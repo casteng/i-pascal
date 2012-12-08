@@ -1,0 +1,53 @@
+<idea-plugin version="2">
+  <id>com.siberika.idea.pascal</id>
+  <name>Pascal IDEA Plugin</name>
+  <version>1.0</version>
+  <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
+
+  <description><![CDATA[
+      Pascal support for IDEA.<br>
+      ]]></description>
+
+  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+  <idea-version since-build="107.105"/>
+
+  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products
+  <depends>com.intellij.modules.lang</depends>
+  -->
+
+  <application-components>
+    <!-- Add your application components here -->
+  </application-components>
+
+    <project-components>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.lang.psi.PascalPsiManager</implementation-class>
+        </component>
+    </project-components>
+
+  <actions>
+    <!-- Add your actions here -->
+  </actions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeLoader"/>
+
+        <lang.syntaxHighlighterFactory key="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
+        <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.lang.parser.PascalParserDefinition"/>
+        <lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>
+
+        <!--<colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage"/>-->
+
+        <!--<projectService serviceInterface="com.siberika.idea.pascal.lang.psi.LuaPsiElementFactory"-->
+
+
+
+
+        <!--<configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>-->
+        <!--<configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />-->
+        <!--<programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>-->
+
+    </extensions>
+</idea-plugin>
