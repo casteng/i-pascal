@@ -1,93 +1,208 @@
 {
+  generateTokens=true
+  generatePsi=true
+  generateStubParser=true
+
   parserClass="com.siberika.idea.pascal.lang.parser.PascalParser"
   stubParserClass="com.siberika.idea.pascal.lang.parser.PascalParserUtil"
 
-  implements="org.intellij.grammar.psi.BnfCompositeElement"
-  extends="org.intellij.grammar.psi.impl.BnfCompositeElementImpl"
+  implements="com.siberika.idea.pascal.lang.psi.PascalPsiElement"
+  extends="com.siberika.idea.pascal.lang.psi.impl.PascalPsiElementImpl"
 
-  psiClassPrefix="Bnf"
+  psiClassPrefix="Pas"
   psiImplClassSuffix="Impl"
-  psiPackage="org.intellij.grammar.psi"
-  psiImplPackage="org.intellij.grammar.psi.impl"
-  psiImplUtilClass="org.intellij.grammar.psi.impl.GrammarPsiImplUtil"
+  psiPackage="com.siberika.idea.pascal.lang.psi"
+  psiImplPackage="com.siberika.idea.pascal.lang.psi.impl"
+  //psiImplUtilClass="com.siberika.idea.pascal.lang.psi.impl.PascalPsiImplUtil"
 
-  elementTypeHolderClass="org.intellij.grammar.psi.BnfTypes"
-  elementTypePrefix="BNF_"
-  elementTypeClass="org.intellij.grammar.psi.BnfCompositeElementType"
-  tokenTypeClass="org.intellij.grammar.psi.BnfTokenType"
+  elementTypeHolderClass="com.siberika.idea.pascal.lang.psi.PasTypes"
+  elementTypePrefix=""
+  elementTypeClass="com.siberika.idea.pascal.lang.psi.PascalPsiElementType"
+  tokenTypeClass="com.siberika.idea.pascal.lang.lexer.PascalElementType"
+
+  //implements("rule|attr")="org.intellij.grammar.psi.BnfNamedElement"
+  //extends("Module")="com.siberika.idea.pascal.lang.lexer.PascalElementType"
 
   tokens = [
-    OP_EQ="="
-    OP_IS="::="
-    OP_OR="|"
-    OP_OPT="?"
-    OP_ONEMORE="+"
-    OP_ZEROMORE="*"
-    OP_AND="&"
-    OP_NOT="!"
-    SEMICOLON=";"
-    LEFT_BRACE="{"
-    RIGHT_BRACE="}"
-    LEFT_BRACKET="["
-    RIGHT_BRACKET="]"
-    LEFT_PAREN="("
-    RIGHT_PAREN=")"
-    EXTERNAL_START="<<"
-    EXTERNAL_END=">>"
+      COMMENT="comment"
+      QSTRING="qstring"
+
+      AND="and"
+      MOD="mod"
+      OR="or"
+      IDIV="div"
+      SHR="shr"
+      SHL="shl"
+      IN="in"
+
+      AS="as"
+
+
+    IS="is"
+    NIL="nil"
+
+    CLASS="class"
+    DISPINTERFACE="dispinterface"
+
+    TRY="try"
+    RAISE="raise"
+    EXCEPT="except"
+    ON="on"
+    FINALLY="finally"
+
+    PROGRAM="program"
+    LIBRARY="library"
+    PACKAGE="package"
+    USES="uses"
+    EXPORTS="exports"
+    FINALIZATION="finalization"
+    INITIALIZATION="initialization"
+
+    THREADVAR="threadvar"
+    ABSOLUTE="absolute"
+    OUT="out"
+    RESOURCESTRING="resourcestring"
+    INLINE="inline"
+    PACKED="packed"
+    PROPERTY="property"
+    ARRAY="array"
+    SET="set"
+    FILE="file"
+    STRING="string"
+
+    ASM="asm"
+    GOTO="goto"
+    LABEL="label"
+    WITH="with"
+
+    CONSTRUCTOR="constructor"
+    DESTRUCTOR="destructor"
+    INHERITED="inherited"
+    OBJECT="object"
+    OPERATOR="operator"
+    REINTRODUCE="reintroduce"
+    SELF="self"
+
+    NOT="not"
+    XOR="xor"
+
+    TO="to"
+    DOWNTO="downto"
+    REPEAT="repeat"
+
+
+      FALSE="false"
+      TRUE="true"
+      NUMBER="number"
+
+      INTERFACE="interface"
+      IMPLEMENTATION="implementation"
+
+      VAR="var"
+      CONST="const"
+      TYPE="type"
+      ARRAY="array"
+      RECORD="record"
+      PROCEDURE="procedure"
+      FUNCTION="function"
+      OF="of"
+
+      CASE="case"
+      BEGIN="begin"
+      END="end"
+      FOR="for"
+      UNTIL="until"
+      WHILE="while"
+      DO="do"
+      IF="if"
+      THEN="then"
+      ELSE="else"
+
+      MULT="*"
+      PLUS="+"
+      MINUS="-"
+      DIV="/"
+      SEMI=";"
+      COMMA=","
+      LPAREN="("
+      RPAREN=")"
+      LBRACK="["
+      RBRACK="]"
+      EQ="="
+      LT="<"
+      GT=">"
+      GE=">="
+      LE="<="
+      NE="<>"
+      COLON=":"
+      ASSIGN=":="
+      DOT="."
+      DEREF="^"
+      ADDR="@"
+      HEXNUM="$"
+      CHARNUM="#"
+      KEYWORDESCAPE="&"
+
   ]
 
-  implements("rule|attr")="org.intellij.grammar.psi.BnfNamedElement"
-  extends("rule|attr")="org.intellij.grammar.psi.impl.BnfNamedElementImpl"
-  mixin("reference_or_token")="org.intellij.grammar.psi.impl.BnfRefOrTokenImpl"
-  mixin("string_literal_expression")="org.intellij.grammar.psi.impl.BnfStringImpl"
-  extends("paren_.*expression")=parenthesized
-
-  methodRenames("getStringLiteralExpression")="getLiteralExpression"
 }
 
-external grammar ::= parseGrammar grammar_element
-private grammar_element ::= attrs | rule {recoverUntil=grammar_element_recover}
-private grammar_element_recover::=!('{'|rule_start)
+external pascal             ::= parsePascal Module
+Module                      ::= pProgram | pUnit | pLibrary | pPackage
+pPackage                    ::= PACKAGE END // ***===
+pLibrary                    ::= LIBRARY END // ***===
+pUnit                       ::= UNIT END    // ***===
 
-rule ::= rule_start expression attrs? ';'? {pin=2}
-private rule_start ::= modifier* id '::='
-modifier ::= 'private' | 'external' | 'meta' | 'inner' | 'left' | 'fake'
+pProgram                    ::= ProgramHead? UsesFileClause? Block SEMI
+private ProgramHead	            ::=	PROGRAM NamespaceName ProgramParmSeq? SEMI
+private ProgramParmSeq	        ::=	LPAREN Ident? (COMMA Ident)* RPAREN
 
-attrs ::= '{' attr * '}' {pin=1}
-attr ::= attr_start attr_value ';'? {pin=1 recoverUntil=attr_recover_until}
-private attr_start ::= id (attr_pattern '=' | '=') {pin(".*")="attr_pattern"}
-private attr_start_simple ::= id attr_pattern? '='
-private attr_recover_until ::= !('}' | attr_start)
-private attr_value ::= (reference_or_token | literal_expression | value_list) !'='
-attr_pattern ::= '(' string_literal_expression ')' {pin=1}
+UsesFileClause	            ::=	USES NamespaceFileNameList
+private NamespaceFileNameList	    ::=	NamespaceFileName (COMMA NamespaceFileName)* SEMI
+NamespaceFileName	        ::=	NamespaceName [IN QuotedString]
 
-value_list ::= '[' list_entry * ']' {pin=1 extends=expression}
-list_entry ::= (id list_entry_tail? | string_literal_expression) ';'? {
-  recoverUntil=list_entry_recover_until
-  methods=[getReferences]
-}
-private list_entry_tail ::= '=' string_literal_expression {pin=1}
-private list_entry_recover_until ::= !(']' | '}' | id | string)
+Block	                    ::=	DeclSection* BlockBody?
+BlockBody	                ::=	CompoundStatement //|	AssemblerStatement
 
-expression ::= sequence choice?
-sequence ::= option * {extends=expression recoverUntil=sequence_recover}
-private sequence_recover ::= !(';'|'|'|'('|')'|'['|']'|'{'|'}') grammar_element_recover
-private option ::= predicate | paren_opt_expression | simple quantified?
+//DeclSection	            ::=	LabelDeclSection | ConstSection | TypeSection | VarSection | MethodDecl | ProcDecl | ExportsSection | AssemblyAttribute
+//LabelDeclSection	        ::=	LABEL Label (COMMA Label)* SEMI
+DeclSection	                ::=	VarSection {recoverUntil=commonRecover}
+commonRecover               ::= !(BEGIN | END | ';')
+VarSection	                ::=	VarKey VarDeclaration+
+VarKey	                    ::=	VAR | THREADVAR
+VarDeclaration	            ::=	CustomAttribute? IdentList COLON TypeDecl VarValueSpec? HintingDirective* SEMI
+VarValueSpec	            ::=	ABSOLUTE Ident | ABSOLUTE ConstExpression | EQ ConstExpression
 
-left choice ::= ( '|' sequence ) + {pin(".*")=1 extends=expression}
-left quantified ::= quantifier {extends=expression }
-quantifier ::= '?' | '+' | '*'
+//TypeDecl	                ::=	StrucType | PointerType | StringType | ProcedureType | VariantType | SimpleType | TYPE? TypeID GenericPostfix?
+TypeDecl	                ::=	TYPE? TypeID //GenericPostfix?
+TypeID                      ::=	NamespacedQualifiedIdent
 
-predicate ::= predicate_sign simple {extends=expression}
-predicate_sign ::= '&' | '!'
+CompoundStatement           ::= BEGIN StatementList? END {pin=3}
+StatementList               ::= Statement? (SEMI Statement?)* {recoverUntil=statement_recover}
+private statement_recover   ::= commonRecover
+Statement                   ::= NAME //===***
 
-fake parenthesized ::= simple_paren_expression {extends=expression}
-private simple ::= !(modifier* id '::=' ) reference_or_token | literal_expression | external_expression | paren_expression
-external_expression ::= '<<' reference_or_token option * '>>' {pin=2 extends=expression}
-reference_or_token ::= id  {extends=expression }
-literal_expression ::= string_literal_expression | number {extends=expression }
-string_literal_expression ::= string {extends=literal_expression}
-paren_expression ::= simple_paren_expression | alt_choice_expression
-paren_opt_expression ::= '[' expression ']' {pin=1}
-private simple_paren_expression ::= '(' expression ')' {pin=1}
-private alt_choice_expression ::= '{' !attr_start_simple expression '}' {pin=2}
+NamespacedQualifiedIdent    ::= (NamespaceName DOT)? QualifiedIdent
+NamespaceName	            ::=	Ident (DOT Ident)*
+QualifiedIdent	            ::=	(Ident DOT)* Ident
+
+HintingDirective            ::= DEPRECATED StringFactor? EXPERIMENTAL |	PLATFORM | LIBRARY
+
+Ident	                    ::= NAME | KEYWORDESCAPE ReservedWord
+IdentList	                ::=	Ident (COMMA Ident)*
+ReservedWord	            ::=	NAME
+
+ConstExpression	            ::=	Expression | LPAREN ConstExpression (COMMA ConstExpression)* RPAREN
+	                        //|	LPAREN RecordConstExpression (SEMI RecordConstExpression)* RPAREN
+Expression                  ::= NUMBER
+ExpressionList	            ::= Expression (COMMA Expression)*
+
+CustomAttribute	            ::=	LBRACK CustomAttributeDecl RBRACK
+                            //| AssemblyAttribute
+CustomAttributeDecl         ::= NamespacedQualifiedIdent LPAREN ExpressionList RPAREN
+
+StringFactor                ::= ControlString (QuotedString ControlString)* QuotedString?
+                            | QuotedString (ControlString QuotedString) ControlString?
+QuotedString                ::=	STRING*
+ControlString               ::=	controlchar+
+controlchar                 ::= CHARNUM NUMBER | CHARNUM HEXNUM NUMBER // ***===

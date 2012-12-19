@@ -28,7 +28,7 @@ public class FPCRunConfigurationProducer extends RuntimeConfigurationProducer im
     protected RunnerAndConfigurationSettingsImpl createConfigurationByElement(Location location, ConfigurationContext configurationContext) {
         sourceFile = location.getPsiElement().getContainingFile();
 
-        if (sourceFile != null && sourceFile.getFileType().equals(PascalFileType.PASCAL_FILE_TYPE)) {
+        if (sourceFile != null && sourceFile.getFileType().equals(PascalFileType.INSTANCE)) {
             return null;
         }
 
