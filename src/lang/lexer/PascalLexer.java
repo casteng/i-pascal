@@ -1,37 +1,36 @@
-/*
- * Copyright 2010 Jon S Akhtar (Sylvanaar)
- *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
- */
-
 package com.siberika.idea.pascal.lang.lexer;
 
 import com.intellij.lexer.FlexAdapter;
 import com.intellij.lexer.MergingLexerAdapter;
 import com.intellij.psi.tree.TokenSet;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 
 import java.io.Reader;
 
-/**
- * Created by IntelliJ IDEA.
- * User: jon
- * Date: Mar 20, 2010
- * Time: 7:30:59 PM
- */
-public class PascalLexer extends MergingLexerAdapter implements PascalTokenTypes {
-    public PascalLexer() {
+public class PascalLexer extends MergingLexerAdapter implements PasTypes {
+    public static final TokenSet KEYWORDS = TokenSet.create(
+            ARRAY, BEGIN, CASE, CONST,
+            DO, ELSE, END,
+            FALSE, FOR, FUNCTION,
+            IF, IMPLEMENTATION, INTERFACE,
+            OF, PROCEDURE, PROGRAM, RECORD,
+            THEN, TRUE, TYPE, UNIT, UNTIL, VAR, WHILE
+    );
 
-        super(new FlexAdapter(new _PascalLexer((Reader) null)),
-                TokenSet.create(LONGCOMMENT, STRING, SHORTCOMMENT));
+    public static final TokenSet SYMBOLS = TokenSet.create(
+            ASSIGN,
+            GE, GT, LE, LT, EQ, NE, MINUS, PLUS, SEMI, COLON, COMMA, DOT, DEREF, DIV, MULT
+    );
+
+    public static final TokenSet OPERATORS = TokenSet.create(
+            AND, OR, MOD, IDIV, IN, SHR, SHL
+    );
+
+    public static final TokenSet PARENS = TokenSet.create(LBRACK, LPAREN, RPAREN, RBRACK);
+
+    public static final TokenSet COMMENTS = TokenSet.create(COMMENT);
+
+    public PascalLexer() {
+        super(new FlexAdapter(new _PascalLexer((Reader) null)), TokenSet.create());
     }
 }
