@@ -21,29 +21,28 @@
     <!-- Add your application components here -->
   </application-components>
 
-    <project-components>
-        <component>
-            <implementation-class>com.siberika.idea.pascal.lang.psi.PascalPsiManager</implementation-class>
-        </component>
-    </project-components>
+    <!--<project-components>-->
+        <!--<component>-->
+            <!--&lt;!&ndash;<implementation-class>com.siberika.idea.pascal.lang.psi.PascalPsiManager</implementation-class>&ndash;&gt;-->
+        <!--</component>-->
+    <!--</project-components>-->
 
   <actions>
     <!-- Add your actions here -->
   </actions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeLoader"/>
+        <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
 
+        <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
+        <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.PascalParserDefinition"/>
         <lang.syntaxHighlighterFactory key="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
-        <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.lang.parser.PascalParserDefinition"/>
-        <lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>
+        <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
+        <!--<lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>-->
 
         <!--<colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage"/>-->
 
         <!--<projectService serviceInterface="com.siberika.idea.pascal.lang.psi.LuaPsiElementFactory"-->
-
-
-
 
         <!--<configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>-->
         <!--<configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />-->
