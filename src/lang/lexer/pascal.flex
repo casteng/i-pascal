@@ -40,13 +40,10 @@ strElement      = "''"|.
 //char            = "'"{strElement}*?"'"
 n               = [0-9]+
 exp             = [Ee][+-]?{n}
-letter          = [A-Za-z]
-digit           = [0-9]
-alphanumeric    = {letter}|{digit}
-other_id_char   = [_]
 identifier      = [_a-zA-Z][_a-zA-Z0-9]{0,126}
-integer         = n|\$[0-9a-fA-F]+
-real            = (({n}|{n}[.]{n}){exp}?|[.]{n}|{n}[.])
+num_int         = n
+num_real        = (({n}|{n}[.]{n}){exp}?|[.]{n}|{n}[.])
+num_hex         = \$[0-9a-fA-F]+
 comment         = {line_comment}|{block_comment}|{brace_comment}
 whitespace      = [ \t\n]
 
@@ -99,6 +96,9 @@ newline         =   \r\n|\n|\r
 "goto"              { return GOTO; }
 "label"             { return LABEL; }
 "with"              { return WITH; }
+"exit"              { return EXIT; }
+"break"             { return BREAK; }
+"continue"          { return CONTINUE; }
 
 "constructor"       { return CONSTRUCTOR; }
 "destructor"        { return DESTRUCTOR; }
@@ -107,6 +107,7 @@ newline         =   \r\n|\n|\r
 "operator"          { return OPERATOR; }
 "reintroduce"       { return REINTRODUCE; }
 "self"              { return SELF; }
+"new"               { return NEW; }
 
 "not"               { return NOT; }
 "xor"               { return XOR; }
@@ -166,7 +167,7 @@ newline         =   \r\n|\n|\r
 ":="            { return ASSIGN; }
 "."             { return DOT; }
 "^"             { return DEREF; }
-"@"             { return ADDR; }
+"@"             { return AT; }
 "$"             { return HEXNUM; }
 "#"             { return CHARNUM; }
 "&"             { return KEYWORDESCAPE; }
@@ -181,8 +182,9 @@ newline         =   \r\n|\n|\r
 }
 
 //{char}          { return STRING; }
-{integer}       { return NUMBER; }
-{real}          { return NUMBER; }
+{num_int}       { return NUMBER_INT; }
+{num_real}      { return NUMBER_REAL; }
+{num_hex}       { return NUMBER_HEX; }
 {comment}       { return COMMENT; }
 {identifier}    { return NAME; }
 {whitespace}    {yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }

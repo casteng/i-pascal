@@ -13,15 +13,12 @@
   psiImplClassSuffix="Impl"
   psiPackage="com.siberika.idea.pascal.lang.psi"
   psiImplPackage="com.siberika.idea.pascal.lang.psi.impl"
-  //psiImplUtilClass="com.siberika.idea.pascal.lang.psi.impl.PascalPsiImplUtil"
+  psiImplUtilClass="com.siberika.idea.pascal.lang.psi.impl.PascalPsiImplUtil"
 
   elementTypeHolderClass="com.siberika.idea.pascal.lang.psi.PasTypes"
   elementTypePrefix=""
   elementTypeClass="com.siberika.idea.pascal.lang.psi.PascalPsiElementType"
   tokenTypeClass="com.siberika.idea.pascal.lang.lexer.PascalElementType"
-
-  //implements("rule|attr")="org.intellij.grammar.psi.BnfNamedElement"
-  //extends("Module")="com.siberika.idea.pascal.lang.lexer.PascalElementType"
 
   tokens = [
       COMMENT="comment"
@@ -138,12 +135,15 @@
       ASSIGN=":="
       DOT="."
       DEREF="^"
-      ADDR="@"
+      AT="@"
       HEXNUM="$"
       CHARNUM="#"
       KEYWORDESCAPE="&"
 
   ]
+
+  implements("pProgram")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  extends("pProgram")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
 
 }
 
@@ -152,6 +152,7 @@ Module                      ::= pProgram | pUnit | pLibrary | pPackage
 pPackage                    ::= PACKAGE END // ***===
 pLibrary                    ::= LIBRARY END // ***===
 pUnit                       ::= UNIT END    // ***===
+                                { methods=[getReferences]}
 
 pProgram                    ::= ProgramHead? UsesFileClause? Block SEMI
 private ProgramHead	            ::=	PROGRAM NamespaceName ProgramParmSeq? SEMI
@@ -167,7 +168,7 @@ BlockBody	                ::=	CompoundStatement //|	AssemblerStatement
 //DeclSection	            ::=	LabelDeclSection | ConstSection | TypeSection | VarSection | MethodDecl | ProcDecl | ExportsSection | AssemblyAttribute
 //LabelDeclSection	        ::=	LABEL Label (COMMA Label)* SEMI
 DeclSection	                ::=	VarSection {recoverUntil=commonRecover}
-commonRecover               ::= !(BEGIN | END | ';')
+commonRecover               ::= !(END | BEGIN | SEMI)
 VarSection	                ::=	VarKey VarDeclaration+
 VarKey	                    ::=	VAR | THREADVAR
 VarDeclaration	            ::=	CustomAttribute? IdentList COLON TypeDecl VarValueSpec? HintingDirective* SEMI
@@ -177,10 +178,29 @@ VarValueSpec	            ::=	ABSOLUTE Ident | ABSOLUTE ConstExpression | EQ Cons
 TypeDecl	                ::=	TYPE? TypeID //GenericPostfix?
 TypeID                      ::=	NamespacedQualifiedIdent
 
-CompoundStatement           ::= BEGIN StatementList? END {pin=3}
+CompoundStatement           ::= BEGIN StatementList? END {pin=2}
 StatementList               ::= Statement? (SEMI Statement?)* {recoverUntil=statement_recover}
 private statement_recover   ::= commonRecover
-Statement                   ::= NAME //===***
+Statement                   ::= [LabelId ":" ] StatementPart
+
+StatementPart               ::=
+//===***IfStatement | CaseStatement | RepeatStatement | WhileStatement | ForStatement | WithStatement | TryStatement | RaiseStatement | AssemblerStatement | CompoundStatement |
+                                SimpleStatement
+
+SimpleStatement             ::= GotoStatement | Designator ":=" Expression | Designator ":=" NewStatement | Designator
+
+NewStatement                ::= NEW "(" [ Expression ] { "," [ Expression ] } [ "," ConstExpression ] ")"
+
+Designator                  ::= [ INHERITED ] [ NamespacedQualifiedIdent | TypeID ] DesignatorItem+  //===***
+
+DesignatorItem              ::= "^" | "." Ident | "[" ExpressionsList "]" | DesignatorItem2
+private DesignatorItem2     ::= "(" [ Expression [ ColonConstruct ] { "," Expression [ ColonConstruct ] } ] ")"
+
+ColonConstruct              ::= ":" Expression [ ":" Expression ]
+
+GotoStatement               ::= GOTO LabelId | EXIT [ "(" Expression ")" ] | BREAK | CONTINUE
+
+LabelId                    ::= Ident | NUMBER
 
 NamespacedQualifiedIdent    ::= (NamespaceName DOT)? QualifiedIdent
 NamespaceName	            ::=	Ident (DOT Ident)*
@@ -192,17 +212,56 @@ Ident	                    ::= NAME | KEYWORDESCAPE ReservedWord
 IdentList	                ::=	Ident (COMMA Ident)*
 ReservedWord	            ::=	NAME
 
-ConstExpression	            ::=	Expression | LPAREN ConstExpression (COMMA ConstExpression)* RPAREN
+ConstExpression	            ::=	LPAREN ConstExpression (COMMA ConstExpression)* RPAREN | Expression
 	                        //|	LPAREN RecordConstExpression (SEMI RecordConstExpression)* RPAREN
-Expression                  ::= NUMBER
-ExpressionList	            ::= Expression (COMMA Expression)*
+
+primary                     ::= AT primary | AT AT primary | NOT primary | PLUS primary | MINUS primary | "^" Ident |
+                                NUMBER_INT | NUMBER_REAL | NUMBER_HEX | TRUE | FALSE | NIL |
+                                "(" Expression ")" | StringFactor | SetSection |
+                                TypeID "(" Expression ")" | Designator
+
+RelOp                       ::= "<" | ">" | "<=" | ">=" | "<>" | "=" | "in" | "is"
+AddOp                       ::=	"+" | "-" | "or" | "xor"
+MulOp                       ::= "*" | "/" | "div" | "mod" | "and" | "shl" | "shr" | "as"
+
+
+Expression ::= expr_rel | ClosureExpression
+term ::= "(" Expression ")" | primary
+expr_rel ::= expr_sum (RelOp expr_sum) *
+expr_sum ::= expr_product (AddOp expr_product) *
+expr_product ::= term (MulOp term) *
+
+private expression_recover ::= !(number | string | id)
+
+/*expression ::= factor add_expression * {recoverUntil="expression_recover"}
+private factor ::= primary mul_expression *
+private primary ::= literal_expression | reference_expression qreference_expression *
+
+left add_expression ::= '+' factor
+left mul_expression ::= '*' primary
+
+identifier ::= id
+reference_expression ::= identifier {mixin="mypackage.MyReferenceExpressionImpl"}
+left qreference_expression ::= '.' identifier {elementType="reference_expression"}
+
+literal_expression ::= number | string*/
+
+SetSection                  ::=	"[" [ Expression { ( "," | ".." ) Expression } ] "]"
+
+ClosureExpression           ::= PROCEDURE [ FormalParameterSection ] Block | FUNCTION [ FormalParameterSection ] ":" TypeDecl Block
+FormalParameterSection      ::= "(" [ FormalParameterList ] ")"
+FormalParameterList         ::= FormalParameter { ";" FormalParameter }
+FormalParameter             ::= [ CustomAttribute ] [ ParmType ] IdentList [ ":" TypeDecl ] [ "=" Expression ]
+ParmType                    ::= CONST | VAR | OUT
+
+
+ExpressionsList	            ::= Expression (COMMA Expression)*
 
 CustomAttribute	            ::=	LBRACK CustomAttributeDecl RBRACK
                             //| AssemblyAttribute
-CustomAttributeDecl         ::= NamespacedQualifiedIdent LPAREN ExpressionList RPAREN
-
-StringFactor                ::= ControlString (QuotedString ControlString)* QuotedString?
-                            | QuotedString (ControlString QuotedString) ControlString?
+CustomAttributeDecl         ::= NamespacedQualifiedIdent LPAREN ExpressionsList RPAREN
+StringFactor                ::= ControlString { QuotedString ControlString } [ QuotedString ] |
+                                QuotedString { ControlString QuotedString } [ ControlString ]
 QuotedString                ::=	STRING*
 ControlString               ::=	controlchar+
 controlchar                 ::= CHARNUM NUMBER | CHARNUM HEXNUM NUMBER // ***===
