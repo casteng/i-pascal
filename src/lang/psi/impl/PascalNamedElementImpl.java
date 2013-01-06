@@ -32,26 +32,29 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
     @Override
     public String getName() {
         if (myCachedName == null) {
-            myCachedName = getId().getText();
+            PsiElement element = getId();
+            myCachedName = element != null ? element.getText() : null;
         }
         return myCachedName;
     }
 
-    @NotNull
-    @Override
     public PsiElement getId() {
         return findChildByType(PasTypes.NAMESPACE_NAME);
     }
 
     @Override
     public PsiElement setName(@NonNls @NotNull String s) throws IncorrectOperationException {
-        getId().replace(PasElementFactory.createLeafFromText(getProject(), s));
+        PsiElement element = getId();
+        if (element != null) {
+            getId().replace(PasElementFactory.createLeafFromText(getProject(), s));
+        }
         return this;
     }
 
     @Override
     public int getTextOffset() {
-        return getId().getTextOffset();
+        PsiElement element = getId();
+        return element != null ? element.getTextOffset() : 0;
     }
 
     @NotNull

@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.lang.psi;
 
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,7 +10,4 @@ import org.jetbrains.annotations.NotNull;
 public interface PascalNamedElement extends PascalPsiElement, PsiNameIdentifierOwner {
     @NotNull
     String getName();
-
-    @NotNull
-    PsiElement getId();
 }

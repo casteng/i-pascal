@@ -21,11 +21,12 @@
     <!-- Add your application components here -->
   </application-components>
 
-    <!--<project-components>-->
-        <!--<component>-->
-            <!--&lt;!&ndash;<implementation-class>com.siberika.idea.pascal.lang.psi.PascalPsiManager</implementation-class>&ndash;&gt;-->
-        <!--</component>-->
-    <!--</project-components>-->
+    <project-components>
+        <component>
+            <!--<implementation-class>com.siberika.idea.pascal.lang.psi.PascalPsiManager</implementation-class>-->
+            <implementation-class>com.siberika.idea.pascal.compiler.PasCompilerManager</implementation-class>
+        </component>
+    </project-components>
 
   <actions>
     <!-- Add your actions here -->
