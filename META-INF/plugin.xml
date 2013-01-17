@@ -36,18 +36,22 @@
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
 
         <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
+        <moduleType id="PASCAL_MODULE" implementationClass="com.siberika.idea.pascal.module.PascalModuleType"/>
+        <moduleConfigurationEditorProvider implementation="com.siberika.idea.pascal.module.PascalModuleConfigEditorProvider" />
         <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.PascalParserDefinition"/>
         <lang.syntaxHighlighterFactory key="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
-        <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
+        <!--<annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>-->
         <!--<lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>-->
 
         <!--<colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage"/>-->
 
         <!--<projectService serviceInterface="com.siberika.idea.pascal.lang.psi.LuaPsiElementFactory"-->
 
-        <!--<configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>-->
-        <!--<configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />-->
-        <!--<programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>-->
+        <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
+        <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>
+        <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />
+        <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
+
 
     </extensions>
 </idea-plugin>
