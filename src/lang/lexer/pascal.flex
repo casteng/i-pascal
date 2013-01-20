@@ -3,9 +3,6 @@ package com.siberika.idea.pascal.lang.lexer;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.TokenType;
-import java.util.*;
-import java.lang.reflect.Field;
-import org.jetbrains.annotations.NotNull;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 
 %%
@@ -23,31 +20,27 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 %eof{ return;
 %eof}
 
-%{
-    ExtendedSyntaxStrCommentHandler longCommentOrStringHandler = new ExtendedSyntaxStrCommentHandler();
-%}
+WHITESPACE      = [\ \n\r\t\f]
+NEWLINE         = \r\n|\n|\r
 
-%init{
-%init}
+LINE_COMMENT    = "/""/"[^\r\n]*
+BLOCK_COMMENT   = "(*" !([^]* "*)" [^]*) ("*)")?
+BRACE_COMMENT   = "{" !([^]* "}" [^]*) ("}")?
+COMMENT         = {LINE_COMMENT}|{BLOCK_COMMENT}|{BRACE_COMMENT}
 
-/*-*
- * PATTERN DEFINITIONS:
- */
-line_comment    = "//" .*
-block_comment   = "(*" !([^]* "*)" [^]*) ("*)")?
-brace_comment   = "{" !([^]* "}" [^]*) ("}")?
-strElement      = "''"|.
-//char            = "'"{strElement}*?"'"
-n               = [0-9]+
-exp             = [Ee][+-]?{n}
-identifier      = [_a-zA-Z][_a-zA-Z0-9]{0,126}
-num_int         = n
-num_real        = (({n}|{n}[.]{n}){exp}?|[.]{n}|{n}[.])
-num_hex         = \$[0-9a-fA-F]+
-comment         = {line_comment}|{block_comment}|{brace_comment}
-whitespace      = [ \t\n]
+IDENTIFIER=[:jletter:] [:jletterdigit:]{0,126}
+//identifier      = [_a-zA-Z][_a-zA-Z0-9]{0,126}
 
-newline         =   \r\n|\n|\r
+STRING_ELEMENT  = "''"|[^'\n\r]
+STRING_LITERAL  = "'"{STRING_ELEMENT}*"'"
+
+N               = [0-9]+
+NUM_INT         = {N}
+EXP             = [Ee]["+""-"]?{N}
+NUM_REAL        = (({N}?[.]{N}){EXP}?|{N}[.])
+NUM_HEX         = \$[0-9a-fA-F]+
+NUM_BIN         = {N}[bB]
+
 
 %x XSTRING
 
@@ -172,20 +165,25 @@ newline         =   \r\n|\n|\r
 "#"             { return CHARNUM; }
 "&"             { return KEYWORDESCAPE; }
 
-"'"           { yybegin(XSTRING); return STRING; }
+//"'"           { yybegin(XSTRING); return STRING; }
 <XSTRING>
 {
   "''"        { return STRING; }
-  "'"         { yybegin(YYINITIAL); return STRING; }
-  {newline}   { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER;  }
+  "'"         { yybegin(YYINITIAL); return STRING_LITERAL; }
+  {NEWLINE}   { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER;  }
   .           { return STRING; }
 }
 
-//{char}          { return STRING; }
-{num_int}       { return NUMBER_INT; }
-{num_real}      { return NUMBER_REAL; }
-{num_hex}       { return NUMBER_HEX; }
-{comment}       { return COMMENT; }
-{identifier}    { return NAME; }
-{whitespace}    {yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
+{STRING_LITERAL} { return STRING_LITERAL;}
+
+{NUM_INT}       { return NUMBER_INT; }
+{NUM_REAL}      { return NUMBER_REAL; }
+{NUM_HEX}       { return NUMBER_HEX; }
+{NUM_BIN}       { return NUMBER_BIN; }
+
+{COMMENT}       { return COMMENT; }
+
+{IDENTIFIER}    { return NAME; }
+
+{WHITESPACE}    {yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
 .               {yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
