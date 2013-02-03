@@ -147,79 +147,94 @@
 }
 
 external pascal             ::= parsePascal Module
-private Module              ::= pProgram | pUnit | pLibrary | pPackage
+private Module              ::= pProgram// | pUnit | pLibrary | pPackage
+private moduleRecover       ::= !(USES | BEGIN | VAR | THREADVAR)
+
 pPackage                    ::= PACKAGE END // ***===
 pLibrary                    ::= LIBRARY END // ***===
 pUnit                       ::= UNIT END    // ***===
                                 { methods=[getReferences]}
 
-pProgram                    ::= ProgramHead? UsesFileClause? Block DOT
-private ProgramHead	            ::=	PROGRAM NamespaceName ProgramParmSeq? SEMI
-private ProgramParmSeq	        ::=	LPAREN Ident? (COMMA Ident)* RPAREN
+pProgram                    ::= ProgramHead? UsesFileClause? Block "."
+private ProgramHead	        ::=	PROGRAM NamespaceName ProgramParamList? SEMI// {recoverUntil=moduleRecover pin=1}
+ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
+private progParamsRest      ::= "," progParam {pin=1}
+private progParam           ::= Ident {recoverUntil=recover_commaList}
 
 UsesFileClause	            ::=	USES NamespaceFileNameList
-private NamespaceFileNameList	    ::=	NamespaceFileName (COMMA NamespaceFileName)* SEMI
-NamespaceFileName	        ::=	NamespaceName [IN QuotedString]
+private NamespaceFileNameList ::= NamespaceFileName NamespaceFileNamesRest* SEMI
+private NamespaceFileNamesRest ::= COMMA NamespaceFileName {pin=1}
+private NamespaceFileName	::=	NamespaceName [IN QuotedString] {recoverUntil=recover_commaList}
+private recover_commaList   ::= !(SEMI | RPAREN | COMMA | COLON | DOT | "]" | "..")
 
-Block	                    ::=	DeclSection* BlockBody?
-BlockBody	                ::=	CompoundStatement //|	AssemblerStatement
-
-//DeclSection	            ::=	LabelDeclSection | ConstSection | TypeSection | VarSection | MethodDecl | ProcDecl | ExportsSection | AssemblyAttribute
+Block	                    ::=	DeclSection* BlockBody? {pin=2}
+private BlockBody	        ::=	CompoundStatement //|	AssemblerStatement
+                      //DeclSection	            ::=	LabelDeclSection | ConstSection | TypeSection | VarSection | MethodDecl | ProcDecl | ExportsSection | AssemblyAttribute
 //LabelDeclSection	        ::=	LABEL Label (COMMA Label)* SEMI
-DeclSection	                ::=	VarSection {recoverUntil=commonRecover}
-commonRecover               ::= !(END | BEGIN | SEMI)
+private DeclSection	        ::=	VarSection
 VarSection	                ::=	VarKey VarDeclaration+
-VarKey	                    ::=	VAR | THREADVAR
-VarDeclaration	            ::=	CustomAttribute? IdentList COLON TypeDecl VarValueSpec? HintingDirective* SEMI
+private VarKey	            ::=	VAR | THREADVAR
+private VarDeclaration	    ::=	CustomAttribute? IdentList COLON TypeDecl VarValueSpec? HintingDirective* SEMI
 VarValueSpec	            ::=	ABSOLUTE Ident | ABSOLUTE ConstExpression | EQ ConstExpression
 
 //TypeDecl	                ::=	StrucType | PointerType | StringType | ProcedureType | VariantType | SimpleType | TYPE? TypeID GenericPostfix?
 TypeDecl	                ::=	TYPE? TypeID //GenericPostfix?
-TypeID                      ::=	NamespacedQualifiedIdent
+TypeID              ::=	NamespacedQualifiedIdent
 
-CompoundStatement           ::= BEGIN StatementList? END {pin=2}
-StatementList               ::= [Statement] (SEMI [Statement])* {recoverUntil=statement_recover}
-private statement_recover   ::= commonRecover
-Statement                   ::= [LabelId ":" ] StatementPart
+CompoundStatement           ::= BEGIN StatementList? END
+private StatementList       ::= [Statement] Statements*
+private Statements          ::= SEMI [Statement]  {recoverUntil=recover_statement}
+private recover_statement   ::= !(SEMI | ':=' | ';' | DOT | IF | TRY | PROCEDURE | FUNCTION | TYPE | VAR | CONST | END | EXCEPT | FINALLY)
+private Statement           ::= [LabelId ":" ] StatementPart
 
 private StatementPart       ::=
 //===*** CaseStatement | RepeatStatement | WhileStatement | ForStatement | WithStatement | RaiseStatement | AssemblerStatement |
-                                CompoundStatement | IfStatement | TryStatement | SimpleStatement
+                                CompoundStatement | IfStatement | TryStatement | SimpleStatement | stmtEmpty
+private stmtEmpty           ::= //empty
 
-SimpleStatement             ::= GotoStatement | Designator ":=" Expression | Designator ":=" NewStatement | Designator {pin=":="}
+SimpleStatement             ::= GotoStatement | stmtAssign | Designator
+private stmtAssign          ::= stmtAssign1 | Designator ":=" NewStatement
+private stmtAssign1         ::= Designator ":=" Expression {pin=2}
 
 NewStatement                ::= NEW "(" [ Expression ] ("," [ Expression ])* [ "," ConstExpression ] ")"
 
 Designator                  ::= //[ "inherited" ] , [ NamespacedQualifiedIdent | TypeID ] , { DesignatorItem } ===***
-                                (INHERITED DesignatorItem* )
-                              | ([NamespacedQualifiedIdent | TypeID] DesignatorItem+)
-                              | ((NamespacedQualifiedIdent | TypeID) DesignatorItem*)
+                                [INHERITED] (TypeID DesignatorItem*) | DesignatorItem+
 
-private DesignatorItem      ::= "^" | "." Ident | "[" ExpressionsList "]" | DesignatorItem2
-private DesignatorItem2     ::= "(" [ Expression [ ColonConstruct ] ("," Expression [ ColonConstruct ])* ] ")"
+DesignatorItem      ::= "^" | "." Ident | "[" ExpressionsList "]" | DesignatorItem2
+DesignatorItem2     ::= "(" [ ExpressionColon ExpressionColons* ] ")" {pin=1}
+private ExpressionColon ::= Expression [ ColonConstruct ] {recoverUntil=recover_commaList}
+private ExpressionColons ::= "," ExpressionColon
 
 ColonConstruct              ::= ":" Expression [ ":" Expression ]
 
-IfStatement                 ::= IF Expression THEN Statement [ELSE Statement]
+IfStatement                 ::= IF Expression THEN Statement [ELSE Statement] {pin=1}
 
-TryStatement                ::= TRY StatementList EXCEPT HandlerList END
-                              | TRY StatementList FINALLY StatementList END
-HandlerList                 ::= (Handler)* [ELSE StatementList] | StatementList
+TryStatement                ::= TryExcept | TryFinally
+private TryFinally          ::= TRY StatementList FINALLY StatementList END {pin=1}
+private TryExcept           ::= TRY StatementList EXCEPT HandlerList END {pin=1}
+HandlerList                 ::= Handler+ [ELSE StatementList] | StatementList
 Handler                     ::= ON Ident ":" TypeID "do" Statement ";"
 
 GotoStatement               ::= GOTO LabelId | EXIT [ "(" Expression ")" ] | BREAK | CONTINUE
 
 LabelId                     ::= Ident | NUMBER_INT
 
-NamespacedQualifiedIdent    ::= (NamespaceName DOT)? QualifiedIdent
-NamespaceName	            ::=	Ident (DOT Ident)*
-QualifiedIdent	            ::=	(Ident DOT)* Ident
+NamespacedQualifiedIdent ::= NamespaceName//(NamespaceName DOT)? QualifiedIdent
+//QualifiedIdent	    ::=	(Ident ".")* Ident//IdentDot* NamespaceItem
+NamespaceName	            ::=	NamespaceItem DotIdent* {recoverUntil=recover_dotList1}
+DotIdent            ::= "." NamespaceItem {pin=1}
+NamespaceItem       ::= Ident
+private recover_dotList1     ::= !("," | SEMI | NUMBER_INT| STRING_LITERAL | ":=" | "^" | "[" | "]" | "(" | ")" | RelOp | AddOp | MulOp | recover_part_statement)
+private recover_part_statement ::= (DO | THEN | ELSE | UNTIL | TO | DOWNTO | EXCEPT | FINALLY | END)
 
 HintingDirective            ::= DEPRECATED StringFactor? EXPERIMENTAL |	PLATFORM | LIBRARY
 
-Ident	                    ::= NAME | KEYWORDESCAPE ReservedWord
-IdentList	                ::=	Ident (COMMA Ident)*
-ReservedWord	            ::=	NAME
+Ident	            ::= NAME | KEYWORDESCAPE ReservedWord
+ReservedWord	            ::=	NAME //===***
+private IdentList	        ::=	IdentListItem IdentListRest*
+private IdentListItem       ::= Ident {recoverUntil=recover_commaList}
+private IdentListRest       ::= "," IdentListItem {pin=1}
 
 ConstExpression	            ::=	LPAREN ConstExpression (COMMA ConstExpression)* RPAREN | Expression
 	                        //|	LPAREN RecordConstExpression (SEMI RecordConstExpression)* RPAREN
@@ -234,13 +249,12 @@ AddOp                       ::=	"+" | "-" | "or" | "xor"
 MulOp                       ::= "*" | "/" | "div" | "mod" | "and" | "shl" | "shr" | "as"
 
 
-Expression ::= expr_rel | ClosureExpression
-term ::= "(" Expression ")" | primary
+Expression ::= ClosureExpression | expr_rel
 expr_rel ::= expr_sum (RelOp expr_sum) *
 expr_sum ::= expr_product (AddOp expr_product) *
-expr_product ::= term (MulOp term) *
+expr_product ::= primary (MulOp primary) *
 
-private expression_recover ::= !(NUMBER_INT | STRING | ID)
+private expression_recover ::= !(NUMBER_INT | STRING)
 
 /*expression ::= factor add_expression * {recoverUntil="expression_recover"}
 private factor ::= primary mul_expression *
@@ -255,13 +269,14 @@ left qreference_expression ::= '.' identifier {elementType="reference_expression
 
 literal_expression ::= number | string*/
 
-SetSection                  ::=	"[" [ Expression (( "," | ".." ) Expression)* ] "]"
+SetSection                  ::=	"[" [ Expression SetRest * ] "]" {pin=1}
+private SetRest             ::= ( "," | ".." ) Expression {recoverUntil=recover_commaList}
 
 ClosureExpression           ::= PROCEDURE [ FormalParameterSection ] Block | FUNCTION [ FormalParameterSection ] ":" TypeDecl Block
 FormalParameterSection      ::= "(" [ FormalParameterList ] ")"
 FormalParameterList         ::= FormalParameter (";" FormalParameter)*
-FormalParameter             ::= [ CustomAttribute ] [ ParmType ] IdentList [ ":" TypeDecl ] [ "=" Expression ]
-ParmType                    ::= CONST | VAR | OUT
+FormalParameter             ::= [ CustomAttribute ] [ ParamType ] IdentList [ ":" TypeDecl ] [ "=" Expression ]
+ParamType                    ::= CONST | VAR | OUT //ParmType
 
 
 ExpressionsList	            ::= Expression (COMMA Expression)*
