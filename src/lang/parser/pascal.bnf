@@ -155,7 +155,11 @@ pLibrary                    ::= LIBRARY END // ***===
 pUnit                       ::= UNIT END    // ***===
                                 { methods=[getReferences]}
 
-pProgram                    ::= ProgramHead? UsesFileClause? Block "."
+private pProgram            ::= progWithHead | progWoHead
+private progWithHead        ::= ProgramHead UsesFileClause? Block "." {pin=1 recoverUntil=recover_module}
+private progWoHead          ::= UsesFileClause? Block "." {recoverUntil=recover_module}
+
+private recover_module      ::= !(BEGIN)
 private ProgramHead	        ::=	PROGRAM NamespaceName ProgramParamList? SEMI// {recoverUntil=moduleRecover pin=1}
 ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
 private progParamsRest      ::= "," progParam {pin=1}
@@ -181,15 +185,16 @@ VarValueSpec	            ::=	ABSOLUTE Ident | ABSOLUTE ConstExpression | EQ Cons
 TypeDecl	                ::=	TYPE? TypeID //GenericPostfix?
 TypeID              ::=	NamespacedQualifiedIdent
 
-CompoundStatement           ::= BEGIN StatementList? END
+CompoundStatement           ::= BEGIN [StatementList] END {pin=1}
 private StatementList       ::= [Statement] Statements*
 private Statements          ::= SEMI [Statement]  {recoverUntil=recover_statement}
-private recover_statement   ::= !(SEMI | ':=' | ';' | DOT | IF | TRY | PROCEDURE | FUNCTION | TYPE | VAR | CONST | END | EXCEPT | FINALLY)
+private recover_statement   ::= !(rec_statements)
+private rec_statements      ::= SEMI | ":=" | IF | ELSE | FOR | WHILE | REPEAT | TRY | PROCEDURE | FUNCTION | TYPE | VAR | CONST | END | UNTIL | EXCEPT | FINALLY | DOT
 private Statement           ::= [LabelId ":" ] StatementPart
 
-private StatementPart       ::=
-//===*** CaseStatement | RepeatStatement | WhileStatement | ForStatement | WithStatement | RaiseStatement | AssemblerStatement |
-                                CompoundStatement | IfStatement | TryStatement | SimpleStatement | stmtEmpty
+private StatementPart       ::= RepeatStatement | WhileStatement | ForStatement
+                              | CompoundStatement | IfStatement | TryStatement | SimpleStatement | stmtEmpty {recoverUntil=recover_statement}
+                                //CaseStatement | WithStatement | RaiseStatement | AssemblerStatement |
 private stmtEmpty           ::= //empty
 
 SimpleStatement             ::= GotoStatement | stmtAssign | Designator
@@ -208,7 +213,15 @@ private ExpressionColons ::= "," ExpressionColon
 
 ColonConstruct              ::= ":" Expression [ ":" Expression ]
 
+RepeatStatement     ::= REPEAT [StatementList] UNTIL Expression {pin=1}
+WhileStatement      ::= WHILE Expression DO Statement {pin=1}
+ForStatement        ::= ForTo | ForDownto | ForEach
+private ForTo               ::= FOR Designator ":=" Expression TO Expression DO Statement {pin=1}
+private ForDownto           ::= FOR Designator ":=" Expression DOWNTO Expression DO Statement {pin=1}
+private ForEach             ::= FOR Designator IN Expression DO Statement {pin=1}
+
 IfStatement                 ::= IF Expression THEN Statement [ELSE Statement] {pin=1}
+private recover_if          ::= !(ELSE | rec_statements)
 
 TryStatement                ::= TryExcept | TryFinally
 private TryFinally          ::= TRY StatementList FINALLY StatementList END {pin=1}
