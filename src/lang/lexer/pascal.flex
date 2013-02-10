@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
  */
 
 %unicode
+%ignorecase
 %class _PascalLexer
 %implements FlexLexer, PasTypes
 
@@ -37,7 +38,7 @@ STRING_LITERAL  = "'"{STRING_ELEMENT}*"'"
 N               = [0-9]+
 NUM_INT         = {N}
 EXP             = [Ee]["+""-"]?{N}
-NUM_REAL        = (({N}?[.]{N}){EXP}?|{N}[.])
+NUM_REAL        = (({N}?[.]{N}){EXP}?|{N}[.][^.])
 NUM_HEX         = \$[0-9a-fA-F]+
 NUM_BIN         = {N}[bB]
 
@@ -98,9 +99,49 @@ NUM_BIN         = {N}[bB]
 "inherited"         { return INHERITED; }
 "object"            { return OBJECT; }
 "operator"          { return OPERATOR; }
-"reintroduce"       { return REINTRODUCE; }
 "self"              { return SELF; }
 "new"               { return NEW; }
+
+"reintroduce"       { return REINTRODUCE; }
+"overload"          { return OVERLOAD; }
+"message"           { return MESSAGE; }
+"static"            { return STATIC; }
+"dynamic"           { return DYNAMIC; }
+"override"          { return OVERRIDE; }
+"virtual"           { return VIRTUAL; }
+"abstract"          { return ABSTRACT; }
+"sealed"            { return SEALED; }
+"final"             { return FINAL; }
+"assembler"         { return ASSEMBLER; }
+"inline"            { return INLINE; }
+
+"cdecl"             { return CDECL; }
+"pascal"            { return PASCAL; }
+"register"          { return REGISTER; }
+"safecall"          { return SAFECALL; }
+"stdcall"           { return STDCALL; }
+"export"            { return EXPORT; }
+
+"STRICT"            { return STRICT; }
+"PRIVATE"           { return PRIVATE; }
+"PROTECTED"         { return PROTECTED; }
+"PUBLIC"            { return PUBLIC; }
+"PUBLISHED"         { return PUBLISHED; }
+"AUTOMATED"         { return AUTOMATED; }
+
+"dispid"            { return DISPID; }
+"external"          { return EXTERNAL; }
+"forward"           { return FORWARD; }
+"helper"            { return HELPER; }
+"default"           { return DEFAULT; }
+"implements"        { return IMPLEMENTS; }
+"index"             { return INDEX; }
+"read"              { return READ; }
+"write"             { return WRITE; }
+
+"deprecated"        { return DEPRECATED; }
+"experimental"      { return EXPERIMENTAL; }
+"platform"          { return PLATFORM; }
 
 "not"               { return NOT; }
 "xor"               { return XOR; }
@@ -112,6 +153,8 @@ NUM_BIN         = {N}[bB]
 
 "false"             { return FALSE; }
 "true"              { return TRUE; }
+"string"            { return STRING; }
+"pointer"           { return POINTER; }
 
 "program"           { return PROGRAM; }
 "unit"              { return UNIT; }
@@ -126,6 +169,7 @@ NUM_BIN         = {N}[bB]
 "procedure"         { return PROCEDURE; }
 "function"          { return FUNCTION; }
 "of"                { return OF; }
+"reference"         { return REFERENCE; }
 
 "case"              { return CASE; }
 "begin"             { return BEGIN; }
@@ -138,6 +182,7 @@ NUM_BIN         = {N}[bB]
 "then"              { return THEN; }
 "else"              { return ELSE; }
 
+".."            { return RANGE; }
 "*"             { return MULT; }
 "+"             { return PLUS; }
 "-"             { return MINUS; }
@@ -166,13 +211,13 @@ NUM_BIN         = {N}[bB]
 "&"             { return KEYWORDESCAPE; }
 
 //"'"           { yybegin(XSTRING); return STRING; }
-<XSTRING>
-{
-  "''"        { return STRING; }
-  "'"         { yybegin(YYINITIAL); return STRING_LITERAL; }
-  {NEWLINE}   { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER;  }
-  .           { return STRING; }
-}
+//<XSTRING>
+//{
+//  "''"        { return STRING_; } //===*** remove
+//  "'"         { yybegin(YYINITIAL); return STRING_LITERAL; }
+//  {NEWLINE}   { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER;  }
+//  .           { return STRING_; }
+//}
 
 {STRING_LITERAL} { return STRING_LITERAL;}
 
