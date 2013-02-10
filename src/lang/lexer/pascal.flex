@@ -61,6 +61,7 @@ NUM_BIN         = {N}[bB]
 
 "class"             { return CLASS; }
 "dispinterface"     { return DISPINTERFACE; }
+"inline"            { return INLINE; }
 
 "try"               { return TRY; }
 "raise"             { return RAISE; }
@@ -76,9 +77,7 @@ NUM_BIN         = {N}[bB]
 
 "threadvar"         { return THREADVAR; }
 "absolute"          { return ABSOLUTE; }
-"out"               { return OUT; }
 "resourcestring"    { return RESOURCESTRING; }
-"inline"            { return INLINE; }
 "packed"            { return PACKED; }
 "property"          { return PROPERTY; }
 "array"             { return ARRAY; }
@@ -90,58 +89,61 @@ NUM_BIN         = {N}[bB]
 "goto"              { return GOTO; }
 "label"             { return LABEL; }
 "with"              { return WITH; }
-"exit"              { return EXIT; }
-"break"             { return BREAK; }
-"continue"          { return CONTINUE; }
 
 "constructor"       { return CONSTRUCTOR; }
 "destructor"        { return DESTRUCTOR; }
 "inherited"         { return INHERITED; }
 "object"            { return OBJECT; }
-"operator"          { return OPERATOR; }
-"self"              { return SELF; }
-"new"               { return NEW; }
 
-"reintroduce"       { return REINTRODUCE; }
-"overload"          { return OVERLOAD; }
-"message"           { return MESSAGE; }
-"static"            { return STATIC; }
-"dynamic"           { return DYNAMIC; }
-"override"          { return OVERRIDE; }
-"virtual"           { return VIRTUAL; }
-"abstract"          { return ABSTRACT; }
-"sealed"            { return SEALED; }
-"final"             { return FINAL; }
-"assembler"         { return ASSEMBLER; }
-"inline"            { return INLINE; }
+    "out"               { return OUT; }
+    "exit"              { return EXIT; }
+    "break"             { return BREAK; }
+    "continue"          { return CONTINUE; }
 
-"cdecl"             { return CDECL; }
-"pascal"            { return PASCAL; }
-"register"          { return REGISTER; }
-"safecall"          { return SAFECALL; }
-"stdcall"           { return STDCALL; }
-"export"            { return EXPORT; }
+    "operator"          { return OPERATOR; }
+    "self"              { return SELF; }
+    "new"               { return NEW; }
 
-"STRICT"            { return STRICT; }
-"PRIVATE"           { return PRIVATE; }
-"PROTECTED"         { return PROTECTED; }
-"PUBLIC"            { return PUBLIC; }
-"PUBLISHED"         { return PUBLISHED; }
-"AUTOMATED"         { return AUTOMATED; }
+    "reintroduce"       { return REINTRODUCE; }
+    "overload"          { return OVERLOAD; }
+    "message"           { return MESSAGE; }
+    "static"            { return STATIC; }
+    "dynamic"           { return DYNAMIC; }
+    "override"          { return OVERRIDE; }
+    "virtual"           { return VIRTUAL; }
+    "abstract"          { return ABSTRACT; }
+    "sealed"            { return SEALED; }
+    "final"             { return FINAL; }
+    "assembler"         { return ASSEMBLER; }
 
-"dispid"            { return DISPID; }
-"external"          { return EXTERNAL; }
-"forward"           { return FORWARD; }
-"helper"            { return HELPER; }
-"default"           { return DEFAULT; }
-"implements"        { return IMPLEMENTS; }
-"index"             { return INDEX; }
-"read"              { return READ; }
-"write"             { return WRITE; }
+    "cdecl"             { return CDECL; }
+    "pascal"            { return PASCAL; }
+    "register"          { return REGISTER; }
+    "safecall"          { return SAFECALL; }
+    "stdcall"           { return STDCALL; }
+    "export"            { return EXPORT; }
 
-"deprecated"        { return DEPRECATED; }
-"experimental"      { return EXPERIMENTAL; }
-"platform"          { return PLATFORM; }
+    "STRICT"            { return STRICT; }
+    "PRIVATE"           { return PRIVATE; }
+    "PROTECTED"         { return PROTECTED; }
+    "PUBLIC"            { return PUBLIC; }
+    "PUBLISHED"         { return PUBLISHED; }
+    "AUTOMATED"         { return AUTOMATED; }
+
+    "dispid"            { return DISPID; }
+    "external"          { return EXTERNAL; }
+    "forward"           { return FORWARD; }
+    "helper"            { return HELPER; }
+    "default"           { return DEFAULT; }
+    "implements"        { return IMPLEMENTS; }
+    "index"             { return INDEX; }
+    "read"              { return READ; }
+    "write"             { return WRITE; }
+
+    "deprecated"        { return DEPRECATED; }
+    "experimental"      { return EXPERIMENTAL; }
+    "platform"          { return PLATFORM; }
+    "reference"         { return REFERENCE; }
 
 "not"               { return NOT; }
 "xor"               { return XOR; }
@@ -169,7 +171,6 @@ NUM_BIN         = {N}[bB]
 "procedure"         { return PROCEDURE; }
 "function"          { return FUNCTION; }
 "of"                { return OF; }
-"reference"         { return REFERENCE; }
 
 "case"              { return CASE; }
 "begin"             { return BEGIN; }
