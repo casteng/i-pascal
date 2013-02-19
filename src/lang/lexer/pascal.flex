@@ -95,6 +95,10 @@ NUM_BIN         = {N}[bB]
 "inherited"         { return INHERITED; }
 "object"            { return OBJECT; }
 
+    "package"           { return PACKAGE; }
+    "contains"          { return CONTAINS; }
+    "requires"          { return REQUIRES; }
+
     "out"               { return OUT; }
     "exit"              { return EXIT; }
     "break"             { return BREAK; }
