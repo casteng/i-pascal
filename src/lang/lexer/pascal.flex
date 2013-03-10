@@ -83,7 +83,6 @@ NUM_BIN         = {N}[bB]
 "array"             { return ARRAY; }
 "set"               { return SET; }
 "file"              { return FILE; }
-"string"            { return STRING; }
 
 "asm"               { return ASM; }
 "goto"              { return GOTO; }
@@ -159,8 +158,6 @@ NUM_BIN         = {N}[bB]
 
 "false"             { return FALSE; }
 "true"              { return TRUE; }
-"string"            { return STRING; }
-"pointer"           { return POINTER; }
 
 "program"           { return PROGRAM; }
 "unit"              { return UNIT; }
