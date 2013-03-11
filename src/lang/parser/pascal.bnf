@@ -362,7 +362,7 @@ ClassPropertyDispInterface ::= "readonly" ";" | "writeonly" ";" | DispIDDirectiv
 
 ArrayType           ::= ARRAY [ArrayIndexes] OF ArraySubType {pin=1}
 ArrayIndexes ::= "[" [ArrayIndex] ArrayIndexRest* "]" {pin=1}
-ArrayIndex          ::= TypeID | ConstExpressionOrd RANGE ConstExpressionOrd
+ArrayIndex          ::= ConstExpressionOrd RANGE ConstExpressionOrd | TypeID
 ArrayIndexRest      ::= "," [ArrayIndex] {pin=1}
 ArraySubType        ::= CONST | TypeDecl
 
@@ -418,7 +418,7 @@ private after_expr          ::= TO | DO | THEN | OF | DOWNTO | EXCEPT | INDEX | 
                               | REINTRODUCE | BindingDirective | AbstractDirective | ClassPropertySpecifier
 
 Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
-                                [INHERITED] (TypeID DesignatorItemEx* | DesignatorItem+)
+                                INHERITED [TypeID] DesignatorItemEx* | [INHERITED] TypeID DesignatorItemEx* | DesignatorItemEx+
 
 DesignatorItem      ::= "^" | "." Ident | "[" ExpressionsList "]"
 DesignatorItemEx    ::= DesignatorItem | DesignatorItem2
@@ -429,10 +429,8 @@ ColonConstruct      ::= ":" Expression [ ":" Expression ]
 
 RepeatStatement     ::= REPEAT [StatementList] UNTIL Expression {pin=1}
 WhileStatement      ::= WHILE Expression DO Statement {pin=1}
-ForStatement        ::= ForTo | ForDownto | ForEach
-private ForTo               ::= FOR Designator ":=" Expression TO Expression DO Statement {pin=1}
-private ForDownto           ::= FOR Designator ":=" Expression DOWNTO Expression DO Statement {pin=1}
-private ForEach             ::= FOR Designator IN Expression DO Statement {pin=1}
+ForStatement        ::= FOR Designator (ForCycle | IN) Expression DO Statement {pin=1}
+ForCycle    ::= ":=" Expression (TO | DOWNTO)
 
 IfStatement                 ::= IF Expression THEN Statement [ELSE Statement] {pin=1}
 
