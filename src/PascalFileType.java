@@ -37,7 +37,7 @@ public class PascalFileType extends LanguageFileType {
 
     @Override
     public Icon getIcon() {
-        return AllIcons.FileTypes.Text;
+        return PascalIcons.UNIT;
     }
 
 }

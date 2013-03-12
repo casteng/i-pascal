@@ -5,7 +5,7 @@
 //import com.intellij.openapi.options.colors.AttributesDescriptor;
 //import com.intellij.openapi.options.colors.ColorDescriptor;
 //import com.intellij.openapi.options.colors.ColorSettingsPage;
-//import com.siberika.idea.pascal.LuaIcons;
+//import com.siberika.idea.pascal.PascalIcons;
 //import org.jetbrains.annotations.NonNls;
 //import org.jetbrains.annotations.NotNull;
 //import org.jetbrains.annotations.Nullable;
@@ -15,9 +15,9 @@
 //import java.util.Map;
 //
 ///**
-// * Author: George Bakhtadze
-// * Date: 12/5/12
-// */
+//* Author: George Bakhtadze
+//* Date: 12/5/12
+//*/
 //public class PascalColorsPage implements ColorSettingsPage {
 //    final String DEMO_TEXT = "<global>a</global> = { <global>foo</global>.<field>bar</field>,  <global>foo</global>.<field>bar</field>(), <global>fx</global>(), <field>f</field> = <global>a</global>, 1,  <global>FOO</global> } -- url http://www.url.com \n" +
 //            "local <local>x</local>,<local>y</local> = 20,nil\n" +
@@ -102,7 +102,7 @@
 //
 //    @Nullable
 //    public Icon getIcon() {
-//        return LuaIcons.LUA_ICON;
+//        return PascalIcons.GENERAL;
 //    }
 //
 //    @NotNull
