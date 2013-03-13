@@ -140,8 +140,8 @@
 
   ]
 
-  implements("ModuleProgram")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  extends("ModuleProgram")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
+  implements("ModuleProgram|.*Ident")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  extends("ModuleProgram|.*Ident")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
 
 }
 
@@ -274,7 +274,7 @@ private ConstDeclaration    ::= [CustomAttribute] Ident [":" TypeDecl] "=" Const
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
 TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3 recoverUntil=recover_type}
-GenericTypeIdent    ::= Ident [GenericDefinition]
+GenericTypeIdent    ::= Ident [GenericDefinition] {extends=Ident}
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
 SimpleGenericDefinition ::= "<" Ident IdentsRest* ">" {pin=1}
 IdentsRest          ::= "," Ident {pin=1}
@@ -538,6 +538,6 @@ CustomAttribute	            ::=	LBRACK CustomAttributeDecl RBRACK | AssemblyAttr
 CustomAttributeDecl         ::= QualifiedIdent LPAREN ExpressionsList RPAREN
 StringFactor                ::= ControlString (QuotedString ControlString)* [QuotedString]
                               | QuotedString (ControlString QuotedString)* [ControlString]
-QuotedString                ::=	STRING_LITERAL
-ControlString               ::=	controlchar+
-controlchar                 ::= CHARNUM NUMBER_INT | CHARNUM HEXNUM NUMBER_INT // ***===
+private QuotedString        ::=	STRING_LITERAL
+private ControlString       ::=	controlchar+
+private controlchar         ::= CHARNUM NUMBER_INT | CHARNUM HEXNUM NUMBER_INT // ***===

@@ -39,7 +39,11 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
     }
 
     public PsiElement getNameElement() {
-        return findChildByType(PasTypes.NAMESPACE_NAME);
+        PsiElement result = findChildByType(PasTypes.NAMESPACE_NAME);
+        if (null == result) {
+            result = findChildByType(PasTypes.NAME);
+        }
+        return result;
     }
 
     @Override

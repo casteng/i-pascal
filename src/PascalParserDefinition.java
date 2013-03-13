@@ -25,7 +25,7 @@ public class PascalParserDefinition implements ParserDefinition {
 
     public static final IFileElementType PAS_FILE_ELEMENT_TYPE = new IFileElementType("PAS_FILE", PascalLanguage.INSTANCE);
     public static final TokenSet WS = TokenSet.create(TokenType.WHITE_SPACE);
-    public static final TokenSet LITERALS = TokenSet.create(PasTypes.NAME);
+    public static final TokenSet LITERALS = TokenSet.create(PasTypes.STRING_FACTOR, PasTypes.STRING_FACTOR);
 
     @NotNull
     @Override
