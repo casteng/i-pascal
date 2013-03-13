@@ -7,7 +7,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
-import com.siberika.idea.pascal.lang.psi.PasPUnit;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
  */
 public class PascalPsiImplUtil {
     @NotNull
-    public static PsiReference[] getReferences(PasPUnit o) {
+    public static PsiReference[] getReferences(PasModule o) {
         final PascalFile file = PsiTreeUtil.getParentOfType(o, PascalFile.class);
         if (file == null) return PsiReference.EMPTY_ARRAY;
         return new PsiReference[] {

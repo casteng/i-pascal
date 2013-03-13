@@ -140,26 +140,26 @@
 
   ]
 
-  implements("pProgram")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  extends("pProgram")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
+  implements("ModuleProgram")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  extends("ModuleProgram")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
 
 }
 
 external pascal             ::= parsePascal Module
-private Module              ::= pUnit | pProgram | pLibrary | pPackage {recoverUntil=recover_main_decl}
+Module              ::= ModuleUnit | ModuleProgram | ModuleLibrary | ModulePackage {recoverUntil=recover_main_decl}
 
-pProgram                    ::= progWithHead | progWoHead
+private ModuleProgram       ::= progWithHead | progWoHead
 progWithHead        ::= ProgramHead [UsesFileClause] BlockLocal "." {pin=1 recoverUntil=recover_decl}
 progWoHead          ::= [UsesFileClause] BlockLocal "."
 
-pUnit                       ::= UnitHead UnitInterface UnitImplementation UnitBlock "." {pin=1}
+private ModuleUnit          ::= UnitHead UnitInterface UnitImplementation UnitBlock "." {pin=1}
 UnitHead            ::= UNIT NamespaceName HintingDirective* ";" {pin=1 recoverUntil=recover_main_decl}
 UsesClause          ::= USES NamespaceNameList {pin=1}
 
-pLibrary                    ::= LibraryHead [UsesFileClause] BlockGlobal "." {pin=1}
+private ModuleLibrary       ::= LibraryHead [UsesFileClause] BlockGlobal "." {pin=1}
 private LibraryHead         ::= LIBRARY NamespaceName HintingDirective* ";" {pin=1 recoverUntil=recover_main_decl}
 
-private pPackage            ::= PackageHead RequiresClause [ContainsClause] END "." {pin=1}
+private ModulePackage       ::= PackageHead RequiresClause [ContainsClause] END "." {pin=1}
 private PackageHead         ::= PACKAGE NamespaceName ";" {pin=1 recoverUntil=recover_main_decl}
 private RequiresClause      ::= REQUIRES NamespaceNameList {pin=1}
 private ContainsClause      ::= CONTAINS NamespaceFileNameList {pin=1}

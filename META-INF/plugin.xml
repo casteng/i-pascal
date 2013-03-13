@@ -33,6 +33,7 @@
   </actions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.PascalReferenceContributor"/>
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
 
         <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
@@ -51,7 +52,5 @@
         <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>
         <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />
         <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
-
-
     </extensions>
 </idea-plugin>

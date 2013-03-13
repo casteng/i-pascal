@@ -31,29 +31,29 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
     @NotNull
     @Override
     public String getName() {
-        if (myCachedName == null) {
-            PsiElement element = getId();
-            myCachedName = element != null ? element.getText() : null;
+        if ((myCachedName == null) || (myCachedName.length() == 0)) {
+            PsiElement element = getNameElement();
+            myCachedName = element != null ? element.getText() : "";
         }
         return myCachedName;
     }
 
-    public PsiElement getId() {
+    public PsiElement getNameElement() {
         return findChildByType(PasTypes.NAMESPACE_NAME);
     }
 
     @Override
     public PsiElement setName(@NonNls @NotNull String s) throws IncorrectOperationException {
-        PsiElement element = getId();
+        PsiElement element = getNameElement();
         if (element != null) {
-            getId().replace(PasElementFactory.createLeafFromText(getProject(), s));
+            element.replace(PasElementFactory.createLeafFromText(getProject(), s));
         }
         return this;
     }
 
     @Override
     public int getTextOffset() {
-        PsiElement element = getId();
+        PsiElement element = getNameElement();
         return element != null ? element.getTextOffset() : 0;
     }
 
@@ -65,7 +65,7 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
 
     @Override
     public PsiElement getNameIdentifier() {
-        return getId();
+        return getNameElement();
     }
 
     @Override
