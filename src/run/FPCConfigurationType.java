@@ -7,7 +7,7 @@ import com.intellij.execution.configurations.RunConfigurationModule;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
-import com.siberika.idea.pascal.LuaIcons;
+import com.siberika.idea.pascal.PascalIcons;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -36,7 +36,7 @@ public class FPCConfigurationType implements ConfigurationType {
     }
 
     public Icon getIcon() {
-        return LuaIcons.LUA_ICON;
+        return PascalIcons.GENERAL;
     }
 
     @NotNull

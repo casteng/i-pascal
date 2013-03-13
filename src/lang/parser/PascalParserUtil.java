@@ -8,6 +8,7 @@ import com.intellij.lang.PsiBuilder;
  */
 public class PascalParserUtil extends GeneratedParserUtilBase {
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {
+        builder_.setDebugMode(true);
         ErrorState state = ErrorState.get(builder_);
         return parseAsTree(state, builder_, level, DUMMY_BLOCK, true, parser, TRUE_CONDITION);
     }

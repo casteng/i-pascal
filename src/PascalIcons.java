@@ -26,15 +26,12 @@ import javax.swing.*;
  * Date: Apr 3, 2010
  * Time: 2:30:48 AM
  */
-public interface LuaIcons {
+public interface PascalIcons {
     final String PATH = "/icons/";
 
-    final Icon LUA_ICON            = IconLoader.findIcon(PATH + "Lua.png");
-    final Icon LUA_FUNCTION        = IconLoader.findIcon(PATH + "function.png");
-    final Icon LUA_TOOLWINDOW_ICON = IconLoader.findIcon(PATH + "logo_13x13.png");
-
-    final Icon LUA_IDEA_MODULE_ICON = IconLoader.findIcon(PATH + "logo_24x24.png");
-    final Icon TAIL_RECURSION       = IconLoader.findIcon(PATH + "repeat-icon-16x16.png");
+    final Icon GENERAL = IconLoader.findIcon(PATH + "pascal_16x16.png");
+    final Icon MODULE  = IconLoader.findIcon(PATH + "module_16x16.png");
+    final Icon UNIT    = IconLoader.findIcon(PATH + "unit_16x16.png");
+    final Icon PROGRAM = IconLoader.findIcon(PATH + "program_16x16.png");
+    final Icon INCLUDE = IconLoader.findIcon(PATH + "include_16x16.png");
 }
-
-

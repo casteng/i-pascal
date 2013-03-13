@@ -3,9 +3,6 @@ package com.siberika.idea.pascal.lang.lexer;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.TokenType;
-import java.util.*;
-import java.lang.reflect.Field;
-import org.jetbrains.annotations.NotNull;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 
 %%
@@ -14,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
  */
 
 %unicode
+%ignorecase
 %class _PascalLexer
 %implements FlexLexer, PasTypes
 
@@ -23,31 +21,27 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 %eof{ return;
 %eof}
 
-%{
-    ExtendedSyntaxStrCommentHandler longCommentOrStringHandler = new ExtendedSyntaxStrCommentHandler();
-%}
+WHITESPACE      = [\ \n\r\t\f]
+NEWLINE         = \r\n|\n|\r
 
-%init{
-%init}
+LINE_COMMENT    = "/""/"[^\r\n]*
+BLOCK_COMMENT   = "(*" !([^]* "*)" [^]*) ("*)")?
+BRACE_COMMENT   = "{" !([^]* "}" [^]*) ("}")?
+COMMENT         = {LINE_COMMENT}|{BLOCK_COMMENT}|{BRACE_COMMENT}
 
-/*-*
- * PATTERN DEFINITIONS:
- */
-line_comment    = "//" .*
-block_comment   = "(*" !([^]* "*)" [^]*) ("*)")?
-brace_comment   = "{" !([^]* "}" [^]*) ("}")?
-strElement      = "''"|.
-//char            = "'"{strElement}*?"'"
-n               = [0-9]+
-exp             = [Ee][+-]?{n}
-identifier      = [_a-zA-Z][_a-zA-Z0-9]{0,126}
-num_int         = n
-num_real        = (({n}|{n}[.]{n}){exp}?|[.]{n}|{n}[.])
-num_hex         = \$[0-9a-fA-F]+
-comment         = {line_comment}|{block_comment}|{brace_comment}
-whitespace      = [ \t\n]
+IDENTIFIER=[:jletter:] [:jletterdigit:]{0,126}
+//identifier      = [_a-zA-Z][_a-zA-Z0-9]{0,126}
 
-newline         =   \r\n|\n|\r
+STRING_ELEMENT  = "''"|[^'\n\r]
+STRING_LITERAL  = "'"{STRING_ELEMENT}*"'"
+
+N               = [0-9]+
+NUM_INT         = {N}
+EXP             = [Ee]["+""-"]?{N}
+NUM_REAL        = (({N}?[.]{N}){EXP}?|{N}[.][^.])
+NUM_HEX         = \$[0-9a-fA-F]+
+NUM_BIN         = {N}[bB]
+
 
 %x XSTRING
 
@@ -67,6 +61,7 @@ newline         =   \r\n|\n|\r
 
 "class"             { return CLASS; }
 "dispinterface"     { return DISPINTERFACE; }
+"inline"            { return INLINE; }
 
 "try"               { return TRY; }
 "raise"             { return RAISE; }
@@ -82,32 +77,76 @@ newline         =   \r\n|\n|\r
 
 "threadvar"         { return THREADVAR; }
 "absolute"          { return ABSOLUTE; }
-"out"               { return OUT; }
 "resourcestring"    { return RESOURCESTRING; }
-"inline"            { return INLINE; }
 "packed"            { return PACKED; }
 "property"          { return PROPERTY; }
 "array"             { return ARRAY; }
 "set"               { return SET; }
 "file"              { return FILE; }
-"string"            { return STRING; }
 
 "asm"               { return ASM; }
 "goto"              { return GOTO; }
 "label"             { return LABEL; }
 "with"              { return WITH; }
-"exit"              { return EXIT; }
-"break"             { return BREAK; }
-"continue"          { return CONTINUE; }
 
 "constructor"       { return CONSTRUCTOR; }
 "destructor"        { return DESTRUCTOR; }
 "inherited"         { return INHERITED; }
 "object"            { return OBJECT; }
-"operator"          { return OPERATOR; }
-"reintroduce"       { return REINTRODUCE; }
-"self"              { return SELF; }
-"new"               { return NEW; }
+
+    "package"           { return PACKAGE; }
+    "contains"          { return CONTAINS; }
+    "requires"          { return REQUIRES; }
+
+    "out"               { return OUT; }
+    "exit"              { return EXIT; }
+    "break"             { return BREAK; }
+    "continue"          { return CONTINUE; }
+
+    "operator"          { return OPERATOR; }
+    "self"              { return SELF; }
+    "new"               { return NEW; }
+
+    "reintroduce"       { return REINTRODUCE; }
+    "overload"          { return OVERLOAD; }
+    "message"           { return MESSAGE; }
+    "static"            { return STATIC; }
+    "dynamic"           { return DYNAMIC; }
+    "override"          { return OVERRIDE; }
+    "virtual"           { return VIRTUAL; }
+    "abstract"          { return ABSTRACT; }
+    "sealed"            { return SEALED; }
+    "final"             { return FINAL; }
+    "assembler"         { return ASSEMBLER; }
+
+    "cdecl"             { return CDECL; }
+    "pascal"            { return PASCAL; }
+    "register"          { return REGISTER; }
+    "safecall"          { return SAFECALL; }
+    "stdcall"           { return STDCALL; }
+    "export"            { return EXPORT; }
+
+    "STRICT"            { return STRICT; }
+    "PRIVATE"           { return PRIVATE; }
+    "PROTECTED"         { return PROTECTED; }
+    "PUBLIC"            { return PUBLIC; }
+    "PUBLISHED"         { return PUBLISHED; }
+    "AUTOMATED"         { return AUTOMATED; }
+
+    "dispid"            { return DISPID; }
+    "external"          { return EXTERNAL; }
+    "forward"           { return FORWARD; }
+    "helper"            { return HELPER; }
+    "default"           { return DEFAULT; }
+    "implements"        { return IMPLEMENTS; }
+    "index"             { return INDEX; }
+    "read"              { return READ; }
+    "write"             { return WRITE; }
+
+    "deprecated"        { return DEPRECATED; }
+    "experimental"      { return EXPERIMENTAL; }
+    "platform"          { return PLATFORM; }
+    "reference"         { return REFERENCE; }
 
 "not"               { return NOT; }
 "xor"               { return XOR; }
@@ -145,6 +184,7 @@ newline         =   \r\n|\n|\r
 "then"              { return THEN; }
 "else"              { return ELSE; }
 
+".."            { return RANGE; }
 "*"             { return MULT; }
 "+"             { return PLUS; }
 "-"             { return MINUS; }
@@ -172,20 +212,25 @@ newline         =   \r\n|\n|\r
 "#"             { return CHARNUM; }
 "&"             { return KEYWORDESCAPE; }
 
-"'"           { yybegin(XSTRING); return STRING; }
-<XSTRING>
-{
-  "''"        { return STRING; }
-  "'"         { yybegin(YYINITIAL); return STRING; }
-  {newline}   { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER;  }
-  .           { return STRING; }
-}
+//"'"           { yybegin(XSTRING); return STRING; }
+//<XSTRING>
+//{
+//  "''"        { return STRING_; } //===*** remove
+//  "'"         { yybegin(YYINITIAL); return STRING_LITERAL; }
+//  {NEWLINE}   { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER;  }
+//  .           { return STRING_; }
+//}
 
-//{char}          { return STRING; }
-{num_int}       { return NUMBER_INT; }
-{num_real}      { return NUMBER_REAL; }
-{num_hex}       { return NUMBER_HEX; }
-{comment}       { return COMMENT; }
-{identifier}    { return NAME; }
-{whitespace}    {yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
+{STRING_LITERAL} { return STRING_LITERAL;}
+
+{NUM_INT}       { return NUMBER_INT; }
+{NUM_REAL}      { return NUMBER_REAL; }
+{NUM_HEX}       { return NUMBER_HEX; }
+{NUM_BIN}       { return NUMBER_BIN; }
+
+{COMMENT}       { return COMMENT; }
+
+{IDENTIFIER}    { return NAME; }
+
+{WHITESPACE}    {yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
 .               {yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
