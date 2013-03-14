@@ -140,8 +140,8 @@
 
   ]
 
-  implements("ModuleProgram|.*Ident")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  extends("ModuleProgram|.*Ident")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
+  implements("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  extends("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
 
 }
 
@@ -274,7 +274,7 @@ private ConstDeclaration    ::= [CustomAttribute] Ident [":" TypeDecl] "=" Const
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
 TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3 recoverUntil=recover_type}
-GenericTypeIdent    ::= Ident [GenericDefinition] {extends=Ident}
+GenericTypeIdent    ::= Ident [GenericDefinition]
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
 SimpleGenericDefinition ::= "<" Ident IdentsRest* ">" {pin=1}
 IdentsRest          ::= "," Ident {pin=1}
@@ -471,7 +471,7 @@ private Ident_kw            ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF 
                               | EXPORT | STRICT | PRIVATE | PROTECTED | PUBLIC | PUBLISHED | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER
                               | DEFAULT | IMPLEMENTS | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
                               | PACKAGE | CONTAINS | REQUIRES
-Ident	            ::= KEYWORDESCAPE ReservedWord | Ident_kw | NAME
+private Ident	            ::= KEYWORDESCAPE ReservedWord | Ident_kw | NAME
 ReservedWord	            ::=	NAME //===***
 IdentList	        ::=	IdentListItem IdentListRest*
 IdentListRest       ::= "," IdentListItem {pin=1}

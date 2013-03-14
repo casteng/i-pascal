@@ -52,6 +52,8 @@
         <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />
         <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
 
-        <psi.referenceContributor implementation="com.siberika.idea.pascal.lang.PascalReferenceContributor"/>
+        <psi.referenceContributor implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
+        <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
+        <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
     </extensions>
 </idea-plugin>

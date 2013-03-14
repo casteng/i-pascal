@@ -30,6 +30,10 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
 
     public static final TokenSet COMMENTS = TokenSet.create(COMMENT);
 
+    public static _PascalLexer getFlexLexer() {
+        return new _PascalLexer((Reader) null);
+    }
+
     public PascalLexer() {
         super(new FlexAdapter(new _PascalLexer((Reader) null)), TokenSet.create());
     }

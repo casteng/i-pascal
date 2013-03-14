@@ -1,4 +1,4 @@
-package com.siberika.idea.pascal.lang;
+package com.siberika.idea.pascal.lang.references;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.patterns.PlatformPatterns;
@@ -9,6 +9,7 @@ import com.intellij.psi.PsiReferenceContributor;
 import com.intellij.psi.PsiReferenceProvider;
 import com.intellij.psi.PsiReferenceRegistrar;
 import com.intellij.util.ProcessingContext;
+import com.siberika.idea.pascal.lang.PascalReference;
 import org.jetbrains.annotations.NotNull;
 
 /**

@@ -4,7 +4,11 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.ResolveResult;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -30,7 +34,7 @@ public class PascalReference extends PsiReferenceBase<PsiElement> implements Psi
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         Project project = myElement.getProject();
-        final List<PascalNamedElement> properties = PascalParserUtil.findProperties(project, key);
+        final List<PascalNamedElement> properties = PascalParserUtil.findTypes(project, key);
         List<ResolveResult> results = new ArrayList<ResolveResult>();
         for (PascalNamedElement property : properties) {
             results.add(new PsiElementResolveResult(property));
@@ -49,7 +53,7 @@ public class PascalReference extends PsiReferenceBase<PsiElement> implements Psi
     @Override
     public Object[] getVariants() {
         Project project = myElement.getProject();
-        List<PascalNamedElement> properties = PascalParserUtil.findProperties(project);
+        List<PascalNamedElement> properties = PascalParserUtil.findTypes(project);
         List<LookupElement> variants = new ArrayList<LookupElement>();
         for (final PascalNamedElement property : properties) {
             if (property.getName().length() > 0) {
