@@ -4,6 +4,8 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.util.IncorrectOperationException;
@@ -85,4 +87,9 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
         return PascalParserUtil.getPresentation(this);
     }
 
+    @Override
+    @NotNull
+    public PsiReference[] getReferences() {
+        return ReferenceProvidersRegistry.getReferencesFromProviders(this);
+    }
 }

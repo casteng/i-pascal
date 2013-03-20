@@ -3,6 +3,8 @@ package com.siberika.idea.pascal.lang.parser.impl;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.FileViewProvider;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
@@ -13,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
  * Author: George Bakhtadze
  * Date: 12/9/12
  */
-public class PascalFileImpl extends PsiFileBase implements PascalFile {
+public class PascalFileImpl extends PsiFileBase implements PascalFile, PsiNameIdentifierOwner {
     public PascalFileImpl(@NotNull FileViewProvider viewProvider) {
         super(viewProvider, PascalLanguage.INSTANCE);
     }
@@ -28,5 +30,11 @@ public class PascalFileImpl extends PsiFileBase implements PascalFile {
     @Override
     public FileType getFileType() {
         return PascalFileType.INSTANCE;
+    }
+
+    @Nullable
+    @Override
+    public PsiElement getNameIdentifier() {
+        return null;
     }
 }
