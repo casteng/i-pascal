@@ -212,15 +212,6 @@ NUM_BIN         = {N}[bB]
 "#"             { return CHARNUM; }
 "&"             { return KEYWORDESCAPE; }
 
-//"'"           { yybegin(XSTRING); return STRING; }
-//<XSTRING>
-//{
-//  "''"        { return STRING_; } //===*** remove
-//  "'"         { yybegin(YYINITIAL); return STRING_LITERAL; }
-//  {NEWLINE}   { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER;  }
-//  .           { return STRING_; }
-//}
-
 {STRING_LITERAL} { return STRING_LITERAL;}
 
 {NUM_INT}       { return NUMBER_INT; }

@@ -306,7 +306,7 @@ ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeDecl | In
 
 private ClassTypeTypeDecl   ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
 
-ClassTypeDecl               ::= CLASS (ClassBody | '===***' [ClassParent]) {pin=1 name="class declaration"}
+ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent]) {pin=1 name="class declaration"}
 ClassBody           ::= [ClassState] [ClassParent] ClassItem* END
 ClassState          ::= SEALED | ABSTRACT
 ClassItem           ::= Visibility | ClassMethod | ClassMethodResolution | ClassField | ClassProperty

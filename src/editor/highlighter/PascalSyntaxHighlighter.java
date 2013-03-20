@@ -23,9 +23,12 @@ public class PascalSyntaxHighlighter extends SyntaxHighlighterBase {
     private final Map<IElementType, TextAttributesKey> colors = new HashMap<IElementType, TextAttributesKey>();
 
     public PascalSyntaxHighlighter() {
-        colors.put(PascalLexer.STRING, LuaHighlightingData.STRING);
+        colors.put(PascalLexer.STRING_LITERAL, LuaHighlightingData.STRING);
         colors.put(PascalLexer.COMMENT, LuaHighlightingData.COMMENT);
-        colors.put(PascalLexer.NUMBER, LuaHighlightingData.NUMBER);
+        colors.put(PascalLexer.NUMBER_INT, LuaHighlightingData.NUMBER);
+        colors.put(PascalLexer.NUMBER_REAL, LuaHighlightingData.NUMBER);
+        colors.put(PascalLexer.NUMBER_HEX, LuaHighlightingData.NUMBER);
+        colors.put(PascalLexer.NUMBER_BIN, LuaHighlightingData.NUMBER);
 
         colors.put(TokenType.BAD_CHARACTER, HighlighterColors.BAD_CHARACTER);
 

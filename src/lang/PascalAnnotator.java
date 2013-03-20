@@ -29,15 +29,17 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PascalAnnotator implements Annotator {
 
+    private final static String PASCAL_CASE_SPLIT_PATTERN = "(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])";
+
     public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
-        ASTNode node = element.getNode();
+        /*ASTNode node = element.getNode();
         StringBuilder sb = new StringBuilder();
         sb.append("psi: ").append(element.toString()).append(", valid: ").append(element.isValid()).append(", class: ").append(element.getClass().getCanonicalName());
         sb.append(", ast: ").append(node.toString()).append(", class: ").append(node.getClass().getCanonicalName());
-        System.out.println("===*** " + sb.toString());
+        System.out.println("---*** " + sb.toString());
         if (!(element instanceof PascalPsiElement)) return;
 
-        holder.createErrorAnnotation(element, sb.toString());
+        holder.createErrorAnnotation(element, sb.toString());*/
 
         //final PascalPsiElement property = (PascalPsiElement) element;
 

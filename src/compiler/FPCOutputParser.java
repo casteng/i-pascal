@@ -41,7 +41,7 @@ class FPCOutputParser extends OutputParser {
             return false;
         }
 
-        //System.out.println("===*** output line: " + line);
+        //System.out.println("---*** output line: " + line);
 
         Matcher matcher = PATTERN_ERROR.matcher(line);
         if (matcher.find()) {
@@ -70,7 +70,7 @@ class FPCOutputParser extends OutputParser {
         String url = "";
         if (null != matcher) {
             int groupCount = matcher.groupCount();
-            //System.out.println("===*** groups: 3: " + matcher.group(3) + ", 4: " + matcher.group(4));
+            //System.out.println("---*** groups: 3: " + matcher.group(3) + ", 4: " + matcher.group(4));
             if (groupCount >= 4) {
                 url = matcher.group(2);
                 if (url != null) {
