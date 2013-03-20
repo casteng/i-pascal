@@ -1,25 +1,25 @@
 <idea-plugin version="2">
-  <id>com.siberika.idea.pascal</id>
-  <name>Pascal IDEA Plugin</name>
-  <version>0.1</version>
-  <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
+    <id>com.siberika.idea.pascal</id>
+    <name>Pascal IDEA Plugin</name>
+    <version>0.1</version>
+    <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
-  <description><![CDATA[
+    <description><![CDATA[
       Pascal support for IDEA.<br>
       ]]></description>
 
-  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="107.105"/>
+    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+    <idea-version since-build="107.105"/>
 
-  <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
-       on how to target different products -->
-  <!-- uncomment to enable plugin in all products
-  <depends>com.intellij.modules.lang</depends>
-  -->
+    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+         on how to target different products -->
+    <!-- uncomment to enable plugin in all products
+    <depends>com.intellij.modules.lang</depends>
+    -->
 
-  <application-components>
-    <!-- Add your application components here -->
-  </application-components>
+    <application-components>
+        <!-- Add your application components here -->
+    </application-components>
 
     <project-components>
         <component>
@@ -28,9 +28,9 @@
         </component>
     </project-components>
 
-  <actions>
-    <!-- Add your actions here -->
-  </actions>
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
 
     <extensions defaultExtensionNs="com.intellij">
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
