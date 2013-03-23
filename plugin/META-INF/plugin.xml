@@ -42,6 +42,8 @@
         <lang.syntaxHighlighterFactory key="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
         <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
 
+        <lang.foldingBuilder language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalFoldingBuilder"/>
+
         <!--<annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>-->
         <!--<lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>-->
 
