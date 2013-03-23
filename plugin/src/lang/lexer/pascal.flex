@@ -163,6 +163,7 @@ NUM_BIN         = {N}[bB]
 "until"             { return UNTIL; }
 "while"             { return WHILE; }
 "do"                { return DO; }
+"with"              { return WITH; }
 
 "begin"             { return BEGIN; }
 "end"               { return END; }
