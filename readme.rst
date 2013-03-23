@@ -3,16 +3,16 @@ Intellij IDEA Pascal plugin
 
 Features
 --------
- - aaa
- - sss
- - ddd
+ - customizable shortcuts
+ - navigations (symbol, file)
+ - includes
 
 Installation
 -------------
 
 1. Select File->Settings->Plugins
 2. Click install plugin from disk
-3. Choose IdeaPas.zip
+3. Choose `IdeaPas.zip`
 
 Creating new project
 ---------------------
