@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.editor.highlighter;
 
 import com.intellij.lexer.Lexer;
+import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.HighlighterColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
@@ -12,32 +13,37 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
+
 /**
  * Author: George Bakhtadze
  * Date: 12/9/12
  */
 public class PascalSyntaxHighlighter extends SyntaxHighlighterBase {
 
-    private final TextAttributesKey[] BAD_CHARACTER_KEYS = new TextAttributesKey[]{HighlighterColors.BAD_CHARACTER};
+    public static final TextAttributesKey KEYWORDS = createTextAttributesKey("Pascal keyword", DefaultLanguageHighlighterColors.KEYWORD);
+    public static final TextAttributesKey NUMBERS = createTextAttributesKey("Pascal number", DefaultLanguageHighlighterColors.NUMBER);
+    public static final TextAttributesKey STRING = createTextAttributesKey("Pascal string", DefaultLanguageHighlighterColors.STRING);
+    public static final TextAttributesKey COMMENT = createTextAttributesKey("Pascal comment", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
+    public static final TextAttributesKey OPERATORS = createTextAttributesKey("Pascal operation", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+    public static final TextAttributesKey SEMICOLON = createTextAttributesKey("Pascal semicolon", DefaultLanguageHighlighterColors.SEMICOLON);
+    public static final TextAttributesKey PARENTHESES = createTextAttributesKey("Pascal parentheses", DefaultLanguageHighlighterColors.PARENTHESES);
+    public static final TextAttributesKey SYMBOLS = createTextAttributesKey("Pascal symbol", DefaultLanguageHighlighterColors.COMMA);
 
     private final Map<IElementType, TextAttributesKey> colors = new HashMap<IElementType, TextAttributesKey>();
 
     public PascalSyntaxHighlighter() {
-        colors.put(PascalLexer.STRING_LITERAL, LuaHighlightingData.STRING);
-        colors.put(PascalLexer.COMMENT, LuaHighlightingData.COMMENT);
-        colors.put(PascalLexer.NUMBER_INT, LuaHighlightingData.NUMBER);
-        colors.put(PascalLexer.NUMBER_REAL, LuaHighlightingData.NUMBER);
-        colors.put(PascalLexer.NUMBER_HEX, LuaHighlightingData.NUMBER);
-        colors.put(PascalLexer.NUMBER_BIN, LuaHighlightingData.NUMBER);
+        colors.put(PascalLexer.STRING_LITERAL, STRING);
+        colors.put(PascalLexer.COMMENT, COMMENT);
+        colors.put(PascalLexer.SEMI, SEMICOLON);
 
         colors.put(TokenType.BAD_CHARACTER, HighlighterColors.BAD_CHARACTER);
 
-        //colors.put(PascalLexer.BLOCK, LuaHighlightingData.KEYWORD);
-
-        fillMap(colors, PascalLexer.KEYWORDS, LuaHighlightingData.KEYWORD);
-        fillMap(colors, PascalLexer.OPERATORS, LuaHighlightingData.OPERATORS);
-        fillMap(colors, PascalLexer.PARENS, LuaHighlightingData.BRACES);
-        fillMap(colors, PascalLexer.SYMBOLS, LuaHighlightingData.COMMA);
+        safeMap(colors, PascalLexer.NUMBERS, NUMBERS);
+        safeMap(colors, PascalLexer.KEYWORDS, KEYWORDS);
+        safeMap(colors, PascalLexer.OPERATORS, OPERATORS);
+        safeMap(colors, PascalLexer.PARENS, PARENTHESES);
+        safeMap(colors, PascalLexer.SYMBOLS, SYMBOLS);
     }
 
     @NotNull

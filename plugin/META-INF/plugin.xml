@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.1</version>
+    <version>0.2</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
     <description><![CDATA[
@@ -40,10 +40,11 @@
         <moduleConfigurationEditorProvider implementation="com.siberika.idea.pascal.module.PascalModuleConfigEditorProvider" />
         <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.PascalParserDefinition"/>
         <lang.syntaxHighlighterFactory key="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
+        <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
+
         <!--<annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>-->
         <!--<lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>-->
 
-        <!--<colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage"/>-->
 
         <!--<projectService serviceInterface="com.siberika.idea.pascal.lang.psi.LuaPsiElementFactory"-->
 

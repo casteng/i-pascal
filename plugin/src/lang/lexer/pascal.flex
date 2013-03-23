@@ -48,20 +48,34 @@ NUM_BIN         = {N}[bB]
 %%
 
 "and"               { return AND; }
-"mod"               { return MOD; }
 "or"                { return OR; }
+"not"               { return NOT; }
+"xor"               { return XOR; }
 "div"               { return IDIV; }
+"mod"               { return MOD; }
 "shr"               { return SHR; }
 "shl"               { return SHL; }
 "in"                { return IN; }
 
 "as"                { return AS; }
 "is"                { return IS; }
-"nil"               { return NIL; }
 
 "class"             { return CLASS; }
 "dispinterface"     { return DISPINTERFACE; }
-"inline"            { return INLINE; }
+
+"program"           { return PROGRAM; }
+"unit"              { return UNIT; }
+"library"           { return LIBRARY; }
+"package"           { return PACKAGE; }
+
+"uses"              { return USES; }
+"interface"         { return INTERFACE; }
+"implementation"    { return IMPLEMENTATION; }
+"exports"           { return EXPORTS; }
+"initialization"    { return INITIALIZATION; }
+"finalization"      { return FINALIZATION; }
+"contains"          { return CONTAINS; }
+"requires"          { return REQUIRES; }
 
 "try"               { return TRY; }
 "raise"             { return RAISE; }
@@ -69,148 +83,136 @@ NUM_BIN         = {N}[bB]
 "on"                { return ON; }
 "finally"           { return FINALLY; }
 
-"library"           { return LIBRARY; }
-"uses"              { return USES; }
-"exports"           { return EXPORTS; }
-"finalization"      { return FINALIZATION; }
-"initialization"    { return INITIALIZATION; }
-
-"threadvar"         { return THREADVAR; }
-"absolute"          { return ABSOLUTE; }
-"resourcestring"    { return RESOURCESTRING; }
-"packed"            { return PACKED; }
-"property"          { return PROPERTY; }
-"array"             { return ARRAY; }
-"set"               { return SET; }
-"file"              { return FILE; }
-
-"asm"               { return ASM; }
-"goto"              { return GOTO; }
-"label"             { return LABEL; }
-"with"              { return WITH; }
-
-"constructor"       { return CONSTRUCTOR; }
-"destructor"        { return DESTRUCTOR; }
-"inherited"         { return INHERITED; }
-"object"            { return OBJECT; }
-
-    "package"           { return PACKAGE; }
-    "contains"          { return CONTAINS; }
-    "requires"          { return REQUIRES; }
-
-    "out"               { return OUT; }
-    "exit"              { return EXIT; }
-    "break"             { return BREAK; }
-    "continue"          { return CONTINUE; }
-
-    "operator"          { return OPERATOR; }
-    "self"              { return SELF; }
-    "new"               { return NEW; }
-
-    "reintroduce"       { return REINTRODUCE; }
-    "overload"          { return OVERLOAD; }
-    "message"           { return MESSAGE; }
-    "static"            { return STATIC; }
-    "dynamic"           { return DYNAMIC; }
-    "override"          { return OVERRIDE; }
-    "virtual"           { return VIRTUAL; }
-    "abstract"          { return ABSTRACT; }
-    "sealed"            { return SEALED; }
-    "final"             { return FINAL; }
-    "assembler"         { return ASSEMBLER; }
-
-    "cdecl"             { return CDECL; }
-    "pascal"            { return PASCAL; }
-    "register"          { return REGISTER; }
-    "safecall"          { return SAFECALL; }
-    "stdcall"           { return STDCALL; }
-    "export"            { return EXPORT; }
-
-    "STRICT"            { return STRICT; }
-    "PRIVATE"           { return PRIVATE; }
-    "PROTECTED"         { return PROTECTED; }
-    "PUBLIC"            { return PUBLIC; }
-    "PUBLISHED"         { return PUBLISHED; }
-    "AUTOMATED"         { return AUTOMATED; }
-
-    "dispid"            { return DISPID; }
-    "external"          { return EXTERNAL; }
-    "forward"           { return FORWARD; }
-    "helper"            { return HELPER; }
-    "default"           { return DEFAULT; }
-    "implements"        { return IMPLEMENTS; }
-    "index"             { return INDEX; }
-    "read"              { return READ; }
-    "write"             { return WRITE; }
-
-    "deprecated"        { return DEPRECATED; }
-    "experimental"      { return EXPERIMENTAL; }
-    "platform"          { return PLATFORM; }
-    "reference"         { return REFERENCE; }
-
-"not"               { return NOT; }
-"xor"               { return XOR; }
-
-"to"                { return TO; }
-"downto"            { return DOWNTO; }
-"repeat"            { return REPEAT; }
-
-
-"false"             { return FALSE; }
-"true"              { return TRUE; }
-
-"program"           { return PROGRAM; }
-"unit"              { return UNIT; }
-"interface"         { return INTERFACE; }
-"implementation"    { return IMPLEMENTATION; }
-
 "var"               { return VAR; }
 "const"             { return CONST; }
 "type"              { return TYPE; }
-"array"             { return ARRAY; }
-"record"            { return RECORD; }
+"threadvar"         { return THREADVAR; }
+"resourcestring"    { return RESOURCESTRING; }
+
 "procedure"         { return PROCEDURE; }
 "function"          { return FUNCTION; }
-"of"                { return OF; }
+"array"             { return ARRAY; }
+"record"            { return RECORD; }
+"set"               { return SET; }
+"file"              { return FILE; }
+"object"            { return OBJECT; }
 
-"case"              { return CASE; }
-"begin"             { return BEGIN; }
-"end"               { return END; }
+"of"                { return OF; }
+"absolute"          { return ABSOLUTE; }
+"packed"            { return PACKED; }
+"operator"          { return OPERATOR; }
+
+"constructor"       { return CONSTRUCTOR; }
+"destructor"        { return DESTRUCTOR; }
+"property"          { return PROPERTY; }
+
+"label"             { return LABEL; }
+"goto"              { return GOTO; }
+"exit"              { return EXIT; }
+"break"             { return BREAK; }
+"continue"          { return CONTINUE; }
+
+"strict"            { return STRICT; }
+"private"           { return PRIVATE; }
+"protected"         { return PROTECTED; }
+"public"            { return PUBLIC; }
+"published"         { return PUBLISHED; }
+"automated"         { return AUTOMATED; }
+
+"virtual"           { return VIRTUAL; }
+"dynamic"           { return DYNAMIC; }
+"abstract"          { return ABSTRACT; }
+"overload"          { return OVERLOAD; }
+"override"          { return OVERRIDE; }
+"reintroduce"       { return REINTRODUCE; }
+
+"message"           { return MESSAGE; }
+"static"            { return STATIC; }
+"sealed"            { return SEALED; }
+"final"             { return FINAL; }
+"assembler"         { return ASSEMBLER; }
+
+"cdecl"             { return CDECL; }
+"pascal"            { return PASCAL; }
+"register"          { return REGISTER; }
+"safecall"          { return SAFECALL; }
+"stdcall"           { return STDCALL; }
+"export"            { return EXPORT; }
+"inline"            { return INLINE; }
+
+"dispid"            { return DISPID; }
+"external"          { return EXTERNAL; }
+"forward"           { return FORWARD; }
+"helper"            { return HELPER; }
+"implements"        { return IMPLEMENTS; }
+
+"default"           { return DEFAULT; }
+"index"             { return INDEX; }
+"read"              { return READ; }
+"write"             { return WRITE; }
+
+"deprecated"        { return DEPRECATED; }
+"experimental"      { return EXPERIMENTAL; }
+"platform"          { return PLATFORM; }
+"reference"         { return REFERENCE; }
+
 "for"               { return FOR; }
+"to"                { return TO; }
+"downto"            { return DOWNTO; }
+"repeat"            { return REPEAT; }
 "until"             { return UNTIL; }
 "while"             { return WHILE; }
 "do"                { return DO; }
+
+"begin"             { return BEGIN; }
+"end"               { return END; }
 "if"                { return IF; }
 "then"              { return THEN; }
 "else"              { return ELSE; }
+"case"              { return CASE; }
 
+"nil"               { return NIL; }
+"false"             { return FALSE; }
+"true"              { return TRUE; }
+
+"asm"               { return ASM; }
+"inherited"         { return INHERITED; }
+"out"               { return OUT; }
+"self"              { return SELF; }
+"new"               { return NEW; }
+
+":="            { return ASSIGN; }
 ".."            { return RANGE; }
+
 "*"             { return MULT; }
+"/"             { return DIV; }
 "+"             { return PLUS; }
 "-"             { return MINUS; }
-"/"             { return DIV; }
-";"             { return SEMI; }
-","             { return COMMA; }
-"("             { return LPAREN; }
-")"             { return RPAREN; }
-"["             { return LBRACK; }
-"]"             { return RBRACK; }
-"(."            { return LBRACK; }
-".)"            { return RBRACK; }
+
 "="             { return EQ; }
-"<"             { return LT; }
 ">"             { return GT; }
+"<"             { return LT; }
 ">="            { return GE; }
 "<="            { return LE; }
 "<>"            { return NE; }
+
 ":"             { return COLON; }
-":="            { return ASSIGN; }
+","             { return COMMA; }
 "."             { return DOT; }
 "^"             { return DEREF; }
 "@"             { return AT; }
 "$"             { return HEXNUM; }
 "#"             { return CHARNUM; }
 "&"             { return KEYWORDESCAPE; }
+
+";"             { return SEMI; }
+
+"("             { return LPAREN; }
+")"             { return RPAREN; }
+"["             { return LBRACK; }
+"]"             { return RBRACK; }
+"(."            { return LBRACK; }
+".)"            { return RBRACK; }
 
 {STRING_LITERAL} { return STRING_LITERAL;}
 
