@@ -302,9 +302,9 @@ TypeDecl	                ::=	StrucType | PointerType | ProcedureType | StringTyp
 private StrucType           ::= [PACKED] StrucTypePart
 private StrucTypePart       ::= ClassDecl | ArrayType | SetType | FileType
 
-ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
+private ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
-private ClassTypeTypeDecl   ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
+ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
 
 ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent]) {pin=1 name="class declaration"}
 ClassBody           ::= [ClassState] [ClassParent] ClassItem* END
@@ -322,7 +322,7 @@ ClassParent         ::= "(" TypeID ("," TypeID)* ")" {pin=1}
 ClassField          ::= [CustomAttribute] IdentList ":" TypeDecl HintingDirective* ';' {pin=3}
 
 
-ClassHelperDecl     ::= CLASS HELPER [ClassParent] FOR TypeID ClassHelperItem* END {pin=2}
+ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID ClassHelperItem* END {pin=2}
 ClassHelperItem     ::= Visibility | ClassMethod | ClassProperty | [CLASS] VarSection {recoverUntil=recover_classItem}
 
 InterfaceTypeDecl           ::= InterfaceKey [ClassParent] [InterfaceGuid] InterfaceItem* END
@@ -346,7 +346,7 @@ RecordFields        ::= [RecordField] (';' RecordField)* [';']  //===***
 RecordVariantSection ::= CASE [Ident ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1}
 RecordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
 
-RecordHelperDecl ::= RECORD HELPER FOR TypeID RecordHelperItem* END {pin=2}
+RecordHelperDecl            ::= RECORD HELPER FOR TypeID RecordHelperItem* END {pin=2}
 RecordHelperItem ::= Visibility | ClassMethod | ClassProperty {recoverUntil=recover_classItem}
 
 ClassMethod         ::= classMethodProc | classMethodFunc
