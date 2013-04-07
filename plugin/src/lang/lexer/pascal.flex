@@ -4,7 +4,7 @@ import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.TokenType;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
-
+@SuppressWarnings("all")
 %%
 /*-*
  * LEXICAL FUNCTIONS:
@@ -14,6 +14,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 %ignorecase
 %class _PascalLexer
 %implements FlexLexer, PasTypes
+%abstract
 
 %function advance
 %type IElementType
@@ -21,8 +22,19 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 %eof{ return;
 %eof}
 
+%{
+  public abstract CharSequence getIncludeContent(CharSequence text);
+%}
+
+
 WHITESPACE      = [\ \n\r\t\f]
 NEWLINE         = \r\n|\n|\r
+
+INCLUDE_START   = "{$INCLUDE" | "{$I"
+INCLUDE         = {INCLUDE_START} [^}]+ "}"
+
+DEFINE          = "{$DEFINE" {IDENTIFIER} "}"
+UNDEFINE        = "{$UNDEF" {IDENTIFIER} "}"
 
 LINE_COMMENT    = "/""/"[^\r\n]*
 BLOCK_COMMENT   = "(*" !([^]* "*)" [^]*) ("*)")?
@@ -215,6 +227,10 @@ NUM_BIN         = {N}[bB]
 "(."            { return LBRACK; }
 ".)"            { return RBRACK; }
 
+{INCLUDE}       { return INCLUDE; }
+{DEFINE}        { return DEFINE; }
+{UNDEFINE}      { return UNDEFINE; }
+
 {STRING_LITERAL} { return STRING_LITERAL;}
 
 {NUM_INT}       { return NUMBER_INT; }
@@ -228,3 +244,5 @@ NUM_BIN         = {N}[bB]
 
 {WHITESPACE}    {yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
 .               {yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
+
+//<<EOF>>        { if (yymoreStreams()) { yypopStream(); } else { zzAtEOF = true; zzDoEOF(); return null; }}

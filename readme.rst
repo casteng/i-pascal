@@ -3,8 +3,6 @@ Intellij IDEA Pascal plugin
 
 Features
 --------
- - customizable shortcuts
- - navigations (symbol, file)
  - includes
 
 Installation
@@ -21,7 +19,7 @@ In order to compile Pascal applications a corresponding type of SDK need to be c
 
 1. Select File->New project
 2. Select "Pascal Module"
-3. Click "New" to the right of Project SDK box
+3. Click "New" to the right of "Project SDK" box
 4. Choose directory where FPC compiler is installed
 
 To adjust SDK settings:

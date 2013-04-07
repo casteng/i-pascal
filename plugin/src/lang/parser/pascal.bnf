@@ -138,6 +138,9 @@
       CHARNUM="#"
       KEYWORDESCAPE="&"
 
+      INCLUDE="include"
+      DEFINE="define"
+      UNDEFINE="undefine"
   ]
 
   implements("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
