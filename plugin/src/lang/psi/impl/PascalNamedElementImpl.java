@@ -43,7 +43,7 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
     }
 
     public PsiElement getNameElement() {
-        PsiElement result = findChildByType(PasTypes.NAMESPACE_NAME);
+        PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
         if (null == result) {
             result = findChildByType(PasTypes.NAME);
         }
@@ -78,7 +78,7 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
 
     @Override
     public String toString() {
-        PsiElement nullableId = findChildByType(PasTypes.NAMESPACE_NAME);
+        PsiElement nullableId = findChildByType(PasTypes.NAMESPACE_IDENT);
         return super.toString() + ":" + (nullableId == null? null : nullableId.getText());
     }
 

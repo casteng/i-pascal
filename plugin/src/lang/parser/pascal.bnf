@@ -152,18 +152,18 @@ external pascal             ::= parsePascal Module
 Module              ::= ModuleUnit | ModuleProgram | ModuleLibrary | ModulePackage {recoverUntil=recover_main_decl}
 
 private ModuleProgram       ::= progWithHead | progWoHead
-progWithHead        ::= ProgramHead [UsesFileClause] BlockLocal "." {pin=1 recoverUntil=recover_decl}
+private progWithHead        ::= ProgramHead [UsesFileClause] BlockLocal "." {pin=1 recoverUntil=recover_decl}
 progWoHead          ::= [UsesFileClause] BlockLocal "."
 
 private ModuleUnit          ::= UnitHead UnitInterface UnitImplementation UnitBlock "." {pin=1}
-UnitHead            ::= UNIT NamespaceName HintingDirective* ";" {pin=1 recoverUntil=recover_main_decl}
+private UnitHead            ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverUntil=recover_main_decl}
 UsesClause          ::= USES NamespaceNameList {pin=1}
 
 private ModuleLibrary       ::= LibraryHead [UsesFileClause] BlockGlobal "." {pin=1}
-private LibraryHead         ::= LIBRARY NamespaceName HintingDirective* ";" {pin=1 recoverUntil=recover_main_decl}
+private LibraryHead         ::= LIBRARY NamespaceIdent HintingDirective* ";" {pin=1 recoverUntil=recover_main_decl}
 
 private ModulePackage       ::= PackageHead RequiresClause [ContainsClause] END "." {pin=1}
-private PackageHead         ::= PACKAGE NamespaceName ";" {pin=1 recoverUntil=recover_main_decl}
+private PackageHead         ::= PACKAGE NamespaceIdent ";" {pin=1 recoverUntil=recover_main_decl}
 private RequiresClause      ::= REQUIRES NamespaceNameList {pin=1}
 private ContainsClause      ::= CONTAINS NamespaceFileNameList {pin=1}
 
@@ -177,12 +177,13 @@ ExportedProcHeading         ::= ExportedProc | ExportedFunc
 ExportedFunc        ::= FUNCTION Ident [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
 ExportedProc        ::= PROCEDURE Ident [FormalParameterSection] ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
 
-UnitImplementation          ::= IMPLEMENTATION [UsesClause] DeclSection* {pin=1 recoverUntil=recover_impl name="implementation section"}
+UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection {pin=1 recoverUntil=recover_impl name="implementation section"}
+ImplDeclSection             ::= DeclSection*
 private UnitBlock           ::= UnitInitialization END | CompoundStatement | END {recoverUntil=recover_impl}
 UnitInitialization          ::= INITIALIZATION StatementList [UnitFinalization]  {pin=1 name="initialization section"} //TODO: recover statement
 UnitFinalization            ::= FINALIZATION StatementList  {pin=1 name="finalization section"} //TODO: recover statement
 
-private ProgramHead	        ::=	PROGRAM NamespaceName ProgramParamList? ";" {pin=1 recoverUntil=recover_decl}
+private ProgramHead	        ::=	PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1 recoverUntil=recover_decl}
 ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
 private progParamsRest      ::= "," progParam {pin=1}
 private progParam           ::= Ident {recoverUntil=recover_progParams}
@@ -191,12 +192,12 @@ private recover_progParams  ::= !(',' | ')' | global_decl)
 UsesFileClause	            ::=	USES NamespaceFileNameList {pin=1 name="uses clause"}
 private NamespaceFileNameList ::= NamespaceFileName NamespaceFileNamesRest* ";"
 private NamespaceFileNamesRest ::= COMMA NamespaceFileName {pin=1}
-private NamespaceFileName	::=	NamespaceName [IN QuotedString] {recoverUntil=recover_uses_list}
+private NamespaceFileName	::=	NamespaceIdent [IN QuotedString] {recoverUntil=recover_uses_list}
 private recover_uses_list   ::= !(',' | global_decl)
 private recover_commaList   ::= !(";" | ')' | ',' | ':' | '.' | "]" | DO)
 
-private NamespaceNameList   ::= NamespaceName NamespaceNamesRest* ";"
-private NamespaceNamesRest  ::= "," NamespaceName {pin=1 recoverUntil=recover_uses_list}
+private NamespaceNameList   ::= NamespaceIdent NamespaceNamesRest* ";"
+private NamespaceNamesRest  ::= "," NamespaceIdent {pin=1 recoverUntil=recover_uses_list}
 
 private recover_main_decl   ::= !(main_decl)
 private recover_decl        ::= !(global_decl | END)
@@ -232,10 +233,10 @@ DeclSectionLocal    ::=	VarSection | TypeSection | ConstSection | MethodDecl | R
 
 private ProcKey             ::= FUNCTION | PROCEDURE
 RoutineDecl                 ::= RoutineDeclHeading ";" FunctionDirective* ProcBodyBlock {pin=1 recoverUntil=recover_decl name="procedure or function declaration"}
-RoutineDeclHeading  ::= procDecl | funcDecl
-funcDecl            ::= [CustomAttribute] FUNCTION  Ident [FormalParameterSection] ":" TypeDecl {pin=2 recoverUntil=recover_decl}
-procDecl            ::= [CustomAttribute] PROCEDURE Ident [FormalParameterSection] {pin=2 recoverUntil=recover_decl}
-FunctionDirective   ::= OverloadDirective | InlineDirectiveSemi | CallConventionSemi | OldCallConventionDirectiveSemi | HintingDirective ";" | ExternalDirective // | "unsafe" ";"
+private RoutineDeclHeading  ::= procDecl | funcDecl
+private funcDecl            ::= [CustomAttribute] FUNCTION  Ident [FormalParameterSection] ":" TypeDecl {pin=2 recoverUntil=recover_decl}
+private procDecl            ::= [CustomAttribute] PROCEDURE Ident [FormalParameterSection] {pin=2 recoverUntil=recover_decl}
+private FunctionDirective   ::= OverloadDirective | InlineDirectiveSemi | CallConventionSemi | OldCallConventionDirectiveSemi | HintingDirective ";" | ExternalDirective // | "unsafe" ";"
 private OverloadDirective   ::= OVERLOAD ";"
 private OldCallConventionDirectiveSemi ::= OldCallConventionDirective ";"
 private OldCallConventionDirective ::= "far" | "local" | "near"
@@ -247,9 +248,9 @@ private ProcForwardDecl     ::= FORWARD ";" FunctionDirective* {pin=1}
 
 MethodDecl                  ::= MethodDeclHeading ";" MethodDirective* [MethodBody] {name="method declaration"}
 MethodBody          ::= BlockLocal ";"
-MethodDeclHeading   ::= ProcMethod | FuncMethod
-ProcMethod          ::= [CustomAttribute] MethodKey NamespacedQualifiedIdent [GenericDefinition] [FormalParameterSection] {pin=3 recoverUntil=recover_decl}
-FuncMethod          ::= [CustomAttribute] [CLASS] FUNCTION NamespacedQualifiedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=4 recoverUntil=recover_decl}
+private MethodDeclHeading   ::= ProcMethod | FuncMethod
+private ProcMethod          ::= [CustomAttribute] MethodKey NamespacedQualifiedIdent [GenericDefinition] [FormalParameterSection] {pin=3 recoverUntil=recover_decl}
+private FuncMethod          ::= [CustomAttribute] [CLASS] FUNCTION NamespacedQualifiedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=4 recoverUntil=recover_decl}
 MethodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
 MethodDirective     ::= REINTRODUCE ';' | OVERLOAD ';' | BindingDirective | AbstractDirectiveSemi | InlineDirectiveSemi
                       | CallConventionSemi | HintingDirective ";" | DispIDDirective {recoverUntil=recover_classItem}
@@ -268,12 +269,13 @@ private Label               ::= Ident | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	VarKey VarDeclaration+ {pin=1 name="var section"}
 private VarKey	            ::=	VAR | THREADVAR
-VarDeclaration	    ::=	[CustomAttribute] IdentList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 recoverUntil=recover_var}
+private VarDeclaration	    ::=	[CustomAttribute] IdentList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 recoverUntil=recover_var}
 VarValueSpec	            ::=	ABSOLUTE Ident | ABSOLUTE ConstExpressionOrd | EQ ConstExpression
 
 ConstSection                ::= ConstKey ConstDeclaration+ {pin=1 name="const section"}
 private ConstKey            ::= CONST |	RESOURCESTRING
-private ConstDeclaration    ::= [CustomAttribute] Ident [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2}
+private ConstDeclaration    ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2}
+NamedIdent                  ::= Ident
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
 TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3 recoverUntil=recover_type}
@@ -459,11 +461,11 @@ LabelId                     ::= Ident | NUMBER_INT
 SetSection                  ::=	"[" [ExpressionOrd SetRest*] "]"// {pin=1}
 SetRest             ::= ("," | RANGE | ) ExpressionOrd //{recoverUntil=recover_commaList}
 
-NamespacedQualifiedIdent ::= IdentsBegin NamespaceName//(NamespaceName DOT)? QualifiedIdent
+NamespacedQualifiedIdent ::= IdentsBegin NamespaceIdent//(NamespaceName DOT)? QualifiedIdent
 QualifiedIdent	    ::=	IdentsBegin* Ident
 private IdentsBegin         ::= Ident "." {pin=2}
-NamespaceName	            ::=	NamespaceItem DotIdent*
-DotIdent            ::= "." NamespaceItem {pin=1}
+NamespaceIdent	            ::=	NamespaceItem DotName*
+DotName            ::= "." NamespaceItem {pin=1}
 NamespaceItem       ::= Ident {recoverUntil=recover_declName}
 
 HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY// {recoverUntil=recover_hintingDir}
@@ -476,9 +478,9 @@ private Ident_kw            ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF 
                               | PACKAGE | CONTAINS | REQUIRES
 private Ident	            ::= KEYWORDESCAPE ReservedWord | Ident_kw | NAME
 ReservedWord	            ::=	NAME //===***
-IdentList	        ::=	IdentListItem IdentListRest*
-IdentListRest       ::= "," IdentListItem {pin=1}
-IdentListItem       ::= Ident {recoverUntil=recover_declName}
+private IdentList	        ::=	IdentListItem IdentListRest*
+private IdentListRest       ::= "," IdentListItem {pin=1}
+private IdentListItem       ::= NamedIdent {recoverUntil=recover_declName}
 //private recover_identList ::= !(')' | ',' | ':' | ';' | '=' | ']')
 
 ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression"}

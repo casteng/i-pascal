@@ -5,6 +5,15 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
+import com.siberika.idea.pascal.lang.psi.PasDeclSection;
+import com.siberika.idea.pascal.lang.psi.PasDeclSectionLocal;
+import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
+import com.siberika.idea.pascal.lang.psi.PasMethodDecl;
+import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
+import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
+import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,4 +52,24 @@ public class PsiUtil {
         }
         return result;
     }
+
+    /**
+     * Returns nearest upper level declaration clause, including formal parameters clause, declaration section,
+     * structured type declaration, module declaration
+     * @param element - Element from where to search
+     * @return one of the above elements or null if not found
+     */
+    public static PsiElement getOuterScopeDecl(PsiElement element) {
+        if (element instanceof PasUnitImplementation) {
+            PasUnitInterface unitInterface = PsiTreeUtil.getPrevSiblingOfType(element, PasUnitInterface.class);
+            if (unitInterface != null) {
+                return unitInterface;
+            }
+        }
+        PascalPsiElement parent = PsiTreeUtil.getParentOfType(element, PasFormalParameterSection.class, PasDeclSectionLocal.class, PasDeclSection.class, PasModule.class,
+                PasMethodDecl.class, PasImplDeclSection.class, PasUnitImplementation.class, PasUnitInterface.class);
+        // TODO: Used units handle
+        return parent;
+    }
+
 }

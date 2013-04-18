@@ -32,7 +32,8 @@ public class PascalChooseByNameContributor implements ChooseByNameContributor {
     @Override
     public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
         // todo include non project items
-        List<PascalNamedElement> properties = PascalParserUtil.findTypes(project, name);
-        return properties.toArray(new NavigationItem[properties.size()]);
+        //List<PascalNamedElement> properties = PascalParserUtil.findTypes(project.getProjectFile(), name);
+        //return properties.toArray(new NavigationItem[properties.size()]);
+        return null;
     }
 }

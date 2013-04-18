@@ -27,16 +27,20 @@ public class PascalReference extends PsiReferenceBase<PsiElement> implements Psi
 
     public PascalReference(@NotNull PsiElement element, TextRange textRange) {
         super(element, textRange);
-        key = element.getText().substring(textRange.getStartOffset(), textRange.getEndOffset());
+        if (element instanceof PascalNamedElement) {
+            key = ((PascalNamedElement) element).getName();
+        } else {
+            key = element.getText().substring(textRange.getStartOffset(), textRange.getEndOffset());
+        }
     }
 
     @NotNull
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         Project project = myElement.getProject();
-        final List<PascalNamedElement> properties = PascalParserUtil.findTypes(project, key);
+        final List<PascalNamedElement> references = PascalParserUtil.findAllReferences(myElement, key);
         List<ResolveResult> results = new ArrayList<ResolveResult>();
-        for (PascalNamedElement property : properties) {
+        for (PascalNamedElement property : references) {
             results.add(new PsiElementResolveResult(property));
         }
         return results.toArray(new ResolveResult[results.size()]);
@@ -46,7 +50,7 @@ public class PascalReference extends PsiReferenceBase<PsiElement> implements Psi
     @Override
     public PsiElement resolve() {
         ResolveResult[] resolveResults = multiResolve(false);
-        return resolveResults.length == 1 ? resolveResults[0].getElement() : null;
+        return resolveResults.length > 0 ? resolveResults[0].getElement() : null;
     }
 
     @NotNull

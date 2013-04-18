@@ -4,15 +4,20 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.util.PsiUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -27,91 +32,59 @@ import java.util.List;
  */
 public class PascalParserUtil extends GeneratedParserUtilBase {
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {
-        builder_.setDebugMode(true);
+        //builder_.setDebugMode(true);
         ErrorState state = ErrorState.get(builder_);
         return parseAsTree(state, builder_, level, DUMMY_BLOCK, true, parser, TRUE_CONDITION);
     }
 
-    public static List<PascalNamedElement> findTypes(Project project, String key) {
-        List<PascalNamedElement> result = null;
-        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project));
-        for (VirtualFile virtualFile : virtualFiles) {
-            PascalFile pascalFile = (PascalFile) PsiManager.getInstance(project).findFile(virtualFile);
-            if (pascalFile != null) {
-                Collection<PasGenericTypeIdent> elements = PsiTreeUtil.findChildrenOfAnyType(pascalFile, PasGenericTypeIdent.class);
-                if (elements != null) {
-                    for (PascalNamedElement property : elements) {
-                        if (key.equalsIgnoreCase(property.getName())) {
-                            if (result == null) {
-                                result = new ArrayList<PascalNamedElement>();
-                            }
-                            result.add(property);
-                        }
-                    }
-                }
-            }
-        }
-        return result != null ? result : Collections.<PascalNamedElement>emptyList();
-    }
-
     public static List<PascalNamedElement> findTypes(Project project) {
-        List<PascalNamedElement> result = null;
-        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project));
-        for (VirtualFile virtualFile : virtualFiles) {
-            PascalFile pascalFile = (PascalFile) PsiManager.getInstance(project).findFile(virtualFile);
-            if (pascalFile != null) {
-                Collection<PasGenericTypeIdent> elements = PsiTreeUtil.findChildrenOfAnyType(pascalFile, PasGenericTypeIdent.class);
-                if (elements != null) {
-                    for (PascalNamedElement property : elements) {
-                        if (result == null) {
-                            result = new ArrayList<PascalNamedElement>();
-                        }
-                        result.add(property);
-                    }
-                }
+        final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
+        findElements(project, new PsiElementProcessor<PasGenericTypeIdent>() {
+            @Override
+            public boolean execute(@NotNull PasGenericTypeIdent element) {
+                result.add(element);
+                return true;
             }
-        }
-        return result != null ? result : Collections.<PascalNamedElement>emptyList();
+        }, PasGenericTypeIdent.class);
+        return result;
     }
 
-    public static List<PascalNamedElement> findProperties(Project project, String key) {
-        List<PascalNamedElement> result = null;
-        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project));
-        for (VirtualFile virtualFile : virtualFiles) {
-            PascalFile pascalFile = (PascalFile) PsiManager.getInstance(project).findFile(virtualFile);
-            if (pascalFile != null) {
-                PascalNamedElement[] elements = PsiTreeUtil.getChildrenOfType(pascalFile, PascalNamedElement.class);
-                if (elements != null) {
-                    for (PascalNamedElement property : elements) {
-                        if (key.equals(property.getName())) {
-                            if (result == null) {
-                                result = new ArrayList<PascalNamedElement>();
-                            }
-                            result.add(property);
-                        }
-                    }
-                }
-            }
-        }
-        return result != null ? result : Collections.<PascalNamedElement>emptyList();
+    public static List<PascalNamedElement> findTypes(PsiElement element, final String key) {
+        return retrieveTypesFromSection(PsiUtil.getOuterScopeDecl(element), key, PasGenericTypeIdent.class);
     }
 
-    public static List<PascalNamedElement> findProperties(Project project) {
-        List<PascalNamedElement> result = null;
-        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project));
-        for (VirtualFile virtualFile : virtualFiles) {
-            PascalFile pascalFile = (PascalFile) PsiManager.getInstance(project).findFile(virtualFile);
-            if (pascalFile != null) {
-                PascalNamedElement[] elements = PsiTreeUtil.getChildrenOfType(pascalFile, PascalNamedElement.class);
-                if (elements != null) {
-                    Collections.addAll(result, elements);
+    private static <T extends PascalNamedElement> List<PascalNamedElement> retrieveTypesFromSection(PsiElement section, String key, Class<T>...classes) {
+        final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
+        if (section != null) {
+            for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
+                if ((null == key) || key.equalsIgnoreCase(namedElement.getName())) {
+                    result.add(namedElement);
                 }
             }
+            result.addAll(retrieveTypesFromSection(PsiUtil.getOuterScopeDecl(section), key, classes));
         }
+        return result;
+    }
+
+    public static List<PascalNamedElement> findConstants(PsiElement element, final String key) {
+        return retrieveTypesFromSection(PsiUtil.getOuterScopeDecl(element), key, PasNamedIdent.class);
+    }
+
+    public static List<PascalNamedElement> findVariables(PsiElement element, final String key) {
+        return retrieveTypesFromSection(PsiUtil.getOuterScopeDecl(element), key, PasNamedIdent.class);
+    }
+
+    public static List<PascalNamedElement> findModules(PsiElement element, final String key) {
+        final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
+        /*findElements(project, new PsiElementProcessor<PascalNamedElement>() {
+            @Override
+            public boolean execute(@NotNull PascalNamedElement element) {
+                if (key.equalsIgnoreCase(element.getName())) {
+                    result.add(element);
+                }
+                return true;
+            }
+        }, PasModule.class);*/
         return result;
     }
 
@@ -137,4 +110,31 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         };
     }
 
+    @NotNull
+    public static <T extends PascalPsiElement> Collection<T> findElements(Project project, PsiElementProcessor<T>processor, Class<? extends T>...clazz) {
+        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
+                GlobalSearchScope.allScope(project));
+        for (VirtualFile virtualFile : virtualFiles) {
+            PascalFile pascalFile = (PascalFile) PsiManager.getInstance(project).findFile(virtualFile);
+            if (pascalFile != null) {
+                for (T element : PsiUtil.findChildrenOfAnyType(pascalFile, clazz)) {
+                    processor.execute(element);
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    public static List<PascalNamedElement> findAllReferences(PsiElement element, String key) {
+        List<PascalNamedElement> types   = findTypes(element, key);
+        List<PascalNamedElement> consts  = findConstants(element, key);
+        List<PascalNamedElement> vars    = findVariables(element, key);
+        List<PascalNamedElement> modules = findModules(element, key);
+        List<PascalNamedElement> result = new ArrayList<PascalNamedElement>(types.size() + consts.size() + vars.size() + modules.size());
+        result.addAll(types);
+        result.addAll(consts);
+        result.addAll(vars);
+        result.addAll(modules);
+        return result;
+    }
 }
