@@ -8,8 +8,11 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NonNls;
@@ -42,10 +45,24 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
         return myCachedName;
     }
 
+    @Override
+    public String getNamespace() {
+        String name = getName();
+        int pos = name.lastIndexOf(".");
+        return pos >=0 ? name.substring(0, pos) : null;
+    }
+
     public PsiElement getNameElement() {
+        if ((this instanceof PasNamespaceIdent) || (this instanceof PasQualifiedIdent)) {
+            return this;
+        }
         PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
         if (null == result) {
             result = findChildByType(PasTypes.NAME);
+        }
+        if (null == result) {
+            PascalNamedElement namedChild = PsiTreeUtil.findChildOfType(this, PascalNamedElement.class);
+            result = namedChild != null ? namedChild.getNameIdentifier() : null;
         }
         return result;
     }
@@ -62,7 +79,7 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
     @Override
     public int getTextOffset() {
         PsiElement element = getNameElement();
-        return element != null ? element.getTextOffset() : 0;
+        return (element != null) && (element != this) ? element.getTextOffset() : getNode().getStartOffset();
     }
 
     @NotNull
@@ -85,6 +102,12 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
     @Override
     public ItemPresentation getPresentation() {
         return PascalParserUtil.getPresentation(this);
+    }
+
+    @Override
+    public PsiReference getReference() {
+        PsiReference[] refs = getReferences();
+        return refs.length > 0 ? refs[0] : null;
     }
 
     @Override

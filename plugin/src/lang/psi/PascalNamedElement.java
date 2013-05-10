@@ -10,4 +10,5 @@ import org.jetbrains.annotations.NotNull;
 public interface PascalNamedElement extends PascalPsiElement, PsiNameIdentifierOwner {
     @NotNull
     String getName();
+    String getNamespace();
 }
