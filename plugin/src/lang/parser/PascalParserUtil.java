@@ -9,13 +9,17 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiElementProcessor;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PascalModuleHead;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +27,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,7 +42,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     public static List<PascalNamedElement> findTypes(Project project) {
         final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
-        findElements(project, new PsiElementProcessor<PasGenericTypeIdent>() {
+        processProjectElements(project, new PsiElementProcessor<PasGenericTypeIdent>() {
             @Override
             public boolean execute(@NotNull PasGenericTypeIdent element) {
                 result.add(element);
@@ -75,16 +78,13 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     public static List<PascalNamedElement> findModules(PsiElement element, final String key) {
-        final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
-        /*findElements(project, new PsiElementProcessor<PascalNamedElement>() {
-            @Override
-            public boolean execute(@NotNull PascalNamedElement element) {
-                if (key.equalsIgnoreCase(element.getName())) {
-                    result.add(element);
-                }
-                return true;
+        List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
+        Collection<PascalModuleHead> head = PsiTreeUtil.findChildrenOfType(element.getContainingFile(), PascalModuleHead.class);
+        for (PascalModuleHead el : head) {
+            if ((null == key) || key.equalsIgnoreCase(el.getName())) {
+                result.add(el);
             }
-        }, PasModule.class);*/
+        }
         return result;
     }
 
@@ -110,8 +110,10 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         };
     }
 
-    @NotNull
-    public static <T extends PascalPsiElement> Collection<T> findElements(Project project, PsiElementProcessor<T>processor, Class<? extends T>...clazz) {
+    /**
+     * Handle all elements of the specified classes in project with the given processor
+     */
+    public static <T extends PascalPsiElement> void processProjectElements(Project project, PsiElementProcessor<T> processor, Class<? extends T>... clazz) {
         Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
                 GlobalSearchScope.allScope(project));
         for (VirtualFile virtualFile : virtualFiles) {
@@ -122,13 +124,17 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
             }
         }
-        return Collections.emptyList();
     }
 
+    @NotNull
     public static List<PascalNamedElement> findAllReferences(PsiElement element, String key) {
-        List<PascalNamedElement> types   = findTypes(element, key);
-        List<PascalNamedElement> consts  = findConstants(element, key);
-        List<PascalNamedElement> vars    = findVariables(element, key);
+        PasNamespaceIdent usedModule = getUsedModuleName(element);
+        if (usedModule != null) {
+            return PasReferenceUtil.findUsedModuleReferences(usedModule);
+        }
+        List<PascalNamedElement> types = findTypes(element, key);
+        List<PascalNamedElement> consts = findConstants(element, key);
+        List<PascalNamedElement> vars = findVariables(element, key);
         List<PascalNamedElement> modules = findModules(element, key);
         List<PascalNamedElement> result = new ArrayList<PascalNamedElement>(types.size() + consts.size() + vars.size() + modules.size());
         result.addAll(types);
@@ -136,5 +142,20 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         result.addAll(vars);
         result.addAll(modules);
         return result;
+    }
+
+    private static PasNamespaceIdent getUsedModuleName(PsiElement element) {
+        if (element instanceof PasNamespaceIdent) {
+            return (PasNamespaceIdent) element;
+        } else if (element.getParent() instanceof PasNamespaceIdent) {
+            return (PasNamespaceIdent) element.getParent();
+        } else {
+            return null;
+        }
+    }
+
+    @NotNull
+    public static List<PascalNamedElement> findNamespaceElements(PsiElement element, String key) {
+        return null;
     }
 }

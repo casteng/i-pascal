@@ -11,6 +11,7 @@ import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,7 +45,9 @@ public class PascalFindUsagesProvider implements FindUsagesProvider {
     @Override
     public String getType(@NotNull PsiElement element) {
         if (element instanceof PasGenericTypeIdent) {
-            return "Type";
+            return "type";
+        } else if (element instanceof PasUnitModuleHead) {
+            return "unit";
         } else {
             return "";
         }

@@ -9,6 +9,7 @@ import com.intellij.psi.PsiReferenceProvider;
 import com.intellij.psi.PsiReferenceRegistrar;
 import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.lang.PascalReference;
+import com.siberika.idea.pascal.lang.psi.PasQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,8 +27,23 @@ public class PascalReferenceContributor extends PsiReferenceContributor {
                     public PsiReference[] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
                         PascalNamedElement psiElement = (PascalNamedElement) element;
                         String text = psiElement.getName();
+
                         if (text.length() > 0) {
-                            return new PsiReference[]{new PascalReference(element, new TextRange(0, text.length()))};
+                            if (psiElement instanceof PasQualifiedIdent) {
+                                String ns = psiElement.getNamespace();
+                                if (ns != null) {
+                                    return new PsiReference[]{
+                                            new PascalReference(psiElement, new TextRange(0, ns.length())),
+                                            new PascalReference(psiElement, new TextRange(ns.length()+1, text.length()))
+                                    };
+                                } else {
+                                    return new PsiReference[]{
+                                            new PascalReference(element, new TextRange(0, text.length()))
+                                    };
+                                }
+                            } else {
+                                return new PsiReference[]{new PascalReference(element, new TextRange(0, text.length()))};
+                            }
                         }
                         return new PsiReference[0];
                     }

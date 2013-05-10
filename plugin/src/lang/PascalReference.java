@@ -6,7 +6,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementResolveResult;
-import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.ResolveResult;
 import com.siberika.idea.pascal.PascalIcons;
@@ -22,28 +21,24 @@ import java.util.List;
  * Date: 3/13/13
  * Author: George Bakhtadze
  */
-public class PascalReference extends PsiReferenceBase<PsiElement> implements PsiPolyVariantReference {
+public class PascalReference extends PsiReferenceBase<PascalNamedElement> {
     private String key;
 
     public PascalReference(@NotNull PsiElement element, TextRange textRange) {
-        super(element, textRange);
-        if (element instanceof PascalNamedElement) {
+        super((PascalNamedElement) element, textRange);
+/*        if (element instanceof PascalNamedElement) {
             key = ((PascalNamedElement) element).getName();
-        } else {
+        } else {*/
             key = element.getText().substring(textRange.getStartOffset(), textRange.getEndOffset());
-        }
+//        }
     }
 
     @NotNull
-    @Override
+    //@Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         Project project = myElement.getProject();
         final List<PascalNamedElement> references = PascalParserUtil.findAllReferences(myElement, key);
-        List<ResolveResult> results = new ArrayList<ResolveResult>();
-        for (PascalNamedElement property : references) {
-            results.add(new PsiElementResolveResult(property));
-        }
-        return results.toArray(new ResolveResult[results.size()]);
+        return PsiElementResolveResult.createResults(references);
     }
 
     @Nullable
