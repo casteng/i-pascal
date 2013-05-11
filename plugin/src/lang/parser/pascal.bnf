@@ -303,6 +303,8 @@ private recover_declName        ::= !('(' | ')' | ',' | '.' | ':' | ';' | '[' | 
                                 | CONTAINS | REQUIRES | (Identifier "=") | RelOp | AddOp | MulOp
                                 | 'far' | 'local' | 'name' | 'near' | 'nodefault' | 'readonly' | 'remove' | 'stored' | 'varargs' | 'writeonly')
 
+TypeID              ::=	QualifiedIdent
+
 TypeDecl	                ::=	StrucType | PointerType | ProcedureType | StringType | VariantType | SimpleType | [TYPE] TypeID [GenericPostfix]
 
 private StrucType           ::= [PACKED] StrucTypePart
@@ -368,7 +370,7 @@ ClassPropertyDispInterface ::= "readonly" ";" | "writeonly" ";" | DispIDDirectiv
 
 ArrayType           ::= ARRAY [ArrayIndexes] OF ArraySubType {pin=1}
 ArrayIndexes ::= "[" [ArrayIndex] ArrayIndexRest* "]" {pin=1}
-ArrayIndex          ::= ConstExpressionOrd RANGE ConstExpressionOrd | TypeID
+ArrayIndex          ::= ConstExpressionOrd RANGE ConstExpressionOrd | TypeID     //TODO: TypeID only?
 ArrayIndexRest      ::= "," [ArrayIndex] {pin=1}
 ArraySubType        ::= CONST | TypeDecl
 
@@ -393,8 +395,6 @@ SubRangeType        ::= ConstExpressionOrd [RANGE ConstExpressionOrd]
 EnumType            ::= "(" EnumEl EnumRest* ")" {pin=1}
 EnumRest            ::= "," EnumEl {pin=1}
 EnumEl              ::= Identifier ["=" Expression] {recoverUntil=recover_commaList}
-
-TypeID              ::=	QualifiedIdent
 
 CompoundStatement           ::= BEGIN [StatementList] END {pin=1}
 StatementList       ::= [Statement] Statements* {recoverUntil=recover_block}
@@ -424,9 +424,12 @@ private after_expr          ::= TO | DO | THEN | OF | DOWNTO | EXCEPT | INDEX | 
                               | REINTRODUCE | BindingDirective | AbstractDirective | ClassPropertySpecifier
 
 Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
-                                INHERITED [TypeID] DesignatorItemEx* | [INHERITED] TypeID DesignatorItemEx* | DesignatorItemEx+
+                                INHERITED [TypeID] DesignatorItem2? | EntityID DesignatorItemEx* | DesignatorItemEx+
 
-DesignatorItem      ::= "^" | "." Identifier | "[" ExpressionsList "]"
+EntityID                    ::= QualifiedIdent
+FieldId                     ::= Identifier
+
+DesignatorItem      ::= "^" | "." FieldId | "[" ExpressionsList "]"
 DesignatorItemEx    ::= DesignatorItem | DesignatorItem2
 DesignatorItem2     ::= "(" [ExpressionColon ExpressionColons*] ")"// {pin=1}
 ExpressionColon     ::= Expression [ColonConstruct] {recoverUntil=recover_commaList}
