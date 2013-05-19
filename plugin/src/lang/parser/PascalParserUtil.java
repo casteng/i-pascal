@@ -19,6 +19,9 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PascalModuleHead;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasEntityIDImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -128,20 +131,27 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     @NotNull
     public static List<PascalNamedElement> findAllReferences(PsiElement element, String key) {
+        List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
         PasNamespaceIdent usedModule = getUsedModuleName(element);
         if (usedModule != null) {
             return PasReferenceUtil.findUsedModuleReferences(usedModule);
+        } else if (isType(element)) {
+            result.addAll(findTypes(element, key));
+        } else if (isEntity(element)) {
+            result.addAll(findTypes(element, key));
+            result.addAll(findVariables(element, key));
+            result.addAll(findConstants(element, key));
+            //List<PascalNamedElement> modules = findModules(element, key);
         }
-        List<PascalNamedElement> types = findTypes(element, key);
-        List<PascalNamedElement> consts = findConstants(element, key);
-        List<PascalNamedElement> vars = findVariables(element, key);
-        List<PascalNamedElement> modules = findModules(element, key);
-        List<PascalNamedElement> result = new ArrayList<PascalNamedElement>(types.size() + consts.size() + vars.size() + modules.size());
-        result.addAll(types);
-        result.addAll(consts);
-        result.addAll(vars);
-        result.addAll(modules);
         return result;
+    }
+
+    private static boolean isEntity(PsiElement element) {
+        return element.getParent().getClass() == PasEntityIDImpl.class;
+    }
+
+    private static boolean isType(PsiElement element) {
+        return (element.getClass() == PasGenericTypeIdentImpl.class) || (element.getParent().getClass() == PasTypeIDImpl.class);
     }
 
     private static PasNamespaceIdent getUsedModuleName(PsiElement element) {
