@@ -447,11 +447,11 @@ CaseStatement       ::= CASE Expression OF CaseItem* [ELSE StatementList [";"] ]
 CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" Statement [";"] {pin=3}
 CaseLabel	        ::=	ConstExpressionOrd [RANGE ConstExpressionOrd] //{recoverUntil=recover_commaList}
 
-TryStatement                ::= TryExcept | TryFinally
-private TryFinally          ::= TRY StatementList FINALLY StatementList END {pin=1}
-private TryExcept           ::= TRY StatementList EXCEPT HandlerList END {pin=1}
+TryStatement                ::= TRY StatementList (TryExcept | TryFinally) END {pin=1}
+private TryFinally          ::= FINALLY StatementList
+private TryExcept           ::= EXCEPT HandlerList
 HandlerList                 ::= Handler+ [ELSE StatementList] | StatementList
-Handler                     ::= ON Identifier ":" TypeID "do" Statement ";"
+Handler                     ::= ON Identifier ":" TypeID "do" Statement ";" {pin=1}
 
 WithStatement               ::= WITH Designator DesignatorsRest* DO Statement {pin=1}
 private DesignatorsRest     ::= "," Designator {recoverUntil=recover_commaList}
@@ -549,4 +549,4 @@ StringFactor                ::= ControlString (QuotedString ControlString)* [Quo
                               | QuotedString (ControlString QuotedString)* [ControlString]
 private QuotedString        ::=	STRING_LITERAL
 private ControlString       ::=	controlchar+
-private controlchar         ::= CHARNUM NUMBER_INT | CHARNUM HEXNUM NUMBER_INT // ***===
+private controlchar         ::= CHARNUM NUMBER_INT | CHARNUM NUMBER_HEX // ***===
