@@ -71,7 +71,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         for (final PsiElement block : blocks) {
             int foldStart = block.getFirstChild() != null ? block.getFirstChild().getTextRange().getEndOffset() : block.getTextOffset();
             TextRange range = new TextRange(foldStart, block.getTextRange().getEndOffset());
-            if (range.getLength() > 0) {
+            if (range.getLength() > 1) {
                 descriptors.add(new FoldingDescriptor(block.getNode(), range, null));
             }
         }
