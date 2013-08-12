@@ -22,6 +22,7 @@ public class PasReferenceUtil {
      * @param moduleName - name element of module to find references for
      * @return array of references in nearest-first order
      */
+    @SuppressWarnings("unchecked")
     public static List<PascalNamedElement> findUsedModuleReferences(@NotNull final PasNamespaceIdent moduleName) {
         final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
         PascalParserUtil.processProjectElements(moduleName.getProject(), new PsiElementProcessor<PasModule>() {

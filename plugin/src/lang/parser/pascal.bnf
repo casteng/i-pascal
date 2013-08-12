@@ -143,16 +143,16 @@
       UNDEFINE="undefine"
   ]
 
-  implements("Module|NamespacePart|.*Ident")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  implements("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements(".*ModuleHead")="com.siberika.idea.pascal.lang.psi.PascalModuleHead"
-  extends("Module|NamespacePart|.*Ident")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
+  extends("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
   extends(".*ModuleHead")="com.siberika.idea.pascal.lang.psi.impl.PascalModuleHeadImpl"
 }
 
 external pascal             ::= parsePascal Module
 Module              ::= ModuleUnit | ModuleProgram | ModuleLibrary | ModulePackage {recoverUntil=recover_main_decl}
 
-private ModuleProgram       ::= progWithHead | progWoHead
+ModuleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead [UsesFileClause] BlockLocal "." {pin=1 recoverUntil=recover_decl}
 private progWoHead          ::= [UsesFileClause] BlockLocal "."
 
@@ -175,8 +175,8 @@ private AssemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=
 private ExportsSection      ::= EXPORTS Identifier ExportItem ("," Identifier ExportItem)* ";" {pin=1}
 private ExportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
 ExportedProcHeading         ::= ExportedProc | ExportedFunc
-ExportedFunc        ::= FUNCTION Identifier [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
-ExportedProc        ::= PROCEDURE Identifier [FormalParameterSection] ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
+ExportedFunc        ::= FUNCTION NamedIdent [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
+ExportedProc        ::= PROCEDURE NamedIdent [FormalParameterSection] ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection {pin=1 recoverUntil=recover_impl name="implementation section"}
 ImplDeclSection             ::= DeclSection*
@@ -235,8 +235,8 @@ DeclSectionLocal    ::=	VarSection | TypeSection | ConstSection | MethodDecl | R
 private ProcKey             ::= FUNCTION | PROCEDURE
 RoutineDecl                 ::= RoutineDeclHeading ";" FunctionDirective* ProcBodyBlock {pin=1 recoverUntil=recover_decl name="procedure or function declaration"}
 private RoutineDeclHeading  ::= procDecl | funcDecl
-private funcDecl            ::= [CustomAttribute] FUNCTION  Identifier [FormalParameterSection] ":" TypeDecl {pin=2 recoverUntil=recover_decl}
-private procDecl            ::= [CustomAttribute] PROCEDURE Identifier [FormalParameterSection] {pin=2 recoverUntil=recover_decl}
+private funcDecl            ::= [CustomAttribute] FUNCTION  NamedIdent [FormalParameterSection] ":" TypeDecl {pin=2 recoverUntil=recover_decl}
+private procDecl            ::= [CustomAttribute] PROCEDURE NamedIdent [FormalParameterSection] {pin=2 recoverUntil=recover_decl}
 private FunctionDirective   ::= OverloadDirective | InlineDirectiveSemi | CallConventionSemi | OldCallConventionDirectiveSemi | HintingDirective ";" | ExternalDirective // | "unsafe" ";"
 private OverloadDirective   ::= OVERLOAD ";"
 private OldCallConventionDirectiveSemi ::= OldCallConventionDirective ";"
@@ -307,7 +307,7 @@ TypeID              ::=	QualifiedIdent
 
 TypeDecl	                ::=	StrucType | PointerType | ProcedureType | StringType | VariantType | SimpleType | [TYPE] TypeID [GenericPostfix]
 
-private StrucType           ::= [PACKED] StrucTypePart
+StrucType                   ::= [PACKED] StrucTypePart
 private StrucTypePart       ::= ClassDecl | ArrayType | SetType | FileType
 
 private ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
@@ -344,12 +344,12 @@ private ObjectItem          ::= Visibility | ClassMethod | ClassField {recoverUn
 
 private Visibility ::= [STRICT] PROTECTED |[STRICT] PRIVATE | PUBLIC | PUBLISHED | AUTOMATED
 
-RecordDecl                  ::= RECORD (VariantRecord | SimpleRecord) END {pin=1 name="record declaration"}
-SimpleRecord        ::= RecordFieldSemi* RecordItem*
-VariantRecord       ::= RecordFieldSemi* RecordVariantSection
+RecordDecl          ::= RECORD (VariantRecord | SimpleRecord) END {pin=1 name="record declaration"}
+private SimpleRecord        ::= RecordFieldSemi* RecordItem*
+private VariantRecord       ::= RecordFieldSemi* RecordVariantSection
 RecordItem          ::= Visibility | ClassMethod | ClassProperty | ConstSection | TypeSection | RecordField | [CLASS] VarSection {recoverUntil=recover_classItem}
 RecordField         ::= IdentList ":" TypeDecl HintingDirective* {pin=2 recoverUntil=recover_declName}
-RecordFieldSemi     ::= RecordField ';'
+private RecordFieldSemi     ::= RecordField ';'
 RecordFields        ::= [RecordField] (';' RecordField)* [';']  //===***
 RecordVariantSection ::= CASE [Identifier ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1}
 RecordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
@@ -358,8 +358,8 @@ RecordHelperDecl            ::= RECORD HELPER FOR TypeID RecordHelperItem* END {
 RecordHelperItem ::= Visibility | ClassMethod | ClassProperty {recoverUntil=recover_classItem}
 
 ClassMethod         ::= classMethodProc | classMethodFunc
-private classMethodProc ::= MethodKey Identifier [GenericDefinition] [FormalParameterSection] ";" MethodDirective* {pin=1}
-private classMethodFunc ::= [CLASS] FUNCTION Identifier [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" MethodDirective* {pin=2}
+private classMethodProc ::= MethodKey NamedIdent [GenericDefinition] [FormalParameterSection] ";" MethodDirective* {pin=1}
+private classMethodFunc ::= [CLASS] FUNCTION NamedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" MethodDirective* {pin=2}
 ClassProperty ::= [CustomAttribute] [CLASS] PROPERTY Identifier [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" {pin=3}
 ClassPropertyArray ::= "[" FormalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
@@ -465,12 +465,12 @@ LabelId                     ::= Identifier | NUMBER_INT
 SetSection                  ::=	"[" [ExpressionOrd SetRest*] "]"// {pin=1}
 SetRest             ::= ("," | RANGE | ) ExpressionOrd //{recoverUntil=recover_commaList}
 
-QualifiedClassIdent         ::= NamespacePart IdentName //(NamespaceName DOT)? QualifiedIdent
-QualifiedIdent	            ::=	NamespacePart? IdentName
-NamespaceIdent	            ::=	NamespacePart? IdentName
-private IdentName           ::= Identifier
-NamespacePart               ::= NamespaceItem+
-private NamespaceItem       ::= Identifier "."// {pin=2 recoverUntil=recover_declName}
+QualifiedClassIdent         ::= NamespacePart SubIdent //(NamespaceName DOT)? QualifiedIdent
+QualifiedIdent	            ::=	NamespacePart? SubIdent
+NamespaceIdent	            ::=	NamespacePart? SubIdent
+SubIdent                    ::= Identifier
+private NamespacePart               ::= NamespaceItem+
+private NamespaceItem       ::= SubIdent "."// {pin=2 recoverUntil=recover_declName}
 
 HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY// {recoverUntil=recover_hintingDir}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
