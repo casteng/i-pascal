@@ -47,7 +47,58 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
 
     public static final TokenSet OPERATORS = TokenSet.create(
             AND, OR, NOT, XOR, IDIV, MOD, SHR, SHL, IN, AS, IS
-            );
+    );
+
+    public static final TokenSet STATEMENTS = TokenSet.create(
+            FOR, WHILE, REPEAT,
+            IF, CASE, WITH,
+            GOTO, EXIT, BREAK, CONTINUE,
+            TRY, RAISE
+    );
+
+    public static final TokenSet VALUES = TokenSet.create(
+            NIL, FALSE, TRUE
+    );
+
+    public static final TokenSet TOP_LEVEL_DECLARATIONS = TokenSet.create(
+            PROGRAM, UNIT, LIBRARY, PACKAGE,
+            USES, INTERFACE, IMPLEMENTATION,
+            INITIALIZATION, FINALIZATION,
+                CONTAINS, REQUIRES
+    );
+
+    public static final TokenSet DECLARATIONS = TokenSet.create(
+            VAR, CONST, TYPE, THREADVAR, RESOURCESTRING,
+            PROCEDURE, FUNCTION
+    );
+
+    public static final TokenSet DIRECTIVE = TokenSet.create(
+            VIRTUAL, DYNAMIC, ABSTRACT, OVERLOAD, OVERRIDE, REINTRODUCE,
+            CDECL, PASCAL, REGISTER, SAFECALL, STDCALL, EXPORT, INLINE,
+            DEPRECATED, EXPERIMENTAL, PLATFORM, REFERENCE,
+            ASSEMBLER
+    );
+
+    public static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
+            CLASS, DISPINTERFACE, INTERFACE,
+            ARRAY, PACKED, RECORD, SET, FILE, OBJECT
+    );
+
+    /*EXPORTS,
+    EXCEPT, ON, FINALLY,
+    OF, ABSOLUTE, OPERATOR,
+    CONSTRUCTOR, DESTRUCTOR, PROPERTY,
+    LABEL,
+    STRICT, PRIVATE, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED,
+
+    MESSAGE, STATIC, SEALED, FINAL,
+
+    DISPID, EXTERNAL, FORWARD, HELPER, IMPLEMENTS,
+            OUT, DEFAULT, INDEX, READ, WRITE,
+
+    TO, DOWNTO, UNTIL, DO,
+    THEN, ELSE,
+    ASM, INHERITED, SELF, NEW*/
 
     public static final TokenSet PARENS = TokenSet.create(LBRACK, LPAREN, RPAREN, RBRACK);
 

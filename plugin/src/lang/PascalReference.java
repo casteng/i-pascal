@@ -8,8 +8,12 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementResolveResult;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.ResolveResult;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,15 +26,11 @@ import java.util.List;
  * Author: George Bakhtadze
  */
 public class PascalReference extends PsiReferenceBase<PascalNamedElement> {
-    private String key;
+    private final String key;
 
     public PascalReference(@NotNull PsiElement element, TextRange textRange) {
         super((PascalNamedElement) element, textRange);
-/*        if (element instanceof PascalNamedElement) {
-            key = ((PascalNamedElement) element).getName();
-        } else {*/
-            key = element.getText().substring(textRange.getStartOffset(), textRange.getEndOffset());
-//        }
+        key = element.getText().substring(textRange.getStartOffset(), textRange.getEndOffset());
     }
 
     @NotNull
@@ -52,8 +52,11 @@ public class PascalReference extends PsiReferenceBase<PascalNamedElement> {
     @Override
     public Object[] getVariants() {
         Project project = myElement.getProject();
-        List<PascalNamedElement> properties = PascalParserUtil.findTypes(project);
         List<LookupElement> variants = new ArrayList<LookupElement>();
+
+        appendCommonVariants(variants);
+
+        List<PascalNamedElement> properties = PascalParserUtil.findTypes(project);
         for (final PascalNamedElement property : properties) {
             if (property.getName().length() > 0) {
                 variants.add(LookupElementBuilder.create(property).
@@ -63,5 +66,23 @@ public class PascalReference extends PsiReferenceBase<PascalNamedElement> {
             }
         }
         return variants.toArray();
+    }
+
+    private void appendCommonVariants(List<LookupElement> variants) {
+        appendTokenSet(variants, PascalLexer.OPERATORS);
+        appendTokenSet(variants, PascalLexer.STATEMENTS);
+        appendTokenSet(variants, PascalLexer.VALUES);
+        appendTokenSet(variants, PascalLexer.TOP_LEVEL_DECLARATIONS);
+        appendTokenSet(variants, PascalLexer.DECLARATIONS);
+        appendTokenSet(variants, PascalLexer.DIRECTIVE);
+        appendTokenSet(variants, PascalLexer.TYPE_DECLARATIONS);
+    }
+
+    private void appendTokenSet(List<LookupElement> variants, TokenSet tokenSet) {
+        for (IElementType op : tokenSet.getTypes()) {
+            variants.add(LookupElementBuilder.create(op.toString()).
+                    withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO))
+            );
+        }
     }
 }
