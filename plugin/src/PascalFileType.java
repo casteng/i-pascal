@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal;
 
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileTypes.LanguageFileType;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,6 +11,8 @@ import javax.swing.*;
  */
 public class PascalFileType extends LanguageFileType {
     public static final PascalFileType INSTANCE = new PascalFileType();
+
+    public static final String UNIT_EXTENSION = "pas";
 
     protected PascalFileType() {
         super(PascalLanguage.INSTANCE);

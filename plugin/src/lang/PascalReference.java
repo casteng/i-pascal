@@ -2,12 +2,14 @@ package com.siberika.idea.pascal.lang;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementResolveResult;
-import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.PsiPolyVariantReferenceBase;
 import com.intellij.psi.ResolveResult;
+import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.PascalIcons;
@@ -25,7 +27,9 @@ import java.util.List;
  * Date: 3/13/13
  * Author: George Bakhtadze
  */
-public class PascalReference extends PsiReferenceBase<PascalNamedElement> {
+public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElement> {
+        //PsiReferenceBase<PascalNamedElement> {
+    private static final Logger LOG = Logger.getInstance(PascalReference.class);
     private final String key;
 
     public PascalReference(@NotNull PsiElement element, TextRange textRange) {
@@ -34,11 +38,10 @@ public class PascalReference extends PsiReferenceBase<PascalNamedElement> {
     }
 
     @NotNull
-    //@Override
+    @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
-        Project project = myElement.getProject();
-        final List<PascalNamedElement> references = PascalParserUtil.findAllReferences(myElement, key);
-        return PsiElementResolveResult.createResults(references);
+        final ResolveCache resolveCache = ResolveCache.getInstance(myElement.getProject());
+        return resolveCache.resolveWithCaching(this, Resolver.INSTANCE, true, incompleteCode, myElement.getContainingFile());
     }
 
     @Nullable
@@ -84,5 +87,36 @@ public class PascalReference extends PsiReferenceBase<PascalNamedElement> {
                     withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO))
             );
         }
+    }
+
+    private static class Resolver implements ResolveCache.PolyVariantResolver<PascalReference> {
+        public static final Resolver INSTANCE = new Resolver();
+
+        @NotNull
+        @Override
+        public ResolveResult[] resolve(@NotNull PascalReference pascalReference, boolean incompleteCode) {
+            final List<PascalNamedElement> references = PascalParserUtil.findAllReferences(pascalReference.getElement(), pascalReference.key);
+            return PsiElementResolveResult.createResults(references);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PascalReference that = (PascalReference) o;
+
+        if (!getElement().equals(that.getElement())) return false;
+        if (!key.equals(that.key)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = key.hashCode();
+        result = 31 * result + getElement().hashCode();
+        return result;
     }
 }

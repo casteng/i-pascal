@@ -143,6 +143,7 @@
       UNDEFINE="undefine"
   ]
 
+  implements(".*QualifiedIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements(".*ModuleHead")="com.siberika.idea.pascal.lang.psi.PascalModuleHead"
   extends("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
@@ -250,8 +251,8 @@ private ProcForwardDecl     ::= FORWARD ";" FunctionDirective* {pin=1}
 MethodDecl                  ::= MethodDeclHeading ";" MethodDirective* [MethodBody] {name="method declaration"}
 MethodBody          ::= BlockLocal ";"
 private MethodDeclHeading   ::= ProcMethod | FuncMethod
-private ProcMethod          ::= [CustomAttribute] MethodKey QualifiedClassIdent [GenericDefinition] [FormalParameterSection] {pin=3 recoverUntil=recover_decl}
-private FuncMethod          ::= [CustomAttribute] [CLASS] FUNCTION QualifiedClassIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=4 recoverUntil=recover_decl}
+private ProcMethod          ::= [CustomAttribute] MethodKey ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] {pin=3 recoverUntil=recover_decl}
+private FuncMethod          ::= [CustomAttribute] [CLASS] FUNCTION ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=4 recoverUntil=recover_decl}
 MethodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
 MethodDirective     ::= REINTRODUCE ';' | OVERLOAD ';' | BindingDirective | AbstractDirectiveSemi | InlineDirectiveSemi
                       | CallConventionSemi | HintingDirective ";" | DispIDDirective {recoverUntil=recover_classItem}
@@ -303,7 +304,7 @@ private recover_declName        ::= !('(' | ')' | ',' | '.' | ':' | ';' | '[' | 
                                 | CONTAINS | REQUIRES | (Identifier "=") | RelOp | AddOp | MulOp
                                 | 'far' | 'local' | 'name' | 'near' | 'nodefault' | 'readonly' | 'remove' | 'stored' | 'varargs' | 'writeonly')
 
-TypeID              ::=	QualifiedIdent
+TypeID              ::=	FullyQualifiedIdent
 
 TypeDecl	                ::=	StrucType | PointerType | ProcedureType | StringType | VariantType | SimpleType | [TYPE] TypeID [GenericPostfix]
 
@@ -360,12 +361,13 @@ RecordHelperItem ::= Visibility | ClassMethod | ClassProperty {recoverUntil=reco
 ClassMethod         ::= classMethodProc | classMethodFunc
 private classMethodProc ::= MethodKey NamedIdent [GenericDefinition] [FormalParameterSection] ";" MethodDirective* {pin=1}
 private classMethodFunc ::= [CLASS] FUNCTION NamedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" MethodDirective* {pin=2}
-ClassProperty ::= [CustomAttribute] [CLASS] PROPERTY Identifier [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" {pin=3}
+ClassProperty ::= [CustomAttribute] [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" {pin=3}
 ClassPropertyArray ::= "[" FormalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
 ClassPropertySpecifier ::= ClassPropertyReadWrite | ClassPropertyDispInterface | "stored" Expression
                                  | DEFAULT Expression | ';' DEFAULT | "nodefault" | IMPLEMENTS TypeID
-ClassPropertyReadWrite ::= READ Identifier | WRITE Identifier | "add" Identifier | "remove" Identifier
+ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefNamedIdent | "remove" RefNamedIdent
+RefNamedIdent       ::= Identifier
 ClassPropertyDispInterface ::= "readonly" ";" | "writeonly" ";" | DispIDDirective
 
 ArrayType           ::= ARRAY [ArrayIndexes] OF ArraySubType {pin=1}
@@ -426,7 +428,7 @@ private after_expr          ::= TO | DO | THEN | OF | DOWNTO | EXCEPT | INDEX | 
 Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
                                 INHERITED [TypeID] DesignatorItem2? | EntityID DesignatorItemEx* | DesignatorItemEx+
 
-EntityID                    ::= QualifiedIdent
+EntityID                    ::= FullyQualifiedIdent
 FieldId                     ::= Identifier
 
 DesignatorItem      ::= "^" | "." FieldId | "[" ExpressionsList "]"
@@ -465,8 +467,8 @@ LabelId                     ::= Identifier | NUMBER_INT
 SetSection                  ::=	"[" [ExpressionOrd SetRest*] "]"// {pin=1}
 SetRest             ::= ("," | RANGE | ) ExpressionOrd //{recoverUntil=recover_commaList}
 
-QualifiedClassIdent         ::= NamespacePart SubIdent //(NamespaceName DOT)? QualifiedIdent
-QualifiedIdent	            ::=	NamespacePart? SubIdent
+ClassQualifiedIdent         ::= SubIdent "." SubIdent
+FullyQualifiedIdent	        ::=	NamespacePart? SubIdent
 NamespaceIdent	            ::=	NamespacePart? SubIdent
 SubIdent                    ::= Identifier
 private NamespacePart               ::= NamespaceItem+
@@ -475,7 +477,7 @@ private NamespaceItem       ::= SubIdent "."// {pin=2 recoverUntil=recover_declN
 HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY// {recoverUntil=recover_hintingDir}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
 
-private Ident_kw            ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
+Ident_kw                    ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
                               | OVERRIDE | VIRTUAL | ABSTRACT | SEALED | FINAL | ASSEMBLER | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL
                               | EXPORT | STRICT | PRIVATE | PROTECTED | PUBLIC | PUBLISHED | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER
                               | DEFAULT | IMPLEMENTS | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
@@ -544,7 +546,7 @@ ParamType                    ::= CONST | VAR | OUT //ParmType
 ExpressionsList	            ::= Expression (COMMA Expression)*
 
 CustomAttribute	            ::=	LBRACK CustomAttributeDecl RBRACK | AssemblyAttribute
-CustomAttributeDecl         ::= QualifiedIdent LPAREN ExpressionsList RPAREN
+CustomAttributeDecl         ::= FullyQualifiedIdent LPAREN ExpressionsList RPAREN
 StringFactor                ::= ControlString (QuotedString ControlString)* [QuotedString]
                               | QuotedString (ControlString QuotedString)* [ControlString]
 private QuotedString        ::=	STRING_LITERAL

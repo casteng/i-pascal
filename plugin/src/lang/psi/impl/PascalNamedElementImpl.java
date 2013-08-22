@@ -12,9 +12,9 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
-import com.siberika.idea.pascal.lang.psi.PasQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +22,8 @@ import org.jetbrains.annotations.NotNull;
  * Author: George Bakhtadze
  * Date: 1/4/13
  */
-public class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
+public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
+    private static final int MAX_SHORT_TEXT_LENGTH = 32;
     private volatile String myCachedName;
 
     public PascalNamedElementImpl(ASTNode node) {
@@ -53,10 +54,13 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
     }
 
     public PsiElement getNameElement() {
-        if ((this instanceof PasNamespaceIdent) || (this instanceof PasQualifiedIdent)) {
+        if ((this instanceof PasNamespaceIdent) || (this instanceof PascalQualifiedIdent)) {
             return this;
         }
         PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
+        if (null == result) {
+            result = findChildByType(PasTypes.IDENT_KW);
+        }
         if (null == result) {
             result = findChildByType(PasTypes.NAME);
         }
@@ -95,8 +99,16 @@ public class PascalNamedElementImpl extends ASTWrapperPsiElement implements Pasc
 
     @Override
     public String toString() {
-        PsiElement nullableId = findChildByType(PasTypes.NAMESPACE_IDENT);
-        return super.toString() + ":" + (nullableId == null? null : nullableId.getText());
+        return "[" + getClass().getSimpleName() + "]\"" + getName() + "\" ^" + getParent() + "..." + getShortText(getParent().getText());
+    }
+
+    private static String getShortText(String text) {
+        int lfPos = text.indexOf("\n");
+        if (lfPos > 0) {
+            return text.substring(0, lfPos);
+        } else {
+            return text.substring(0, Math.min(text.length(), MAX_SHORT_TEXT_LENGTH));
+        }
     }
 
     @Override
