@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -95,7 +97,11 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
         @NotNull
         @Override
         public ResolveResult[] resolve(@NotNull PascalReference pascalReference, boolean incompleteCode) {
-            final List<PascalNamedElement> references = PascalParserUtil.findAllReferences(pascalReference.getElement(), pascalReference.key);
+            final Collection<PascalNamedElement> references = PascalParserUtil.findAllReferences(pascalReference.getElement(), pascalReference.key);
+            // return only first reference
+            for (PascalNamedElement namedElement : references) {
+                return PsiElementResolveResult.createResults(Arrays.asList(namedElement));
+            }
             return PsiElementResolveResult.createResults(references);
         }
     }
