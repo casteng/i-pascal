@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.2</version>
+    <version>0.3</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
     <description><![CDATA[
@@ -58,5 +58,7 @@
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
         <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
         <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
+        <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+                                 implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
     </extensions>
 </idea-plugin>

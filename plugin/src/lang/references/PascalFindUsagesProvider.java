@@ -1,16 +1,11 @@
 package com.siberika.idea.pascal.lang.references;
 
 import com.intellij.find.impl.HelpID;
-import com.intellij.lang.cacheBuilder.DefaultWordsScanner;
 import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
-import com.intellij.lexer.FlexAdapter;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
-import com.intellij.psi.tree.TokenSet;
-import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
-import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,14 +15,10 @@ import org.jetbrains.annotations.Nullable;
  * Author: George Bakhtadze
  */
 public class PascalFindUsagesProvider implements FindUsagesProvider {
-    private static final DefaultWordsScanner WORDS_SCANNER =
-            new DefaultWordsScanner(new FlexAdapter(PascalLexer.getFlexLexer()),
-                    TokenSet.create(PasTypes.GENERIC_TYPE_IDENT), TokenSet.create(PasTypes.COMMENT), TokenSet.EMPTY);
-
     @Nullable
     @Override
     public WordsScanner getWordsScanner() {
-        return WORDS_SCANNER;
+        return null;
     }
 
     @Override

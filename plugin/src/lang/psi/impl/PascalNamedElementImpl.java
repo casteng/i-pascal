@@ -3,10 +3,11 @@ package com.siberika.idea.pascal.lang.psi.impl;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
+import com.intellij.openapi.roots.FileIndexFacade;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
-import com.intellij.psi.search.LocalSearchScope;
+import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
@@ -89,7 +90,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public SearchScope getUseScope() {
-        return new LocalSearchScope(getContainingFile());
+        return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));
     }
 
     @Override
