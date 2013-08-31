@@ -139,8 +139,15 @@
       KEYWORDESCAPE="&"
 
       INCLUDE="include"
-      DEFINE="define"
-      UNDEFINE="undefine"
+
+      CT_DEFINE="ct_define"
+      CT_UNDEFINE="ct_undefine"
+      CT_IFDEF="ct_ifdef"
+      CT_IFNDEF="ct_ifndef"
+      CT_ELSE="ct_else"
+      CT_ENDIF="ct_endif"
+
+      COMP_OPTION="comp_option"
   ]
 
   implements(".*QualifiedIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
@@ -552,3 +559,5 @@ StringFactor                ::= ControlString (QuotedString ControlString)* [Quo
 private QuotedString        ::=	STRING_LITERAL
 private ControlString       ::=	controlchar+
 private controlchar         ::= CHARNUM NUMBER_INT | CHARNUM NUMBER_HEX // ***===
+
+compileTime ::= CT_DEFINE

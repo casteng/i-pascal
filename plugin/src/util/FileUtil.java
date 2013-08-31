@@ -1,6 +1,8 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -11,13 +13,12 @@ import java.io.FileFilter;
  * Date: 1/6/13
  */
 public class FileUtil {
-    public static String getFileDir(final String fileName) {
+    public static String getPath(@NotNull final String fileName) {
         int lastSepPos = fileName.lastIndexOf(File.separator);
         return lastSepPos >= 0 ? fileName.substring(0, lastSepPos) : "";
-
     }
 
-    public static File[] listDirs(File baseDir) {
+    public static File[] listDirs(@NotNull File baseDir) {
         return baseDir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
@@ -33,5 +34,15 @@ public class FileUtil {
 
     public static boolean exists(String filePath) {
         return new File(filePath).exists();
+    }
+
+    public static String getExtension(@NotNull String fileName) {
+        int index = fileName.lastIndexOf('.');
+        if (index < 0) return null;
+        return fileName.substring(index + 1);
+    }
+
+    public static VirtualFile getVirtualFile(String path) {
+        return LocalFileSystem.getInstance().findFileByPath(path.replace(File.separatorChar, '/'));
     }
 }

@@ -13,7 +13,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 %unicode
 %ignorecase
 %class _PascalLexer
-%implements FlexLexer, PasTypes
+%implements FlexLexer, PasTypes, PascalFlexLexer
 %abstract
 
 %function advance
@@ -28,13 +28,11 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 
 
 WHITESPACE      = [\ \n\r\t\f]
-NEWLINE         = \r\n|\n|\r
 
-INCLUDE_START   = "{$INCLUDE" | "{$I"
+INCLUDE_START   = "{$INCLUDE " | "{$I "
 INCLUDE         = {INCLUDE_START} [^}]+ "}"
 
-DEFINE          = "{$DEFINE" {IDENTIFIER} "}"
-UNDEFINE        = "{$UNDEF" {IDENTIFIER} "}"
+COMP_OPTION     = "{$" !([^]* "}" [^]*) ("}")?
 
 LINE_COMMENT    = "/""/"[^\r\n]*
 BLOCK_COMMENT   = "(*" !([^]* "*)" [^]*) ("*)")?
@@ -47,6 +45,14 @@ IDENTIFIER=[:jletter:] [:jletterdigit:]{0,126}
 STRING_ELEMENT  = "''"|[^'\n\r]
 STRING_LITERAL  = "'"{STRING_ELEMENT}*"'"
 
+CT_DEFINE          = "{$DEFINE " !([^]* "}" [^]*) ("}")?
+CT_UNDEFINE        = "{$UNDEF " !([^]* "}" [^]*) ("}")?
+
+CT_IFDEF        = "{$IFDEF " !([^]* "}" [^]*) ("}")?
+CT_IFNDEF       = "{$IFNDEF " !([^]* "}" [^]*) ("}")?
+CT_ELSE         = "{$ELSE" !([^]* "}" [^]*) ("}")?
+CT_ENDIF        = "{$ENDIF" !([^]* "}" [^]*) ("}")?
+
 N               = [0-9]+
 NUM_INT         = {N}
 EXP             = [Ee]["+""-"]?{N}
@@ -54,195 +60,212 @@ NUM_REAL        = (({N}?[.]{N}){EXP}?|{N}[.][^.])
 NUM_HEX         = \$[0-9a-fA-F]+
 NUM_BIN         = {N}[bB]
 
-
-%x XSTRING
+%state INACTIVE_BRANCH
 
 %%
+<INACTIVE_BRANCH> {
+    {CT_IFDEF}      { return handleIfDef(yytext()); }
+    {CT_IFNDEF}     { return handleIfNDef(yytext()); }
+    {CT_ELSE}       { return handleElse(); }
+    {CT_ENDIF}      { return handleEndIf(); }
+    {IDENTIFIER}    { return COMMENT; }
+    {WHITESPACE}    { return TokenType.WHITE_SPACE; }
+    .               { return COMMENT; }
+}
 
-"and"               { return AND; }
-"or"                { return OR; }
-"not"               { return NOT; }
-"xor"               { return XOR; }
-"div"               { return IDIV; }
-"mod"               { return MOD; }
-"shr"               { return SHR; }
-"shl"               { return SHL; }
-"in"                { return IN; }
+<YYINITIAL> {
+    "and"               { return getElement(AND); }
+    "or"                { return getElement(OR); }
+    "not"               { return getElement(NOT); }
+    "xor"               { return getElement(XOR); }
+    "div"               { return getElement(IDIV); }
+    "mod"               { return getElement(MOD); }
+    "shr"               { return getElement(SHR); }
+    "shl"               { return getElement(SHL); }
+    "in"                { return getElement(IN); }
 
-"as"                { return AS; }
-"is"                { return IS; }
+    "as"                { return getElement(AS); }
+    "is"                { return getElement(IS); }
 
-"class"             { return CLASS; }
-"dispinterface"     { return DISPINTERFACE; }
+    "class"             { return getElement(CLASS); }
+    "dispinterface"     { return getElement(DISPINTERFACE); }
 
-"program"           { return PROGRAM; }
-"unit"              { return UNIT; }
-"library"           { return LIBRARY; }
-"package"           { return PACKAGE; }
+    "program"           { return getElement(PROGRAM); }
+    "unit"              { return getElement(UNIT); }
+    "library"           { return getElement(LIBRARY); }
+    "package"           { return getElement(PACKAGE); }
 
-"uses"              { return USES; }
-"interface"         { return INTERFACE; }
-"implementation"    { return IMPLEMENTATION; }
-"exports"           { return EXPORTS; }
-"initialization"    { return INITIALIZATION; }
-"finalization"      { return FINALIZATION; }
-"contains"          { return CONTAINS; }
-"requires"          { return REQUIRES; }
+    "uses"              { return getElement(USES); }
+    "interface"         { return getElement(INTERFACE); }
+    "implementation"    { return getElement(IMPLEMENTATION); }
+    "exports"           { return getElement(EXPORTS); }
+    "initialization"    { return getElement(INITIALIZATION); }
+    "finalization"      { return getElement(FINALIZATION); }
+    "contains"          { return getElement(CONTAINS); }
+    "requires"          { return getElement(REQUIRES); }
 
-"try"               { return TRY; }
-"raise"             { return RAISE; }
-"except"            { return EXCEPT; }
-"on"                { return ON; }
-"finally"           { return FINALLY; }
+    "try"               { return getElement(TRY); }
+    "raise"             { return getElement(RAISE); }
+    "except"            { return getElement(EXCEPT); }
+    "on"                { return getElement(ON); }
+    "finally"           { return getElement(FINALLY); }
 
-"var"               { return VAR; }
-"const"             { return CONST; }
-"type"              { return TYPE; }
-"threadvar"         { return THREADVAR; }
-"resourcestring"    { return RESOURCESTRING; }
+    "var"               { return getElement(VAR); }
+    "const"             { return getElement(CONST); }
+    "type"              { return getElement(TYPE); }
+    "threadvar"         { return getElement(THREADVAR); }
+    "resourcestring"    { return getElement(RESOURCESTRING); }
 
-"procedure"         { return PROCEDURE; }
-"function"          { return FUNCTION; }
-"array"             { return ARRAY; }
-"record"            { return RECORD; }
-"set"               { return SET; }
-"file"              { return FILE; }
-"object"            { return OBJECT; }
+    "procedure"         { return getElement(PROCEDURE); }
+    "function"          { return getElement(FUNCTION); }
+    "array"             { return getElement(ARRAY); }
+    "record"            { return getElement(RECORD); }
+    "set"               { return getElement(SET); }
+    "file"              { return getElement(FILE); }
+    "object"            { return getElement(OBJECT); }
 
-"of"                { return OF; }
-"absolute"          { return ABSOLUTE; }
-"packed"            { return PACKED; }
-"operator"          { return OPERATOR; }
+    "of"                { return getElement(OF); }
+    "absolute"          { return getElement(ABSOLUTE); }
+    "packed"            { return getElement(PACKED); }
+    "operator"          { return getElement(OPERATOR); }
 
-"constructor"       { return CONSTRUCTOR; }
-"destructor"        { return DESTRUCTOR; }
-"property"          { return PROPERTY; }
+    "constructor"       { return getElement(CONSTRUCTOR); }
+    "destructor"        { return getElement(DESTRUCTOR); }
+    "property"          { return getElement(PROPERTY); }
 
-"label"             { return LABEL; }
-"goto"              { return GOTO; }
-"exit"              { return EXIT; }
-"break"             { return BREAK; }
-"continue"          { return CONTINUE; }
+    "label"             { return getElement(LABEL); }
+    "goto"              { return getElement(GOTO); }
+    "exit"              { return getElement(EXIT); }
+    "break"             { return getElement(BREAK); }
+    "continue"          { return getElement(CONTINUE); }
 
-"strict"            { return STRICT; }
-"private"           { return PRIVATE; }
-"protected"         { return PROTECTED; }
-"public"            { return PUBLIC; }
-"published"         { return PUBLISHED; }
-"automated"         { return AUTOMATED; }
+    "strict"            { return getElement(STRICT); }
+    "private"           { return getElement(PRIVATE); }
+    "protected"         { return getElement(PROTECTED); }
+    "public"            { return getElement(PUBLIC); }
+    "published"         { return getElement(PUBLISHED); }
+    "automated"         { return getElement(AUTOMATED); }
 
-"virtual"           { return VIRTUAL; }
-"dynamic"           { return DYNAMIC; }
-"abstract"          { return ABSTRACT; }
-"overload"          { return OVERLOAD; }
-"override"          { return OVERRIDE; }
-"reintroduce"       { return REINTRODUCE; }
+    "virtual"           { return getElement(VIRTUAL); }
+    "dynamic"           { return getElement(DYNAMIC); }
+    "abstract"          { return getElement(ABSTRACT); }
+    "overload"          { return getElement(OVERLOAD); }
+    "override"          { return getElement(OVERRIDE); }
+    "reintroduce"       { return getElement(REINTRODUCE); }
 
-"message"           { return MESSAGE; }
-"static"            { return STATIC; }
-"sealed"            { return SEALED; }
-"final"             { return FINAL; }
-"assembler"         { return ASSEMBLER; }
+    "message"           { return getElement(MESSAGE); }
+    "static"            { return getElement(STATIC); }
+    "sealed"            { return getElement(SEALED); }
+    "final"             { return getElement(FINAL); }
+    "assembler"         { return getElement(ASSEMBLER); }
 
-"cdecl"             { return CDECL; }
-"pascal"            { return PASCAL; }
-"register"          { return REGISTER; }
-"safecall"          { return SAFECALL; }
-"stdcall"           { return STDCALL; }
-"export"            { return EXPORT; }
-"inline"            { return INLINE; }
+    "cdecl"             { return getElement(CDECL); }
+    "pascal"            { return getElement(PASCAL); }
+    "register"          { return getElement(REGISTER); }
+    "safecall"          { return getElement(SAFECALL); }
+    "stdcall"           { return getElement(STDCALL); }
+    "export"            { return getElement(EXPORT); }
+    "inline"            { return getElement(INLINE); }
 
-"dispid"            { return DISPID; }
-"external"          { return EXTERNAL; }
-"forward"           { return FORWARD; }
-"helper"            { return HELPER; }
-"implements"        { return IMPLEMENTS; }
+    "dispid"            { return getElement(DISPID); }
+    "external"          { return getElement(EXTERNAL); }
+    "forward"           { return getElement(FORWARD); }
+    "helper"            { return getElement(HELPER); }
+    "implements"        { return getElement(IMPLEMENTS); }
 
-"default"           { return DEFAULT; }
-"index"             { return INDEX; }
-"read"              { return READ; }
-"write"             { return WRITE; }
+    "default"           { return getElement(DEFAULT); }
+    "index"             { return getElement(INDEX); }
+    "read"              { return getElement(READ); }
+    "write"             { return getElement(WRITE); }
 
-"deprecated"        { return DEPRECATED; }
-"experimental"      { return EXPERIMENTAL; }
-"platform"          { return PLATFORM; }
-"reference"         { return REFERENCE; }
+    "deprecated"        { return getElement(DEPRECATED); }
+    "experimental"      { return getElement(EXPERIMENTAL); }
+    "platform"          { return getElement(PLATFORM); }
+    "reference"         { return getElement(REFERENCE); }
 
-"for"               { return FOR; }
-"to"                { return TO; }
-"downto"            { return DOWNTO; }
-"repeat"            { return REPEAT; }
-"until"             { return UNTIL; }
-"while"             { return WHILE; }
-"do"                { return DO; }
-"with"              { return WITH; }
+    "for"               { return getElement(FOR); }
+    "to"                { return getElement(TO); }
+    "downto"            { return getElement(DOWNTO); }
+    "repeat"            { return getElement(REPEAT); }
+    "until"             { return getElement(UNTIL); }
+    "while"             { return getElement(WHILE); }
+    "do"                { return getElement(DO); }
+    "with"              { return getElement(WITH); }
 
-"begin"             { return BEGIN; }
-"end"               { return END; }
-"if"                { return IF; }
-"then"              { return THEN; }
-"else"              { return ELSE; }
-"case"              { return CASE; }
+    "begin"             { return getElement(BEGIN); }
+    "end"               { return getElement(END); }
+    "if"                { return getElement(IF); }
+    "then"              { return getElement(THEN); }
+    "else"              { return getElement(ELSE); }
+    "case"              { return getElement(CASE); }
 
-"nil"               { return NIL; }
-"false"             { return FALSE; }
-"true"              { return TRUE; }
+    "nil"               { return getElement(NIL); }
+    "false"             { return getElement(FALSE); }
+    "true"              { return getElement(TRUE); }
 
-"asm"               { return ASM; }
-"inherited"         { return INHERITED; }
-"out"               { return OUT; }
-"self"              { return SELF; }
-"new"               { return NEW; }
+    "asm"               { return getElement(ASM); }
+    "inherited"         { return getElement(INHERITED); }
+    "out"               { return getElement(OUT); }
+    "self"              { return getElement(SELF); }
+    "new"               { return getElement(NEW); }
 
-":="            { return ASSIGN; }
-".."            { return RANGE; }
+    ":="            { return getElement(ASSIGN); }
+    ".."            { return getElement(RANGE); }
 
-"*"             { return MULT; }
-"/"             { return DIV; }
-"+"             { return PLUS; }
-"-"             { return MINUS; }
+    "*"             { return getElement(MULT); }
+    "/"             { return getElement(DIV); }
+    "+"             { return getElement(PLUS); }
+    "-"             { return getElement(MINUS); }
 
-"="             { return EQ; }
-">"             { return GT; }
-"<"             { return LT; }
-">="            { return GE; }
-"<="            { return LE; }
-"<>"            { return NE; }
+    "="             { return getElement(EQ); }
+    ">"             { return getElement(GT); }
+    "<"             { return getElement(LT); }
+    ">="            { return getElement(GE); }
+    "<="            { return getElement(LE); }
+    "<>"            { return getElement(NE); }
 
-":"             { return COLON; }
-","             { return COMMA; }
-"."             { return DOT; }
-"^"             { return DEREF; }
-"@"             { return AT; }
-"$"             { return HEXNUM; }
-"#"             { return CHARNUM; }
-"&"             { return KEYWORDESCAPE; }
+    ":"             { return getElement(COLON); }
+    ","             { return getElement(COMMA); }
+    "."             { return getElement(DOT); }
+    "^"             { return getElement(DEREF); }
+    "@"             { return getElement(AT); }
+    "$"             { return getElement(HEXNUM); }
+    "#"             { return getElement(CHARNUM); }
+    "&"             { return getElement(KEYWORDESCAPE); }
 
-";"             { return SEMI; }
+    ";"             { return getElement(SEMI); }
 
-"("             { return LPAREN; }
-")"             { return RPAREN; }
-"["             { return LBRACK; }
-"]"             { return RBRACK; }
-"(."            { return LBRACK; }
-".)"            { return RBRACK; }
+    "("             { return getElement(LPAREN); }
+    ")"             { return getElement(RPAREN); }
+    "["             { return getElement(LBRACK); }
+    "]"             { return getElement(RBRACK); }
+    "(."            { return getElement(LBRACK); }
+    ".)"            { return getElement(RBRACK); }
 
-{INCLUDE}       { return INCLUDE; }
-{DEFINE}        { return DEFINE; }
-{UNDEFINE}      { return UNDEFINE; }
+    {CT_DEFINE}     { define(yytext()); return CT_DEFINE; }
+    {CT_UNDEFINE}   { unDefine(yytext()); return CT_UNDEFINE; }
 
-{STRING_LITERAL} { return STRING_LITERAL;}
+    {CT_IFDEF}      { return handleIfDef(yytext()); }
+    {CT_IFNDEF}     { return handleIfNDef(yytext()); }
+    {CT_ELSE}       { return handleElse(); }
+    {CT_ENDIF}      { return handleEndIf(); }
 
-{NUM_INT}       { return NUMBER_INT; }
-{NUM_REAL}      { return NUMBER_REAL; }
-{NUM_HEX}       { return NUMBER_HEX; }
-{NUM_BIN}       { return NUMBER_BIN; }
+    {INCLUDE}       { return handleInclude(yytext()); }
 
-{COMMENT}       { return COMMENT; }
+    {COMP_OPTION}   { return getElement(COMP_OPTION); }
 
-{IDENTIFIER}    { return NAME; }
+    {STRING_LITERAL} { return getElement(STRING_LITERAL); }
 
-{WHITESPACE}    {yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
-.               {yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }
+    {NUM_INT}       { return getElement(NUMBER_INT); }
+    {NUM_REAL}      { return getElement(NUMBER_REAL); }
+    {NUM_HEX}       { return getElement(NUMBER_HEX); }
+    {NUM_BIN}       { return getElement(NUMBER_BIN); }
+
+    {COMMENT}       { return getElement(COMMENT); }
+    {IDENTIFIER}    { return getElement(NAME); }
+    {WHITESPACE}    { return TokenType.WHITE_SPACE; }
+    .               { return TokenType.BAD_CHARACTER; }
+}
+
 
 //<<EOF>>        { if (yymoreStreams()) { yypopStream(); } else { zzAtEOF = true; zzDoEOF(); return null; }}

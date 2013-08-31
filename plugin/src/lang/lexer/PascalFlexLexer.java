@@ -1,21 +1,22 @@
 package com.siberika.idea.pascal.lang.lexer;
 
-import com.intellij.util.text.CharArrayCharSequence;
-
-import java.io.Reader;
+import com.intellij.psi.tree.IElementType;
 
 /**
  * Author: George Bakhtadze
- * Date: 05/04/2013
+ * Date: 27/08/2013
  */
-public class PascalFlexLexer extends _PascalLexer {
-    public PascalFlexLexer(Reader in) {
-        super(in);
-    }
+public interface PascalFlexLexer {
+    void define(CharSequence sequence);
+    void unDefine(CharSequence sequence);
+    void clearDefines();
 
-    @Override
-    public CharSequence getIncludeContent(CharSequence text) {
-        return new CharArrayCharSequence("{Some text}".toCharArray());
-    }
+    IElementType handleIfDef(CharSequence sequence);
+    IElementType handleIfNDef(CharSequence sequence);
+    IElementType handleElse();
+    IElementType handleEndIf();
 
+    IElementType handleInclude(CharSequence sequence);
+
+    IElementType getElement(IElementType elementType);
 }

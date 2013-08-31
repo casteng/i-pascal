@@ -1,11 +1,11 @@
 package com.siberika.idea.pascal.lang.lexer;
 
 import com.intellij.lexer.FlexAdapter;
+import com.intellij.lexer.FlexLexer;
 import com.intellij.lexer.MergingLexerAdapter;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
-
-import java.io.Reader;
 
 public class PascalLexer extends MergingLexerAdapter implements PasTypes {
     public static final TokenSet KEYWORDS = TokenSet.create(
@@ -102,14 +102,14 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
 
     public static final TokenSet PARENS = TokenSet.create(LBRACK, LPAREN, RPAREN, RBRACK);
 
-    public static final TokenSet COMMENTS = TokenSet.create(COMMENT, INCLUDE, DEFINE, UNDEFINE);
+    public static final TokenSet COMMENTS = TokenSet.create(COMMENT, INCLUDE, CT_DEFINE, CT_UNDEFINE, COMP_OPTION);
 
-    public static _PascalLexer getFlexLexer() {
-        return new PascalFlexLexer((Reader) null);
+    public FlexLexer getFlexLexer() {
+        return myDelegate instanceof FlexAdapter ? ((FlexAdapter) myDelegate).getFlex() : null;
     }
 
-    public PascalLexer() {
-        super(new FlexAdapter(new PascalFlexLexer((Reader) null)), TokenSet.create());
+    public PascalLexer(Project project) {
+        super(new FlexAdapter(new PascalFlexLexerImpl(null, project, null)), TokenSet.create());
     }
 
 }

@@ -48,12 +48,12 @@ public class PascalSyntaxHighlighter extends SyntaxHighlighterBase {
 
     @NotNull
     public Lexer getHighlightingLexer() {
-        return new PascalLexer();
+        return new PascalLexer(null);
     }
 
     @NotNull
-  public TextAttributesKey[] getTokenHighlights(IElementType tokenType) {
-    return pack(colors.get(tokenType));
-  }
+    public TextAttributesKey[] getTokenHighlights(IElementType tokenType) {
+        return pack(colors.get(tokenType));
+    }
 
 }
