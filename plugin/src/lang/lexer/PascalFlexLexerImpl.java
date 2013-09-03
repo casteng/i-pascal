@@ -6,6 +6,8 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.search.FileTypeIndex;
@@ -14,6 +16,8 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.text.CharArrayCharSequence;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.sdk.DefinesParser;
+import com.siberika.idea.pascal.sdk.FPCSdkType;
 import com.siberika.idea.pascal.util.FileUtil;
 
 import java.io.File;
@@ -68,6 +72,15 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     @Override
     public void clearDefines() {
         defines.clear();
+        if ((project != null) && (virtualFile != null)) {
+            Module module = ModuleUtil.findModuleForFile(virtualFile, project);
+            if (module != null) {
+                final Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
+                if ((null != sdk) && (sdk.getSdkType() instanceof FPCSdkType)) {
+                    defines.addAll(DefinesParser.getDefaultDefines(DefinesParser.COMPILER_FPC, sdk.getVersionString()));
+                }
+            }
+        }
     }
 
     private IElementType doHandleIfDef(CharSequence sequence, boolean negate) {

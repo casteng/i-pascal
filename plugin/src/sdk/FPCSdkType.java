@@ -14,7 +14,6 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.xml.actions.xmlbeans.FileUtils;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.util.FileUtil;
 import com.siberika.idea.pascal.util.SysUtils;
@@ -54,6 +53,7 @@ public class FPCSdkType extends BasePascalSdkType {
 
     public FPCSdkType() {
         super(FPCSdkType.class.getSimpleName());
+        DefinesParser.parse(getClass().getResource("/defines.xml"));
     }
 
     @NotNull
@@ -153,7 +153,8 @@ public class FPCSdkType extends BasePascalSdkType {
         }
     }
 
-    private String getExecutableVersionOutput(String sdkHome) {
+    @Nullable
+    private static String getExecutableVersionOutput(String sdkHome) {
         final String exePath = getCompilerExecutable(sdkHome).getAbsolutePath();
         final ProcessOutput processOutput;
         try {
