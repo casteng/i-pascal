@@ -39,11 +39,11 @@ public class PascalSyntaxHighlighter extends SyntaxHighlighterBase {
 
         colors.put(TokenType.BAD_CHARACTER, HighlighterColors.BAD_CHARACTER);
 
-        safeMap(colors, PascalLexer.NUMBERS, NUMBERS);
-        safeMap(colors, PascalLexer.KEYWORDS, KEYWORDS);
-        safeMap(colors, PascalLexer.OPERATORS, OPERATORS);
-        safeMap(colors, PascalLexer.PARENS, PARENTHESES);
-        safeMap(colors, PascalLexer.SYMBOLS, SYMBOLS);
+        fillMap(colors, PascalLexer.NUMBERS, NUMBERS);           // TODO: change to safeMap when it will be supported by ultimate edition
+        fillMap(colors, PascalLexer.KEYWORDS, KEYWORDS);
+        fillMap(colors, PascalLexer.OPERATORS, OPERATORS);
+        fillMap(colors, PascalLexer.PARENS, PARENTHESES);
+        fillMap(colors, PascalLexer.SYMBOLS, SYMBOLS);
     }
 
     @NotNull
