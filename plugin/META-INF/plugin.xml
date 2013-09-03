@@ -44,7 +44,7 @@
 
         <lang.foldingBuilder language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalFoldingBuilder"/>
 
-        <!--<annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>-->
+        <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
         <!--<lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>-->
 
 

@@ -14,14 +14,18 @@ import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighter;
+import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
 
 /**
  * Author: George Bakhtadze
@@ -29,22 +33,14 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PascalAnnotator implements Annotator {
 
-    private final static String PASCAL_CASE_SPLIT_PATTERN = "(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])";
-
     public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
-        /*ASTNode node = element.getNode();
-        StringBuilder sb = new StringBuilder();
-        sb.append("psi: ").append(element.toString()).append(", valid: ").append(element.isValid()).append(", class: ").append(element.getClass().getCanonicalName());
-        sb.append(", ast: ").append(node.toString()).append(", class: ").append(node.getClass().getCanonicalName());
-        System.out.println("---*** " + sb.toString());
-        if (!(element instanceof PascalPsiElement)) return;
-
-        holder.createErrorAnnotation(element, sb.toString());*/
-
-        //final PascalPsiElement property = (PascalPsiElement) element;
-
-        //highlightTokens(property, element.getNode(), holder, new PascalSyntaxHighlighter());
-        //highlightTokens(property, valueNode, holder, new PropertiesValueHighlighter());
+        if (PsiUtil.isEntity(element)) {
+            PascalNamedElement namedElement = (PascalNamedElement) element;
+            Collection<PascalNamedElement> refs = PascalParserUtil.findAllReferences(element, namedElement.getName());
+            if (refs.isEmpty()) {
+                holder.createErrorAnnotation(element, "Undeclared identifier");
+            }
+        }
     }
 
     private static void highlightTokens(final PascalPsiElement property, final ASTNode node, final AnnotationHolder holder, PascalSyntaxHighlighter highlighter) {
