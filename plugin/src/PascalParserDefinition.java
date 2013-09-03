@@ -30,7 +30,7 @@ public class PascalParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public Lexer createLexer(Project project) {
-        return new PascalLexer(project);
+        return new PascalLexer(project, null);
     }
 
     @Override

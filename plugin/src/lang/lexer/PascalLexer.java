@@ -4,6 +4,7 @@ import com.intellij.lexer.FlexAdapter;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.lexer.MergingLexerAdapter;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 
@@ -108,8 +109,8 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
         return myDelegate instanceof FlexAdapter ? ((FlexAdapter) myDelegate).getFlex() : null;
     }
 
-    public PascalLexer(Project project) {
-        super(new FlexAdapter(new PascalFlexLexerImpl(null, project, null)), TokenSet.create());
+    public PascalLexer(Project project, VirtualFile virtualFile) {
+        super(new FlexAdapter(new PascalFlexLexerImpl(null, project, virtualFile)), TokenSet.create());
     }
 
 }

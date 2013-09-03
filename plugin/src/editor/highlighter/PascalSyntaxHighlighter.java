@@ -5,6 +5,8 @@ import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.HighlighterColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
@@ -21,6 +23,9 @@ import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAtt
  */
 public class PascalSyntaxHighlighter extends SyntaxHighlighterBase {
 
+    final Project project;
+    final VirtualFile virtualFile;
+
     public static final TextAttributesKey KEYWORDS = createTextAttributesKey("Pascal keyword", DefaultLanguageHighlighterColors.KEYWORD);
     public static final TextAttributesKey NUMBERS = createTextAttributesKey("Pascal number", DefaultLanguageHighlighterColors.NUMBER);
     public static final TextAttributesKey STRING = createTextAttributesKey("Pascal string", DefaultLanguageHighlighterColors.STRING);
@@ -32,13 +37,15 @@ public class PascalSyntaxHighlighter extends SyntaxHighlighterBase {
 
     private final Map<IElementType, TextAttributesKey> colors = new HashMap<IElementType, TextAttributesKey>();
 
-    public PascalSyntaxHighlighter() {
+    @SuppressWarnings("deprecation")
+    public PascalSyntaxHighlighter(final Project project, final VirtualFile virtualFile) {
+        this.project = project;
+        this.virtualFile = virtualFile;
+
         colors.put(PascalLexer.STRING_LITERAL, STRING);
         colors.put(PascalLexer.COMMENT, COMMENT);
         colors.put(PascalLexer.SEMI, SEMICOLON);
-
         colors.put(TokenType.BAD_CHARACTER, HighlighterColors.BAD_CHARACTER);
-
         fillMap(colors, PascalLexer.NUMBERS, NUMBERS);           // TODO: change to safeMap when it will be supported by ultimate edition
         fillMap(colors, PascalLexer.KEYWORDS, KEYWORDS);
         fillMap(colors, PascalLexer.OPERATORS, OPERATORS);
@@ -48,7 +55,7 @@ public class PascalSyntaxHighlighter extends SyntaxHighlighterBase {
 
     @NotNull
     public Lexer getHighlightingLexer() {
-        return new PascalLexer(null);
+        return new PascalLexer(null, null);
     }
 
     @NotNull

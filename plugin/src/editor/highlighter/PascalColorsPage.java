@@ -71,7 +71,7 @@ public class PascalColorsPage implements ColorSettingsPage {
 
     @NotNull
     public SyntaxHighlighter getHighlighter() {
-        return new PascalSyntaxHighlighter();
+        return new PascalSyntaxHighlighter(null, null);
     }
 
     @NonNls
