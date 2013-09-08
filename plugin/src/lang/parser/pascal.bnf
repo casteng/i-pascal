@@ -178,13 +178,13 @@ private ContainsClause      ::= CONTAINS NamespaceFileNameList {pin=1}
 
 UnitInterface               ::= INTERFACE [UsesClause] InterfaceDecl* {pin=1 recoverUntil=recover_decl name="interface section"}
 
-private InterfaceDecl       ::= VarSection | ConstSection | TypeSection | ExportedProcHeading | ExportsSection | AssemblyAttribute {recoverUntil=recover_decl}
+private InterfaceDecl       ::= VarSection | ConstSection | TypeSection | ExportedRoutine | ExportsSection | AssemblyAttribute {recoverUntil=recover_decl}
 private AssemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
 private ExportsSection      ::= EXPORTS Identifier ExportItem ("," Identifier ExportItem)* ";" {pin=1}
 private ExportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
-ExportedProcHeading         ::= ExportedProc | ExportedFunc
-ExportedFunc        ::= FUNCTION NamedIdent [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
-ExportedProc        ::= PROCEDURE NamedIdent [FormalParameterSection] ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
+ExportedRoutine             ::= ExportedProc | ExportedFunc {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
+private ExportedFunc        ::= FUNCTION NamedIdent [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
+private ExportedProc        ::= PROCEDURE NamedIdent [FormalParameterSection] ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection {pin=1 recoverUntil=recover_impl name="implementation section"}
 ImplDeclSection             ::= DeclSection*
@@ -241,7 +241,9 @@ DeclSectionLocal    ::=	VarSection | TypeSection | ConstSection | MethodDecl | R
 //                              | INITIALIZATION | INTERFACE | IMPLEMENTATION | LABEL
 
 private ProcKey             ::= FUNCTION | PROCEDURE
-RoutineDecl                 ::= RoutineDeclHeading ";" FunctionDirective* ProcBodyBlock {pin=1 recoverUntil=recover_decl name="procedure or function declaration"}
+RoutineDecl                 ::= RoutineDeclHeading ";" FunctionDirective* ProcBodyBlock
+                                {pin=1 recoverUntil=recover_decl name="procedure or function declaration"
+                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
 private RoutineDeclHeading  ::= procDecl | funcDecl
 private funcDecl            ::= [CustomAttribute] FUNCTION  NamedIdent [FormalParameterSection] ":" TypeDecl {pin=2 recoverUntil=recover_decl}
 private procDecl            ::= [CustomAttribute] PROCEDURE NamedIdent [FormalParameterSection] {pin=2 recoverUntil=recover_decl}
@@ -255,7 +257,8 @@ ProcBodyBlock               ::= ProcForwardDecl | ProcExternalDecl | BlockLocal 
 private ProcExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* FunctionDirective* {pin=1}
 private ProcForwardDecl     ::= FORWARD ";" FunctionDirective* {pin=1}
 
-MethodDecl                  ::= MethodDeclHeading ";" MethodDirective* [MethodBody] {name="method declaration"}
+MethodDecl                  ::= MethodDeclHeading ";" MethodDirective* [MethodBody]
+                                {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
 MethodBody          ::= BlockLocal ";"
 private MethodDeclHeading   ::= ProcMethod | FuncMethod
 private ProcMethod          ::= [CustomAttribute] MethodKey ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] {pin=3 recoverUntil=recover_decl}
@@ -322,7 +325,8 @@ private ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeD
 
 ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
 
-ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent]) {pin=1 name="class declaration"}
+ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent])
+                                {pin=1 name="class declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
 ClassBody           ::= [ClassState] [ClassParent] ClassItem* END
 ClassState          ::= SEALED | ABSTRACT
 ClassItem           ::= Visibility | ClassMethod | ClassMethodResolution | ClassField | ClassProperty
@@ -338,21 +342,25 @@ ClassParent         ::= "(" TypeID ("," TypeID)* ")" {pin=1}
 ClassField          ::= [CustomAttribute] IdentList ":" TypeDecl HintingDirective* ';' {pin=3}
 
 
-ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID ClassHelperItem* END {pin=2}
+ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID ClassHelperItem* END
+                                {pin=2 extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
 ClassHelperItem     ::= Visibility | ClassMethod | ClassProperty | [CLASS] VarSection {recoverUntil=recover_classItem}
 
 InterfaceTypeDecl           ::= InterfaceKey [ClassParent] [InterfaceGuid] InterfaceItem* END
-                             |	InterfaceKey [ClassParent] {pin(".*")=InterfaceKey}
+                              | InterfaceKey [ClassParent]
+                             {pin(".*")=InterfaceKey extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
 private InterfaceItem       ::= ClassMethod | [CLASS] ClassProperty
 private InterfaceGuid       ::= "[" QuotedString "]" {pin=1}
 private InterfaceKey        ::= INTERFACE | DISPINTERFACE
 
-ObjectDecl                  ::= OBJECT [ClassParent] ObjectItem* END {pin=1 name="object declaration"}
+ObjectDecl                  ::= OBJECT [ClassParent] ObjectItem* END
+                                {pin=1 name="object declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
 private ObjectItem          ::= Visibility | ClassMethod | ClassField {recoverUntil=recover_classItem}
 
 private Visibility ::= [STRICT] PROTECTED |[STRICT] PRIVATE | PUBLIC | PUBLISHED | AUTOMATED
 
-RecordDecl          ::= RECORD (VariantRecord | SimpleRecord) END {pin=1 name="record declaration"}
+RecordDecl          ::= RECORD (VariantRecord | SimpleRecord) END
+                        {pin=1 name="record declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
 private SimpleRecord        ::= RecordFieldSemi* RecordItem*
 private VariantRecord       ::= RecordFieldSemi* RecordVariantSection
 RecordItem          ::= Visibility | ClassMethod | ClassProperty | ConstSection | TypeSection | RecordField | [CLASS] VarSection {recoverUntil=recover_classItem}
@@ -362,10 +370,11 @@ RecordFields        ::= [RecordField] (';' RecordField)* [';']  //===***
 RecordVariantSection ::= CASE [Identifier ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1}
 RecordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
 
-RecordHelperDecl            ::= RECORD HELPER FOR TypeID RecordHelperItem* END {pin=2}
+RecordHelperDecl            ::= RECORD HELPER FOR TypeID RecordHelperItem* END
+                                {pin=2 extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
 RecordHelperItem ::= Visibility | ClassMethod | ClassProperty {recoverUntil=recover_classItem}
 
-ClassMethod         ::= classMethodProc | classMethodFunc
+ClassMethod         ::= classMethodProc | classMethodFunc {name="method declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
 private classMethodProc ::= MethodKey NamedIdent [GenericDefinition] [FormalParameterSection] ";" MethodDirective* {pin=1}
 private classMethodFunc ::= [CLASS] FUNCTION NamedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" MethodDirective* {pin=2}
 ClassProperty ::= [CustomAttribute] [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" {pin=3}

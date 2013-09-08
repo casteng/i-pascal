@@ -37,6 +37,7 @@ import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -158,10 +159,10 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
      * @param current element which should be affected by a unit declaration in order to be added to result
      */
     private static void addUsedUnitDeclarations(Collection<PascalNamedElement> result, PascalNamedElement current) {
-        for (PasNamespaceIdent usedUnitName : PsiUtil.getUsedUnits(current)) {
+        for (PasNamespaceIdent usedUnitName : PsiUtil.getUsedUnits(current.getContainingFile())) {
             PascalNamedElement usedUnit = PasReferenceUtil.findUsedModule(usedUnitName);
             if (usedUnit != null) {
-                addDeclarations(result, PsiUtil.getUnitInterfaceSection(usedUnit), current.getName());
+                addDeclarations(result, PsiUtil.getModuleInterfaceSection(usedUnit), current.getName());
             }
         }
     }
@@ -187,7 +188,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             PsiElement section = retrieveNamespace(entityDecl, namespaces.isFirst());
             // Check if the new section is another unit
             if ((section instanceof PasModule) && (section.getContainingFile() != entityDecl.getContainingFile())) {
-                section = PsiUtil.getUnitInterfaceSection(section);
+                section = PsiUtil.getModuleInterfaceSection(section);
             }
 
             if (section != null) {
@@ -308,6 +309,9 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             @Nullable
             @Override
             public String getPresentableText() {
+                if (element instanceof PascalRoutineImpl) {
+                    return element.getText();
+                }
                 return element.getName();
             }
 

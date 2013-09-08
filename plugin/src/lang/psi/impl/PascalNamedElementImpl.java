@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Author: George Bakhtadze
@@ -54,7 +55,8 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         return pos >=0 ? name.substring(0, pos) : null;
     }
 
-    public PsiElement getNameElement() {
+    @Nullable
+    protected PsiElement getNameElement() {
         if ((this instanceof PasNamespaceIdent) || (this instanceof PascalQualifiedIdent)) {
             return this;
         }

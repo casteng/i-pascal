@@ -1,9 +1,11 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasClassMethod;
@@ -59,6 +61,37 @@ public class PsiUtil {
         };
         PsiTreeUtil.processElements(element, processor);
         return processor.getCollection();
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static <T extends PsiElement> Collection<T> findImmChildrenOfAnyType(@Nullable final PsiElement element,
+                                                                                @NotNull final Class<? extends T>... classes) {
+        if (element == null) {
+            return ContainerUtil.emptyList();
+        }
+
+        Collection<T> result = new SmartList<T>();
+        for (PsiElement each : element.getChildren()) {
+                if (PsiTreeUtil.instanceOf(each, classes)) {
+                    result.add((T) each);
+                }
+        };
+        return result;
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    public static <T extends PsiElement> T findImmChildOfAnyType(@Nullable final PsiElement element,
+                                                                             @NotNull final Class<? extends T>... classes) {
+        if (element != null) {
+            for (PsiElement each : element.getChildren()) {
+                if (PsiTreeUtil.instanceOf(each, classes)) {
+                    return (T) each;
+                }
+            };
+        }
+        return null;
     }
 
     /**
@@ -127,15 +160,37 @@ public class PsiUtil {
         return i >= 0;
     }
 
+    /**
+     * Returns interface section of module specified by section
+     * @param section - can be PasModule or PsiFile
+     * @return interface section of module
+     */
     @Nullable
-    public static PsiElement getUnitInterfaceSection(@NotNull PsiElement section) {
-        return PsiTreeUtil.findChildOfType(section, PasUnitInterface.class, true);
+    public static PsiElement getModuleInterfaceSection(@NotNull PsiElement section) {
+        assert (section instanceof PasModule) || (section instanceof PsiFile);
+        return PsiTreeUtil.findChildOfType(section, PasUnitInterface.class);
     }
 
+    /**
+     * Returns implementation section of module specified by section
+     * @param section - can be PasModule or PsiFile
+     * @return unit implementation section or module itself if the module is not a unit
+     */
+    @Nullable
+    public static PsiElement getModuleImplementationSection(@NotNull PsiElement section) {
+        assert (section instanceof PasModule) || (section instanceof PsiFile);
+        PsiElement result = PsiTreeUtil.findChildOfType(section, PasUnitImplementation.class);
+        if (result == null) {
+            result = section;
+        }
+        return result;
+    }
+
+    @NotNull
     @SuppressWarnings("unchecked")
-    public static List<PasNamespaceIdent> getUsedUnits(PsiElement element) {
+    public static List<PasNamespaceIdent> getUsedUnits(PsiFile file) {
         List<PasNamespaceIdent> result = new ArrayList<PasNamespaceIdent>();
-        Collection<PascalPsiElement> usesClauses = findChildrenOfAnyType(element.getContainingFile(), PasUsesClause.class, PasUsesFileClause.class);
+        Collection<PascalPsiElement> usesClauses = findChildrenOfAnyType(file, PasUsesClause.class, PasUsesFileClause.class);
         for (PascalPsiElement usesClause : usesClauses) {
             for (PsiElement usedUnitName : usesClause.getChildren()) {
                 if (usedUnitName.getClass() == PasNamespaceIdentImpl.class) {
