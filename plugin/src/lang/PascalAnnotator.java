@@ -34,7 +34,7 @@ import java.util.Collection;
 public class PascalAnnotator implements Annotator {
 
     public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
-        if (PsiUtil.isEntity(element)) {
+        if (PsiUtil.isEntityName(element)) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             Collection<PascalNamedElement> refs = PascalParserUtil.findAllReferences(element, namedElement.getName());
             if (refs.isEmpty()) {

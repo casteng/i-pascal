@@ -29,7 +29,7 @@ import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasRecordField;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineDecl;
-import com.siberika.idea.pascal.lang.psi.PasStrucType;
+import com.siberika.idea.pascal.lang.psi.PasStruct;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -96,7 +96,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             if (innerSection == outerSection) {
                 return true;
             }
-            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection, PasStrucType.class, PasRoutineDecl.class, PasMethodDecl.class,
+            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection, PasStruct.class, PasRoutineDecl.class, PasMethodDecl.class,
                     PasProcedureType.class, PasClosureExpression.class)) {
                 return false;
             }
@@ -233,7 +233,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     private static PsiElement getStructTypeByIdent(@NotNull PascalNamedElement typeIdent) {
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(typeIdent, PasTypeDecl.class);
         if (typeDecl != null) {
-            PasStrucType strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasStrucType.class, true);
+            PasStruct strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasStruct.class, true);
             if (strucTypeDecl != null) {   // structured type
                 return strucTypeDecl;
             } else {                       // regular type
@@ -352,9 +352,9 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         PasNamespaceIdent usedModule = getUsedModuleName(element);
         if (usedModule != null) {
             return PasReferenceUtil.findUsedModuleReferences(usedModule);
-        } else if (PsiUtil.isType(element)) {
+        } else if (PsiUtil.isTypeName(element)) {
             result.addAll(findTypes(element, key));
-        } else if (PsiUtil.isEntity(element)) {
+        } else if (PsiUtil.isEntityName(element)) {
             //result.addAll(findTypes(element, key));
             NamespaceRec namespaceRec;
             if (element instanceof PasSubIdent) {

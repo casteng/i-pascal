@@ -11,4 +11,5 @@ public interface PascalNamedElement extends PascalPsiElement, PsiNameIdentifierO
     @NotNull
     String getName();
     String getNamespace();
+    String getNamePart();
 }

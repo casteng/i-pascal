@@ -17,9 +17,12 @@ import com.siberika.idea.pascal.lang.psi.PasClassMethod;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasMethodDecl;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineDecl;
+import com.siberika.idea.pascal.lang.psi.PasStruct;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasImplDeclSectionImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -117,10 +120,21 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         return result;
     }
 
-    private Collection<PsiElement> getInterfaceMethodTargets(PascalRoutineImpl routineDecl) {
-        PasStructImpl owner = PasStructImpl.findOwner(routineDecl);
+    private Collection<PsiElement> getInterfaceMethodTargets(@NotNull PascalRoutineImpl routineDecl) {
         Collection<PsiElement> result = new SmartList<PsiElement>();
-        PsiElement section = PsiUtil.getModuleInterfaceSection(routineDecl.getContainingFile());
+        PasModule module = PsiUtil.getModule(routineDecl);
+        if (module != null) {
+            PasField typeMember = module.getField(routineDecl.getNamespace());
+            if ((typeMember != null) && (typeMember.type == PasField.Type.TYPE)) {
+                PasStruct struct = PasStructImpl.getStructByNameElement(typeMember.element);
+                if (struct != null) {
+                    PasField field = struct.getField(routineDecl.getNamePart());
+                    if ((field != null) && (field.type == PasField.Type.ROUTINE)) {
+                        result.add(field.element);
+                    }
+                }
+            }
+        }
         return result;
     }
 

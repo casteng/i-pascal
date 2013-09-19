@@ -63,6 +63,6 @@ public class PasReferenceUtil {
 
     private static boolean isUnitWithName(VirtualFile virtualFile, String name) {
         return PascalFileType.UNIT_EXTENSION.equalsIgnoreCase(virtualFile.getExtension()) &&
-               virtualFile.getNameWithoutExtension().equalsIgnoreCase(name);
+                virtualFile.getNameWithoutExtension().equalsIgnoreCase(name);
     }
 }

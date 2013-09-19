@@ -52,7 +52,14 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     public String getNamespace() {
         String name = getName();
         int pos = name.lastIndexOf(".");
-        return pos >=0 ? name.substring(0, pos) : null;
+        return pos >= 0 ? name.substring(0, pos) : null;
+    }
+
+    @Override
+    public String getNamePart() {
+        String name = getName();
+        int pos = name.lastIndexOf(".");
+        return pos >= 0 ? name.substring(pos + 1) : name;
     }
 
     @Nullable
@@ -102,7 +109,11 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Override
     public String toString() {
-        return "[" + getClass().getSimpleName() + "]\"" + getName() + "\" ^" + getParent() + "..." + getShortText(getParent().getText());
+        try {
+            return "[" + getClass().getSimpleName() + "]\"" + getName() + "\" ^" + getParent() + "..." + getShortText(getParent().getText());
+        } catch (NullPointerException e) {
+            return "<NPE>";
+        }
     }
 
     private static String getShortText(String text) {

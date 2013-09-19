@@ -151,14 +151,14 @@
   ]
 
   implements(".*QualifiedIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
-  implements("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  implements(".*ModuleHead")="com.siberika.idea.pascal.lang.psi.PascalModuleHead"
-  extends("Module|.*Ident")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
-  extends(".*ModuleHead")="com.siberika.idea.pascal.lang.psi.impl.PascalModuleHeadImpl"
+  implements(".*ModuleHead|.*Ident|ClassProperty")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  extends(".*ModuleHead|.*Ident|ClassProperty")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
 }
 
 external pascal             ::= parsePascal Module
-Module              ::= ModuleUnit | ModuleProgram | ModuleLibrary | ModulePackage {recoverUntil=recover_main_decl}
+Module              ::= ModuleUnit | ModuleProgram | ModuleLibrary | ModulePackage
+                            {recoverUntil=recover_main_decl extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
+                             implements="com.siberika.idea.pascal.lang.psi.PasStruct"}
 
 ModuleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead [UsesFileClause] BlockLocal "." {pin=1 recoverUntil=recover_decl}
@@ -318,7 +318,7 @@ TypeID              ::=	FullyQualifiedIdent
 
 TypeDecl	                ::=	StrucType | PointerType | ProcedureType | StringType | VariantType | SimpleType | [TYPE] TypeID [GenericPostfix]
 
-StrucType                   ::= [PACKED] StrucTypePart
+private StrucType           ::= [PACKED] StrucTypePart
 private StrucTypePart       ::= ClassDecl | ArrayType | SetType | FileType
 
 private ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
@@ -327,9 +327,9 @@ ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="meta
 
 ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent])
                                 {pin=1 name="class declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
-ClassBody           ::= [ClassState] [ClassParent] ClassItem* END
+private ClassBody           ::= [ClassState] [ClassParent] ClassItem* END
 ClassState          ::= SEALED | ABSTRACT
-ClassItem           ::= Visibility | ClassMethod | ClassMethodResolution | ClassField | ClassProperty
+private ClassItem           ::= Visibility | ClassMethod | ClassMethodResolution | ClassField | ClassProperty
                               | ConstSection | TypeSection | [CLASS] VarSection {recoverUntil=recover_classItem}
 
 private recover_classItem   ::= !('[' | Identifier
@@ -344,7 +344,7 @@ ClassField          ::= [CustomAttribute] IdentList ":" TypeDecl HintingDirectiv
 
 ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID ClassHelperItem* END
                                 {pin=2 extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
-ClassHelperItem     ::= Visibility | ClassMethod | ClassProperty | [CLASS] VarSection {recoverUntil=recover_classItem}
+private ClassHelperItem     ::= Visibility | ClassMethod | ClassProperty | [CLASS] VarSection {recoverUntil=recover_classItem}
 
 InterfaceTypeDecl           ::= InterfaceKey [ClassParent] [InterfaceGuid] InterfaceItem* END
                               | InterfaceKey [ClassParent]
@@ -357,18 +357,18 @@ ObjectDecl                  ::= OBJECT [ClassParent] ObjectItem* END
                                 {pin=1 name="object declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
 private ObjectItem          ::= Visibility | ClassMethod | ClassField {recoverUntil=recover_classItem}
 
-private Visibility ::= [STRICT] PROTECTED |[STRICT] PRIVATE | PUBLIC | PUBLISHED | AUTOMATED
+Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
 RecordDecl          ::= RECORD (VariantRecord | SimpleRecord) END
                         {pin=1 name="record declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
 private SimpleRecord        ::= RecordFieldSemi* RecordItem*
 private VariantRecord       ::= RecordFieldSemi* RecordVariantSection
-RecordItem          ::= Visibility | ClassMethod | ClassProperty | ConstSection | TypeSection | RecordField | [CLASS] VarSection {recoverUntil=recover_classItem}
+private RecordItem          ::= Visibility | ClassMethod | ClassProperty | ConstSection | TypeSection | RecordField | [CLASS] VarSection {recoverUntil=recover_classItem}
 RecordField         ::= IdentList ":" TypeDecl HintingDirective* {pin=2 recoverUntil=recover_declName}
 private RecordFieldSemi     ::= RecordField ';'
 RecordFields        ::= [RecordField] (';' RecordField)* [';']  //===***
-RecordVariantSection ::= CASE [Identifier ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1}
-RecordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
+private RecordVariantSection ::= CASE [Identifier ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1}
+private RecordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
 
 RecordHelperDecl            ::= RECORD HELPER FOR TypeID RecordHelperItem* END
                                 {pin=2 extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}

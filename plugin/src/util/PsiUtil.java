@@ -12,13 +12,16 @@ import com.siberika.idea.pascal.lang.psi.PasClassMethod;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasDeclSectionLocal;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasMethodDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasRoutineDecl;
-import com.siberika.idea.pascal.lang.psi.PasStrucType;
+import com.siberika.idea.pascal.lang.psi.PasStruct;
 import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
@@ -82,8 +85,7 @@ public class PsiUtil {
 
     @Nullable
     @SuppressWarnings("unchecked")
-    public static <T extends PsiElement> T findImmChildOfAnyType(@Nullable final PsiElement element,
-                                                                             @NotNull final Class<? extends T>... classes) {
+    public static <T extends PsiElement> T findImmChildOfAnyType(@Nullable final PsiElement element, @NotNull final Class<? extends T>... classes) {
         if (element != null) {
             for (PsiElement each : element.getChildren()) {
                 if (PsiTreeUtil.instanceOf(each, classes)) {
@@ -99,6 +101,7 @@ public class PsiUtil {
      * @param element - element from where to search
      * @return next sibling element or null if not found
      */
+    @Nullable
     public static PsiElement getNextSibling(PsiElement element) {
         PsiElement result = element.getNextSibling();
         while (result instanceof PsiWhiteSpace) {
@@ -127,7 +130,7 @@ public class PsiUtil {
                 PasModule.class,
                 PasDeclSection.class, PasDeclSectionLocal.class,
                 PasUnitInterface.class,
-                PasStrucType.class);
+                PasStruct.class);
         if (isInstanceOfAny(parent, PasRoutineDecl.class, PasMethodDecl.class, PasProcedureType.class) && element.getParent() == parent) {
             return getNearestAffectingDeclarationsRoot(parent);
         }
@@ -140,16 +143,32 @@ public class PsiUtil {
                 + "\" [" + current.getClass().getSimpleName() + "]" + getParentStr(current.getParent()) : "-";
     }
 
-    private static String getParentStr(PsiElement parent) {
+    private static String getParentStr(@NotNull PsiElement parent) {
         return parent != null ? parent.getText() + " [" + parent.getClass().getSimpleName() + "]" : "";
     }
 
-    public static boolean isEntity(PsiElement element) {
+    public static boolean isEntityName(@NotNull PsiElement element) {
         return (element.getClass() == PasSubIdentImpl.class) || (element.getClass() == PasRefNamedIdentImpl.class);
     }
 
-    public static boolean isType(PsiElement element) {
+    public static boolean isTypeName(@NotNull PsiElement element) {
         return (element.getClass() == PasGenericTypeIdentImpl.class) || (element.getParent().getClass() == PasTypeIDImpl.class);
+    }
+
+    public static boolean isRoutineName(@NotNull PascalNamedElement element) {
+        return element.getParent() instanceof PasExportedRoutine;
+    }
+
+    public static boolean isUsedUnitName(@NotNull PascalNamedElement element) {
+        return element.getParent() instanceof PasUsesClause;
+    }
+
+    public static boolean isModuleName(@NotNull PascalNamedElement element) {
+        return element.getParent() instanceof PasModuleHead;
+    }
+
+    public static boolean isFormalParameterName(@NotNull PascalNamedElement element) {
+        return element.getParent() instanceof PasFormalParameter;
     }
 
     public static <T extends PsiElement> boolean isInstanceOfAny(PsiElement object, Class<? extends T>... classes) {
@@ -158,6 +177,16 @@ public class PsiUtil {
             i--;
         }
         return i >= 0;
+    }
+
+    /**
+     * Returns module containing the element
+     * @param element - element
+     * @return module containing the element
+     */
+    @Nullable
+    public static PasModule getModule(@NotNull PsiElement element) {
+        return PsiTreeUtil.findChildOfType(element.getContainingFile(), PasModule.class);
     }
 
     /**
@@ -200,4 +229,5 @@ public class PsiUtil {
         }
         return result;
     }
+
 }
