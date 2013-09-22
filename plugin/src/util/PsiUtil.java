@@ -230,4 +230,12 @@ public class PsiUtil {
         return result;
     }
 
+    public static int getElementLevel(PsiElement element) {
+        int result = 0;
+        while ((element != null) && (!(element instanceof PsiFile))) {
+            result++;
+            element = element.getParent();
+        }
+        return result;
+    }
 }

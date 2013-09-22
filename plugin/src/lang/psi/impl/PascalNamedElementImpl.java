@@ -110,18 +110,19 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     public String toString() {
         try {
-            return "[" + getClass().getSimpleName() + "]\"" + getName() + "\" ^" + getParent() + "..." + getShortText(getParent().getText());
+            return "[" + getClass().getSimpleName() + "]\"" + getName() + "\" ^" + getParent() + "..." + getShortText(getParent());
         } catch (NullPointerException e) {
             return "<NPE>";
         }
     }
 
-    private static String getShortText(String text) {
-        int lfPos = text.indexOf("\n");
+    private static String getShortText(PsiElement parent) {
+        if (null == parent) { return ""; }
+        int lfPos = parent.getText().indexOf("\n");
         if (lfPos > 0) {
-            return text.substring(0, lfPos);
+            return parent.getText().substring(0, lfPos);
         } else {
-            return text.substring(0, Math.min(text.length(), MAX_SHORT_TEXT_LENGTH));
+            return parent.getText().substring(0, Math.min(parent.getText().length(), MAX_SHORT_TEXT_LENGTH));
         }
     }
 

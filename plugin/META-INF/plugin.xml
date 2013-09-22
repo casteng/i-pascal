@@ -47,9 +47,6 @@
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
         <!--<lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>-->
 
-
-        <!--<projectService serviceInterface="com.siberika.idea.pascal.lang.psi.LuaPsiElementFactory"-->
-
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>
         <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />
@@ -62,5 +59,9 @@
                                  implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
         <editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalLineMarkerProvider"/>
+
+        <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionContributor"/>
+
+        <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
     </extensions>
 </idea-plugin>

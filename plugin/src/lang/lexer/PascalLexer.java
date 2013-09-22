@@ -53,8 +53,12 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
     public static final TokenSet STATEMENTS = TokenSet.create(
             FOR, WHILE, REPEAT,
             IF, CASE, WITH,
-            GOTO, EXIT, BREAK, CONTINUE,
+            GOTO, EXIT,
             TRY, RAISE
+    );
+
+    public static final TokenSet STATEMENTS_IN_CYCLE = TokenSet.create(
+            BREAK, CONTINUE
     );
 
     public static final TokenSet VALUES = TokenSet.create(
@@ -63,9 +67,12 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
 
     public static final TokenSet TOP_LEVEL_DECLARATIONS = TokenSet.create(
             PROGRAM, UNIT, LIBRARY, PACKAGE,
-            USES, INTERFACE, IMPLEMENTATION,
-            INITIALIZATION, FINALIZATION,
-                CONTAINS, REQUIRES
+            CONTAINS, REQUIRES
+    );
+
+    public static final TokenSet UNIT_DECLARATIONS = TokenSet.create(
+            INTERFACE, IMPLEMENTATION,
+            INITIALIZATION, FINALIZATION
     );
 
     public static final TokenSet DECLARATIONS = TokenSet.create(

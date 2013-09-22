@@ -173,8 +173,8 @@ LibraryModuleHead           ::= LIBRARY NamespaceIdent HintingDirective* ";" {pi
 
 private ModulePackage       ::= PackageModuleHead RequiresClause [ContainsClause] END "." {pin=1}
 PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1 recoverUntil=recover_main_decl}
-private RequiresClause      ::= REQUIRES NamespaceNameList {pin=1}
-private ContainsClause      ::= CONTAINS NamespaceFileNameList {pin=1}
+RequiresClause              ::= REQUIRES NamespaceNameList {pin=1}
+ContainsClause              ::= CONTAINS NamespaceFileNameList {pin=1}
 
 UnitInterface               ::= INTERFACE [UsesClause] InterfaceDecl* {pin=1 recoverUntil=recover_decl name="interface section"}
 
@@ -188,8 +188,8 @@ private ExportedProc        ::= PROCEDURE NamedIdent [FormalParameterSection] ";
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection {pin=1 recoverUntil=recover_impl name="implementation section"}
 ImplDeclSection             ::= DeclSection*
-private UnitBlock           ::= UnitInitialization END | CompoundStatement | END {recoverUntil=recover_impl}
-UnitInitialization          ::= INITIALIZATION StatementList [UnitFinalization]  {pin=1 name="initialization section"} //TODO: recover statement
+private UnitBlock           ::= UnitInitialization [UnitFinalization] END | CompoundStatement | END {recoverUntil=recover_impl}
+UnitInitialization          ::= INITIALIZATION StatementList {pin=1 name="initialization section"} //TODO: recover statement
 UnitFinalization            ::= FINALIZATION StatementList  {pin=1 name="finalization section"} //TODO: recover statement
 
 ProgramModuleHead	        ::= PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1 recoverUntil=recover_decl}
@@ -415,16 +415,16 @@ EnumRest            ::= "," EnumEl {pin=1}
 EnumEl              ::= Identifier ["=" Expression] {recoverUntil=recover_commaList}
 
 CompoundStatement           ::= BEGIN [StatementList] END {pin=1}
-StatementList       ::= [Statement] Statements* {recoverUntil=recover_block}
-Statements          ::= ";" [Statement] {recoverUntil=recover_statement}
-Statement           ::= [LabelId ":" ] StatementPart
-StatementPart       ::= RepeatStatement | WhileStatement | ForStatement
+StatementList               ::= [Statement] Statements* {recoverUntil=recover_block}
+private Statements          ::= ";" [Statement] {recoverUntil=recover_statement}
+private Statement           ::= [LabelId ":" ] StatementPart
+private StatementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | CompoundStatement | IfStatement | TryStatement | SimpleStatement | stmtEmpty
 private recover_block ::= !(block_end | block_start)
 
-SimpleStatement             ::= GotoStatement | stmtSimpleOrAssign
-stmtSimpleOrAssign          ::= Designator [assignPart]
+private SimpleStatement     ::= GotoStatement | StmtSimpleOrAssign
+StmtSimpleOrAssign          ::= Designator [assignPart]
 assignPart                  ::= ":=" (NewStatement | Expression) {pin=1 recoverUntil=recover_statement}
 NewStatement                ::= NEW "(" [ Expression ] ("," [ Expression ])* [ "," ConstExpression ] ")"// {pin=1 recoverUntil=recover_statement}
 stmtEmpty           ::= //empty
@@ -513,24 +513,24 @@ RecordConstValue            ::= "(" RecordValue RecordValueRest* ")" {pin=1}
 private RecordValueRest     ::= ";" RecordValue
 private RecordValue         ::= Identifier ":" RecordConstExpression
 
-primary                     ::= AT primary | AT AT primary | NOT primary | PLUS primary | MINUS primary
+private primary             ::= AT primary | AT AT primary | NOT primary | PLUS primary | MINUS primary
                               | NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL
                               | "(" Expression ")" | StringFactor | SetSection | Designator
 
 primaryOrd                  ::= NOT primaryOrd | PLUS primaryOrd | MINUS primaryOrd | NUMBER_INT | NUMBER_HEX | TRUE | FALSE | NIL
                               | "(" ExpressionOrd ")" | StringFactor | Designator
 
-RelOp                       ::= "<" | ">" | "<=" | ">=" | "<>" | "=" | IN | IS
-AddOp                       ::=	"+" | "-" | OR | XOR
-MulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
+private RelOp               ::= "<" | ">" | "<=" | ">=" | "<>" | "=" | IN | IS
+private AddOp               ::=	"+" | "-" | OR | XOR
+private MulOp               ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
 
 Expression ::= ClosureExpression | expr_rel
-expr_rel ::= expr_sum RelOpRest*
-RelOpRest           ::= RelOp expr_sum {pin=1 recoverUntil=recover_expression}
-expr_sum ::= expr_product AddOpRest*
-AddOpRest           ::= AddOp expr_product {pin=1 recoverUntil=recover_expression}
-expr_product ::= primary MulOpRest*
-MulOpRest           ::= MulOp primary {pin=1 recoverUntil=recover_expression}
+private expr_rel            ::= expr_sum RelOpRest*
+private RelOpRest           ::= RelOp expr_sum {pin=1 recoverUntil=recover_expression}
+private expr_sum            ::= expr_product AddOpRest*
+private AddOpRest           ::= AddOp expr_product {pin=1 recoverUntil=recover_expression}
+private expr_product        ::= primary MulOpRest*
+private MulOpRest           ::= MulOp primary {pin=1 recoverUntil=recover_expression}
 
 ExpressionOrd ::= expr_relOrd
 private expr_relOrd ::= expr_sumOrd (RelOp expr_sumOrd)*
