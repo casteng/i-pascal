@@ -54,43 +54,53 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
             FOR, WHILE, REPEAT,
             IF, CASE, WITH,
             GOTO, EXIT,
-            TRY, RAISE
+            TRY, RAISE,
+            END
     );
 
-    public static final TokenSet STATEMENTS_IN_CYCLE = TokenSet.create(
-            BREAK, CONTINUE
-    );
+    public static final TokenSet STATEMENTS_IN_CYCLE = TokenSet.create(BREAK, CONTINUE);
 
-    public static final TokenSet VALUES = TokenSet.create(
-            NIL, FALSE, TRUE
-    );
+    public static final TokenSet VALUES = TokenSet.create(NIL, FALSE, TRUE);
 
-    public static final TokenSet TOP_LEVEL_DECLARATIONS = TokenSet.create(
-            PROGRAM, UNIT, LIBRARY, PACKAGE,
-            CONTAINS, REQUIRES
-    );
+    public static final TokenSet MODULE_HEADERS = TokenSet.create(PROGRAM, UNIT, LIBRARY, PACKAGE);
 
-    public static final TokenSet UNIT_DECLARATIONS = TokenSet.create(
+    public static final TokenSet TOP_LEVEL_DECLARATIONS = TokenSet.create(CONTAINS, REQUIRES);
+
+    public static final TokenSet UNIT_SECTIONS = TokenSet.create(
             INTERFACE, IMPLEMENTATION,
-            INITIALIZATION, FINALIZATION
+            INITIALIZATION, FINALIZATION,
+            END
     );
 
     public static final TokenSet DECLARATIONS = TokenSet.create(
             VAR, CONST, TYPE, THREADVAR, RESOURCESTRING,
-            PROCEDURE, FUNCTION
+            PROCEDURE, FUNCTION, CONSTRUCTOR, DESTRUCTOR
     );
 
-    public static final TokenSet DIRECTIVE = TokenSet.create(
-            VIRTUAL, DYNAMIC, ABSTRACT, OVERLOAD, OVERRIDE, REINTRODUCE,
-            CDECL, PASCAL, REGISTER, SAFECALL, STDCALL, EXPORT, INLINE,
-            DEPRECATED, EXPERIMENTAL, PLATFORM, REFERENCE,
-            ASSEMBLER
+    public static final TokenSet STRUCT_DECLARATIONS = TokenSet.create(
+            PROCEDURE, FUNCTION, CONSTRUCTOR, DESTRUCTOR,
+            CLASS, OPERATOR, PROPERTY, END
+    );
+
+    public static final TokenSet DIRECTIVE_ROUTINE = TokenSet.create(
+            OVERLOAD, INLINE, ASSEMBLER,
+            CDECL, PASCAL, REGISTER, SAFECALL, STDCALL, EXPORT,
+            DEPRECATED, EXPERIMENTAL, PLATFORM, LIBRARY
+    );
+
+    public static final TokenSet DIRECTIVE_METHOD = TokenSet.create(
+            REINTRODUCE, OVERLOAD, MESSAGE, STATIC, DYNAMIC, OVERRIDE, VIRTUAL,
+            CDECL, PASCAL, REGISTER, SAFECALL, STDCALL, EXPORT,
+            ABSTRACT, FINAL, INLINE, ASSEMBLER,
+            DEPRECATED, EXPERIMENTAL, PLATFORM, LIBRARY, DISPID
     );
 
     public static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
-            CLASS, DISPINTERFACE, INTERFACE,
+            TYPE, CLASS, DISPINTERFACE, INTERFACE,
             ARRAY, PACKED, RECORD, SET, FILE, OBJECT
     );
+
+    public static final TokenSet VISIBILITY = TokenSet.create(STRICT, PRIVATE, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED);
 
     /*EXPORTS,
     EXCEPT, ON, FINALLY,

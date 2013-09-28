@@ -255,7 +255,7 @@ private ExternalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL ConstExp
 private ExternalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
 ProcBodyBlock               ::= ProcForwardDecl | ProcExternalDecl | BlockLocal [";"]
 private ProcExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* FunctionDirective* {pin=1}
-private ProcForwardDecl     ::= FORWARD ";" FunctionDirective* {pin=1}
+ProcForwardDecl             ::= FORWARD ";" FunctionDirective* {pin=1}
 
 MethodDecl                  ::= MethodDeclHeading ";" MethodDirective* [MethodBody]
                                 {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
