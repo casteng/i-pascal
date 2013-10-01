@@ -64,6 +64,7 @@
         <completion.confidence language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionConfidence"/>
 
         <braceMatcher filetype="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalBraceMatcher"/>
+        <lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCommenter"/>
 
         <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
     </extensions>
