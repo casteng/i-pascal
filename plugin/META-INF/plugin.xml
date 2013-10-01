@@ -63,6 +63,8 @@
         <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionContributor"/>
         <completion.confidence language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionConfidence"/>
 
+        <braceMatcher filetype="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalBraceMatcher"/>
+
         <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
     </extensions>
 </idea-plugin>
