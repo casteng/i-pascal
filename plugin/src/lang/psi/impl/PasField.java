@@ -1,7 +1,11 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
-import com.siberika.idea.pascal.lang.psi.PasStruct;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
 * Author: George Bakhtadze
@@ -9,15 +13,19 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 */
 public class PasField {
     public enum Type {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY}
+
+    public static final Set<Type> TYPES_ALL = new HashSet<Type>(Arrays.asList(Type.values()));
+    public static final Set<Type> TYPES_ASSIGNABLE = new HashSet<Type>(Arrays.asList(Type.VARIABLE, Type.PROPERTY));
+
     public enum Visibility {STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
-    public final PasStruct owner;
+    public final PasEntityScope owner;
     public final PascalNamedElement element;
     public final String name;
     public final Type type;
     public final Visibility visibility;
 
-    PasField(PasStruct owner, PascalNamedElement element, String name, Type type, Visibility visibility) {
+    public PasField(PasEntityScope owner, PascalNamedElement element, String name, Type type, Visibility visibility) {
         this.owner = owner;
         this.element = element;
         this.name = name;

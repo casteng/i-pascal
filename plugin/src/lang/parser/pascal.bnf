@@ -21,144 +21,190 @@
   tokenTypeClass="com.siberika.idea.pascal.lang.lexer.PascalElementType"
 
   tokens = [
-      COMMENT="COMMENT"
-      STRING_LITERAL="STRING_LITERAL"
+        COMMENT="COMMENT"
+        STRING_LITERAL="STRING_LITERAL"
 
-      AND="and"
-      MOD="mod"
-      OR="or"
-      IDIV="div"
-      SHR="shr"
-      SHL="shl"
-      IN="in"
+        AND="and"
+        MOD="mod"
+        OR="or"
+        IDIV="div"
+        SHR="shr"
+        SHL="shl"
+        IN="in"
 
-      AS="as"
+        AS="as"
+        IS="is"
+        NIL="nil"
 
+        CLASS="class"
+        DISPINTERFACE="dispinterface"
 
-    IS="is"
-    NIL="nil"
+        TRY="try"
+        RAISE="raise"
+        EXCEPT="except"
+        ON="on"
+        FINALLY="finally"
 
-    CLASS="class"
-    DISPINTERFACE="dispinterface"
+        PROGRAM="program"
+        UNIT="unit"
+        LIBRARY="library"
+        PACKAGE="package"
+        USES="uses"
+        EXPORTS="exports"
+        FINALIZATION="finalization"
+        INITIALIZATION="initialization"
 
-    TRY="try"
-    RAISE="raise"
-    EXCEPT="except"
-    ON="on"
-    FINALLY="finally"
+        THREADVAR="threadvar"
+        ABSOLUTE="absolute"
+        OUT="out"
+        RESOURCESTRING="resourcestring"
+        INLINE="inline"
+        PACKED="packed"
+        PROPERTY="property"
+        ARRAY="array"
+        SET="set"
+        FILE="file"
 
-    PROGRAM="program"
-    LIBRARY="library"
-    PACKAGE="package"
-    USES="uses"
-    EXPORTS="exports"
-    FINALIZATION="finalization"
-    INITIALIZATION="initialization"
+        ASM="asm"
+        GOTO="goto"
+        LABEL="label"
+        WITH="with"
+        EXIT="exit"
+        CONTINUE="continue"
+        BREAK="break"
 
-    THREADVAR="threadvar"
-    ABSOLUTE="absolute"
-    OUT="out"
-    RESOURCESTRING="resourcestring"
-    INLINE="inline"
-    PACKED="packed"
-    PROPERTY="property"
-    ARRAY="array"
-    SET="set"
-    FILE="file"
+        CONSTRUCTOR="constructor"
+        DESTRUCTOR="destructor"
+        INHERITED="inherited"
+        OBJECT="object"
+        OPERATOR="operator"
+        REINTRODUCE="reintroduce"
+        SELF="self"
 
-    ASM="asm"
-    GOTO="goto"
-    LABEL="label"
-    WITH="with"
+        NOT="not"
+        XOR="xor"
 
-    CONSTRUCTOR="constructor"
-    DESTRUCTOR="destructor"
-    INHERITED="inherited"
-    OBJECT="object"
-    OPERATOR="operator"
-    REINTRODUCE="reintroduce"
-    SELF="self"
+        TO="to"
+        DOWNTO="downto"
+        REPEAT="repeat"
 
-    NOT="not"
-    XOR="xor"
+        STATIC="static"
+        SEALED="sealed"
+        FINAL="final"
+        HELPER="helper"
+        EXPORT="export"
+        DISPID="dispid"
+        ABSTRACT="abstract"
 
-    TO="to"
-    DOWNTO="downto"
-    REPEAT="repeat"
+        STRICT="strict"
+        PUBLISHED="published"
+        PUBLIC="public"
+        PROTECTED="protected"
+        PRIVATE="private"
+        AUTOMATED="automated"
 
+        MESSAGE="message"
+        FORWARD="forward"
+        EXTERNAL="external"
+        EXPERIMENTAL="experimental"
+        DEPRECATED="deprecated"
+        ASSEMBLER="assembler"
 
-      FALSE="false"
-      TRUE="true"
+        INDEX="index"
+        DEFAULT="default"
 
-      INTERFACE="interface"
-      IMPLEMENTATION="implementation"
+        VIRTUAL="virtual"
+        DYNAMIC="dynamic"
+        OVERRIDE="override"
+        OVERLOAD="overload"
 
-      VAR="var"
-      CONST="const"
-      TYPE="type"
-      ARRAY="array"
-      RECORD="record"
-      PROCEDURE="procedure"
-      FUNCTION="function"
-      OF="of"
+        REGISTER="register"
+        STDCALL="stdcall"
+        PLATFORM="platform"
+        PASCAL="pascal"
+        CDECL="cdecl"
+        SAFECALL="safecall"
 
-      CASE="case"
-      BEGIN="begin"
-      END="end"
-      FOR="for"
-      UNTIL="until"
-      WHILE="while"
-      DO="do"
-      IF="if"
-      THEN="then"
-      ELSE="else"
+        REFERENCE="reference"
 
-      MULT="*"
-      PLUS="+"
-      MINUS="-"
-      DIV="/"
-      SEMI=";"
-      COMMA=","
-      LPAREN="("
-      RPAREN=")"
-      LBRACK="["
-      RBRACK="]"
-      EQ="="
-      LT="<"
-      GT=">"
-      GE=">="
-      LE="<="
-      NE="<>"
-      COLON=":"
-      ASSIGN=":="
-      DOT="."
-      DEREF="^"
-      AT="@"
-      HEXNUM="$"
-      CHARNUM="#"
-      KEYWORDESCAPE="&"
+        IMPLEMENTS="implements"
+        REQUIRES="requires"
+        CONTAINS="contains"
 
-      INCLUDE="include"
+        POINTER="pointer"
+        FALSE="false"
+        TRUE="true"
 
-      CT_DEFINE="ct_define"
-      CT_UNDEFINE="ct_undefine"
-      CT_IFDEF="ct_ifdef"
-      CT_IFNDEF="ct_ifndef"
-      CT_ELSE="ct_else"
-      CT_ENDIF="ct_endif"
+        INTERFACE="interface"
+        IMPLEMENTATION="implementation"
 
-      COMP_OPTION="comp_option"
+        VAR="var"
+        CONST="const"
+        TYPE="type"
+        ARRAY="array"
+        RECORD="record"
+        PROCEDURE="procedure"
+        FUNCTION="function"
+        OF="of"
+
+        CASE="case"
+        BEGIN="begin"
+        END="end"
+        FOR="for"
+        UNTIL="until"
+        WHILE="while"
+        DO="do"
+        IF="if"
+        THEN="then"
+        ELSE="else"
+
+        READ="read"
+        WRITE="write"
+
+        MULT="*"
+        PLUS="+"
+        MINUS="-"
+        DIV="/"
+        SEMI=";"
+        COMMA=","
+        LPAREN="("
+        RPAREN=")"
+        LBRACK="["
+        RBRACK="]"
+        EQ="="
+        LT="<"
+        GT=">"
+        GE=">="
+        LE="<="
+        NE="<>"
+        COLON=":"
+        ASSIGN=":="
+        DOT="."
+        DEREF="^"
+        AT="@"
+        HEXNUM="$"
+        CHARNUM="#"
+        KEYWORDESCAPE="&"
+
+        INCLUDE="include"
+        CT_DEFINE="ct_define"
+        CT_UNDEFINE="ct_undefine"
+        CT_IFDEF="ct_ifdef"
+        CT_IFNDEF="ct_ifndef"
+        CT_ELSE="ct_else"
+        CT_ENDIF="ct_endif"
+        COMP_OPTION="comp_option"
   ]
 
   implements(".*QualifiedIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
-  implements(".*ModuleHead|.*Ident|ClassProperty")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  extends(".*ModuleHead|.*Ident|ClassProperty")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
+  implements(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  extends(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
 }
 
 external pascal             ::= parsePascal Module
 Module              ::= ModuleUnit | ModuleProgram | ModuleLibrary | ModulePackage
                             {recoverUntil=recover_main_decl extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
-                             implements="com.siberika.idea.pascal.lang.psi.PasStruct"}
+                             implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 
 ModuleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead [UsesFileClause] BlockLocal "." {pin=1 recoverUntil=recover_decl}
@@ -233,15 +279,15 @@ BlockBody	        ::=	CompoundStatement |	AssemblerStatement
 AssemblerStatement  ::= ASM AssemblerItem* END
 private AssemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | Identifier | NUMBER_INT | NUMBER_HEX | NUMBER_BIN
 
-DeclSection	        ::=	VarSection | TypeSection | ConstSection | MethodDecl | RoutineDecl | LabelDeclSection
+DeclSection	        ::=	VarSection | TypeSection | ConstSection | MethodImplDecl | RoutineImplDecl | LabelDeclSection
                               | ExportsSection | AssemblyAttribute {recoverUntil=recover_decl}
-DeclSectionLocal    ::=	VarSection | TypeSection | ConstSection | MethodDecl | RoutineDecl | LabelDeclSection {recoverUntil=recover_decl}
+DeclSectionLocal    ::=	VarSection | TypeSection | ConstSection | MethodImplDecl | RoutineImplDecl | LabelDeclSection {recoverUntil=recover_decl}
 
 //private recover_declEnd     ::= BEGIN | TYPE | VarKey | ConstKey | ProcKey | Ident '=' | END
 //                              | INITIALIZATION | INTERFACE | IMPLEMENTATION | LABEL
 
 private ProcKey             ::= FUNCTION | PROCEDURE
-RoutineDecl                 ::= RoutineDeclHeading ";" FunctionDirective* ProcBodyBlock
+RoutineImplDecl             ::= RoutineDeclHeading ";" FunctionDirective* ProcBodyBlock
                                 {pin=1 recoverUntil=recover_decl name="procedure or function declaration"
                                  extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
 private RoutineDeclHeading  ::= procDecl | funcDecl
@@ -257,7 +303,7 @@ ProcBodyBlock               ::= ProcForwardDecl | ProcExternalDecl | BlockLocal 
 private ProcExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* FunctionDirective* {pin=1}
 ProcForwardDecl             ::= FORWARD ";" FunctionDirective* {pin=1}
 
-MethodDecl                  ::= MethodDeclHeading ";" MethodDirective* [MethodBody]
+MethodImplDecl              ::= MethodDeclHeading ";" MethodDirective* [MethodBody]
                                 {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
 MethodBody          ::= BlockLocal ";"
 private MethodDeclHeading   ::= ProcMethod | FuncMethod
@@ -326,7 +372,7 @@ private ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeD
 ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
 
 ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent])
-                                {pin=1 name="class declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
+                                {pin=1 name="class declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"}
 private ClassBody           ::= [ClassState] [ClassParent] ClassItem* END
 ClassState          ::= SEALED | ABSTRACT
 private ClassItem           ::= Visibility | ClassMethod | ClassMethodResolution | ClassField | ClassProperty
@@ -343,24 +389,24 @@ ClassField          ::= [CustomAttribute] IdentList ":" TypeDecl HintingDirectiv
 
 
 ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID ClassHelperItem* END
-                                {pin=2 extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
+                                {pin=2 extends="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"}
 private ClassHelperItem     ::= Visibility | ClassMethod | ClassProperty | [CLASS] VarSection {recoverUntil=recover_classItem}
 
 InterfaceTypeDecl           ::= InterfaceKey [ClassParent] [InterfaceGuid] InterfaceItem* END
                               | InterfaceKey [ClassParent]
-                             {pin(".*")=InterfaceKey extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
+                             {pin(".*")=InterfaceKey extends="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"}
 private InterfaceItem       ::= ClassMethod | [CLASS] ClassProperty
 private InterfaceGuid       ::= "[" QuotedString "]" {pin=1}
 private InterfaceKey        ::= INTERFACE | DISPINTERFACE
 
 ObjectDecl                  ::= OBJECT [ClassParent] ObjectItem* END
-                                {pin=1 name="object declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
+                                {pin=1 name="object declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"}
 private ObjectItem          ::= Visibility | ClassMethod | ClassField {recoverUntil=recover_classItem}
 
 Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
 RecordDecl          ::= RECORD (VariantRecord | SimpleRecord) END
-                        {pin=1 name="record declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
+                        {pin=1 name="record declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"}
 private SimpleRecord        ::= RecordFieldSemi* RecordItem*
 private VariantRecord       ::= RecordFieldSemi* RecordVariantSection
 private RecordItem          ::= Visibility | ClassMethod | ClassProperty | ConstSection | TypeSection | RecordField | [CLASS] VarSection {recoverUntil=recover_classItem}
@@ -371,7 +417,7 @@ private RecordVariantSection ::= CASE [Identifier ":"] TypeDecl OF (RecordVarian
 private RecordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
 
 RecordHelperDecl            ::= RECORD HELPER FOR TypeID RecordHelperItem* END
-                                {pin=2 extends="com.siberika.idea.pascal.lang.psi.impl.PasStructImpl"}
+                                {pin=2 extends="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"}
 RecordHelperItem ::= Visibility | ClassMethod | ClassProperty {recoverUntil=recover_classItem}
 
 ClassMethod         ::= classMethodProc | classMethodFunc {name="method declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}

@@ -1,19 +1,18 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.PsiElement;
-import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
-import com.siberika.idea.pascal.lang.psi.PasMethodDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
-import com.siberika.idea.pascal.lang.psi.PasProcedureType;
-import com.siberika.idea.pascal.lang.psi.PasRoutineDecl;
-import com.siberika.idea.pascal.lang.psi.PasStruct;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.util.FieldCollector;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -23,13 +22,14 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 14/09/2013
  */
-public class PascalModuleImpl extends PascalNamedElementImpl implements PasStruct {
+public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntityScope {
 
-    public static final int MAX_NON_BREAKING_NAMESPACES = 1;
     private Map<String, PasField> privateMembers = null;
     private Map<String, PasField> publicMembers = null;
     private Set<PascalNamedElement> redeclaredPublicMembers = null;
     private Set<PascalNamedElement> redeclaredPrivateMembers = null;
+    private long buildPrivateStamp = 0;
+    private long buildPublicStamp = 0;
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -51,66 +51,74 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasStruc
         return result;
     }
 
+    @NotNull
+    @Override
+    public Collection<PasField> getAllFields() {
+        if (!isCacheActual(publicMembers, buildPublicStamp)) {
+            buildPublicMembers();
+        }
+        if (!isCacheActual(privateMembers, buildPrivateStamp)) {
+            buildPrivateMembers();
+        }
+        Collection<PasField> result = new HashSet<PasField>();
+        result.addAll(publicMembers.values());
+        result.addAll(privateMembers.values());
+        return result;
+    }
+
     synchronized private void buildPrivateMembers() {
-        if (privateMembers != null) { return; }  // TODO: check correctness
+        if (isCacheActual(privateMembers, buildPrivateStamp)) { return; } // TODO: check correctness
         privateMembers = new LinkedHashMap<String, PasField>();
         redeclaredPrivateMembers = new LinkedHashSet<PascalNamedElement>();
         System.out.println("buildPrivateMembers: " + getName());
         //noinspection unchecked
-        retrieveEntitiesFromSection(PsiUtil.getModuleImplementationSection(this), PasField.Visibility.PRIVATE, privateMembers, redeclaredPrivateMembers,
+        PsiUtil.retrieveEntitiesFromSection(this, PsiUtil.getModuleImplementationSection(this), PasField.Visibility.PRIVATE,
+                new FieldCollector() {
+                    @Override
+                    public boolean fieldExists(PascalNamedElement element) {
+                        if (privateMembers.containsKey(element.getName())) {
+                            redeclaredPrivateMembers.add(element);
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+
+                    @Override
+                    public void addField(String name, PasField field) {
+                        privateMembers.put(name, field);
+                    }
+                },
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
     }
 
     synchronized private void buildPublicMembers() {
-        if (publicMembers != null) { return; }  // TODO: check correctness
+        if (isCacheActual(publicMembers, buildPublicStamp)) { return; } // TODO: check correctness
         publicMembers = new LinkedHashMap<String, PasField>();
         redeclaredPublicMembers = new LinkedHashSet<PascalNamedElement>();
-        System.out.println("buildPublicMembers: " + getName());
+        System.out.println("module buildPublicMembers: " + getName());
         //noinspection unchecked
-        retrieveEntitiesFromSection(PsiUtil.getModuleInterfaceSection(this), PasField.Visibility.PUBLIC, publicMembers, redeclaredPublicMembers,
+        PsiUtil.retrieveEntitiesFromSection(this, PsiUtil.getModuleImplementationSection(this), PasField.Visibility.PUBLIC,
+                new FieldCollector() {
+                    @Override
+                    public boolean fieldExists(PascalNamedElement element) {
+                        if (publicMembers.containsKey(element.getName())) {
+                            redeclaredPublicMembers.add(element);
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+
+                    @Override
+                    public void addField(String name, PasField field) {
+                        publicMembers.put(name, field);
+                    }
+                },
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
     }
 
-    private <T extends PascalNamedElement> void retrieveEntitiesFromSection(PsiElement section, PasField.Visibility visibility, Map<String, PasField> members, Set<PascalNamedElement> redeclaredMembers, Class<? extends T>... classes) {
-        if (section != null) {
-            for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
-                if (isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
-                    if (!PsiUtil.isModuleName(namedElement) && !PsiUtil.isFormalParameterName(namedElement)) {
-                        String name = namedElement.getName();
-                        if (!members.containsKey(name)) {
-                            PasField.Type type = PasField.Type.VARIABLE;
-                            if (PsiUtil.isTypeName(namedElement)) {
-                                type = PasField.Type.TYPE;
-                            } else if (PsiUtil.isRoutineName(namedElement)) {
-                                type = PasField.Type.ROUTINE;
-                            } else if (PsiUtil.isUsedUnitName(namedElement)) {
-                                type = PasField.Type.UNIT;
-                            }
-                            members.put(name, new PasField(this, namedElement, name, type, visibility));
-                        } else {
-                            redeclaredMembers.add(namedElement);
-                        }
-
-                    }
-                }
-            }
-            retrieveEntitiesFromSection(PsiUtil.getNearestAffectingDeclarationsRoot(section), null, members, redeclaredMembers, classes);
-        }
+    public boolean isCacheActual(Map<String, PasField> cache, long stamp) {
+        return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
     }
-
-    private static boolean isSameAffectingScope(PsiElement innerSection, PsiElement outerSection) {
-        for (int i = 0; i < MAX_NON_BREAKING_NAMESPACES; i++) {
-            if (innerSection == outerSection) {
-                return true;
-            }
-            //noinspection unchecked
-            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection, PasStruct.class, PasRoutineDecl.class, PasMethodDecl.class,
-                    PasProcedureType.class, PasClosureExpression.class)) {
-                return false;
-            }
-            innerSection = PsiUtil.getNearestAffectingDeclarationsRoot(innerSection);
-        }
-        return false;
-    }
-
 }

@@ -4,15 +4,18 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.siberika.idea.pascal.lang.psi.PasStruct;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -23,10 +26,11 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 07/09/2013
  */
-public class PasStructImpl extends PascalNamedElementImpl implements PasStruct {
+public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implements PasEntityScope {
 
     private List<Map<String, PasField>> members = null;
     private Set<PascalNamedElement> redeclaredMembers = null;
+    private long buildStamp = 0;
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
 
@@ -42,13 +46,15 @@ public class PasStructImpl extends PascalNamedElementImpl implements PasStruct {
         assert STR_TO_VIS.size() == PasField.Visibility.values().length;
     }
 
-    public PasStructImpl(ASTNode node) {
+    private boolean cacheStale;
+
+    public PasEntityScopeImpl(ASTNode node) {
         super(node);
     }
 
     @Nullable
     @SuppressWarnings("unchecked")
-    public static PasStructImpl findOwner(PascalRoutineImpl element) {
+    public static PasEntityScopeImpl findOwner(PascalRoutineImpl element) {
         return PsiTreeUtil.getParentOfType(element,
                 PasClassHelperDeclImpl.class, PasClassTypeDeclImpl.class, PasInterfaceTypeDeclImpl.class, PasObjectDeclImpl.class, PasRecordHelperDeclImpl.class, PasRecordDeclImpl.class);
     }
@@ -67,11 +73,11 @@ public class PasStructImpl extends PascalNamedElementImpl implements PasStruct {
      * @return structured type declaration element
      */
     @Nullable
-    public static PasStruct getStructByNameElement(final PascalNamedElement namedElement) {
+    public static PasEntityScope getStructByNameElement(final PascalNamedElement namedElement) {
         PsiElement sibling = PsiUtil.getNextSibling(namedElement);
         sibling = sibling != null ? PsiUtil.getNextSibling(sibling) : null;
-        if ((sibling instanceof PasTypeDecl) && (sibling.getFirstChild() instanceof PasStruct)) {
-            return (PasStruct) sibling.getFirstChild();
+        if ((sibling instanceof PasTypeDecl) && (sibling.getFirstChild() instanceof PasEntityScope)) {
+            return (PasEntityScope) sibling.getFirstChild();
         }
         return null;
     }
@@ -79,7 +85,7 @@ public class PasStructImpl extends PascalNamedElementImpl implements PasStruct {
     @Nullable
     @Override
     public PasField getField(String name) {
-        if (members == null) {
+        if (!isCacheActual(members, buildStamp)) { // TODO: check correctness
             buildMembers();
         }
         for (PasField.Visibility visibility : PasField.Visibility.values()) {
@@ -89,6 +95,19 @@ public class PasStructImpl extends PascalNamedElementImpl implements PasStruct {
             }
         }
         return null;
+    }
+
+    @NotNull
+    @Override
+    public Collection<PasField> getAllFields() {
+        if (!isCacheActual(members, buildStamp)) {
+            buildMembers();
+        }
+        Collection<PasField> result = new HashSet<PasField>();
+        for (Map<String, PasField> fields : members) {
+            result.addAll(fields.values());
+        }
+        return result;
     }
 
     private PasField.Visibility getVisibility(PsiElement element) {
@@ -104,7 +123,8 @@ public class PasStructImpl extends PascalNamedElementImpl implements PasStruct {
     }
 
     synchronized private void buildMembers() {
-        if (members != null) { return; }  // TODO: check correctness
+        if (isCacheActual(members, buildStamp)) { return; }  // TODO: check correctness
+        buildStamp = getContainingFile().getModificationStamp();
         members = new ArrayList<Map<String, PasField>>(PasField.Visibility.values().length);
         for (PasField.Visibility visibility : PasField.Visibility.values()) {
             members.add(visibility.ordinal(), new LinkedHashMap<String, PasField>());
@@ -161,4 +181,7 @@ public class PasStructImpl extends PascalNamedElementImpl implements PasStruct {
         members.get(visibility.ordinal()).put(field.name, field);
     }
 
+    public boolean isCacheActual(List<Map<String, PasField>> cache, long stamp) {
+        return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
+    }
 }

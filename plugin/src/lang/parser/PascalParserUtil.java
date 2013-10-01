@@ -17,19 +17,24 @@ import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
+import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
+import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
-import com.siberika.idea.pascal.lang.psi.PasMethodDecl;
+import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
-import com.siberika.idea.pascal.lang.psi.PasProcedureType;
+import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
+import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordField;
+import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasRoutineDecl;
-import com.siberika.idea.pascal.lang.psi.PasStruct;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -96,8 +101,9 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             if (innerSection == outerSection) {
                 return true;
             }
-            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection, PasStruct.class, PasRoutineDecl.class, PasMethodDecl.class,
-                    PasProcedureType.class, PasClosureExpression.class)) {
+            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection,
+                    PasClassTypeDecl.class, PasClassHelperDecl.class, PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordDecl.class, PasRecordHelperDecl.class,
+                    PasRoutineImplDecl.class, PasMethodImplDecl.class, PasClosureExpression.class)) {
                 return false;
             }
             innerSection = PsiUtil.getNearestAffectingDeclarationsRoot(innerSection);
@@ -124,7 +130,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     private static void retrieveFunctionResultReference(Collection<PascalNamedElement> result, PascalNamedElement current) {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(current);
-        if (section instanceof PasRoutineDecl) {
+        if (section instanceof PasRoutineImplDecl) {
             for (PsiElement element : section.getChildren()) {
                 if (element instanceof PascalNamedElement) {
                     result.add((PascalNamedElement) element);
@@ -136,7 +142,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     private static void retrieveDefaultNamespaceEntities(Collection<PascalNamedElement> result, PascalNamedElement current) {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(current);
-        if (section instanceof PasMethodDecl) {
+        if (section instanceof PasMethodImplDecl) {
             // add class declarations
             for (PsiElement element : section.getChildren()) {
                 if (element instanceof PascalQualifiedIdent) {
@@ -233,7 +239,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     private static PsiElement getStructTypeByIdent(@NotNull PascalNamedElement typeIdent) {
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(typeIdent, PasTypeDecl.class);
         if (typeDecl != null) {
-            PasStruct strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasStruct.class, true);
+            PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
             if (strucTypeDecl != null) {   // structured type
                 return strucTypeDecl;
             } else {                       // regular type

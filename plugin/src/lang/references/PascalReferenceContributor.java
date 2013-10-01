@@ -10,7 +10,7 @@ import com.intellij.psi.PsiReferenceRegistrar;
 import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasRoutineDecl;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +31,7 @@ public class PascalReferenceContributor extends PsiReferenceContributor {
                         String text = psiElement.getName();
 
                         if ((psiElement instanceof PasSubIdent) || (psiElement instanceof PasRefNamedIdent)
-                                || (psiElement.getParent() instanceof PasRoutineDecl)) {
+                                || (psiElement.getParent() instanceof PasRoutineImplDecl)) {
                             return new PsiReference[]{
                                     new PascalReference(element, new TextRange(0, text.length()))
                             };

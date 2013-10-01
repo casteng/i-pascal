@@ -15,16 +15,16 @@ import com.intellij.util.ConstantFunction;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasClassMethod;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasMethodDecl;
+import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasRoutineDecl;
-import com.siberika.idea.pascal.lang.psi.PasStruct;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasImplDeclSectionImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PasStructImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -55,12 +55,12 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
                 if (!targets.isEmpty()) {
                     result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, "Go to implementation", getHandler(targets)));
                 }
-            } else if (routineDecl instanceof PasRoutineDecl) {
+            } else if (routineDecl instanceof PasRoutineImplDecl) {
                 targets = getInterfaceRoutinesTargets(routineDecl);
                 if (!targets.isEmpty()) {
                     result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementingMethod, "Go to interface", getHandler(targets)));
                 }
-            } else if (routineDecl instanceof PasMethodDecl) {
+            } else if (routineDecl instanceof PasMethodImplDecl) {
                 targets = getInterfaceMethodTargets(routineDecl);
                 if (!targets.isEmpty()) {
                     result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementingMethod, "Go to interface", getHandler(targets)));
@@ -126,7 +126,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         if (module != null) {
             PasField typeMember = module.getField(routineDecl.getNamespace());
             if ((typeMember != null) && (typeMember.type == PasField.Type.TYPE)) {
-                PasStruct struct = PasStructImpl.getStructByNameElement(typeMember.element);
+                PasEntityScope struct = PasEntityScopeImpl.getStructByNameElement(typeMember.element);
                 if (struct != null) {
                     PasField field = struct.getField(routineDecl.getNamePart());
                     if ((field != null) && (field.type == PasField.Type.ROUTINE)) {
@@ -147,7 +147,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     private Collection<PsiElement> getImplementationMethodTargets(PascalRoutineImpl routineDecl) {
         Collection<PsiElement> result = new SmartList<PsiElement>();
-        PasStructImpl owner = PasStructImpl.findOwner(routineDecl);
+        PasEntityScopeImpl owner = PasEntityScopeImpl.findOwner(routineDecl);
         if (null == owner) {
             return result;
         }
