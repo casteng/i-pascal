@@ -61,6 +61,7 @@
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalLineMarkerProvider"/>
 
         <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionContributor"/>
+        <completion.confidence language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionConfidence"/>
 
         <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
     </extensions>
