@@ -31,7 +31,7 @@ public class PasField {
         this.name = name;
         this.type = type;
         this.visibility = visibility;
-        System.out.println(this);
+        //System.out.println(this);
     }
 
     @Override
