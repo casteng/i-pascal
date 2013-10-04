@@ -39,7 +39,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     @Nullable
     public final PasField getField(final String name) {
         if (publicMembers == null) {
-            buildPublicMembers();
+            buildPublicMembers();           // TODO: clarify order of members iteration
         }
         PasField result = publicMembers.get(name);
         if (null == result) {

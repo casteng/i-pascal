@@ -54,6 +54,7 @@ public class FPCSdkType extends BasePascalSdkType {
     public FPCSdkType() {
         super(FPCSdkType.class.getSimpleName());
         DefinesParser.parse(getClass().getResource("/defines.xml"));
+        BuiltinsParser.parse(getClass().getResource("/builtins.xml"));
     }
 
     @NotNull

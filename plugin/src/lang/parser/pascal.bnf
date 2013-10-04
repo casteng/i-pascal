@@ -304,7 +304,7 @@ private ProcExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)*
 ProcForwardDecl             ::= FORWARD ";" FunctionDirective* {pin=1}
 
 MethodImplDecl              ::= MethodDeclHeading ";" MethodDirective* [MethodBody]
-                                {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
+                                {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
 MethodBody          ::= BlockLocal ";"
 private MethodDeclHeading   ::= ProcMethod | FuncMethod
 private ProcMethod          ::= [CustomAttribute] MethodKey ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] {pin=3 recoverUntil=recover_decl}

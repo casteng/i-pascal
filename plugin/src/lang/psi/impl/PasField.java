@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,13 +20,15 @@ public class PasField {
 
     public enum Visibility {STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
+    @Nullable
     public final PasEntityScope owner;
+    @Nullable
     public final PascalNamedElement element;
     public final String name;
     public final Type type;
     public final Visibility visibility;
 
-    public PasField(PasEntityScope owner, PascalNamedElement element, String name, Type type, Visibility visibility) {
+    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, Visibility visibility) {
         this.owner = owner;
         this.element = element;
         this.name = name;
@@ -36,6 +39,6 @@ public class PasField {
 
     @Override
     public String toString() {
-        return visibility + " " + type + ": " + owner.getName() + "." + name + ", " + element;
+        return visibility + " " + type + ": " + (owner != null ? owner.getName() : "-") + "." + name + ", " + element;
     }
 }

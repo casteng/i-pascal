@@ -61,6 +61,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
     }
 
     private void foldCommon(PsiElement root, List<FoldingDescriptor> descriptors) {
+        @SuppressWarnings("unchecked")
         Collection<PascalPsiElement> blocks = PsiUtil.findChildrenOfAnyType(root,
                 PasUnitInterface.class, PasUnitImplementation.class, PasUsesClause.class, PasUnitInitialization.class, PasUnitFinalization.class,
                 PasVarSection.class, PasTypeSection.class, PasConstSection.class,
@@ -69,7 +70,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                 PasCompoundStatement.class, PasHandlerList.class, PasRepeatStatement.class);
 
         for (final PsiElement block : blocks) {
-            int foldStart = block.getFirstChild() != null ? block.getFirstChild().getTextRange().getEndOffset() : block.getTextOffset();
+            int foldStart = block.getFirstChild() != null ? block.getFirstChild().getTextRange().getEndOffset() : block.getTextRange().getStartOffset();
             TextRange range = new TextRange(foldStart, block.getTextRange().getEndOffset());
             if (range.getLength() > 1) {
                 descriptors.add(new FoldingDescriptor(block.getNode(), range, null));
@@ -84,7 +85,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
             if (caseItem != null) {
                 caseItem = PsiUtil.getNextSibling(caseItem);
             }
-            int foldStart = caseItem != null ? caseItem.getTextOffset() : caseStatement.getTextOffset();
+            int foldStart = caseItem != null ? caseItem.getTextRange().getStartOffset() : caseStatement.getTextRange().getStartOffset();
             TextRange range = new TextRange(foldStart, caseStatement.getTextRange().getEndOffset());
             if (range.getLength() > 0) {
                 descriptors.add(new FoldingDescriptor(caseStatement.getNode(), range, null));
@@ -93,9 +94,10 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
     }
 
     private void foldEnums(PsiElement root, List<FoldingDescriptor> descriptors) {
+        @SuppressWarnings("unchecked")
         Collection<PascalPsiElement> enums = PsiUtil.findChildrenOfAnyType(root, PasEnumType.class, PasRecordConstValue.class);
         for (final PascalPsiElement enumType : enums) {
-            TextRange range = new TextRange(enumType.getTextOffset()+1, enumType.getTextRange().getEndOffset()-1);
+            TextRange range = new TextRange(enumType.getTextRange().getStartOffset()+1, enumType.getTextRange().getEndOffset()-1);
             if (range.getLength() > 0) {
                 descriptors.add(new FoldingDescriptor(enumType.getNode(), range, null));
             }
@@ -107,7 +109,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         TextRange commentRange = null;
         PsiComment lastComment = null;
         for (final PsiComment comment : comments) {
-            if ((null == lastComment) || (!commentRange.contains(comment.getTextOffset()))) {
+            if ((null == lastComment) || (!commentRange.contains(comment.getTextRange().getStartOffset()))) {
                 lastComment = comment;
                 commentRange = comment.getTextRange();
                 // Merge sibling comments

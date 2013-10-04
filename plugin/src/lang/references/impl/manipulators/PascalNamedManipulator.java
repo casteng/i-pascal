@@ -19,7 +19,7 @@ public class PascalNamedManipulator extends AbstractElementManipulator<PascalNam
             @SuppressWarnings("ConstantConditions")
             final Document document = FileDocumentManager.getInstance().getDocument(element.getContainingFile().getVirtualFile());
             if (document != null) {
-                document.replaceString(element.getTextOffset() + range.getStartOffset(), element.getTextOffset() + range.getEndOffset(), newContent);
+                document.replaceString(element.getTextRange().getStartOffset() + range.getStartOffset(), element.getTextRange().getStartOffset() + range.getEndOffset(), newContent);
                 PsiDocumentManager.getInstance(element.getProject()).commitDocument(document);
             }
         }

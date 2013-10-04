@@ -12,11 +12,13 @@ import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassMethod;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
+import com.siberika.idea.pascal.lang.psi.PasEntityID;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterList;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -24,10 +26,13 @@ import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
+import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
+import com.siberika.idea.pascal.lang.psi.PasSubIdent;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
@@ -176,6 +181,14 @@ public class PsiUtil {
 
     public static boolean isModuleName(@NotNull PascalNamedElement element) {
         return element.getParent() instanceof PasModuleHead;
+    }
+
+    /**
+     * @param element element
+     * @return true if the element is a pointer type declaration. I.e. "TType = ^element".
+     */
+    public static boolean isPointerTypeDeclaration(@NotNull PascalNamedElement element) {
+         return PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class, PasTypeIDImpl.class, PasTypeDecl.class) instanceof PasPointerType;
     }
 
     public static boolean isFormalParameterName(@NotNull PascalNamedElement element) {
