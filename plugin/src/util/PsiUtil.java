@@ -8,8 +8,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
+import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
-import com.siberika.idea.pascal.lang.psi.PasClassMethod;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityID;
@@ -27,7 +27,6 @@ import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
-import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -45,6 +44,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRefNamedIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -140,17 +140,26 @@ public class PsiUtil {
                 return unitInterface;
             }
         }
-        PascalPsiElement parent = PsiTreeUtil.getParentOfType(element,
-                PasRoutineImplDecl.class, PasMethodImplDecl.class, PasClassMethod.class, PasClosureExpression.class,
-                PasModuleProgram.class, PasUnitImplementation.class, PasBlockGlobal.class,
+        PascalPsiElement parent = getParentDeclRoot(element);
+        if (parent instanceof PascalRoutineImpl) {
+            return getNearestAffectingDeclarationsRoot(parent);
+        } else if (PsiUtil.isInstanceOfAny(parent, PasFormalParameterSection.class, PasBlockLocal.class)) {
+            return getParentDeclRoot(parent);
+        }
+        return parent;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static PascalPsiElement getParentDeclRoot(PsiElement element) {
+        return PsiTreeUtil.getParentOfType(element,
+                PascalRoutineImpl.class, PasFormalParameterSection.class,
+                PasClosureExpression.class,
+                PasModuleProgram.class, PasUnitImplementation.class,
+                PasBlockGlobal.class, PasBlockLocal.class,
                 PasModule.class,
                 PasUnitInterface.class,
                 PasClassTypeDecl.class, PasClassHelperDecl.class, PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordDecl.class, PasRecordHelperDecl.class
         );
-        if (isInstanceOfAny(parent, PasRoutineImplDecl.class, PasMethodImplDecl.class, PasProcedureType.class) && element.getParent() == parent) {
-            return getNearestAffectingDeclarationsRoot(parent);
-        }
-        return parent;
     }
 
 
@@ -160,7 +169,7 @@ public class PsiUtil {
     }
 
     private static String getParentStr(@NotNull PsiElement parent) {
-        return parent != null ? parent.getText() + " [" + parent.getClass().getSimpleName() + "]" : "";
+        return parent.getText() + " [" + parent.getClass().getSimpleName() + "]";
     }
 
     public static boolean isEntityName(@NotNull PsiElement element) {

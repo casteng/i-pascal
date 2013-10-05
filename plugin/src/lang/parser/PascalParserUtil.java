@@ -105,7 +105,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             }
             if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection,
                     PasClassTypeDecl.class, PasClassHelperDecl.class, PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordDecl.class, PasRecordHelperDecl.class,
-                    PasRoutineImplDecl.class, PasMethodImplDecl.class, PasClosureExpression.class)) {
+                    PasClosureExpression.class, PascalRoutineImpl.class)) {
                 return false;
             }
             innerSection = PsiUtil.getNearestAffectingDeclarationsRoot(innerSection);
