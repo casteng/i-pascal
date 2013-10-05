@@ -1,12 +1,15 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.FieldCollector;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -28,7 +31,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
     private Map<String, PasField> members;
     private Set<PascalNamedElement> redeclaredMembers = null;
     private long buildStamp = 0;
-    private List<PasFormalParameter> formalParameters;
+    //private List<PasFormalParameter> formalParameters;
 
     @Nullable
     public abstract PasFormalParameterSection getFormalParameterSection();
@@ -102,4 +105,8 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
     }
 
+    public PasFullyQualifiedIdent getFunctionTypeIdent() {
+        PasTypeDecl type = PsiTreeUtil.getChildOfType(this, PasTypeDecl.class);
+        return PsiTreeUtil.findChildOfType(type, PasFullyQualifiedIdent.class);
+    }
 }

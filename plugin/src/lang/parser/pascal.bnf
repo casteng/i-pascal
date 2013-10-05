@@ -289,7 +289,8 @@ DeclSectionLocal    ::=	VarSection | TypeSection | ConstSection | MethodImplDecl
 private ProcKey             ::= FUNCTION | PROCEDURE
 RoutineImplDecl             ::= RoutineDeclHeading ";" FunctionDirective* ProcBodyBlock
                                 {pin=1 recoverUntil=recover_decl name="procedure or function declaration"
-                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
+                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
+                                 implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
 private RoutineDeclHeading  ::= procDecl | funcDecl
 private funcDecl            ::= [CustomAttribute] FUNCTION  NamedIdent [FormalParameterSection] ":" TypeDecl {pin=2 recoverUntil=recover_decl}
 private procDecl            ::= [CustomAttribute] PROCEDURE NamedIdent [FormalParameterSection] {pin=2 recoverUntil=recover_decl}
