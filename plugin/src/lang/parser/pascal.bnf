@@ -375,7 +375,7 @@ ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent])
                                 {pin=1 name="class declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"}
 private ClassBody           ::= [ClassState] [ClassParent] ClassItem* END
 ClassState          ::= SEALED | ABSTRACT
-private ClassItem           ::= Visibility | ClassMethod | ClassMethodResolution | ClassField | ClassProperty
+private ClassItem           ::= Visibility | ClassMethodResolution | ClassMethod | ClassField | ClassProperty
                               | ConstSection | TypeSection | [CLASS] VarSection {recoverUntil=recover_classItem}
 
 private recover_classItem   ::= !('[' | Identifier
@@ -383,7 +383,7 @@ private recover_classItem   ::= !('[' | Identifier
                                 | OPERATOR | PRIVATE | PROCEDURE | PROPERTY | PROTECTED | PUBLIC | PUBLISHED | RESOURCESTRING
                                 | STATIC | STRICT | THREADVAR | TYPE | VAR | VIRTUAL)
 
-ClassMethodResolution ::= [CLASS] ProcKey TypeID "." Identifier "=" Identifier ";" {pin=2}
+ClassMethodResolution ::= [CLASS] ProcKey GenericTypeIdent "." Identifier "=" Identifier ";"
 ClassParent         ::= "(" TypeID ("," TypeID)* ")" {pin=1}
 ClassField          ::= [CustomAttribute] IdentList ":" TypeDecl HintingDirective* ';' {pin=3}
 
