@@ -210,7 +210,7 @@ ModuleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead [UsesFileClause] BlockLocal "." {pin=1 recoverUntil=recover_decl}
 private progWoHead          ::= [UsesFileClause] BlockLocal "."
 
-private ModuleUnit          ::= UnitModuleHead UnitInterface UnitImplementation UnitBlock "." {pin=1}
+private ModuleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverUntil=recover_main_decl}
 UsesClause                  ::= USES NamespaceNameList {pin=1}
 
@@ -232,7 +232,7 @@ ExportedRoutine             ::= ExportedProc | ExportedFunc {extends="com.siberi
 private ExportedFunc        ::= FUNCTION NamedIdent [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
 private ExportedProc        ::= PROCEDURE NamedIdent [FormalParameterSection] ";" FunctionDirective* {pin=1 recoverUntil=recover_decl}
 
-UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection {pin=1 recoverUntil=recover_impl name="implementation section"}
+UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection UnitBlock {pin=1 recoverUntil=recover_impl name="implementation section"}
 ImplDeclSection             ::= DeclSection*
 private UnitBlock           ::= UnitInitialization [UnitFinalization] END | CompoundStatement | END {recoverUntil=recover_impl}
 UnitInitialization          ::= INITIALIZATION StatementList {pin=1 name="initialization section"} //TODO: recover statement

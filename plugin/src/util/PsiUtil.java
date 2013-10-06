@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.search.PsiElementProcessor;
+import com.intellij.psi.text.BlockSupport;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
@@ -24,6 +25,7 @@ import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
@@ -59,7 +61,7 @@ import java.util.List;
  */
 public class PsiUtil {
 
-    public static final int MAX_NON_BREAKING_NAMESPACES = 1;
+    public static final int MAX_NON_BREAKING_NAMESPACES = 2;
 
     @NotNull
     public static <T extends PsiElement> Collection<T> findChildrenOfAnyType(@Nullable final PsiElement element,
@@ -133,7 +135,7 @@ public class PsiUtil {
      * @return nearest declarations root element which affects the given element
      */
     @SuppressWarnings("unchecked")
-    public static PsiElement getNearestAffectingDeclarationsRoot(PsiElement element) {
+    public static PsiElement getNearestAffectingDeclarationsRoot(PsiElement element) {   // TODO: remove blocks?
         if (element instanceof PasUnitImplementation) {
             PasUnitInterface unitInterface = PsiTreeUtil.getPrevSiblingOfType(element, PasUnitInterface.class);
             if (unitInterface != null) {
@@ -141,7 +143,8 @@ public class PsiUtil {
             }
         }
         PascalPsiElement parent = getParentDeclRoot(element);
-        if (parent instanceof PascalRoutineImpl) {
+        // Make routine itself belong to parent root
+        if ((element instanceof PasNamedIdent) && (parent instanceof PascalRoutineImpl) && (element.getParent() == parent)) {
             return getNearestAffectingDeclarationsRoot(parent);
         } else if (PsiUtil.isInstanceOfAny(parent, PasFormalParameterSection.class, PasBlockLocal.class)) {
             return getParentDeclRoot(parent);
@@ -161,7 +164,6 @@ public class PsiUtil {
                 PasClassTypeDecl.class, PasClassHelperDecl.class, PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordDecl.class, PasRecordHelperDecl.class
         );
     }
-
 
     public static String getElDebugContext(PsiElement current) {
         return current != null ? "\"" + (current instanceof PascalNamedElement ? ((PascalNamedElement)current).getName() : "")
@@ -322,5 +324,18 @@ public class PsiUtil {
             }
         }
         return Collections.emptyList();
+    }
+
+    @Nullable
+    public static <T extends PsiElement> T findInSameSection(PsiElement section, Class<? extends T>...classes) {
+        T element = PsiTreeUtil.findChildOfAnyType(section, classes);
+        if ((element != null) && (isSameAffectingScope(getNearestAffectingDeclarationsRoot(element), section))) {
+            return element;
+        }
+        return null;
+    }
+
+    public static void rebuildPsi(@NotNull PsiElement block) {
+        BlockSupport.getInstance(block.getProject()).reparseRange(block.getContainingFile(), block.getTextRange().getStartOffset(), block.getTextRange().getEndOffset(), block.getText());
     }
 }

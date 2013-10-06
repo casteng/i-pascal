@@ -18,6 +18,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
+import com.siberika.idea.pascal.editor.PasActionCreateVar;
 import com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighter;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -38,7 +39,7 @@ public class PascalAnnotator implements Annotator {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             Collection<PascalNamedElement> refs = PascalParserUtil.findAllReferences(element, namedElement.getName());
             if (refs.isEmpty()) {
-                holder.createErrorAnnotation(element, "Undeclared identifier");
+                holder.createErrorAnnotation(element, "Undeclared identifier").registerFix(new PasActionCreateVar(namedElement));
             }
         }
     }

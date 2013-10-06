@@ -16,8 +16,13 @@ public class PasElementFactory {
     }
 
     public static PsiElement createLeafFromText(Project project, String text) {
-        PsiFile fileFromText = PsiFileFactory.getInstance(project).createFileFromText("_.pas", PascalLanguage.INSTANCE, text);
-        return PsiTreeUtil.getDeepestFirst(fileFromText);
+        PsiFile file = PsiFileFactory.getInstance(project).createFileFromText("_.pas", PascalLanguage.INSTANCE, text);
+        return PsiTreeUtil.getDeepestFirst(file);
+    }
+
+    public static PsiElement createElementFromText(Project project, String text) {
+        PsiFile file = PsiFileFactory.getInstance(project).createFileFromText("_.pas", PascalLanguage.INSTANCE, text);
+        return file.getFirstChild();
     }
 
 }
