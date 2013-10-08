@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -38,6 +39,7 @@ import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
@@ -259,8 +261,11 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
             }
         }
-        if (isVariableDecl(entityDecl) || isFieldDecl(entityDecl)) {                                          // variable declaration case
-            PasTypeDecl varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeDecl.class);
+        if (isVariableDecl(entityDecl) || isFieldDecl(entityDecl) || isPropertyDecl(entityDecl)) { // variable declaration case
+            PascalPsiElement varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeDecl.class);
+            if (null == varDecl) {
+                varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeID.class);
+            }
             if (varDecl != null) {
                 PascalNamedElement typeIdent = PsiTreeUtil.findChildOfType(varDecl, PascalQualifiedIdent.class, true);
                 if (typeIdent != null) {
@@ -311,6 +316,10 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     private static boolean isFieldDecl(PascalNamedElement entityDecl) {
         return (entityDecl.getParent() instanceof PasRecordField) || (entityDecl.getParent() instanceof PasClassField);
+    }
+
+    private static boolean isPropertyDecl(PascalNamedElement entityDecl) {
+        return (entityDecl.getParent() instanceof PasClassProperty);
     }
 
     /**
