@@ -70,7 +70,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         if (isCacheActual(privateMembers, buildPrivateStamp)) { return; } // TODO: check correctness
         privateMembers = new LinkedHashMap<String, PasField>();
         redeclaredPrivateMembers = new LinkedHashSet<PascalNamedElement>();
-        System.out.println("buildPrivateMembers: " + getName());
+
         //noinspection unchecked
         PsiUtil.retrieveEntitiesFromSection(this, PsiUtil.getModuleImplementationSection(this), PasField.Visibility.PRIVATE,
                 new FieldCollector() {
@@ -90,6 +90,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                     }
                 },
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
+        System.out.println(getName() + ": buildPrivateMembers: " + privateMembers.size() + "members");
     }
 
     synchronized private void buildPublicMembers() {
@@ -116,6 +117,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                     }
                 },
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
+        System.out.println(getName() + ": buildPublicMembers: " + publicMembers.size() + "members");
     }
 
     public boolean isCacheActual(Map<String, PasField> cache, long stamp) {

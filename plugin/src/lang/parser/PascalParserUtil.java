@@ -16,13 +16,10 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalIcons;
-import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
-import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
@@ -32,7 +29,6 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
-import com.siberika.idea.pascal.lang.psi.PasRecordField;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -40,7 +36,6 @@ import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
@@ -135,7 +130,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return result;
     }
 
-    private static void retrieveBuiltinReferences(Collection<PascalNamedElement> result, PascalQualifiedIdent ident) {
+    private static void retrieveBuiltinReferences(Collection<PascalNamedElement> result, PascalNamedElement ident) {
         if (null == ident) { return; }
         for (PasField field : BuiltinsParser.getBuiltins()) {
             if (field.name.equalsIgnoreCase(ident.getName())) {
@@ -244,7 +239,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     private static PsiElement retrieveNamespace(PascalNamedElement entityDecl, boolean canBeUnit) {
-        if (canBeUnit && (entityDecl instanceof PasNamespaceIdent)) {
+        if (canBeUnit && (entityDecl instanceof PasNamespaceIdent)) {                                         // unit reference case
             PasNamespaceIdent usedModuleName = getUsedModuleName(entityDecl);
             if (usedModuleName != null) {
                 PascalNamedElement unit = PasReferenceUtil.findUsedModule(usedModuleName);
@@ -253,7 +248,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
             }
         }
-        if (canBeUnit && (entityDecl instanceof PascalRoutineImpl)) {
+        if (canBeUnit && (entityDecl instanceof PascalRoutineImpl)) {                                         // routine self-reference case
             PasFullyQualifiedIdent typeName = ((PascalRoutineImpl) entityDecl).getFunctionTypeIdent();
             if (typeName != null) {
                 for (PascalNamedElement strucTypeIdent : findVariables(new NamespaceRec(typeName, null), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
@@ -261,7 +256,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
             }
         }
-        if (isVariableDecl(entityDecl) || isFieldDecl(entityDecl) || isPropertyDecl(entityDecl)) { // variable declaration case
+        if (PsiUtil.isVariableDecl(entityDecl) || PsiUtil.isFieldDecl(entityDecl) || PsiUtil.isPropertyDecl(entityDecl)) { // variable declaration case
             PascalPsiElement varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeDecl.class);
             if (null == varDecl) {
                 varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeID.class);
@@ -276,7 +271,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             }
         } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {                                    // type declaration case
             return getStructTypeByIdent(entityDecl);
-        } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                    // type declaration case
+        } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
             PasFullyQualifiedIdent typeIdent = ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
             if (typeIdent != null) {
                 for (PascalNamedElement strucTypeIdent : findVariables(new NamespaceRec(typeIdent, null), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
@@ -289,7 +284,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     @Nullable
-    private static PascalNamedElement getStructTypeByIdent(@NotNull PascalNamedElement typeIdent) {
+    private static PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent) {
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(typeIdent, PasTypeDecl.class);
         if (typeDecl != null) {
             PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
@@ -314,23 +309,6 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         }
     }
 
-    private static boolean isFieldDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasRecordField) || (entityDecl.getParent() instanceof PasClassField);
-    }
-
-    private static boolean isPropertyDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasClassProperty);
-    }
-
-    /**
-     * Checks if the entityDecl is a declaration of variable or formal parameter
-     * @param entityDecl entity declaration to check
-     * @return true if the entityDecl is a declaration of variable or formal parameter
-     */
-    private static boolean isVariableDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasVarSection) || (entityDecl.getParent() instanceof PasFormalParameter);
-    }
-
     /**
      * Returns list of entities matching the specified key and classes which may be visible from the element
      * @param element - element which should be affected by returned named entities
@@ -346,7 +324,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             }
         });
         int offset = element.getTextRange().getStartOffset();
-        if ((element instanceof PascalNamedElement) && PsiUtil.isPointerTypeDeclaration((PascalNamedElement) element)) {
+        if (PsiUtil.allowsForwardReference(element)) {
             offset = element.getContainingFile().getTextLength();
         }
         result.addAll(retrieveEntitiesFromSection(PsiUtil.getNearestAffectingDeclarationsRoot(element), key, offset, classes));

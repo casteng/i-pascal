@@ -5,8 +5,6 @@ import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
-import com.intellij.codeInsight.completion.InsertHandler;
-import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.PlatformPatterns;
@@ -21,6 +19,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
@@ -71,6 +70,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
@@ -84,14 +84,20 @@ public class PascalCompletionContributor extends CompletionContributor {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), new CompletionProvider<CompletionParameters>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
-                PsiElement originalPos = skipParents(parameters.getOriginalPosition());
-                PsiElement pos = skipParents(parameters.getPosition());
+                PsiElement originalPos = skipToExpressionParent(parameters.getOriginalPosition());
+                PsiElement pos = skipToExpressionParent(parameters.getPosition());
                 int level = PsiUtil.getElementLevel(originalPos);
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {
+                    //noinspection ConstantConditions
+                    if ((PsiUtil.isInstanceOfAny(parameters.getOriginalPosition().getParent(), PasSubIdent.class, PasStmtSimpleOrAssign.class))) {
+                        addEntities(result, parameters.getPosition(), PasField.TYPES_ALL);
+                    }
                     appendTokenSet(result, PascalLexer.VALUES);
-                    result.addAllElements(PasReferenceUtil.getEntities(pos, PasField.TYPES_ALL));
-                } else if ((originalPos instanceof PasStatementList) || (originalPos instanceof PasCompoundStatement)) {
-                    result.addAllElements(PasReferenceUtil.getEntities(pos, PasField.TYPES_ASSIGNABLE));
+                } else if (PsiTreeUtil.instanceOf(originalPos, PasStatementList.class, PasCompoundStatement.class) ||
+                           PsiTreeUtil.instanceOf(pos, PasStatementList.class, PasCompoundStatement.class)) {
+                    if ((parameters.getPosition() instanceof PasSubIdent) || (parameters.getPosition().getParent() instanceof PasSubIdent)) {
+                        addEntities(result, parameters.getPosition(), PasField.TYPES_ASSIGNABLE);
+                    }
                     appendTokenSet(result, PascalLexer.STATEMENTS);
                     if (PsiTreeUtil.getParentOfType(parameters.getPosition(), PasRepeatStatement.class, PasWhileStatement.class, PasForStatement.class) != null) {
                         appendTokenSet(result, PascalLexer.STATEMENTS_IN_CYCLE);
@@ -120,6 +126,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 } else if (posIs(originalPos, pos, PasExportedRoutine.class, PasDeclSectionLocal.class) && parameters.getPosition().getParent() instanceof PsiErrorElement) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
                 } else if (pos instanceof PasTypeID) {
+                    addEntities(result, parameters.getPosition(), PasField.TYPES_TYPE);
                     appendTokenSet(result, PascalLexer.TYPE_DECLARATIONS);
                 }
                 handleDirectives(result, parameters, originalPos, pos);
@@ -136,7 +143,12 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     }
 
-    private void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
+    private static void addEntities(CompletionResultSet result, PsiElement originalPosition, Set<PasField.Type> types) {
+        NamespaceRec namespace = new NamespaceRec((PasSubIdent) originalPosition.getParent());
+        result.addAllElements(PasReferenceUtil.getEntities(namespace, types));
+    }
+
+    private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
         if (PsiTreeUtil.instanceOf(originalPos, PasEntityScope.class, PasMethodImplDecl.class, PasRoutineImplDecl.class, PasProcForwardDecl.class, PasExportedRoutine.class)) {
             pos = originalPos;
         }
@@ -154,7 +166,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private static PsiElement skipParents(PsiElement element) {
+    private static PsiElement skipToExpressionParent(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
                 PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class, PasDesignator.class,
                 PasStmtSimpleOrAssign.class, PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class);
@@ -169,19 +181,14 @@ public class PascalCompletionContributor extends CompletionContributor {
         return false;
     }
 
-    private void appendTokenSet(CompletionResultSet result, TokenSet tokenSet) {
+    private static void appendTokenSet(CompletionResultSet result, TokenSet tokenSet) {
         for (IElementType op : tokenSet.getTypes()) {
             result.addElement(getElement(op.toString()));
         }
     }
 
-    private LookupElement getElement(String s) {
-        return LookupElementBuilder.create(s).withIcon(PascalIcons.GENERAL).withStrikeoutness(s.equals(PasTypes.GOTO)).withInsertHandler(new InsertHandler<LookupElement>() {
-            @Override
-            public void handleInsert(InsertionContext context, LookupElement item) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-        });
+    private static LookupElement getElement(String s) {
+        return LookupElementBuilder.create(s).withIcon(PascalIcons.GENERAL).withStrikeoutness(s.equals(PasTypes.GOTO));
     }
 
     private static Map<IElementType, Class<? extends PascalPsiElement>> TOKEN_TO_PSI = new HashMap<IElementType, Class<? extends PascalPsiElement>>();

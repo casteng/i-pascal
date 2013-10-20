@@ -36,6 +36,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
 
     static {
         STR_TO_VIS = new HashMap<String, PasField.Visibility>(PasField.Visibility.values().length);
+        STR_TO_VIS.put("INTERNAL", PasField.Visibility.INTERNAL);
         STR_TO_VIS.put("STRICTPRIVATE", PasField.Visibility.STRICT_PRIVATE);
         STR_TO_VIS.put("PRIVATE", PasField.Visibility.PRIVATE);
         STR_TO_VIS.put("STRICTPROTECTED", PasField.Visibility.STRICT_PROTECTED);
@@ -131,7 +132,6 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         }
         assert members.size() == PasField.Visibility.values().length;
         redeclaredMembers = new LinkedHashSet<PascalNamedElement>();
-        System.out.println("buildMembers: " + getName());
 
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
@@ -151,6 +151,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
             }
             child = child.getNextSibling();
         }
+        System.out.println(getName() + ": buildMembers: " + members.size() + "members");
     }
 
     private void addVariantRecordFields(PsiElement element, PasField.Visibility visibility) {

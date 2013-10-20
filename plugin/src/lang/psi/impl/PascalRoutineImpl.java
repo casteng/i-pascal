@@ -67,7 +67,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         }
 
         //noinspection unchecked
-        PsiUtil.retrieveEntitiesFromSection(this, this, PasField.Visibility.PUBLIC,
+        PsiUtil.retrieveEntitiesFromSection(this, this, PasField.Visibility.STRICT_PRIVATE,
                 new FieldCollector() {
                     @Override
                     public boolean fieldExists(PascalNamedElement element) {
@@ -85,6 +85,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
                     }
                 },
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
+        System.out.println(getName() + ": buildMembers: " + members.size() + "members");
     }
 
     private void addField(PascalNamedElement element, PasField.Type type) {

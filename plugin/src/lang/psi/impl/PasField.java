@@ -17,8 +17,9 @@ public class PasField {
 
     public static final Set<Type> TYPES_ALL = new HashSet<Type>(Arrays.asList(Type.values()));
     public static final Set<Type> TYPES_ASSIGNABLE = new HashSet<Type>(Arrays.asList(Type.VARIABLE, Type.PROPERTY));
+    public static final Set<Type> TYPES_TYPE = new HashSet<Type>(Arrays.asList(Type.TYPE));
 
-    public enum Visibility {STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
+    public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
     @Nullable
     public final PasEntityScope owner;
