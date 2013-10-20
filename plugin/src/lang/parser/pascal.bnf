@@ -196,7 +196,7 @@
         COMP_OPTION="comp_option"
   ]
 
-  implements(".*QualifiedIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
+  implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   extends(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
 }
@@ -291,7 +291,7 @@ RoutineImplDecl             ::= RoutineDeclHeading ";" FunctionDirective* ProcBo
                                 {pin=1 recoverUntil=recover_decl name="procedure or function declaration"
                                  extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
                                  implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
-private RoutineDeclHeading  ::= procDecl | funcDecl
+private RoutineDeclHeading  ::= funcDecl | procDecl
 private funcDecl            ::= [CustomAttribute] FUNCTION  NamedIdent [FormalParameterSection] ":" TypeDecl {pin=2 recoverUntil=recover_decl}
 private procDecl            ::= [CustomAttribute] PROCEDURE NamedIdent [FormalParameterSection] {pin=2 recoverUntil=recover_decl}
 private FunctionDirective   ::= OverloadDirective | InlineDirectiveSemi | CallConventionSemi | OldCallConventionDirectiveSemi | HintingDirective ";" | ExternalDirective // | "unsafe" ";"
@@ -307,9 +307,9 @@ ProcForwardDecl             ::= FORWARD ";" FunctionDirective* {pin=1}
 MethodImplDecl              ::= MethodDeclHeading ";" MethodDirective* [MethodBody]
                                 {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
 MethodBody          ::= BlockLocal ";"
-private MethodDeclHeading   ::= ProcMethod | FuncMethod
-private ProcMethod          ::= [CustomAttribute] MethodKey ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] {pin=3 recoverUntil=recover_decl}
-private FuncMethod          ::= [CustomAttribute] [CLASS] FUNCTION ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=4 recoverUntil=recover_decl}
+private MethodDeclHeading   ::= FuncMethod | ProcMethod
+private ProcMethod          ::= [CustomAttribute] MethodKey ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] {recoverUntil=recover_decl}
+private FuncMethod          ::= [CustomAttribute] [CLASS] FUNCTION ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {recoverUntil=recover_decl}
 MethodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
 MethodDirective     ::= REINTRODUCE ';' | OVERLOAD ';' | BindingDirective | AbstractDirectiveSemi | InlineDirectiveSemi
                       | CallConventionSemi | HintingDirective ";" | DispIDDirective {recoverUntil=recover_classItem}
@@ -534,7 +534,7 @@ ClassQualifiedIdent         ::= SubIdent "." SubIdent
 FullyQualifiedIdent	        ::=	NamespacePart? SubIdent
 NamespaceIdent	            ::=	NamespacePart? SubIdent
 SubIdent                    ::= Identifier
-private NamespacePart               ::= NamespaceItem+
+private NamespacePart       ::= NamespaceItem+
 private NamespaceItem       ::= SubIdent "."// {pin=2 recoverUntil=recover_declName}
 
 HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY// {recoverUntil=recover_hintingDir}
@@ -615,5 +615,3 @@ StringFactor                ::= ControlString (QuotedString ControlString)* [Quo
 private QuotedString        ::=	STRING_LITERAL
 private ControlString       ::=	controlchar+
 private controlchar         ::= CHARNUM NUMBER_INT | CHARNUM NUMBER_HEX // ***===
-
-compileTime ::= CT_DEFINE
