@@ -11,6 +11,7 @@ import com.intellij.patterns.PlatformPatterns;
 import com.intellij.patterns.StandardPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
@@ -107,16 +108,16 @@ public class PascalCompletionContributor extends CompletionContributor {
                     }
                 }
                 if ((PsiTreeUtil.findChildOfType(parameters.getOriginalFile(), PasUnitModuleHead.class) != null)) {
-                    if ((originalPos != null) && (originalPos.getParent()) instanceof PasModule) {
-                        appendTokenSetIfAbsent(result, PascalLexer.UNIT_SECTIONS, parameters.getOriginalFile(),
-                                PasProgramModuleHead.class, PasUnitModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);
+                    if ((originalPos instanceof PasModule) || ((originalPos != null) && (originalPos.getParent()) instanceof PasModule)) {
+                        appendTokenSetUnique(result, PascalLexer.UNIT_SECTIONS, parameters.getOriginalFile());
                     }
                 } else if (level <= 3) {
                     appendTokenSetUnique(result, PascalLexer.TOP_LEVEL_DECLARATIONS, parameters.getOriginalFile());
                     appendTokenSetUnique(result, TokenSet.create(PascalLexer.USES), parameters.getOriginalFile());
                     PasModuleProgram program = pos instanceof PasModuleProgram ? (PasModuleProgram) pos : PsiTreeUtil.getPrevSiblingOfType(pos.getNextSibling(), PasModuleProgram.class);
-                    if ((program != null) && (program.getProgramModuleHead() == null)) {
-                        appendTokenSet(result, PascalLexer.MODULE_HEADERS);
+                    if ((pos instanceof PsiFile) || ((program != null) && (program.getProgramModuleHead() == null))) {
+                        appendTokenSetIfAbsent(result, PascalLexer.MODULE_HEADERS, parameters.getOriginalFile(),
+                                PasProgramModuleHead.class, PasUnitModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);
                     }
                 }
                 if (posIs(originalPos, pos, PasUnitInterface.class, PasImplDeclSection.class, PasDeclSection.class, PasBlockLocal.class, PasBlockGlobal.class)) {
@@ -210,7 +211,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private void appendTokenSetUnique(CompletionResultSet result, TokenSet tokenSet, PsiElement position) {
         for (IElementType op : tokenSet.getTypes()) {
-            if (PsiTreeUtil.findChildOfType(position, TOKEN_TO_PSI.get(op), true) == null) {
+            if ((TOKEN_TO_PSI.get(op) == null) || (PsiTreeUtil.findChildOfType(position, TOKEN_TO_PSI.get(op), true) == null)) {
                 result.addElement(LookupElementBuilder.create(op.toString()).withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO)));
             }
         }
