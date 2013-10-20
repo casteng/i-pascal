@@ -236,6 +236,7 @@
     <var>ThreadID</var>
     <var>ExceptionClass</var>
 
+    <routine>assert</routine>
     <routine>SizeOf</routine>
     <routine>ord</routine>
     <routine>chr</routine>
@@ -244,7 +245,10 @@
     <routine>read</routine>
     <routine>readln</routine>
     <routine>length</routine>
+    <routine>setLength</routine>
     <routine>copy</routine>
+    <routine>concat</routine>
+    <routine>slice</routine>
     <routine>EnumResourceTypes</routine>
     <routine>EnumResourceNames</routine>
     <routine>EnumResourceLanguages</routine>
@@ -296,8 +300,12 @@
     <routine>SysGetFPCHeapStatus</routine>
     <routine>Getmem</routine>
     <routine>Getmemory</routine>
+    <routine>new</routine>
+    <routine>mark</routine>
     <routine>Freemem</routine>
     <routine>Freememory</routine>
+    <routine>dispose</routine>
+    <routine>release</routine>
     <routine>MemSize</routine>
     <routine>AllocMem</routine>
     <routine>ReAllocMem</routine>
@@ -310,6 +318,7 @@
     <routine>Error</routine>
     <routine>Paramcount</routine>
     <routine>ParamStr</routine>
+    <routine>cmdLine</routine>
     <routine>RunError</routine>
     <routine>AddExitProc</routine>
     <routine>halt</routine>
@@ -337,6 +346,8 @@
     <routine>WriteBarrier</routine>
     <routine>lo</routine>
     <routine>hi</routine>
+    <routine>low</routine>
+    <routine>high</routine>
     <routine>swap</routine>
     <routine>Align</routine>
     <routine>Random</routine>
@@ -359,6 +370,7 @@
     <routine>pi</routine>
     <routine>sqrt</routine>
     <routine>arctan</routine>
+    <routine>tan</routine>
     <routine>ln</routine>
     <routine>sin</routine>
     <routine>cos</routine>
@@ -369,6 +381,7 @@
     <routine>trunc</routine>
     <routine>FPower10</routine>
     <routine>ptr</routine>
+    <routine>addr</routine>
     <routine>strpas</routine>
     <routine>Delete</routine>
     <routine>Insert</routine>
@@ -382,6 +395,8 @@
     <routine>OctStr</routine>
     <routine>binStr</routine>
     <routine>chr</routine>
+    <routine>str</routine>
+    <routine>val</routine>
     <routine>UniqueString</routine>
     <routine>StringOfChar</routine>
     <routine>StringCodePage</routine>
@@ -439,6 +454,9 @@
     <routine>InterLockedExchangeAdd</routine>
     <routine>InterlockedCompareExchange</routine>
     <routine>Hash</routine>
-    <routine></routine>
-    <routine></routine>
+    <routine>inc</routine>
+    <routine>dec</routine>
+    <routine>pred</routine>
+    <routine>succ</routine>
+    <routine>typeinfo</routine>
 </builtins>
