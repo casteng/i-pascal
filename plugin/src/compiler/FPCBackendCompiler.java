@@ -17,7 +17,9 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileVisitor;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.module.PascalModuleType;
@@ -196,12 +198,18 @@ public class FPCBackendCompiler extends ExternalCompiler {
         context.addMessage(CompilerMessageCategory.INFORMATION, getMessage(module, "compile.commandLine", sb.toString()), null, -1, -1);
     }
 
-    private void addSourceRootToCmdLine(ArrayList<String> commandLine, VirtualFile sourceRoot) {
-        String path = sourceRoot.getPath();
-        if (path != null) {
-            commandLine.add(COMPILER_SETTING_SRCPATH + path);
-            commandLine.add(COMPILER_SETTING_INCPATH + path);
-        }
+    private void addSourceRootToCmdLine(final ArrayList<String> commandLine, VirtualFile sourceRoot) {
+        VfsUtilCore.visitChildrenRecursively(sourceRoot, new VirtualFileVisitor() {
+            @Override
+            public boolean visitFile(@NotNull VirtualFile file) {
+                final String path = file.getPath();
+                if (file.isDirectory() && (path != null)) {
+                    commandLine.add(COMPILER_SETTING_SRCPATH + path);
+                    commandLine.add(COMPILER_SETTING_INCPATH + path);
+                }
+                return true;
+            }
+        });
     }
 
     private File getCompilerExe(Sdk sdk, Module module, CompileContext context) {
