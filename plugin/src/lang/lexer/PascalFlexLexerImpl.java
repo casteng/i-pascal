@@ -41,7 +41,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private int curLevel = -1;
     private int inactiveLevel = -1;
 
-    private Set<String> defines = new HashSet<String>();
+    private Set<String> defines = null;
 
     Project project;
     VirtualFile virtualFile;
@@ -52,6 +52,13 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         this.virtualFile = virtualFile;
     }
 
+    public Set<String> getDefines() {
+        if (null == defines) {
+            initDefines();
+        }
+        return defines;
+    }
+
     @Override
     public CharSequence getIncludeContent(CharSequence text) {
         return new CharArrayCharSequence("{Some text}".toCharArray());
@@ -60,18 +67,18 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     @Override
     public void define(CharSequence sequence) {
         String name = extractDefineName(sequence);
-        defines.add(name);
+        getDefines().add(name);
     }
 
     @Override
     public void unDefine(CharSequence sequence) {
         String name = extractDefineName(sequence);
-        defines.remove(name);
+        getDefines().remove(name);
     }
 
-    @Override
-    public void clearDefines() {
-        defines.clear();
+    synchronized private void initDefines() {
+        if (defines != null) { return; }
+        defines = new HashSet<String>();
         if ((project != null) && (virtualFile != null)) {
             Module module = ModuleUtil.findModuleForFile(virtualFile, project);
             if (module != null) {
@@ -86,7 +93,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private IElementType doHandleIfDef(CharSequence sequence, boolean negate) {
         String name = extractDefineName(sequence);
         curLevel++;
-        if ((!defines.contains(name) ^ negate) && (!isInactive())) {
+        if ((!getDefines().contains(name) ^ negate) && (!isInactive())) {
             inactiveLevel = curLevel;
             yybegin(INACTIVE_BRANCH);
         }
@@ -144,7 +151,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                         while (flexAdapter.getTokenType() != null) {
                             flexAdapter.advance();
                         }
-                        defines.addAll(lexer.defines);
+                        getDefines().addAll(lexer.getDefines());
                     }
                 } else {
                     System.out.println("*** include " + name + " referenced from " + virtualFile.getName() + " not found");
