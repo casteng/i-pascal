@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.InputStream;
 
 /**
  * Author: George Bakhtadze
@@ -53,8 +54,14 @@ public class FPCSdkType extends BasePascalSdkType {
 
     public FPCSdkType() {
         super(FPCSdkType.class.getSimpleName());
-        DefinesParser.parse(getClass().getResource("/defines.xml"));
-        BuiltinsParser.parse(getClass().getResource("/builtins.xml"));
+        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
+        if (definesStream != null) {
+            DefinesParser.parse(definesStream);
+        }
+        InputStream builtinsUrl = getClass().getClassLoader().getResourceAsStream("/builtins.xml");
+        if (builtinsUrl != null) {
+            BuiltinsParser.parse(builtinsUrl);
+        }
     }
 
     @NotNull

@@ -7,7 +7,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.net.URL;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +22,7 @@ public class DefinesParser {
     public static final String COMPILER_FPC = "FPC";
     private static Map<String, Set<String>> defaultDefines = new TreeMap<String, Set<String>>();
 
-    static void parse(@NotNull URL resource) {
+    static void parse(@NotNull InputStream stream) {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
@@ -53,7 +53,7 @@ public class DefinesParser {
 
             };
 
-            saxParser.parse(resource.getFile(), handler);
+            saxParser.parse(stream, handler);
 
         } catch (Exception e) {
             e.printStackTrace();

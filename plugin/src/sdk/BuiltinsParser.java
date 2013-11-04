@@ -8,7 +8,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.net.URL;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -20,7 +20,7 @@ public class BuiltinsParser {
 
     private static Collection<PasField> builtins = new HashSet<PasField>();
 
-    static void parse(@NotNull URL resource) {
+    static void parse(@NotNull InputStream resource) {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
@@ -49,7 +49,7 @@ public class BuiltinsParser {
 
             };
 
-            saxParser.parse(resource.getFile(), handler);
+            saxParser.parse(resource, handler);
 
         } catch (Exception e) {
             e.printStackTrace();
