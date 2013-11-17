@@ -67,5 +67,10 @@
         <lang.formatter language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalFormatter"/>
 
         <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
+
+        <contentBasedClassFileProcessor implementation="com.siberika.idea.pascal.lang.compiled.ContentBasedClassFileProcessorPPU"/>
+        <psi.clsDecompiledFileProvider implementation="com.siberika.idea.pascal.lang.compiled.PPUClsFileDecompiledPsiFileProvider"/>
+        <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
+        <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
     </extensions>
 </idea-plugin>

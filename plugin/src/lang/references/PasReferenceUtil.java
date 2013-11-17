@@ -2,17 +2,21 @@ package com.siberika.idea.pascal.lang.references;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FileTypeIndex;
+import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.indexing.FileBasedIndex;
+import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -63,12 +67,19 @@ public class PasReferenceUtil {
     public static PascalNamedElement findUsedModule(@NotNull final PasNamespaceIdent moduleName) {
         Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
                 GlobalSearchScope.allScope(moduleName.getProject()));
+
+        Module module = ModuleUtilCore.findModuleForPsiElement(moduleName);
+        if (module != null) {
+            virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, "baseunix.ppu",
+                    GlobalSearchScope.moduleWithLibrariesScope(module)));
+        }
+
         for (VirtualFile virtualFile : virtualFiles) {
             if (isUnitWithName(virtualFile, moduleName.getName())) {
-                PascalFile pascalFile = (PascalFile) PsiManager.getInstance(moduleName.getProject()).findFile(virtualFile);
-                PasModule module = PsiTreeUtil.findChildOfType(pascalFile, PasModule.class);
-                if (module != null) {
-                    return module;
+                PsiFile pascalFile = PsiManager.getInstance(moduleName.getProject()).findFile(virtualFile);
+                PasModule pasModule = PsiTreeUtil.findChildOfType(pascalFile, PasModule.class);
+                if (pasModule != null) {
+                    return pasModule;
                 }
             }
         }
@@ -76,8 +87,13 @@ public class PasReferenceUtil {
     }
 
     private static boolean isUnitWithName(VirtualFile virtualFile, String name) {
-        return PascalFileType.UNIT_EXTENSION.equalsIgnoreCase(virtualFile.getExtension()) &&
+        return isUnitExtension(virtualFile) &&
                 virtualFile.getNameWithoutExtension().equalsIgnoreCase(name);
+    }
+
+    private static boolean isUnitExtension(VirtualFile virtualFile) {
+        return PascalFileType.UNIT_EXTENSION.equalsIgnoreCase(virtualFile.getExtension())
+            || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension());
     }
 
     public static Collection<LookupElement> getEntities(final PsiElement element, Set<PasField.Type> types) {

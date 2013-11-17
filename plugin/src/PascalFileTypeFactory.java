@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 public class PascalFileTypeFactory extends FileTypeFactory {
   @Override
   public void createFileTypes(@NotNull FileTypeConsumer fileTypeConsumer) {
-    fileTypeConsumer.consume(PascalFileType.INSTANCE, "pas;pp;lpr;dpr;inc");
+      fileTypeConsumer.consume(PascalFileType.INSTANCE, "pas;pp;lpr;dpr;inc");
+      fileTypeConsumer.consume(PPUFileType.INSTANCE, "ppu");
   }
 }

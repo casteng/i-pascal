@@ -34,4 +34,5 @@ public interface PascalIcons {
     final Icon UNIT    = IconLoader.findIcon(PATH + "unit_16x16.png");
     final Icon PROGRAM = IconLoader.findIcon(PATH + "program_16x16.png");
     final Icon INCLUDE = IconLoader.findIcon(PATH + "include_16x16.png");
+    final Icon COMPILED = IconLoader.findIcon(PATH + "include_16x16.png");
 }
