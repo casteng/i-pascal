@@ -3,17 +3,16 @@ package com.siberika.idea.pascal.lang.compiled;
 import com.intellij.extapi.psi.LightPsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.ClassFileViewProvider;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiCompiledFile;
+import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.PsiFileEx;
-import com.intellij.psi.impl.PsiManagerEx;
-import com.intellij.psi.impl.PsiManagerImpl;
 import com.intellij.psi.impl.source.LightPsiFileImpl;
+import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.impl.source.SourceTreeToPsiMap;
 import com.intellij.psi.impl.source.tree.TreeElement;
 import com.siberika.idea.pascal.PPUFileType;
@@ -26,6 +25,9 @@ import org.jetbrains.annotations.NotNull;
  * Date: 14/11/2013
  */
 public class PPUFileImpl extends LightPsiFileBase implements PsiFileEx, PsiCompiledFile {
+
+    public static final String DECOMPILED_FILENAME_PREFIX = "$";
+
     private volatile TreeElement myMirrorFileElement;
     private final PsiManager myManager;
 
@@ -49,12 +51,19 @@ public class PPUFileImpl extends LightPsiFileBase implements PsiFileEx, PsiCompi
 
     @Override
     public LightPsiFileImpl copyLight(FileViewProvider viewProvider) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
     @Override
     public PsiFile getDecompiledPsiFile() {
         return (PsiFile) getMirror();
+    }
+
+    @Override
+    public PsiDirectory getContainingDirectory() {
+        VirtualFile parentFile = getVirtualFile().getParent();
+        if (parentFile == null) return null;
+        return getManager().findDirectory(parentFile);
     }
 
     @Override
@@ -68,9 +77,14 @@ public class PPUFileImpl extends LightPsiFileBase implements PsiFileEx, PsiCompi
         synchronized (PPUFileImpl.class) {
             if (myMirrorFileElement == null) {
                 String ext = PascalFileType.INSTANCE.getDefaultExtension();
-                String fileName = getVirtualFile().getNameWithoutExtension() + "." + ext;
+                String fileName = DECOMPILED_FILENAME_PREFIX + getVirtualFile().getNameWithoutExtension() + "." + ext;
                 PsiFileFactory factory = PsiFileFactory.getInstance(getManager().getProject());
                 PsiFile mirror = factory.createFileFromText(fileName, PascalLanguage.INSTANCE, decompile(getManager(), getVirtualFile()), false, false);
+
+                if (mirror instanceof PsiFileImpl) {
+                    ((PsiFileImpl) mirror).setOriginalFile(this);
+                }
+
                 TreeElement mirrorTreeElement = SourceTreeToPsiMap.psiToTreeNotNull(mirror);
                 myMirrorFileElement = mirrorTreeElement;
             }
@@ -86,20 +100,6 @@ public class PPUFileImpl extends LightPsiFileBase implements PsiFileEx, PsiCompi
     }
 
     public static String decompile(PsiManager manager, VirtualFile file) {
-        PPUFileImpl psiFile = null;
-
-        final FileViewProvider provider = ((PsiManagerEx)manager).getFileManager().findViewProvider(file);
-        if (provider != null) {
-            final PsiFile psi = provider.getPsi(provider.getBaseLanguage());
-            if (psi instanceof PPUFileImpl) {
-                psiFile = (PPUFileImpl)psi;
-            }
-        }
-
-        if (psiFile == null) {
-            psiFile = new PPUFileImpl((PsiManagerImpl)manager, new ClassFileViewProvider(manager, file));
-        }
-
         return PPUFileDecompiler.decompileText(file);
     }
 }

@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.parser.impl;
 
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
@@ -37,4 +38,19 @@ public class PascalFileImpl extends PsiFileBase implements PascalFile, PsiNameId
     public PsiElement getNameIdentifier() {
         return null;
     }
+
+    @Override
+    public VirtualFile getVirtualFile() {
+        VirtualFile file = super.getVirtualFile();
+        if (file != null) {
+            if (file.getName().startsWith("$")) {
+                return myOriginalFile != null ? myOriginalFile.getVirtualFile() : file;
+            } else {
+                return file;
+            }
+        } else {
+            return myOriginalFile != null ? myOriginalFile.getVirtualFile() : null;
+        }
+    }
+
 }
