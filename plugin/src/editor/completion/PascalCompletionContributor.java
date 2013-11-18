@@ -95,7 +95,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
                 } else if (PsiTreeUtil.instanceOf(originalPos, PasStatementList.class, PasCompoundStatement.class) ||
-                           PsiTreeUtil.instanceOf(pos, PasStatementList.class, PasCompoundStatement.class)) {
+                        PsiTreeUtil.instanceOf(pos, PasStatementList.class, PasCompoundStatement.class)) {
                     if ((parameters.getPosition() instanceof PasSubIdent) || (parameters.getPosition().getParent() instanceof PasSubIdent)) {
                         addEntities(result, parameters.getPosition(), PasField.TYPES_ASSIGNABLE);
                     }
@@ -106,6 +106,8 @@ public class PascalCompletionContributor extends CompletionContributor {
                     if ((level <= 3) && (originalPos.getParent() instanceof PasUnitInitialization)) {
                         appendTokenSetUnique(result, TokenSet.create(PascalLexer.FINALIZATION), parameters.getOriginalFile());
                     }
+                } else {
+                    result.addElement(getElement("begin"));
                 }
                 if ((PsiTreeUtil.findChildOfType(parameters.getOriginalFile(), PasUnitModuleHead.class) != null)) {
                     if ((originalPos instanceof PasModule) || ((originalPos != null) && (originalPos.getParent()) instanceof PasModule)) {

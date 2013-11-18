@@ -71,12 +71,12 @@ public class PasActionCreateVar extends BaseIntentionAction {
                                             PasImplDeclSection.class, PasBlockLocal.class, PasBlockGlobal.class);
                                     if (block != null) {
                                         block.getParent().getNode().addLeaf(PasTypes.VAR_SECTION, "var " + element.getName() + ": ;\n", block.getNode());
-                                        moveCaretToAdded(block, 2);
+                                        moveCaretToAdded(block, -2);
                                         PsiUtil.rebuildPsi(block.getParent());
                                     }
                                 } else {
                                     varSection.getNode().addLeaf(PasTypes.NAME, "\n" + element.getName() + ": ;", null);
-                                    moveCaretToAdded(varSection.getLastChild(), -(1 + element.getName().length() + 2));
+                                    moveCaretToAdded(varSection.getLastChild(), 1 + element.getName().length() + 2);
                                     PsiUtil.rebuildPsi(varSection.getParent());
                                 }
                             }
@@ -92,7 +92,7 @@ public class PasActionCreateVar extends BaseIntentionAction {
         ((Navigatable) block.getNavigationElement()).navigate(true);
         Editor editor = FileEditorManager.getInstance(block.getProject()).getSelectedTextEditor();
         if (editor != null) {
-            editor.getCaretModel().moveToOffset(editor.getCaretModel().getOffset() - offsetFromEnd);
+            editor.getCaretModel().moveToOffset(editor.getCaretModel().getOffset() + offsetFromEnd);
         }
     }
 
