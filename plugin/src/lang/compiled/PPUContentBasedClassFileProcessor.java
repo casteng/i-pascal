@@ -5,6 +5,7 @@ import com.intellij.openapi.fileTypes.ContentBasedClassFileProcessor;
 import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalLanguage;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
  * Author: George Bakhtadze
  * Date: 13/11/2013
  */
-public class ContentBasedClassFileProcessorPPU implements ContentBasedClassFileProcessor {
+public class PPUContentBasedClassFileProcessor implements ContentBasedClassFileProcessor {
     @NotNull
     @Override
     public SyntaxHighlighter createHighlighter(Project project, VirtualFile vFile) {
@@ -30,12 +31,12 @@ public class ContentBasedClassFileProcessorPPU implements ContentBasedClassFileP
     @NotNull
     @Override
     public String obtainFileText(Project project, VirtualFile file) {
-        return PPUFileDecompiler.decompileText(file);
+        return PPUFileDecompiler.decompileText(file, ProjectRootManager.getInstance(project).getProjectSdk());
     }
 
     @Nullable
     @Override
     public Language obtainLanguageForFile(VirtualFile file) {
-        return null;//"ppu".equalsIgnoreCase(file.getExtension()) ? PascalLanguage.INSTANCE : null;
+        return null;
     }
 }

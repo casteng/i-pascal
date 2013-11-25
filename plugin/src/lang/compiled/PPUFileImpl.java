@@ -2,6 +2,8 @@ package com.siberika.idea.pascal.lang.compiled;
 
 import com.intellij.extapi.psi.LightPsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiCompiledFile;
@@ -100,6 +102,7 @@ public class PPUFileImpl extends LightPsiFileBase implements PsiFileEx, PsiCompi
     }
 
     public static String decompile(PsiManager manager, VirtualFile file) {
-        return PPUFileDecompiler.decompileText(file);
+        Sdk sdk = ProjectRootManager.getInstance(manager.getProject()).getProjectSdk();
+        return PPUFileDecompiler.decompileText(file, sdk);
     }
 }

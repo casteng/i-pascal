@@ -1,7 +1,5 @@
 package com.siberika.idea.pascal.sdk;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.process.ProcessOutput;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.AdditionalDataConfigurable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -32,6 +30,7 @@ import java.io.InputStream;
  */
 public class FPCSdkType extends BasePascalSdkType {
 
+    public static final String FPC_PARAMS_VERSION_GET = "-iV";
     private static String target;
 
     @NotNull
@@ -99,9 +98,20 @@ public class FPCSdkType extends BasePascalSdkType {
 
     @NotNull
     public static File getCompilerExecutable(@NotNull final String sdkHome) {
-        File binDir = new File(sdkHome, "bin");
+        return getUtilExecutable(sdkHome, "bin", "fpc");
+    }
+
+    @NotNull
+    public static File getPPUDumpExecutable(@NotNull final String sdkHome) {
+        return getUtilExecutable(sdkHome, "bin", "ppudump");
+    }
+
+    //TODO: take target directory from compiler target
+    @NotNull
+    static File getUtilExecutable(@NotNull final String sdkHome, @NotNull final String dir, @NotNull final String exe) {
+        File binDir = new File(sdkHome, dir);
         for (File targetDir : FileUtil.listDirs(binDir)) {
-            File executable = getExecutable(targetDir.getAbsolutePath(), "fpc");
+            File executable = getExecutable(targetDir.getAbsolutePath(), exe);
             if (executable.canExecute()) {
                 target = targetDir.getName();
                 return executable;
@@ -123,8 +133,8 @@ public class FPCSdkType extends BasePascalSdkType {
     }
 
     @Nullable
-    public String getVersionString(String sdkHome){
-        return getExecutableVersionOutput(sdkHome);
+    public String getVersionString(String sdkHome) {
+        return SysUtils.runAndGetStdOut(sdkHome, getCompilerExecutable(sdkHome).getAbsolutePath(), FPC_PARAMS_VERSION_GET);
     }
 
     @NotNull
@@ -159,24 +169,6 @@ public class FPCSdkType extends BasePascalSdkType {
         if (sdkModificatorHolder[0] != null) {
             sdkModificatorHolder[0].commitChanges();
         }
-    }
-
-    @Nullable
-    private static String getExecutableVersionOutput(String sdkHome) {
-        final String exePath = getCompilerExecutable(sdkHome).getAbsolutePath();
-        final ProcessOutput processOutput;
-        try {
-            processOutput = SysUtils.getProcessOutput(sdkHome, exePath, "-iV");
-        } catch (final ExecutionException e) {
-            return null;
-        }
-        if (processOutput.getExitCode() != 0) {
-            return null;
-        }
-        final String stdout = processOutput.getStdout().trim();
-        if (stdout.isEmpty()) return null;
-
-        return stdout;
     }
 
     @Override

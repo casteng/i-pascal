@@ -65,13 +65,13 @@ public class PasReferenceUtil {
 
     @Nullable
     public static PascalNamedElement findUsedModule(@NotNull final PasNamespaceIdent moduleName) {
-        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
+        final Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
                 GlobalSearchScope.allScope(moduleName.getProject()));
 
         Module module = ModuleUtilCore.findModuleForPsiElement(moduleName);
         if (module != null) {
-            virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, "baseunix.ppu",
-                    GlobalSearchScope.moduleWithLibrariesScope(module)));
+            virtualFiles.addAll(FilenameIndex.getAllFilesByExt(module.getProject(), "ppu",
+                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
         }
 
         for (VirtualFile virtualFile : virtualFiles) {

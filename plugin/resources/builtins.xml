@@ -1,4 +1,5 @@
 <builtins>
+    <type>___DUMMY__TYPE___</type>
     <type>Byte</type>
     <type>ShortInt</type>
     <type>Word</type>

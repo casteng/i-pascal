@@ -5,6 +5,7 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessOutput;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
@@ -48,4 +49,20 @@ public class SysUtils {
         return timeout < 0 ? processHandler.runProcess() : processHandler.runProcess(timeout);
     }
 
+    @Nullable
+    public static String runAndGetStdOut(String workDir, String exePath, String...params) {
+        final ProcessOutput processOutput;
+        try {
+            processOutput = getProcessOutput(workDir, exePath, params);
+        } catch (final ExecutionException e) {
+            return null;
+        }
+        if (processOutput.getExitCode() != 0) {
+            return null;
+        }
+        final String stdout = processOutput.getStdout().trim();
+        if (stdout.isEmpty()) return null;
+
+        return stdout;
+    }
 }
