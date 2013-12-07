@@ -18,6 +18,15 @@ public class FileUtil {
         return lastSepPos >= 0 ? fileName.substring(0, lastSepPos) : "";
     }
 
+    /**
+     * Returns file name without path
+     * @param fullPath - file name with full path
+     * @return file name without full path
+     */
+    public static String getFilename(@NotNull final String fullPath) {
+        return fullPath.substring(fullPath.lastIndexOf(File.separator)+1);
+    }
+
     public static File[] listDirs(@NotNull File baseDir) {
         return baseDir.listFiles(new FileFilter() {
             @Override

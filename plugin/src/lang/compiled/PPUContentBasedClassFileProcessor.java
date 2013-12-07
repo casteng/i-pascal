@@ -5,10 +5,10 @@ import com.intellij.openapi.fileTypes.ContentBasedClassFileProcessor;
 import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +31,7 @@ public class PPUContentBasedClassFileProcessor implements ContentBasedClassFileP
     @NotNull
     @Override
     public String obtainFileText(Project project, VirtualFile file) {
-        return PPUFileDecompiler.decompileText(file, ProjectRootManager.getInstance(project).getProjectSdk());
+        return PPUFileDecompiler.decompileText(file.getPath(), ModuleUtil.getModuleForFile(project, file));
     }
 
     @Nullable

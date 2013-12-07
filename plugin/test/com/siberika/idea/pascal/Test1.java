@@ -1,24 +1,24 @@
 package com.siberika.idea.pascal;
 
+import com.intellij.testFramework.ParsingTestCase;
 import org.junit.Test;
 
 /**
  * Author: George Bakhtadze
  * Date: 20/03/2013
  */
-public class Test1 {
+public class Test1 extends ParsingTestCase {
+    public Test1() {
+        super("", "pas", new PascalParserDefinition());
+    }
+
     @Test
-    public void test() throws Exception {
-        int a = 100;
-        int b = a * 1000000;
-        System.out.println(log2(a));
-        System.out.println(log2(b));
-        System.out.println(log2(b)/log2(a));
+    public void testSimple() {
+        doTest(true);
     }
 
-    private double log2(int i) {
-        return Math.log(i) / Math.log(2);
+    @Override
+    protected String getTestDataPath() {
+        return "testData";
     }
-
-
 }

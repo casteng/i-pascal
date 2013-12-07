@@ -43,7 +43,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
 
     public void reset() {
         if (optionsEdit != null) {
-            optionsEdit.setText(BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_COMPILER_OPTIONS));
+            optionsEdit.setText((String) BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_COMPILER_OPTIONS));
         }
     }
 

@@ -151,7 +151,7 @@ public class FPCBackendCompiler extends ExternalCompiler {
 
         commandLine.add(executable.getPath());
 
-        String compilerOptions = BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_COMPILER_OPTIONS);
+        String compilerOptions = (String) BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_COMPILER_OPTIONS);
         if (compilerOptions != null) {
             commandLine.add(compilerOptions);
         }

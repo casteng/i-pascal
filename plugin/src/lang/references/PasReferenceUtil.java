@@ -2,14 +2,12 @@ package com.siberika.idea.pascal.lang.references;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FileTypeIndex;
-import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
@@ -26,6 +24,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,11 +67,7 @@ public class PasReferenceUtil {
         final Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
                 GlobalSearchScope.allScope(moduleName.getProject()));
 
-        Module module = ModuleUtilCore.findModuleForPsiElement(moduleName);
-        if (module != null) {
-            virtualFiles.addAll(FilenameIndex.getAllFilesByExt(module.getProject(), "ppu",
-                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
-        }
+        virtualFiles.addAll(ModuleUtil.getAllCompiledModuleFilesByName(ModuleUtilCore.findModuleForPsiElement(moduleName), moduleName.getName()));
 
         for (VirtualFile virtualFile : virtualFiles) {
             if (isUnitWithName(virtualFile, moduleName.getName())) {

@@ -11,13 +11,13 @@ import java.util.Map;
  */
 public class PascalSdkData implements SdkAdditionalData {
 
-    private final Map<String, String> data;
+    private final Map<String, Object> data;
 
     public PascalSdkData() {
-        this.data = new HashMap<String, String>();
+        this.data = new HashMap<String, Object>();
     }
 
-    public PascalSdkData(Map<String, String> data) {
+    public PascalSdkData(Map<String, Object> data) {
         this.data = data;
     }
 
@@ -26,11 +26,11 @@ public class PascalSdkData implements SdkAdditionalData {
         return new PascalSdkData(data);
     };
 
-    public String getValue(final String key) {
+    public Object getValue(final String key) {
         return data.get(key);
     }
 
-    public void setValue(final String key, final String value) {
+    public void setValue(final String key, final Object value) {
         data.put(key, value);
     }
 }

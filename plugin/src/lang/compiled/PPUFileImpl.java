@@ -2,8 +2,6 @@ package com.siberika.idea.pascal.lang.compiled;
 
 import com.intellij.extapi.psi.LightPsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiCompiledFile;
@@ -13,13 +11,16 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.PsiFileEx;
+import com.intellij.psi.impl.file.PsiFileImplUtil;
 import com.intellij.psi.impl.source.LightPsiFileImpl;
 import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.impl.source.SourceTreeToPsiMap;
 import com.intellij.psi.impl.source.tree.TreeElement;
+import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -49,6 +50,12 @@ public class PPUFileImpl extends LightPsiFileBase implements PsiFileEx, PsiCompi
     @Override
     public PsiElement[] getChildren() {
         return getMirror().getChildren();
+    }
+
+    @Override
+    public void delete() throws IncorrectOperationException {
+        checkDelete();
+        PsiFileImplUtil.doDelete(this);
     }
 
     @Override
@@ -102,7 +109,6 @@ public class PPUFileImpl extends LightPsiFileBase implements PsiFileEx, PsiCompi
     }
 
     public static String decompile(PsiManager manager, VirtualFile file) {
-        Sdk sdk = ProjectRootManager.getInstance(manager.getProject()).getProjectSdk();
-        return PPUFileDecompiler.decompileText(file, sdk);
+        return PPUFileDecompiler.decompileText(file.getPath(), ModuleUtil.getModuleForFile(manager.getProject(), file));
     }
 }
