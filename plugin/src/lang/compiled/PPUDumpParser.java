@@ -34,6 +34,7 @@ import java.util.TreeMap;
 public class PPUDumpParser {
 
     private static final Logger LOG = Logger.getInstance(PPUDumpParser.class);
+    public static final String UNRESOLVED_INTERNAL = "__INTERNAL__";
 
     public static Section parse(InputStream inputStream, PPUDecompilerCache cache) throws ParseException, ParserConfigurationException, SAXException, IOException {
         SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -88,7 +89,7 @@ public class PPUDumpParser {
             addSection("/formal", "", "", "", "", 0).ignore = true;
 
             addSection("/proc", "", "", "", ";\n\n", 0);
-            addSection("/proctype", "", null, "", ";\n\n", 0);
+            addSection("/proctype", "", null, "", "", 0);
             addSection("prop/params", "[", "", "", "]", 2);
             addSection("/params", "(", "", "", ")", 2);
             addSection("/param", "", "", "", "; ", 0);
@@ -96,16 +97,16 @@ public class PPUDumpParser {
             addSection("/const", "const ", " = ", "", ";\n\n", 0);
             addSection("/var", "var ", ": ", "", ";\n\n", 0);
 
-            addSection("/array", "type ", " = array", "", ";\n\n", 0);
+            addSection("/array", "", " = array", "", "", 0);
 
             addSection("/obj", "", null, "", "end;\n\n", 0);
 
-            addSection("/classref", "type ", " = class of ", "", ";\n\n", 0);
+            addSection("/classref", "", "", "", "", 0);
 
             addSection("/prop", "property ", "", "", ";\n\n", 0);
 
             for (String name : TYPES) {
-                addSection(name, "type ", " = ", "", ";\n\n", 0);
+                addSection(name, "", null, "", "", 0);
             }
 
             NAME_SUB.put("$assign",   ":= ");
@@ -212,15 +213,13 @@ public class PPUDumpParser {
             sec.sb.append(sec.textEnd);
 
             if (!sec.ignore) {
-                if (!StringUtils.isBlank(sec.name) ||
-                        (StringUtils.isBlank(sec.getDataStr("id")) && StringUtils.isBlank(sec.getDataStr("symid")))) {
+
+                if (!sec.isAnonimous()) {
                     if (stack.isEmpty()) {
                         result = sec;
                         fixupUndefined(sec);
                         result.idNameMap = idNameMap;
                         result.symidNameMap = symidNameMap;
-                    } else {
-                        stack.getFirst().merge(sec);
                     }
                 } else {
                     if (!StringUtils.isBlank(sec.getDataStr("id"))) {
@@ -230,6 +229,9 @@ public class PPUDumpParser {
                         symidNameMap.put(sec.getDataStr("symid"), sec.sb.toString());
                     }
                 }
+                if (!stack.isEmpty()) {
+                    stack.getFirst().merge(sec);
+                }
             } else {//if (LOG.isDebugEnabled()) {
                 //LOG.debug("Section ignored: " + sec);
                 //System.out.println("Section ignored: " + sec); //===***
@@ -238,6 +240,7 @@ public class PPUDumpParser {
 
         private void handleSectionEnd(Section sec) {
             if (TYPES.contains(sec.type)) {
+                insertTypeDeclName(sec);
                 if ("/ord".equalsIgnoreCase(sec.type)) {
                     if (sec.getDataStr("ordtype").endsWith("ool")) {
                         sec.sb.append("false..true");
@@ -248,33 +251,35 @@ public class PPUDumpParser {
                     }
                 } else if ("/ptr".equalsIgnoreCase(sec.type)) {
                     sec.sb.append("^");
-                    appendReference(sec, "ptr", "", "", sec.name);
+                    appendReference(sec, "ptr", "", "", UNRESOLVED_INTERNAL);
                 } else if ("/set".equalsIgnoreCase(sec.type)) {
                     sec.sb.append("set");
-                    appendReference(sec, "eltype", " of ", "", sec.name);
+                    appendReference(sec, "eltype", " of ", "", UNRESOLVED_INTERNAL);
                 } else {
                     sec.sb.append(sec.name);
                 }
+                appendLineEnd(sec);
             } else if ("/array".equalsIgnoreCase(sec.type)) {
-                if (!hasOption(sec, "dynamic")) {
-                    if (allDataPresent(sec, "low", "high")) {
-                        sec.sb.append("[").append(sec.getDataStr("low")).append("..").append(sec.getDataStr("high")).append("]");
-                    }
+                insertTypeDeclName(sec);
+                sec.sb.append(" array");
+                if (!hasOption(sec, "dynamic") && allDataPresent(sec, "low", "high") && !"-1".equals(sec.getDataStr("high"))) {
+                    sec.sb.append("[").append(sec.getDataStr("low")).append("..").append(sec.getDataStr("high")).append("]");
                 }
                 sec.sb.append(" of ");
-                appendReference(sec, "eltype", "", "", "__INTERNAL__");
+                appendReference(sec, "eltype", "", "", UNRESOLVED_INTERNAL);
+                appendLineEnd(sec);
             } else if ("/options".equalsIgnoreCase(sec.type)) {
                 if (!stack.isEmpty()) {
                     stack.getFirst().data.putAll(sec.data);
                 }
             } else if ("/param".equalsIgnoreCase(sec.type)) {
                 sec.insertText(0, sec.getDataStr("spez") + " ");
-                appendReference(sec, "vartype", ": ", "", "__INTERNAL__");
+                appendReference(sec, "vartype", ": ", "", UNRESOLVED_INTERNAL);
             } else if ("/field".equalsIgnoreCase(sec.type)) {
                 sec.insertVisibility();
-                appendReference(sec, "vartype", "", "", "__INTERNAL__");
+                appendReference(sec, "vartype", "", "", UNRESOLVED_INTERNAL);
             } else if ("/var".equalsIgnoreCase(sec.type)) {
-                appendReference(sec, "vartype", "", "", "__INTERNAL__");
+                appendReference(sec, "vartype", "", "", UNRESOLVED_INTERNAL);
             } else if ("/proc".equalsIgnoreCase(sec.type)) {
                 if (hasOption(sec, "procedure")) {
                     sec.insertText(0, "procedure ");
@@ -284,11 +289,11 @@ public class PPUDumpParser {
                     sec.insertText(0, "destructor ");
                 } else if (hasOption(sec, "operator")) {
                     sec.insertText(0, "operator ");
-                    appendReference(sec, "rettype", "", "", "__INTERNAL__");
+                    appendReference(sec, "rettype", "", "", UNRESOLVED_INTERNAL);
                 } else if (hasOption(sec, "function")) {
                     sec.insertText(0, "function ");
                     sec.sb.append(": ");
-                    appendReference(sec, "rettype", "", "", "__INTERNAL__");
+                    appendReference(sec, "rettype", "", "", UNRESOLVED_INTERNAL);
                 }
                 if (hasOption(sec, "classmethod")) {
                     sec.insertText(0, "class ");
@@ -302,21 +307,24 @@ public class PPUDumpParser {
             } else if ("/obj".equalsIgnoreCase(sec.type)) {
                 StringBuilder psb = new StringBuilder("type ");
                 psb.append(sec.name).append(" = ").append(sec.getDataStr("objtype"));
-                appendReference(sec, "ancestor", "(", ")", "__INTERNAL__");
+                appendReference(sec, "ancestor", "(", ")", UNRESOLVED_INTERNAL);
                 psb.append("\n");
                 if (!StringUtils.isBlank(sec.getDataStr("iid"))) {
                     psb.append("['").append(sec.getDataStr("iid")).append("']").append("\n");
                 }
                 sec.insertText(0, psb.toString());
             } else if ("/classref".equalsIgnoreCase(sec.type)) {
-                appendReference(sec, "ref", "", "", "__INTERNAL__");
+                insertTypeDeclName(sec);
+                sec.sb.append("class of ");
+                appendReference(sec, "ref", "", "", UNRESOLVED_INTERNAL);
+                appendLineEnd(sec);
             } else if ("/proctype".equalsIgnoreCase(sec.type)) {
                 if (StringUtils.isBlank(sec.getDataStr("rettype/id"))) {
                     sec.insertText(0, "procedure ");
                 } else {
                     sec.insertText(0, "function ");
                     sec.sb.append(": ");
-                    appendReference(sec, "rettype", "", "", "");
+                    appendReference(sec, "rettype", "", "", UNRESOLVED_INTERNAL);
                 }
                 if (sec.name != null) {
                     sec.insertText(0, "type " + sec.name + " = ");
@@ -324,12 +332,25 @@ public class PPUDumpParser {
                 if ("1".equals(sec.getDataStr("methodptr"))) {
                     sec.sb.append(" of object");
                 }
+                appendLineEnd(sec);
             } else if ("/prop".equalsIgnoreCase(sec.type)) {
                 sec.sb.append(": ");
-                appendReference(sec, "proptype", "", "", "__INTERNAL__");
+                appendReference(sec, "proptype", "", "", UNRESOLVED_INTERNAL);
                 appendIfAllNotBlank(sec.sb, " read ", retrieveReference(null, sec.data.get("getter/id"), sec.data.get("getter/symid"), ""));
                 appendIfAllNotBlank(sec.sb, " write ", retrieveReference(null, sec.data.get("setter/id"), sec.data.get("setter/symid"), ""));
                 sec.insertVisibility();
+            }
+        }
+
+        private void appendLineEnd(Section sec) {
+            if (!StringUtils.isBlank(sec.name)) {
+                sec.sb.append(";\n\n");
+            }
+        }
+
+        private void insertTypeDeclName(Section sec) {
+            if (!StringUtils.isBlank(sec.name)) {
+                sec.sb.append("type ").append(sec.name).append(" = ");
             }
         }
 
@@ -531,8 +552,9 @@ public class PPUDumpParser {
                 if ('s' == key.charAt(0)) {
                     nameMap = symidNameMap;
                 }
-                //result.insert(pos, "[<" + key.substring(1) + ">]");// + nameMap.get(key.substring(1)));
-                result.insertText(pos, nameMap.get(key.substring(1)));
+                String res = nameMap.get(key.substring(1));
+                res = res != null ? res : "__unresolved__";
+                result.insertText(pos, res);
             }
             result.insertText(0, PascalBundle.message("decompiled.unit.header"));
         }
@@ -653,7 +675,9 @@ public class PPUDumpParser {
             for (Integer key : sec.undefined.keySet()) {
                 undefined.put(key + sb.length(), sec.undefined.get(key));
             }
-            sb.append(sec.sb);
+            if (!sec.isAnonimous()) {
+                sb.append(sec.sb);
+            }
         }
 
         public void insertText(int pos, String text) {
@@ -668,6 +692,11 @@ public class PPUDumpParser {
 
         public String getResult() {
             return sb.toString();
+        }
+
+        public boolean isAnonimous() {
+            return StringUtils.isBlank(name) &&
+                 (!StringUtils.isBlank(getDataStr("id")) || !StringUtils.isBlank(getDataStr("symid")));
         }
     }
 
