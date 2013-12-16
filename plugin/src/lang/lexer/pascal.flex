@@ -115,6 +115,7 @@ NUM_BIN         = {N}[bB]
     "type"              { return getElement(TYPE); }
     "threadvar"         { return getElement(THREADVAR); }
     "resourcestring"    { return getElement(RESOURCESTRING); }
+    "constref"          { return getElement(CONSTREF); }
 
     "procedure"         { return getElement(PROCEDURE); }
     "function"          { return getElement(FUNCTION); }

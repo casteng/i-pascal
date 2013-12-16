@@ -7,10 +7,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.indexing.FileBasedIndex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -30,13 +30,8 @@ public class ModuleUtil {
 
     public static Collection<VirtualFile> getAllCompiledModuleFilesByName(Module module, String name) {
         if (module != null) {
-            for (VirtualFile file : getAllModuleFilesByExt(module, "ppu")) {
-                if (name.equals(file.getNameWithoutExtension())) {
-                    return Arrays.asList(file);
-                }
-            }
-//            return FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, name + ".ppu",
-//                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module));
+            return FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, name + ".ppu",
+                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module));
         }
         return Collections.emptyList();
     }
