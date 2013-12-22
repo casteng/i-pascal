@@ -73,11 +73,11 @@ public class PPUDumpParser {
             addSection("/elements", "", "", "", "", 2);
             addSection("/elements/const", "", " = ", "", ", ", 0);
 
-            addSection("/unit", "unit ", ";", "\ninterface\n", "", 0);
+            addSection("/unit", "unit ", ";", "\ninterface\n", "implementation\n" + PascalBundle.message("decompiled.unit.footer") + "\nend.", 0);
             addSection("/units", "", "", "", "", 0).ignore = true;
             addSection("/uses", LF + "uses", "", "", ";\n", 1);
             addSection("/files", "\n{" + PascalBundle.message("decompiled.unit.files") + " ", "", "", "}\n", 2);
-            addSection("/interface", "", "", "", "implementation\n" + PascalBundle.message("decompiled.unit.footer") + "\nend.", 0);
+            addSection("/interface", "", "", "", "", 0);
 
 //            addSection("/fields/rec", "record\n", "", "", "end", 0);
 //            addSection("/fields/proctype", "procedure", "", "", "", 0);
