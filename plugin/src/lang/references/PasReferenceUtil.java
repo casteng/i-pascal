@@ -2,7 +2,9 @@ package com.siberika.idea.pascal.lang.references;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -22,7 +24,6 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -47,31 +48,40 @@ public class PasReferenceUtil {
      * @param moduleName - name element of module to find references for
      * @return array of references in nearest-first order
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "ConstantConditions"})
     public static List<PascalNamedElement> findUsedModuleReferences(@NotNull final PasNamespaceIdent moduleName) {
         final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
-        PascalNamedElement module = findUsedModule(moduleName);
-        if (module != null) {
-            result.add(module);
+        PascalNamedElement unit = findUnit(moduleName.getProject(), ModuleUtilCore.findModuleForPsiElement(moduleName), moduleName.getName());
+        if (unit != null) {
+            result.add(unit);
         }
-        for (PascalQualifiedIdent element : PsiUtil.findChildrenOfAnyType(moduleName.getContainingFile(), PascalQualifiedIdent.class)) {
+
+        /*for (PascalQualifiedIdent element : PsiUtil.findChildrenOfAnyType(moduleName.getContainingFile(), PascalQualifiedIdent.class)) {
             if (moduleName.getName().equalsIgnoreCase(element.getNamespace())) {
                 result.add(element);
             }
-        }
+        }*/
         return result;
     }
 
+    /**
+     * Finds and returns unit in path by name
+     * @param module - IDEA module
+     * @param moduleName - unit name
+     * @return unit element
+     */
     @Nullable
-    public static PascalNamedElement findUsedModule(@NotNull final PasNamespaceIdent moduleName) {
+    public static PascalNamedElement findUnit(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
         final Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(moduleName.getProject()));
+                GlobalSearchScope.allScope(project));
 
-        virtualFiles.addAll(ModuleUtil.getAllCompiledModuleFilesByName(ModuleUtilCore.findModuleForPsiElement(moduleName), moduleName.getName()));
+        if (module != null) {
+            virtualFiles.addAll(ModuleUtil.getAllCompiledModuleFilesByName(module, moduleName));
+        }
 
         for (VirtualFile virtualFile : virtualFiles) {
-            if (isUnitWithName(virtualFile, moduleName.getName())) {
-                PsiFile pascalFile = PsiManager.getInstance(moduleName.getProject()).findFile(virtualFile);
+            if (isUnitWithName(virtualFile, moduleName)) {
+                PsiFile pascalFile = PsiManager.getInstance(project).findFile(virtualFile);
                 PasModule pasModule = PsiTreeUtil.findChildOfType(pascalFile, PasModule.class);
                 if (pasModule != null) {
                     return pasModule;
@@ -190,7 +200,7 @@ public class PasReferenceUtil {
         /*if (canBeUnit && (entityDecl instanceof PasNamespaceIdent)) {
             PasNamespaceIdent usedModuleName = getUsedModuleName(entityDecl);
             if (usedModuleName != null) {
-                PascalNamedElement unit = PasReferenceUtil.findUsedModule(usedModuleName);
+                PascalNamedElement unit = PasReferenceUtil.findUnit(usedModuleName);
                 if (unit != null) {
                     return unit;
                 }

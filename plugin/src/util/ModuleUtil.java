@@ -28,7 +28,7 @@ public class ModuleUtil {
         }
     }
 
-    public static Collection<VirtualFile> getAllCompiledModuleFilesByName(Module module, String name) {
+    public static Collection<VirtualFile> getAllCompiledModuleFilesByName(@NotNull Module module, String name) {
         if (module != null) {
             return FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, name + ".ppu",
                     GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module));

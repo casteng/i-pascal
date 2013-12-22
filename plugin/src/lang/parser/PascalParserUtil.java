@@ -3,6 +3,8 @@ package com.siberika.idea.pascal.lang.parser;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -49,6 +51,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -63,6 +66,8 @@ import java.util.TreeSet;
 @SuppressWarnings("unchecked")
 public class PascalParserUtil extends GeneratedParserUtilBase {
     private static final Logger LOG = Logger.getInstance(PascalParserUtil.class);
+
+    public static final Collection<String> EXPLICIT_UNITS = Arrays.asList("system");
 
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {
         PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
@@ -189,12 +194,20 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
      * @param result list of declarations to add unit declarations to
      * @param current element which should be affected by a unit declaration in order to be added to result
      */
+    @SuppressWarnings("ConstantConditions")
     private static void addUsedUnitDeclarations(Collection<PascalNamedElement> result, PascalNamedElement current) {
+        for (String unitName : EXPLICIT_UNITS) {
+            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(current), unitName);
+        }
         for (PasNamespaceIdent usedUnitName : PsiUtil.getUsedUnits(current.getContainingFile())) {
-            PascalNamedElement usedUnit = PasReferenceUtil.findUsedModule(usedUnitName);
-            if (usedUnit != null) {
-                addDeclarations(result, PsiUtil.getModuleInterfaceSection(usedUnit), current.getName());
-            }
+            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName());
+        }
+    }
+
+    private static void addUnitDeclarations(Collection<PascalNamedElement> result, Project project, Module module, String unitName) {
+        PascalNamedElement usedUnit = PasReferenceUtil.findUnit(project, module, unitName);
+        if (usedUnit != null) {
+            addDeclarations(result, PsiUtil.getModuleInterfaceSection(usedUnit), unitName);
         }
     }
 
@@ -216,7 +229,8 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             result.add(entityDecl);
         } else {
             assert namespaces.getCurrent() != null;
-            PsiElement section = retrieveNamespace(entityDecl, namespaces.isFirst());
+            PsiElement section = getExplicitUnitSection(namespaces);
+            section = section != null ? section : retrieveNamespace(entityDecl, namespaces.isFirst());
             // Check if the new section is another unit and use its interface section in this case
             if ((section instanceof PasModule) && (section.getContainingFile() != entityDecl.getContainingFile())) {
                 section = PsiUtil.getModuleInterfaceSection(section);
@@ -234,15 +248,27 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         }
     }
 
+    private static PsiElement getExplicitUnitSection(NamespaceRec namespaces) {
+        if (namespaces.isFirst()) {
+            for (String unitName : EXPLICIT_UNITS) {
+                if (unitName.equalsIgnoreCase(namespaces.getCurrent().getName())) {
+                    return PasReferenceUtil.findUnit(namespaces.getCurrent().getProject(), ModuleUtilCore.findModuleForPsiElement(namespaces.getCurrent()), namespaces.getCurrent().getName());
+                }
+            }
+        }
+        return null;
+    }
+
     private final static int getEndOffset(PsiElement section) {
         return section.getTextRange().getEndOffset();
     }
 
+    @SuppressWarnings("ConstantConditions")
     private static PsiElement retrieveNamespace(PascalNamedElement entityDecl, boolean canBeUnit) {
         if (canBeUnit && (entityDecl instanceof PasNamespaceIdent)) {                                         // unit reference case
             PasNamespaceIdent usedModuleName = getUsedModuleName(entityDecl);
             if (usedModuleName != null) {
-                PascalNamedElement unit = PasReferenceUtil.findUsedModule(usedModuleName);
+                PascalNamedElement unit = PasReferenceUtil.findUnit(usedModuleName.getProject(), ModuleUtilCore.findModuleForPsiElement(usedModuleName), usedModuleName.getName());
                 if (unit != null) {
                     return unit;
                 }
