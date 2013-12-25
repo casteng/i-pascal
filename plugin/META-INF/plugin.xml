@@ -1,12 +1,31 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.5</version>
+    <version>0.6</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
     <description><![CDATA[
       Pascal support for IDEA.<br>
       ]]></description>
+
+    <change-notes><![CDATA[
+        <p>0.6</p>
+        <ul>
+          <li>PPU viewer</li>
+        </ul>
+        <p>0.5</p>
+        <ul>
+          <li>context-aware code completion</li>
+          <li>undeclared identifiers highlighting and quick fix</li>
+          <li>rename refactoring</li>
+          <li>find usages</li>
+          <li>navigation: class method definition <=> implementation</li>
+          <li>navigation: unit routine interface definition <=> implementation</li>
+          <li>Pascal syntax highlighting</li>
+          <li>program compilation with FPC and running</li>
+          <li>first public version</li>
+        </ul>
+    ]]></change-notes>
 
     <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
     <idea-version since-build="123.72"/>
