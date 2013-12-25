@@ -239,9 +239,8 @@ public class PPUDumpParser {
                 if (!stack.isEmpty()) {
                     stack.getFirst().merge(sec);
                 }
-            } else {//if (LOG.isDebugEnabled()) {
-                //LOG.debug("Section ignored: " + sec);
-                //System.out.println("Section ignored: " + sec); //===***
+            } else if (LOG.isDebugEnabled()) {
+                LOG.debug("Section ignored: " + sec);
             }
         }
 

@@ -51,7 +51,6 @@ public class PPUDecompilerCache {
         PPUDecompilerCache decompilerCache = (PPUDecompilerCache) BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_DECOMPILER_CACHE);
         if (null == decompilerCache) {
             decompilerCache = new PPUDecompilerCache(module);
-            System.out.println("===*** Creating new decompiler cache for module: " + module);
             BasePascalSdkType.getAdditionalData(sdk).setValue(BasePascalSdkType.DATA_KEY_DECOMPILER_CACHE, decompilerCache);
         }
         String unitName = FileUtil.getNameWithoutExtension(com.siberika.idea.pascal.util.FileUtil.getFilename(filename));
