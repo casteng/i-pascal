@@ -206,13 +206,13 @@
 }
 
 //external pascal             ::= parsePascal Module
-Module              ::= ModuleUnit | ModuleProgram | ModuleLibrary | ModulePackage
+Module                      ::= ModuleUnit | ModuleProgram | ModuleLibrary | ModulePackage
                             {recoverWhile=recover_main_decl extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
                              implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 
-ModuleProgram       ::= progWithHead | progWoHead
+ModuleProgram               ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead progWoHead
-private progWoHead          ::= [UsesFileClause] BlockLocal "."
+private progWoHead          ::= [UsesFileClause] BlockGlobal "."
 
 private ModuleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "."
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1}
@@ -226,9 +226,10 @@ PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1 recoverWhile=r
 RequiresClause              ::= REQUIRES NamespaceNameList {pin=1}
 ContainsClause              ::= CONTAINS NamespaceFileNameList {pin=1}
 
-UnitInterface               ::= INTERFACE [UsesClause] InterfaceDecl* {pin=1 recoverWhile=recover_decl name="interface section"}
+UnitInterface               ::= INTERFACE [UsesClause] InterfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
+//private rec_interface       ::= !(IMPLEMENTATION)
 
-private InterfaceDecl       ::= VarSection | ConstSection | TypeSection | ExportedRoutine | ExportsSection | AssemblyAttribute {recoverWhile=recover_decl}
+private InterfaceDecl       ::= commonDecl | RoutineDecl | ExportsSection | AssemblyAttribute {recoverWhile=recover_decl}
 private AssemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
 private ExportsSection      ::= EXPORTS Identifier ExportItem ("," Identifier ExportItem)* ";" {pin=1}
 private ExportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
@@ -236,11 +237,21 @@ ExportedRoutine             ::= ExportedProc | ExportedFunc {extends="com.siberi
 private ExportedFunc        ::= FUNCTION NamedIdent [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" FunctionDirective* {pin=1 recoverWhile=recover_decl}
 private ExportedProc        ::= PROCEDURE NamedIdent [FormalParameterSection] ";" FunctionDirective* {pin=1 recoverWhile=recover_decl}
 
+private StrucType           ::= [PACKED] StrucTypePart
+private StrucTypePart       ::= ClassDecl | ArrayType | SetType | FileType
+private ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
+
+private RoutineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
+private commonDecl          ::= ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
+private StructItem          ::= commonDecl | RoutineDecl | ClassField | Visibility {recoverWhile=recover_classItem} // TODO: remove routines
+
+
+
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection UnitBlock {pin=1 recoverWhile=recover_impl name="implementation section"}
-ImplDeclSection             ::= DeclSection*
+ImplDeclSection             ::= (MethodImplDecl | RoutineImplDecl | DeclSection)* {recoverWhile=recover_impl}
 private UnitBlock           ::= UnitInitialization [UnitFinalization] END | CompoundStatement | END {recoverWhile=recover_impl}
-UnitInitialization          ::= INITIALIZATION StatementList {pin=1 name="initialization section"} //TODO: recover statement
-UnitFinalization            ::= FINALIZATION StatementList  {pin=1 name="finalization section"} //TODO: recover statement
+UnitInitialization          ::= INITIALIZATION StatementList {pin=1 name="initialization section"}
+UnitFinalization            ::= FINALIZATION StatementList  {pin=1 name="finalization section"}
 
 ProgramModuleHead	        ::= PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1 recoverWhile=recover_decl}
 ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
@@ -263,7 +274,7 @@ private recover_decl        ::= !(global_decl | END)
 
 private recover_impl        ::= !(local_decl | END | FINALIZATION | INITIALIZATION)
 
-private local_decl          ::= ';' | '.' | BEGIN | VarKey | ProcKey | ConstKey | TYPE | LABEL
+private local_decl          ::= ';' | '.' | BEGIN | VarKey | ProcKey | ConstKey | PROPERTY | TYPE | LABEL
 private global_decl         ::= local_decl | CONSTRUCTOR | DESTRUCTOR | FINALIZATION | INITIALIZATION
                               | CLASS | EXPORTS | INTERFACE | IMPLEMENTATION | USES | CONTAINS | REQUIRES
 private main_decl           ::= local_decl | global_decl | PROGRAM | UNIT | LIBRARY | PACKAGE
@@ -277,14 +288,12 @@ private recover_type        ::= !(global_decl | Identifier '=' | TYPE)
 //private global_decl        ::= local_decl | FINALIZATION | INITIALIZATION | CLASS | EXPORTS | INTERFACE | IMPLEMENTATION | USES | CONTAINS | REQUIRES
 
 BlockGlobal	                ::=	[';'] DeclSection* BlockBody {pin=2 recoverWhile=recover_declName}
-BlockLocal                  ::=	[';'] DeclSection* BlockBody {pin=2 recoverWhile=recover_declName}
 BlockBody	        ::=	CompoundStatement |	AssemblerStatement
 
 AssemblerStatement  ::= ASM AssemblerItem* END
 private AssemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | Identifier | NUMBER_INT | NUMBER_HEX | NUMBER_BIN
 
-DeclSection	        ::=	VarSection | TypeSection | ConstSection | MethodImplDecl | RoutineImplDecl | LabelDeclSection
-                              | ExportsSection | AssemblyAttribute {recoverWhile=recover_decl}
+DeclSection	        ::=	commonDecl | LabelDeclSection | ExportsSection | AssemblyAttribute {recoverWhile=recover_decl}
 
 //private recover_declEnd     ::= BEGIN | TYPE | VarKey | ConstKey | ProcKey | Ident '=' | END
 //                              | INITIALIZATION | INTERFACE | IMPLEMENTATION | LABEL
@@ -292,27 +301,29 @@ DeclSection	        ::=	VarSection | TypeSection | ConstSection | MethodImplDecl
 private ProcKey             ::= FUNCTION | PROCEDURE
 RoutineImplDecl             ::= RoutineDeclHeading ";" FunctionDirective* ProcBodyBlock
                                 {pin=1 recoverWhile=recover_decl name="procedure or function declaration"
-                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
-                                 implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
+                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
+MethodImplDecl              ::= MethodDeclHeading ";" MethodDirective* [MethodBody]
+                                {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
+
 private RoutineDeclHeading  ::= funcDecl | procDecl
+private MethodDeclHeading   ::= FuncMethod | ProcMethod
+
 private funcDecl            ::= [CustomAttribute] FUNCTION  NamedIdent [FormalParameterSection] ":" TypeDecl {pin=2 recoverWhile=recover_decl}
 private procDecl            ::= [CustomAttribute] PROCEDURE NamedIdent [FormalParameterSection] {pin=2 recoverWhile=recover_decl}
+private ProcMethod          ::= [CustomAttribute] MethodKey ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] {recoverWhile=recover_decl}
+private FuncMethod          ::= [CustomAttribute] [CLASS] FUNCTION ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {recoverWhile=recover_decl}
+
 private FunctionDirective   ::= OverloadDirective | InlineDirectiveSemi | CallConventionSemi | OldCallConventionDirectiveSemi | HintingDirective ";" | ExternalDirective // | "unsafe" ";"
 private OverloadDirective   ::= OVERLOAD ";"
 private OldCallConventionDirectiveSemi ::= OldCallConventionDirective ";"
 private OldCallConventionDirective ::= "far" | "local" | "near"
 private ExternalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL ConstExpression ExternalSpecifier* ";"
 private ExternalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
-ProcBodyBlock               ::= ProcForwardDecl | ProcExternalDecl | BlockLocal [";"]
+ProcBodyBlock               ::= ProcForwardDecl | ProcExternalDecl | BlockGlobal [";"]
 private ProcExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* FunctionDirective* {pin=1}
 ProcForwardDecl             ::= FORWARD ";" FunctionDirective* {pin=1}
 
-MethodImplDecl              ::= MethodDeclHeading ";" MethodDirective* [MethodBody]
-                                {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
-MethodBody          ::= BlockLocal ";"
-private MethodDeclHeading   ::= FuncMethod | ProcMethod
-private ProcMethod          ::= [CustomAttribute] MethodKey ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] {recoverWhile=recover_decl}
-private FuncMethod          ::= [CustomAttribute] [CLASS] FUNCTION ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {recoverWhile=recover_decl}
+MethodBody          ::= BlockGlobal ";"
 MethodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
 MethodDirective     ::= REINTRODUCE ';' | OVERLOAD ';' | BindingDirective | AbstractDirectiveSemi | InlineDirectiveSemi
                       | CallConventionSemi | HintingDirective ";" | DispIDDirective {recoverWhile=recover_classItem}
@@ -368,19 +379,22 @@ TypeID              ::=	FullyQualifiedIdent
 
 TypeDecl	                ::=	StrucType | PointerType | ProcedureType | StringType | VariantType | SimpleType | [TYPE] TypeID [GenericPostfix]
 
-private StrucType           ::= [PACKED] StrucTypePart
-private StrucTypePart       ::= ClassDecl | ArrayType | SetType | FileType
+ClassField          ::= [CustomAttribute] IdentList ":" TypeDecl HintingDirective* ';' {pin=3}
 
-private ClassDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
+ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent]) {pin=1 name="class declaration"}
+private ClassBody           ::= [ClassState] [ClassParent] StructItem* END
+ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID ClassHelperItem* END {pin=2}
+private ClassHelperItem     ::= Visibility | ClassMethod | ClassProperty | [CLASS] VarSection {recoverWhile=recover_classItem}
+InterfaceTypeDecl           ::= InterfaceKey [ClassParent] [InterfaceGuid] InterfaceItem* END
+                              | InterfaceKey [ClassParent] {pin(".*")=InterfaceKey}
+private InterfaceItem       ::= ClassMethod | [CLASS] ClassProperty
+
+
+
 
 ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
 
-ClassTypeDecl               ::= CLASS (ClassBody | [ClassParent])
-                                {pin=1 name="class declaration"}
-private ClassBody           ::= [ClassState] [ClassParent] ClassItem* END
 ClassState          ::= SEALED | ABSTRACT
-private ClassItem           ::= Visibility | ClassMethodResolution | ClassMethod | ClassField | ClassProperty
-                              | ConstSection | TypeSection | [CLASS] VarSection {recoverWhile=recover_classItem}
 
 private recover_classItem   ::= !('[' | Identifier
                                 | CLASS | CONST | CONSTRUCTOR | DESTRUCTOR | BEGIN | END | FUNCTION | IMPLEMENTS | KEYWORDESCAPE
@@ -389,16 +403,7 @@ private recover_classItem   ::= !('[' | Identifier
 
 ClassMethodResolution ::= [CLASS] ProcKey GenericTypeIdent "." Identifier "=" Identifier ";"
 ClassParent         ::= "(" TypeID ("," TypeID)* ")" {pin=1}
-ClassField          ::= [CustomAttribute] IdentList ":" TypeDecl HintingDirective* ';' {pin=3}
 
-
-ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID ClassHelperItem* END {pin=2}
-private ClassHelperItem     ::= Visibility | ClassMethod | ClassProperty | [CLASS] VarSection {recoverWhile=recover_classItem}
-
-InterfaceTypeDecl           ::= InterfaceKey [ClassParent] [InterfaceGuid] InterfaceItem* END
-                              | InterfaceKey [ClassParent]
-                             {pin(".*")=InterfaceKey}
-private InterfaceItem       ::= ClassMethod | [CLASS] ClassProperty
 private InterfaceGuid       ::= "[" QuotedString "]" {pin=1}
 private InterfaceKey        ::= INTERFACE | DISPINTERFACE
 
@@ -600,7 +605,7 @@ left qreference_expression ::= '.' identifier {elementType="reference_expression
 
 literal_expression ::= number | string*/
 
-ClosureExpression           ::= PROCEDURE [ FormalParameterSection ] BlockLocal | FUNCTION [ FormalParameterSection ] ":" TypeDecl BlockLocal
+ClosureExpression           ::= PROCEDURE [ FormalParameterSection ] BlockGlobal | FUNCTION [ FormalParameterSection ] ":" TypeDecl BlockGlobal
 FormalParameterSection      ::= "(" [ FormalParameterList ] ")"
 FormalParameterList         ::= FormalParameter (";" FormalParameter)*
 FormalParameter             ::= [ CustomAttribute ] [ ParamType ] IdentList [ ":" TypeDecl ] [ "=" Expression ]
