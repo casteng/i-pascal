@@ -237,13 +237,13 @@ ExportedRoutine             ::= exportedProc | exportedFunc {extends="com.siberi
 private exportedFunc        ::= FUNCTION NamedIdent [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" functionDirective* {pin=1 recoverWhile=recover_decl}
 private exportedProc        ::= PROCEDURE NamedIdent [FormalParameterSection] ";" functionDirective* {pin=1 recoverWhile=recover_decl}
 
-private strucType           ::= [PACKED] strucTypePart
-private strucTypePart       ::= classDecl | ArrayType | SetType | FileType
-private classDecl           ::= ClassTypeTypeDecl | ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
+private complexType         ::= [PACKED] complexTypePart
+private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
+private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
-private commonDecl          ::= ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
-private structItem          ::= commonDecl | routineDecl | ClassField | Visibility {recoverWhile=recover_classItem} // TODO: remove routines
+private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
+private structItem          ::= commonDecl | routineDecl | ClassField | Visibility {recoverWhile=recover_classItem}
 DeclSection	                ::=	commonDecl | LabelDeclSection | exportsSection | assemblyAttribute {recoverWhile=recover_decl}
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=recover_impl name="implementation section"}
@@ -374,22 +374,27 @@ private recover_declName        ::= !('(' | ')' | ',' | '.' | ':' | ';' | '[' | 
 
 TypeID              ::=	FullyQualifiedIdent
 
-TypeDecl	                ::=	strucType | PointerType | ProcedureType | stringType | variantType | SimpleType | [TYPE] TypeID [GenericPostfix]
+TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringType | variantType | SimpleType | [TYPE] TypeID [GenericPostfix]
 
-ClassField          ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* ';' {pin=3}
+ClassField                  ::= field ';' //TODO: remove ";"
 
 ClassTypeDecl               ::= CLASS (classBody | [ClassParent]) {pin=1 name="class declaration"}
 private classBody           ::= [ClassState] [ClassParent] structItem* END
-ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID classHelperItem* END {pin=2}
-private classHelperItem     ::= Visibility | ClassMethod | ClassProperty | [CLASS] VarSection {recoverWhile=recover_classItem}
-InterfaceTypeDecl           ::= interfaceKey [ClassParent] [interfaceGuid] interfaceItem* END
-                              | interfaceKey [ClassParent] {pin(".*")=interfaceKey}
-private interfaceItem       ::= ClassMethod | [CLASS] ClassProperty
+ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID structItem* END {pin=2 name="class helper declaration"}
+InterfaceTypeDecl           ::= interfaceKey [ClassParent] [interfaceGuid] structItem* END
+                              | interfaceKey [ClassParent] {pin(".*")=interfaceKey name="interface declaration"}
+ObjectDecl                  ::= OBJECT [ClassParent] structItem* END {pin=1 name="object declaration"}
+RecordDecl                  ::= RECORD (variantRecord | simpleRecord) END {pin=1 name="record declaration"}
+private simpleRecord        ::= recordFieldSemi* structItem*
+private variantRecord       ::= recordFieldSemi* recordVariantSection
 
+private recordFieldSemi     ::= ClassField
+private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3}
+RecordFields        ::= [field] (';' field)* [';']  //===***
+private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1}
+private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
 
-
-
-ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
+RecordHelperDecl            ::= RECORD HELPER FOR TypeID structItem* END {pin=2}
 
 ClassState          ::= SEALED | ABSTRACT
 
@@ -404,25 +409,10 @@ ClassParent         ::= "(" TypeID ("," TypeID)* ")" {pin=1}
 private interfaceGuid       ::= "[" quotedString "]" {pin=1}
 private interfaceKey        ::= INTERFACE | DISPINTERFACE
 
-ObjectDecl                  ::= OBJECT [ClassParent] objectItem* END
-                                {pin=1 name="object declaration"}
-private objectItem          ::= Visibility | ClassMethod | ClassField {recoverWhile=recover_classItem}
+ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
 
 Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
-RecordDecl          ::= RECORD (variantRecord | simpleRecord) END
-                        {pin=1 name="record declaration"}
-private simpleRecord        ::= recordFieldSemi* recordItem*
-private variantRecord       ::= recordFieldSemi* recordVariantSection
-private recordItem          ::= Visibility | ClassMethod | ClassProperty | ConstSection | TypeSection | RecordField | [CLASS] VarSection {recoverWhile=recover_classItem}
-RecordField         ::= identList ":" TypeDecl HintingDirective* {pin=2 recoverWhile=recover_declName}
-private recordFieldSemi     ::= RecordField ';'
-RecordFields        ::= [RecordField] (';' RecordField)* [';']  //===***
-private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1}
-private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
-
-RecordHelperDecl            ::= RECORD HELPER FOR TypeID RecordHelperItem* END {pin=2}
-RecordHelperItem ::= Visibility | ClassMethod | ClassProperty {recoverWhile=recover_classItem}
 
 ClassMethod         ::= classMethodProc | classMethodFunc {name="method declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
 private classMethodProc ::= MethodKey NamedIdent [GenericDefinition] [FormalParameterSection] ";" MethodDirective* {pin=1}
