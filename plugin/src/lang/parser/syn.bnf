@@ -201,6 +201,7 @@
         NAME='regexp:[_\w]\w*'
         RANGE='..'
         STRING_LITERAL="regexp:'[^']*'"
+        NUMBER_HEX='regexp:\$[0-9abcdef]+'
   ]
 
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
@@ -231,7 +232,7 @@ RequiresClause              ::= REQUIRES namespaceNameList {pin=1}
 ContainsClause              ::= CONTAINS namespaceFileNameList {pin=1}
 
 UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
-private rec_interface       ::= !(IMPLEMENTATION | END)
+private rec_interface       ::= !(IMPLEMENTATION)
 
 private interfaceDecl       ::= commonDecl | routineDecl | exportsSection | assemblyAttribute {recoverWhile=recover_decl}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
