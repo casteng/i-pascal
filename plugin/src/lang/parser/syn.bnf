@@ -163,6 +163,7 @@
         READ="read"
         WRITE="write"
 
+        POWER="**"
         MULT="*"
         PLUS="+"
         MINUS="-"
@@ -236,9 +237,32 @@ private interfaceDecl       ::= commonDecl | routineDecl | exportsSection | asse
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
 private exportsSection      ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
 private exportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
-ExportedRoutine             ::= exportedProc | exportedFunc {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
-private exportedFunc        ::= FUNCTION NamedIdent [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" functionDirective* {pin=1 recoverWhile=recover_decl}
-private exportedProc        ::= PROCEDURE NamedIdent [FormalParameterSection] ";" functionDirective* {pin=1 recoverWhile=recover_decl}
+
+private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | LE | GT | GE
+private procName            ::= ClassQualifiedIdent | NamedIdent
+private methodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
+private procKey             ::= FUNCTION | PROCEDURE
+
+ExportedRoutine             ::= routineDeclaration {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
+private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl) ";" functionDirective* {recoverWhile=recover_decl}
+private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=2}
+private exportedProc        ::= methodKey procName [GenericDefinition] [FormalParameterSection] {pin=1}
+private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
+
+RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 recoverWhile=recover_decl name="procedure or function declaration"
+                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
+MethodImplDecl              ::= routineDeclaration [MethodBody]     //TODO: remove
+                                {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
+ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
+ClassMethod                 ::= routineDeclaration {name="method declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}  //TODO: remove
+
+ProcedureReference          ::= REFERENCE TO procedureTypeHeading {pin=1}
+private procedureTypeHeading ::= funcHeading | procHeading;
+private funcHeading         ::= FUNCTION [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=1}
+private procHeading         ::= PROCEDURE [FormalParameterSection] {pin=1}
+
+ClosureExpression           ::= (funcHeading | procHeading) BlockGlobal
+
 
 private complexType         ::= [PACKED] complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
@@ -276,11 +300,12 @@ private recover_decl        ::= !(global_decl | END)
 
 private recover_impl        ::= !(local_decl | END | FINALIZATION | INITIALIZATION)
 
-private local_decl          ::= ';' | '.' | BEGIN | varKey | procKey | constKey | PROPERTY | TYPE | LABEL
-private global_decl         ::= local_decl | CONSTRUCTOR | DESTRUCTOR | FINALIZATION | INITIALIZATION
+private local_decl          ::= ';' | '.' | BEGIN | varKey | routine_key | constKey | PROPERTY | TYPE | LABEL
+private global_decl         ::= local_decl | FINALIZATION | INITIALIZATION
                               | CLASS | EXPORTS | INTERFACE | IMPLEMENTATION | USES | CONTAINS | REQUIRES
-private main_decl           ::= local_decl | global_decl | PROGRAM | UNIT | LIBRARY | PACKAGE
+private main_decl           ::= global_decl | PROGRAM | UNIT | LIBRARY | PACKAGE
 
+private routine_key         ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private decl_list           ::= ',' | ';' | BEGIN
 private recover_var         ::= !(decl_list | identifier | global_decl)
 //private recover_const       ::= !(decl_list | Ident)
@@ -298,22 +323,10 @@ private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | 
 //private recover_declEnd     ::= BEGIN | TYPE | VarKey | ConstKey | ProcKey | Ident '=' | END
 //                              | INITIALIZATION | INTERFACE | IMPLEMENTATION | LABEL
 
-private procKey             ::= FUNCTION | PROCEDURE
-RoutineImplDecl             ::= routineDeclHeading ";" functionDirective* ProcBodyBlock
-                                {pin=1 recoverWhile=recover_decl name="procedure or function declaration"
-                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
-MethodImplDecl              ::= methodDeclHeading ";" MethodDirective* [MethodBody]
-                                {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
 
-private routineDeclHeading  ::= funcDecl | procDecl
-private methodDeclHeading   ::= funcMethod | procMethod
-
-private funcDecl            ::= [CustomAttribute] FUNCTION  NamedIdent [FormalParameterSection] ":" TypeDecl {pin=2 recoverWhile=recover_decl}
-private procDecl            ::= [CustomAttribute] PROCEDURE NamedIdent [FormalParameterSection] {pin=2 recoverWhile=recover_decl}
-private procMethod          ::= [CustomAttribute] MethodKey ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] {recoverWhile=recover_decl}
-private funcMethod          ::= [CustomAttribute] [CLASS] FUNCTION ClassQualifiedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {recoverWhile=recover_decl}
-
-private functionDirective   ::= overloadDirective | inlineDirectiveSemi | callConventionSemi | oldCallConventionDirectiveSemi | HintingDirective ";" | externalDirective // | "unsafe" ";"
+private functionDirective   ::= overloadDirective | externalDirective | oldCallConventionDirectiveSemi
+                              | inlineDirectiveSemi | callConventionSemi | HintingDirective ";"
+                              | REINTRODUCE ';' | OVERLOAD ';' | bindingDirective | abstractDirectiveSemi | dispIDDirective
 private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
@@ -324,9 +337,6 @@ private procExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)*
 ProcForwardDecl             ::= FORWARD ";" functionDirective* {pin=1}
 
 MethodBody          ::= BlockGlobal ";"
-MethodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
-MethodDirective     ::= REINTRODUCE ';' | OVERLOAD ';' | bindingDirective | abstractDirectiveSemi | inlineDirectiveSemi
-                      | callConventionSemi | HintingDirective ";" | dispIDDirective {recoverWhile=recover_classItem}
 private dispIDDirective     ::= DISPID Expression ";" {pin=1}
 private callConventionSemi  ::= callConvention ";"
 private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT
@@ -354,7 +364,7 @@ TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"
 TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3 recoverWhile=recover_type}
 GenericTypeIdent    ::= identifier [GenericDefinition]
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
-SimpleGenericDefinition ::= "<" identifier IdentsRest* ">" {pin=1}
+SimpleGenericDefinition ::= "<" identifier IdentsRest* ">" {pin=1}                     //TODO use meta rule
 IdentsRest          ::= "," identifier {pin=1}
 ConstrainedGenericDefinition ::= "<" ConstrainedGeneric ConstrainedGenericsRest ">" {pin=1}
 ConstrainedGeneric  ::= identifier [ ":" GenericConstraint GenericConstraintsRest ]
@@ -406,7 +416,6 @@ private recover_classItem   ::= !('[' | identifier
                                 | OPERATOR | PRIVATE | PROCEDURE | PROPERTY | PROTECTED | PUBLIC | PUBLISHED | RESOURCESTRING
                                 | STATIC | STRICT | THREADVAR | TYPE | VAR | VIRTUAL)
 
-ClassMethodResolution ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
 ClassParent         ::= "(" TypeID ("," TypeID)* ")" {pin=1}
 
 private interfaceGuid       ::= "[" quotedString "]" {pin=1}
@@ -417,9 +426,6 @@ ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="meta
 Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
 
-ClassMethod         ::= classMethodProc | classMethodFunc {name="method declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
-private classMethodProc ::= MethodKey NamedIdent [GenericDefinition] [FormalParameterSection] ";" MethodDirective* {pin=1}
-private classMethodFunc ::= [CLASS] FUNCTION NamedIdent [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl ";" MethodDirective* {pin=2}
 ClassProperty ::= [CustomAttribute] [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" {pin=3}
 ClassPropertyArray ::= "[" FormalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
@@ -444,12 +450,8 @@ private codePageNumber      ::= "(" ConstExpressionOrd ")" {pin=1}
 private variantType         ::= identifier
 
 ProcedureType       ::= MethodType | SimpleProcedureType | ProcedureReference
-SimpleProcedureType ::= ProcedureTypeHeading
-MethodType          ::= ProcedureTypeHeading OF OBJECT {pin=3}
-ProcedureReference  ::= REFERENCE TO ProcedureTypeHeading {pin=1}
-ProcedureTypeHeading ::= funcHeading | procHeading;
-funcHeading         ::= FUNCTION [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=1}
-procHeading         ::= PROCEDURE [FormalParameterSection] {pin=1}
+SimpleProcedureType ::= procedureTypeHeading
+MethodType          ::= procedureTypeHeading OF OBJECT {pin=3}
 
 SimpleType          ::= identifier | EnumType | SubRangeType
 SubRangeType        ::= RangeBound [RANGE RangeBound]
@@ -565,7 +567,7 @@ primaryOrd                  ::= NOT primaryOrd | PLUS primaryOrd | MINUS primary
                               | "(" ExpressionOrd ")" | StringFactor | Designator
 
 private relOp               ::= "<" | ">" | "<=" | ">=" | "<>" | "=" | IN | IS
-private addOp               ::=	"+" | "-" | OR | XOR
+private addOp               ::=	PLUS | MINUS | OR | XOR
 private mulOp               ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
 
 Expression ::= ClosureExpression | expr_rel
@@ -596,7 +598,6 @@ left qreference_expression ::= '.' identifier {elementType="reference_expression
 
 literal_expression ::= number | string*/
 
-ClosureExpression           ::= PROCEDURE [ FormalParameterSection ] BlockGlobal | FUNCTION [ FormalParameterSection ] ":" TypeDecl BlockGlobal
 FormalParameterSection      ::= "(" [ FormalParameterList ] ")"
 FormalParameterList         ::= FormalParameter (";" FormalParameter)*
 FormalParameter             ::= [ CustomAttribute ] [ ParamType ] identList [ ":" TypeDecl ] [ "=" Expression ]
