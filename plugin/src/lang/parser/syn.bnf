@@ -296,7 +296,7 @@ private namespaceNameList   ::= NamespaceIdent namespaceNamesRest* ";"
 private namespaceNamesRest  ::= "," NamespaceIdent {pin=1 recoverWhile=recover_uses_list}
 
 private recover_main_decl   ::= !(main_decl)
-private recover_decl        ::= !(global_decl | END)
+private recover_decl        ::= !(global_decl)
 
 private recover_impl        ::= !(local_decl | END | FINALIZATION | INITIALIZATION)
 
@@ -306,7 +306,6 @@ private global_decl         ::= local_decl | FINALIZATION | INITIALIZATION
 private main_decl           ::= global_decl | PROGRAM | UNIT | LIBRARY | PACKAGE
 
 private routine_key         ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
-private decl_list           ::= ',' | ';' | BEGIN
 
 //';' | '.' | BEGIN | VarKey | ProcKey | ConstKey | TYPE | LABEL
 //private global_decl        ::= local_decl | FINALIZATION | INITIALIZATION | CLASS | EXPORTS | INTERFACE | IMPLEMENTATION | USES | CONTAINS | REQUIRES
@@ -350,7 +349,7 @@ private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 VarSection	                ::=	varKey varDeclaration+ {pin=1 name="var section"}
 private varKey	            ::=	VAR | THREADVAR
 private varDeclaration	    ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 recoverWhile=recover_var}
-private recover_var         ::= !(identifier ":") recover_decl
+private recover_var         ::= !(identifier) recover_decl
 VarValueSpec	            ::=	ABSOLUTE identifier | ABSOLUTE ConstExpressionOrd | EQ ConstExpression
 
 ConstSection                ::= constKey constDeclaration+ {pin=1 name="const section"}
@@ -387,7 +386,7 @@ private recover_declName        ::= !('(' | ')' | ',' | '.' | ':' | ';' | '[' | 
 
 TypeID              ::=	FullyQualifiedIdent
 
-TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringType | variantType | SimpleType | [TYPE] TypeID [GenericPostfix]
+TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringType | SimpleType | [TYPE] TypeID [GenericPostfix] | variantType
 
 ClassField                  ::= field ';' //TODO: remove ";"
 
@@ -397,11 +396,12 @@ ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID structItem
 InterfaceTypeDecl           ::= interfaceKey [ClassParent] [interfaceGuid] structItem* END
                               | interfaceKey [ClassParent] {pin(".*")=interfaceKey name="interface declaration"}
 ObjectDecl                  ::= OBJECT [ClassParent] structItem* END {pin=1 name="object declaration"}
-RecordDecl                  ::= RECORD (variantRecord | simpleRecord) END {pin=1 name="record declaration"}
-private simpleRecord        ::= recordFieldSemi* structItem* {recoverWhile=recover_not_end}
-private variantRecord       ::= recordFieldSemi* recordVariantSection {recoverWhile=recover_not_end}
+RecordDecl                  ::= simpleRecord | variantRecord {name="record declaration"}
+private simpleRecord        ::= RECORD recordFieldSemi* structItem* END {pin=1}
+private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END {pin=1}
 private recover_not_end     ::= !(END)
-private recordFieldSemi     ::= ClassField
+private recover_field       ::= !(identifier ":" | END)
+private recordFieldSemi     ::= ClassField {recoverWhile=recover_field}
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3}
 RecordFields        ::= [field] (';' field)* [';']  //===***
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1}
@@ -445,7 +445,7 @@ SetType             ::= SET OF TypeDecl {pin=1}
 FileType            ::= FILE [OF TypeDecl] {pin=1}
 PointerType         ::= "^" TypeDecl | POINTER {pin=1}
 
-private stringType          ::= "string" ["[" Expression "]"] | TypeID [codePageNumber]
+private stringType          ::= "string" ["[" Expression "]"] | "AnsiString" [codePageNumber]
 private codePageNumber      ::= "(" ConstExpressionOrd ")" {pin=1}
 private variantType         ::= identifier
 
