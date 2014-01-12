@@ -23,32 +23,32 @@
   tokens = [
         STRING_LITERAL="STRING_LITERAL"
 
-        AND="and"
+        AND='regexp:[Aa]nd'
         MOD="mod"
         OR="or"
         IDIV="div"
         SHR="shr"
         SHL="shl"
-        IN="in"
+        IN='regexp:[Ii][Nn]'
 
         AS="as"
         IS="is"
         NIL="nil"
 
-        CLASS="class"
+        CLASS='regexp:[Cc]lass'
         DISPINTERFACE="dispinterface"
 
-        TRY="try"
-        RAISE="raise"
+        TRY='regexp:[Tt]ry'
+        RAISE='regexp:[Rr]aise'
         EXCEPT="except"
         ON="on"
         FINALLY="finally"
 
         PROGRAM="program"
-        UNIT="unit"
+        UNIT='regexp:[Uu]nit'
         LIBRARY="library"
         PACKAGE="package"
-        USES="uses"
+        USES='regexp:[Uu]ses'
         EXPORTS="exports"
         FINALIZATION="finalization"
         INITIALIZATION="initialization"
@@ -56,36 +56,35 @@
         THREADVAR="threadvar"
         ABSOLUTE="absolute"
         OUT="out"
-        RESOURCESTRING="resourcestring"
+        RESOURCESTRING='regexp:[Rr]esource[Ss]tring'
         INLINE="inline"
         PACKED="packed"
         PROPERTY="property"
-        ARRAY="array"
         SET="set"
         FILE="file"
 
         ASM="asm"
         GOTO="goto"
         LABEL="label"
-        WITH="with"
+        WITH='regexp:[Ww]ith'
         EXIT="exit"
         CONTINUE="continue"
         BREAK="break"
 
-        CONSTRUCTOR="constructor"
-        DESTRUCTOR="destructor"
+        CONSTRUCTOR='regexp:[Cc]onstructor'
+        DESTRUCTOR='regexp:[Dd]estructor'
         INHERITED="inherited"
         OBJECT="object"
         OPERATOR="operator"
         REINTRODUCE="reintroduce"
         SELF="self"
 
-        NOT="not"
+        NOT='regexp:[Nn]ot'
         XOR="xor"
 
-        TO="to"
+        TO='regexp:[Tt]o'
         DOWNTO="downto"
-        REPEAT="repeat"
+        REPEAT='regexp:[Rr]epeat'
 
         STATIC="static"
         SEALED="sealed"
@@ -130,31 +129,30 @@
         REQUIRES="requires"
         CONTAINS="contains"
 
-        POINTER="pointer"
-        FALSE="false"
-        TRUE="true"
+        FALSE='regexp:[Ff]alse'
+        TRUE='regexp:[Tt]rue'
 
         INTERFACE="interface"
         IMPLEMENTATION="implementation"
 
-        VAR="var"
-        CONST="const"
+        VAR='regexp:[Vv]ar'
+        CONST='regexp:[Cc]onst'
         TYPE="type"
-        ARRAY="array"
-        RECORD="record"
-        PROCEDURE="procedure"
-        FUNCTION="function"
+        ARRAY='regexp:[Aa]rray'
+        RECORD='regexp:[Rr]ecord'
+        PROCEDURE='regexp:[Pp]rocedure'
+        FUNCTION='regexp:[Ff]unction'
         OF="of"
 
         CASE="case"
-        BEGIN="begin"
-        END="end"
-        FOR="for"
-        UNTIL="until"
-        WHILE="while"
-        DO="do"
-        IF="if"
-        THEN="then"
+        BEGIN='regexp:[Bb]egin'
+        END='regexp:[Ee]nd'
+        FOR='regexp:[Ff]or'
+        UNTIL='regexp:[Uu]ntil'
+        WHILE='regexp:[Ww]hile'
+        DO='regexp:[Dd][Oo]'
+        IF='regexp:[Ii]f'
+        THEN='regexp:[Tt]hen'
         ELSE="else"
 
         READ="read"
@@ -186,7 +184,6 @@
         CHARNUM="#"
         KEYWORDESCAPE="&"
 
-        INCLUDE="include"
         CT_DEFINE="ct_define"
         CT_UNDEFINE="ct_undefine"
         CT_IFDEF="ct_ifdef"
@@ -198,9 +195,10 @@
         COMMENT='regexp:\{[^}]*\}'
         COMMENT='regexp://.*'
         COMMENT='regexp:\(\*(.*\n)*.*\*\)'
-        NAME='regexp:[_\w]\w*'
+        NAME='regexp:[_A-Za-z]\w*'
         RANGE='..'
         STRING_LITERAL="regexp:'[^']*'"
+        NUMBER_INT='regexp:[0-9]+'
         NUMBER_HEX='regexp:\$[0-9abcdef]+'
   ]
 
@@ -245,7 +243,7 @@ private methodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | C
 private procKey             ::= FUNCTION | PROCEDURE
 
 ExportedRoutine             ::= routineDeclaration {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
-private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl) ";" functionDirective* {recoverWhile=recover_decl}
+private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl) ";" functionDirective* {pin=2 recoverWhile=recover_decl}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=2}
 private exportedProc        ::= methodKey procName [GenericDefinition] [FormalParameterSection] {pin=1}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
@@ -271,10 +269,10 @@ private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeD
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
 private structItem          ::= commonDecl | routineDecl | ClassField | Visibility {recoverWhile=recover_classItem}
-DeclSection	                ::=	commonDecl | LabelDeclSection | exportsSection | assemblyAttribute {recoverWhile=recover_decl}
+DeclSection	                ::=	MethodImplDecl | RoutineImplDecl | commonDecl | LabelDeclSection | exportsSection | assemblyAttribute {recoverWhile=recover_decl}
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=recover_impl name="implementation section"}
-ImplDeclSection             ::= (MethodImplDecl | RoutineImplDecl | DeclSection)* {recoverWhile=recover_impl}
+ImplDeclSection             ::= (DeclSection)* {recoverWhile=recover_impl}
 private unitBlock           ::= UnitInitialization [UnitFinalization] END | CompoundStatement | END {recoverWhile=recover_impl}
 UnitInitialization          ::= INITIALIZATION StatementList {pin=1 name="initialization section"}
 UnitFinalization            ::= FINALIZATION StatementList  {pin=1 name="finalization section"}
@@ -289,7 +287,7 @@ UsesFileClause	            ::=	USES namespaceFileNameList {pin=1 name="uses clau
 private namespaceFileNameList ::= namespaceFileName namespaceFileNamesRest* ";"
 private namespaceFileNamesRest ::= COMMA namespaceFileName {pin=1}
 private namespaceFileName	::=	NamespaceIdent [IN quotedString] {recoverWhile=recover_uses_list}
-private recover_uses_list   ::= !(',' | global_decl)
+private recover_uses_list   ::= !(',' | ';' | global_decl)
 private recover_commaList   ::= !(";" | ')' | ',' | ':' | '.' | "]" | DO)
 
 private namespaceNameList   ::= NamespaceIdent namespaceNamesRest* ";"
@@ -301,7 +299,7 @@ private recover_decl        ::= !(global_decl)
 private recover_impl        ::= !(local_decl | END | FINALIZATION | INITIALIZATION)
 
 private local_decl          ::= '.' | BEGIN | varKey | routine_key | constKey | PROPERTY | TYPE | LABEL
-private global_decl         ::= local_decl | FINALIZATION | INITIALIZATION
+private global_decl         ::= local_decl | FINALIZATION | INITIALIZATION | END
                               | CLASS | EXPORTS | INTERFACE | IMPLEMENTATION | USES | CONTAINS | REQUIRES
 private main_decl           ::= global_decl | PROGRAM | UNIT | LIBRARY | PACKAGE
 
@@ -322,7 +320,7 @@ private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | 
 
 private functionDirective   ::= overloadDirective | externalDirective | oldCallConventionDirectiveSemi
                               | inlineDirectiveSemi | callConventionSemi | HintingDirective ";"
-                              | REINTRODUCE ';' | OVERLOAD ';' | bindingDirective | abstractDirectiveSemi | dispIDDirective
+                              | REINTRODUCE ';' | OVERLOAD ';' | bindingDirective | abstractDirectiveSemi | dispIDDirective {name="routine directive"}
 private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
@@ -355,7 +353,7 @@ VarValueSpec	            ::=	ABSOLUTE identifier | ABSOLUTE ConstExpressionOrd |
 ConstSection                ::= constKey constDeclaration+ {pin=1 name="const section"}
 private constKey            ::= CONST |	RESOURCESTRING
 private constDeclaration    ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2 recoverWhile=recover_const}
-private recover_const       ::= !(identifier "=") recover_decl
+private recover_const       ::= !(identifier) recover_decl
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
@@ -443,7 +441,7 @@ ArraySubType        ::= CONST | TypeDecl
 
 SetType             ::= SET OF TypeDecl {pin=1}
 FileType            ::= FILE [OF TypeDecl] {pin=1}
-PointerType         ::= "^" TypeDecl | POINTER {pin=1}
+PointerType         ::= "^" TypeDecl {pin=1}
 
 private stringType          ::= "string" ["[" Expression "]"] | "AnsiString" [codePageNumber]
 private codePageNumber      ::= "(" ConstExpressionOrd ")" {pin=1}
