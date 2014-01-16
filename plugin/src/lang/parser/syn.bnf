@@ -135,7 +135,7 @@
         INTERFACE="interface"
         IMPLEMENTATION="implementation"
 
-        VAR='regexp:[Vv]ar'
+        VAR='regexp:[Vv][Aa][Rr]'
         CONST='regexp:[Cc]onst'
         TYPE="type"
         ARRAY='regexp:[Aa]rray'
@@ -485,18 +485,8 @@ private after_expr          ::= TO | DO | THEN | OF | DOWNTO | EXCEPT | INDEX | 
                               | DEPRECATED | EXPERIMENTAL | PLATFORM | LIBRARY | "varargs" | EXTERNAL | "unsafe"
                               | REINTRODUCE | bindingDirective | abstractDirective | ClassPropertySpecifier
 
-Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
-                                INHERITED [TypeID] DesignatorItem2? | EntityID DesignatorItemEx* | DesignatorItemEx+
-
 EntityID                    ::= FullyQualifiedIdent
 FieldId                     ::= identifier
-
-DesignatorItem      ::= "^" | "." FieldId | "[" ExpressionsList "]"
-DesignatorItemEx    ::= DesignatorItem | DesignatorItem2
-DesignatorItem2     ::= "(" [ExpressionColon ExpressionColons*] ")"// {pin=1}
-ExpressionColon     ::= Expression [ColonConstruct] {recoverWhile=recover_commaList}
-ExpressionColons    ::= "," ExpressionColon
-ColonConstruct      ::= ":" Expression [ ":" Expression ]
 
 RepeatStatement     ::= REPEAT [StatementList] UNTIL Expression {pin=1}
 WhileStatement      ::= WHILE Expression DO statement {pin=1}
@@ -556,9 +546,19 @@ RecordConstValue            ::= "(" recordValue recordValueRest* ")" {pin=1}
 private recordValueRest     ::= ";" recordValue
 private recordValue         ::= identifier ":" RecordConstExpression
 
+Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
+                                INHERITED [TypeID] DesignatorItem2? | EntityID DesignatorItemEx* | DesignatorItemEx+
+
+DesignatorItem      ::= "^" | "." FieldId | "[" ExpressionsList "]"
+DesignatorItemEx    ::= DesignatorItem | DesignatorItem2
+DesignatorItem2     ::= "(" [ExpressionColon ExpressionColons*] ")"// {pin=1}
+ExpressionColon     ::= Expression [ColonConstruct] {recoverWhile=recover_commaList}
+ExpressionColons    ::= "," ExpressionColon
+ColonConstruct      ::= ":" Expression [ ":" Expression ]
+
 private primary             ::= AT primary | AT AT primary | NOT primary | PLUS primary | MINUS primary
                               | NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL
-                              | "(" Expression ")" | StringFactor | SetSection | Designator
+                              | StringFactor | SetSection | Designator
 
 primaryOrd                  ::= NOT primaryOrd | PLUS primaryOrd | MINUS primaryOrd | NUMBER_INT | NUMBER_HEX | TRUE | FALSE | NIL
                               | "(" ExpressionOrd ")" | StringFactor | Designator
