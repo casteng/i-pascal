@@ -1,11 +1,11 @@
 package com.siberika.idea.pascal.lang.compiled;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import java.io.File;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Author: George Bakhtadze
@@ -16,8 +16,8 @@ public class PPUDecompilerTest {
     public void testGetPPUDumpVersion() throws Exception {
         File ppuDump = new File("/usr/lib/codetyphon/fpc/bin/i386-linux/ppudump");
         String ver = PPUDecompilerCache.getPPUDumpVersion(ppuDump);
-        assertThat(ver, is(PPUDecompilerCache.PPUDUMP_VERSION_MIN));
-        assertThat(ver.compareTo("2.6.1") >= 0, is(true));
-        assertThat(ver.compareTo("2.8.1") < 0, is(true));
+        assertEquals(ver, PPUDecompilerCache.PPUDUMP_VERSION_MIN);
+        assertTrue(ver.compareTo("2.6.1") >= 0);
+        assertTrue(ver.compareTo("2.8.1") < 0);
     }
 }

@@ -29,7 +29,7 @@ public class PascalFindUsagesProvider implements FindUsagesProvider {
     @Nullable
     @Override
     public String getHelpId(@NotNull PsiElement psiElement) {
-        return HelpID.FIND_OTHER_USAGES;
+        return HelpID.FIND_IN_PROJECT;
     }
 
     @NotNull

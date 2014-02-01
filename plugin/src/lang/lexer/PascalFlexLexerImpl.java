@@ -190,7 +190,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
 
             Module module = ModuleUtil.findModuleForFile(referencing, project);
 
-            return trySearchPath(module, name);
+            return module != null ? trySearchPath(module, name) : null;
         } else {
             return null;
         }

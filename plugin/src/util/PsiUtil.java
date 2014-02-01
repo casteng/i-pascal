@@ -9,7 +9,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
-import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
@@ -33,7 +32,6 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
-import com.siberika.idea.pascal.lang.psi.PasRecordField;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
@@ -154,7 +152,7 @@ public class PsiUtil {
         if ((element instanceof PasNamedIdent) && (parent instanceof PascalRoutineImpl) && (element.getParent() == parent)) {
             // Make routine itself belong to parent root
             return getNearestAffectingDeclarationsRoot(parent);
-        } else if (PsiUtil.isInstanceOfAny(parent, PasFormalParameterSection.class, PasBlockLocal.class)) {
+        } else if (PsiUtil.isInstanceOfAny(parent, PasFormalParameterSection.class, PasBlockGlobal.class)) {
             // Make routine local variable or parameters belong to the routine
             return getParentDeclRoot(parent);
         }
@@ -167,7 +165,7 @@ public class PsiUtil {
                 PascalRoutineImpl.class, PasFormalParameterSection.class,
                 PasClosureExpression.class,
                 PasModuleProgram.class, PasUnitImplementation.class,
-                PasBlockGlobal.class, PasBlockLocal.class,
+                PasBlockGlobal.class,
                 PasModule.class,
                 PasUnitInterface.class,
                 PasEntityScope.class
@@ -376,7 +374,7 @@ public class PsiUtil {
     }
 
     public static boolean isFieldDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasRecordField) || (entityDecl.getParent() instanceof PasClassField);
+        return (entityDecl.getParent() instanceof PasClassField);
     }
 
     public static boolean isPropertyDecl(PascalNamedElement entityDecl) {

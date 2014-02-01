@@ -23,13 +23,11 @@ import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
-import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasClassMethod;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasContainsClause;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
-import com.siberika.idea.pascal.lang.psi.PasDeclSectionLocal;
 import com.siberika.idea.pascal.lang.psi.PasDesignator;
 import com.siberika.idea.pascal.lang.psi.PasEntityID;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -37,9 +35,9 @@ import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasHintingDirective;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasMethodDirective;
 import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
@@ -122,11 +120,11 @@ public class PascalCompletionContributor extends CompletionContributor {
                                 PasProgramModuleHead.class, PasUnitModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);
                     }
                 }
-                if (posIs(originalPos, pos, PasUnitInterface.class, PasImplDeclSection.class, PasDeclSection.class, PasBlockLocal.class, PasBlockGlobal.class)) {
+                if (posIs(originalPos, pos, PasUnitInterface.class, PasImplDeclSection.class, PasDeclSection.class, PasBlockGlobal.class)) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
                 } else if (posIs(originalPos, pos, PasVarSection.class, PasConstSection.class, PasTypeSection.class, PasRoutineImplDecl.class) && parameters.getPosition() instanceof LeafPsiElement) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
-                } else if (posIs(originalPos, pos, PasExportedRoutine.class, PasDeclSectionLocal.class) && parameters.getPosition().getParent() instanceof PsiErrorElement) {
+                } else if (posIs(originalPos, pos, PasExportedRoutine.class, PasDeclSection.class) && parameters.getPosition().getParent() instanceof PsiErrorElement) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
                 } else if (pos instanceof PasTypeID) {
                     addEntities(result, parameters.getPosition(), PasField.TYPES_TYPE);
@@ -159,7 +157,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             appendTokenSet(result, PascalLexer.VISIBILITY);
             appendTokenSet(result, PascalLexer.STRUCT_DECLARATIONS);
             PsiElement el = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class);
-            if ((el instanceof PasClassMethod) || (el instanceof PasMethodDirective)) {
+            if ((el instanceof PasClassMethod) || (el instanceof PasHintingDirective)) {
                 appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
             }
         } else if (pos instanceof PasMethodImplDecl) {

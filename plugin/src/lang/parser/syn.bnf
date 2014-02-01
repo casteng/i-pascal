@@ -56,6 +56,7 @@
         THREADVAR="threadvar"
         ABSOLUTE="absolute"
         OUT="out"
+        CONSTREF="constref"
         RESOURCESTRING='regexp:[Rr]esource[Ss]tring'
         INLINE="inline"
         PACKED="packed"
@@ -451,7 +452,7 @@ ProcedureType       ::= MethodType | SimpleProcedureType | ProcedureReference
 SimpleProcedureType ::= procedureTypeHeading
 MethodType          ::= procedureTypeHeading OF OBJECT {pin=3}
 
-SimpleType          ::= identifier | EnumType | SubRangeType
+SimpleType          ::= EnumType | SubRangeType
 SubRangeType        ::= RangeBound [RANGE RangeBound]
 RangeBound          ::= ConstExpressionOrd
 EnumType            ::= "(" EnumEl EnumRest* ")" {pin=1}

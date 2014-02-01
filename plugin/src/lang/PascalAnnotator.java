@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.lang;
 
-import com.intellij.codeInsight.CodeInsightUtilBase;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.annotation.Annotation;
@@ -91,7 +90,7 @@ public class PascalAnnotator implements Annotator {
                             }
 
                             public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
-                                if (!CodeInsightUtilBase.prepareFileForWrite(file)) return;
+                                //if (!CodeInsightUtilBase.prepareFileForWrite(file)) return;
                                 int offset = annotation.getStartOffset();
                                 if (property.getContainingFile().getText().charAt(offset) == '\\') {
                                     editor.getDocument().deleteString(offset, offset + 1);

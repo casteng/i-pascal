@@ -12,7 +12,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
-import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
@@ -68,7 +67,7 @@ public class PasActionCreateVar extends BaseIntentionAction {
                                 PasVarSection varSection = PsiUtil.findInSameSection(section, PasVarSection.class);
                                 if (null == varSection) {
                                     PsiElement block = PsiUtil.findInSameSection(section,
-                                            PasImplDeclSection.class, PasBlockLocal.class, PasBlockGlobal.class);
+                                            PasImplDeclSection.class, PasBlockGlobal.class);
                                     if (block != null) {
                                         block.getParent().getNode().addLeaf(PasTypes.VAR_SECTION, "var " + element.getName() + ": ;\n", block.getNode());
                                         moveCaretToAdded(block, -2);
