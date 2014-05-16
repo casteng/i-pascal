@@ -22,6 +22,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
@@ -151,7 +153,7 @@ public class FPCBackendCompiler extends ExternalCompiler {
 
         commandLine.add(executable.getPath());
 
-        String compilerOptions = (String) BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_COMPILER_OPTIONS);
+        String compilerOptions = (String) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
         if (compilerOptions != null) {
             commandLine.add(compilerOptions);
         }
@@ -216,7 +218,7 @@ public class FPCBackendCompiler extends ExternalCompiler {
         File result = null;
         String sdkHomePath = sdk.getHomePath();
         if (sdkHomePath != null) {
-            result = FPCSdkType.getCompilerExecutable(sdkHomePath);
+            result = PascalSdkUtil.getCompilerExecutable(sdkHomePath);
             if (!result.canExecute()) {
                 context.addMessage(CompilerMessageCategory.ERROR, getMessage(module, "compile.noCompiler", result.getPath()), null, -1, -1);
                 result = null;

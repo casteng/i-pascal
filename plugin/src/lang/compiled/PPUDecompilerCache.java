@@ -10,6 +10,8 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import com.siberika.idea.pascal.util.ModuleUtil;
@@ -48,12 +50,12 @@ public class PPUDecompilerCache {
     synchronized public static String decompile(Module module, String filename) {
         Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
         if (null == sdk) { return PascalBundle.message("decompile.wrong.sdk"); }
-        PPUDecompilerCache decompilerCache = (PPUDecompilerCache) BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_DECOMPILER_CACHE);
+        PPUDecompilerCache decompilerCache = (PPUDecompilerCache) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE);
         if (null == decompilerCache) {
             decompilerCache = new PPUDecompilerCache(module);
-            BasePascalSdkType.getAdditionalData(sdk).setValue(BasePascalSdkType.DATA_KEY_DECOMPILER_CACHE, decompilerCache);
+            BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE, decompilerCache);
         }
-        String unitName = FileUtil.getNameWithoutExtension(com.siberika.idea.pascal.util.FileUtil.getFilename(filename));
+        String unitName = FileUtil.getNameWithoutExtension(com.siberika.idea.pascal.jps.util.FileUtil.getFilename(filename));
         return decompilerCache.getContents(unitName).getResult();                 // TODO: check for null
     }
 
@@ -69,7 +71,7 @@ public class PPUDecompilerCache {
             if (files.isEmpty()) {
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.ppu.notfound", key));
             }
-            File ppuDump = FPCSdkType.getPPUDumpExecutable(sdk.getHomePath());
+            File ppuDump = PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath());
             String xml = "";
             try {
                 if (!ppuDump.isFile() || !ppuDump.canExecute()) {

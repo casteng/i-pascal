@@ -1,11 +1,16 @@
 package com.siberika.idea.pascal.jps.model;
 
-import org.jetbrains.jps.model.JpsDummyElement;
-import org.jetbrains.jps.model.ex.JpsElementTypeWithDummyProperties;
+import com.intellij.openapi.util.Key;
+import com.siberika.idea.pascal.jps.util.ParamMap;
+import org.jetbrains.jps.model.JpsSimpleElement;
+import org.jetbrains.jps.model.ex.JpsElementTypeBase;
 import org.jetbrains.jps.model.module.JpsModuleType;
 
-public class JpsPascalModuleType extends JpsElementTypeWithDummyProperties implements JpsModuleType<JpsDummyElement> {
+public class JpsPascalModuleType extends JpsElementTypeBase<JpsSimpleElement<ParamMap>> implements JpsModuleType<JpsSimpleElement<ParamMap>> {
     public static final JpsPascalModuleType INSTANCE = new JpsPascalModuleType();
+
+    public static final String MODULE_TYPE_ID = "PASCAL_MODULE";
+    public static final Key<Object> USERDATA_KEY_MAIN_FILE = new Key<Object>("mainFile");
 
     private JpsPascalModuleType() {
     }

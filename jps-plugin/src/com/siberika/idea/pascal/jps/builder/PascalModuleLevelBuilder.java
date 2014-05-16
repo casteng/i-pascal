@@ -1,8 +1,17 @@
 package com.siberika.idea.pascal.jps.builder;
 
+import com.intellij.execution.process.BaseOSProcessHandler;
+import com.intellij.execution.process.ProcessAdapter;
+import com.intellij.openapi.util.io.FileUtil;
+import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
+import com.siberika.idea.pascal.jps.compiler.FPCBackendCompiler;
+import com.siberika.idea.pascal.jps.model.JpsPascalSdkType;
+import com.siberika.idea.pascal.jps.util.ParamMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.ModuleChunk;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
+import org.jetbrains.jps.builders.FileProcessor;
+import org.jetbrains.jps.builders.java.JavaBuilderUtil;
 import org.jetbrains.jps.builders.java.JavaSourceRootDescriptor;
 import org.jetbrains.jps.incremental.BuilderCategory;
 import org.jetbrains.jps.incremental.CompileContext;
@@ -11,13 +20,20 @@ import org.jetbrains.jps.incremental.ModuleLevelBuilder;
 import org.jetbrains.jps.incremental.ProjectBuildException;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
-import org.jetbrains.jps.model.java.JpsJavaSdkType;
+import org.jetbrains.jps.model.java.JpsJavaExtensionService;
+import org.jetbrains.jps.model.library.JpsOrderRootType;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
+import org.jetbrains.jps.model.module.JpsModule;
+import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: George Bakhtadze
@@ -25,26 +41,105 @@ import java.util.List;
  */
 public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
 
-    private static final List<String> COMPILABLE_EXTENSIONS = Arrays.asList("pas", "inc", "dpr", "pp");
+    private static final List<String> COMPILABLE_EXTENSIONS = Arrays.asList("pas", "inc", "dpr", "pp", "lpr");
+    public static final String NAME = "FPC";
 
     public PascalModuleLevelBuilder() {
         super(BuilderCategory.TRANSLATOR);
     }
 
     @Override
-    public ExitCode build(CompileContext context,
-                          ModuleChunk chunk,
+    public ExitCode build(final CompileContext context, ModuleChunk chunk,
                           DirtyFilesHolder<JavaSourceRootDescriptor, ModuleBuildTarget> dirtyFilesHolder,
                           OutputConsumer outputConsumer) throws ProjectBuildException, IOException {
-
-        context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.WARNING, "Starting compile..."));
-        JpsSdk<?> sdk = chunk.getModules().iterator().next().getSdk(JpsJavaSdkType.INSTANCE);
-        final List<File> toCompile = collectChangedFiles(context, dirtyFilesHolder);
-        for (File file : toCompile) {
-            context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.WARNING, "compiling: " + file.getAbsolutePath()));
+        context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.ERROR, "Don't close messages"));
+        Map<ModuleBuildTarget, List<File>> files = collectChangedFiles(context, dirtyFilesHolder);
+        if (files.isEmpty()) {
+            context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.INFO, "No changes detected"));
+            return ExitCode.NOTHING_DONE;
         }
-        context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.ERROR, "Error message 7"));
+
+        CompilerMessager messager = new CompilerMessager() {
+            @Override
+            public void info(String msg, String path, long line, long column) {
+                context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.INFO, msg, path, -1l, -1l, -1l, line, column));
+            }
+
+            @Override
+            public void warning(String msg, String path, long line, long column) {
+                context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.WARNING, msg, path, -1l, -1l, -1l, line, column));
+            }
+
+            @Override
+            public void error(String msg, String path, long line, long column) {
+                context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.ERROR, msg, path, -1l, -1l, -1l, line, column));
+            }
+        };
+
+        FPCBackendCompiler compiler = new FPCBackendCompiler(messager);
+        for (ModuleBuildTarget target : chunk.getTargets()) {
+            JpsModule module = target.getModule();
+            JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
+            if (sdk != null) {
+                List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
+                sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
+                File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
+                String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
+                        sdkFiles, getFiles(module.getSourceRoots()),
+                        files.get(target), ParamMap.getJpsParams(module.getProperties()),
+                        JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
+                        ParamMap.getJpsParams(sdk.getSdkProperties()));
+                launchCompiler(messager, cmdLine);
+            } else {
+                log(context, "Pascal SDK is not defined for module " + module.getName());
+            }
+            /*public String[] createStartupCommand(final String sdkHomePath, final String moduleName, final String outputDir,
+            final VirtualFile[] sdkSourceRoots, final VirtualFile[] moduleSourceRoots,
+            final VirtualFile[] files, final VirtualFile mainFile,
+            final boolean isRebuild,
+            final PascalSdkData pascalSdkData) throws IOException, IllegalArgumentException {*/
+        }
+
         return ExitCode.OK;
+    }
+
+    private void launchCompiler(CompilerMessager messager, String[] cmdLine) throws IOException {
+        messager.info("Command line: ", null, -1l, -1l);
+        for (String s : cmdLine) {
+            messager.info(s, null, -1l, -1l);
+        }
+        Process process = Runtime.getRuntime().exec(cmdLine);
+        BaseOSProcessHandler handler = new BaseOSProcessHandler(process, "", Charset.defaultCharset());
+        ProcessAdapter adapter = new PascalCompilerProcessAdapter(messager);
+        handler.addProcessListener(adapter);
+        handler.startNotify();
+        handler.waitFor();
+    }
+
+    private List<File> getFiles(List<JpsModuleSourceRoot> sourceRoots) {
+        List<File> result = new ArrayList<File>();
+        for (JpsModuleSourceRoot root : sourceRoots) {
+            result.add(root.getFile());
+        }
+        return result;
+    }
+
+    private static File getBuildOutputDirectory(@NotNull JpsModule module, boolean forTests,
+                                                @NotNull CompileContext context) throws ProjectBuildException {
+        JpsJavaExtensionService instance = JpsJavaExtensionService.getInstance();
+        File outputDirectory = instance.getOutputDirectory(module, forTests);
+        if (outputDirectory == null) {
+            context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "No output dir for module " + module.getName()));
+        } else {
+            if (!outputDirectory.exists()) {
+                FileUtil.createDirectory(outputDirectory);
+            }
+        }
+        return outputDirectory;
+    }
+
+    private static void log(CompileContext context, String text) {
+        context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, text));
     }
 
     @Override
@@ -52,24 +147,27 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
         return COMPILABLE_EXTENSIONS;
     }
 
-    private static List<File> collectChangedFiles(CompileContext context,
-                                                  DirtyFilesHolder<JavaSourceRootDescriptor, ModuleBuildTarget> dirtyFilesHolder) throws IOException {
-        final ResourcePatterns patterns = ResourcePatterns.KEY.get(context);
-        assert patterns != null;
-        final List<File> toCompile = new ArrayList<File>();
+    private static Map<ModuleBuildTarget, List<File>> collectChangedFiles(CompileContext context, DirtyFilesHolder<JavaSourceRootDescriptor,
+            ModuleBuildTarget> dirtyFilesHolder) throws IOException {
+        final Map<ModuleBuildTarget, List<File>> result = new HashMap<ModuleBuildTarget, List<File>>();
         dirtyFilesHolder.processDirtyFiles(new FileProcessor<JavaSourceRootDescriptor, ModuleBuildTarget>() {
             public boolean apply(ModuleBuildTarget target, File file, JavaSourceRootDescriptor sourceRoot) throws IOException {
                 final String path = file.getPath();
-                if (isGroovyFile(path) && !patterns.isResourceFile(file, sourceRoot.root)) { //todo file type check
+                if (isPascalFile(path)) { //todo file type check
+                    List<File> toCompile = result.get(target);
+                    if (null == toCompile) {
+                        toCompile = new ArrayList<File>();
+                        result.put(target, toCompile);
+                    }
                     toCompile.add(file);
                 }
                 return true;
             }
         });
-        return toCompile;
+        return result;
     }
 
-    private static boolean isGroovyFile(String path) {
+    private static boolean isPascalFile(String path) {
         for (String ext : COMPILABLE_EXTENSIONS) {
             if (path.endsWith("." + ext)) {
                 return true;
@@ -81,6 +179,6 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
     @NotNull
     @Override
     public String getPresentableName() {
-        return "Free Pascal Compiler";
+        return NAME;
     }
 }

@@ -1,4 +1,4 @@
-package com.siberika.idea.pascal.compiler;
+package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.compiler.OutputParser;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * Author: George Bakhtadze
  * Date: 1/6/13
  */
-class FPCOutputParser extends OutputParser {
+public class FPCOutputParser extends OutputParser {
 
     public static final Logger LOG = Logger.getInstance(FPCOutputParser.class.getName());
 
@@ -24,12 +24,6 @@ class FPCOutputParser extends OutputParser {
     @NonNls private static final Pattern PATTERN_WARNING = Pattern.compile(PATTERN_COMMON + "(Warning:|warning:)" + PATTERN_MESSAGE);
     @NonNls private static final Pattern PATTERN_INFO = Pattern.compile(PATTERN_COMMON + PATTERN_MESSAGE);
 
-    // /home/me/IdeaProjects/untitled1/untitled/src/test.pas(5,4) Fatal: Syntax error, "." expected but "end of file" found
-    // Fatal: Can't open file "q"
-    // /usr/bin/ld: warning: link.res contains output sections; did you forget -T?
-    // /home/me/IdeaProjects/untitled1/untitled/src/test.pas(4,12) Warning: Variable "b" does not seem to be initialized
-
-
     @Override
     public boolean processMessageLine(Callback callback) {
         final String line = callback.getNextLine();
@@ -38,23 +32,27 @@ class FPCOutputParser extends OutputParser {
             LOG.debug(line);
         }
 
+        return processLine(null, line);
+    }
+
+    public static boolean processLine(CompilerMessager messager, String line) {
         if (line == null) {
             return false;
         }
 
         Matcher matcher = PATTERN_ERROR.matcher(line);
         if (matcher.find()) {
-            createMessage(CompilerMessageCategory.ERROR, line, matcher, callback);
+            createMessage(CompilerMessageCategory.ERROR, line, matcher, messager);
         } else {
             matcher = PATTERN_WARNING.matcher(line);
             if (matcher.find()) {
-                createMessage(CompilerMessageCategory.WARNING, line, matcher, callback);
+                createMessage(CompilerMessageCategory.WARNING, line, matcher, messager);
             } else {
                 matcher = PATTERN_INFO.matcher(line);
                 if (matcher.find()) {
-                    createMessage(CompilerMessageCategory.INFORMATION, line, matcher, callback);
+                    createMessage(CompilerMessageCategory.INFORMATION, line, matcher, messager);
                 } else {
-                    createMessage(CompilerMessageCategory.INFORMATION, line, null, callback);
+                    createMessage(CompilerMessageCategory.INFORMATION, line, null, messager);
                 }
             }
         }
@@ -62,7 +60,7 @@ class FPCOutputParser extends OutputParser {
         return true;
     }
 
-    private void createMessage(CompilerMessageCategory category, String line, Matcher matcher, Callback callback) {
+    private static void createMessage(CompilerMessageCategory category, String line, Matcher matcher, CompilerMessager messager) {
         int lineNum = -1;
         int colNum = -1;
         String message = null;
@@ -72,7 +70,7 @@ class FPCOutputParser extends OutputParser {
             if (groupCount >= 4) {
                 url = matcher.group(2);
                 if (url != null) {
-                    url = VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, url);
+                    url = VirtualFileManager.extractPath(VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, url));
                 }
                 try {
                     lineNum = Integer.valueOf(matcher.group(3));
@@ -82,7 +80,14 @@ class FPCOutputParser extends OutputParser {
             message = matcher.group(groupCount);
         }
         if (null == message) message = line;
-        callback.message(category, message, url, lineNum, colNum);
+
+        if (CompilerMessageCategory.ERROR.equals(category)) {
+            messager.error(message, url, lineNum, colNum);
+        } else if (CompilerMessageCategory.WARNING.equals(category)) {
+            messager.warning(message, url, lineNum, colNum);
+        } else {
+            messager.info(message, url, lineNum, colNum);
+        }
     }
 
     public boolean isTrimLines() {

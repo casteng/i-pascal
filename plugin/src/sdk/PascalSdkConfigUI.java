@@ -6,6 +6,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,18 +33,18 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
 
     public boolean isModified() {
         return (optionsEdit != null) &&
-                !optionsEdit.getText().equals(BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_COMPILER_OPTIONS));
+                !optionsEdit.getText().equals(BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS));
     }
 
     public void apply() throws ConfigurationException {
         if (optionsEdit != null) {
-            BasePascalSdkType.getAdditionalData(sdk).setValue(BasePascalSdkType.DATA_KEY_COMPILER_OPTIONS, optionsEdit.getText());
+            BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, optionsEdit.getText());
         }
     }
 
     public void reset() {
         if (optionsEdit != null) {
-            optionsEdit.setText((String) BasePascalSdkType.getAdditionalData(sdk).getValue(BasePascalSdkType.DATA_KEY_COMPILER_OPTIONS));
+            optionsEdit.setText((String) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS));
         }
     }
 

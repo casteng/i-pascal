@@ -1,4 +1,4 @@
-package com.siberika.idea.pascal.util;
+package com.siberika.idea.pascal.jps.util;
 
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;

@@ -19,12 +19,6 @@ public class PascalBuilderService extends BuilderService {
         return Arrays.asList(PascalTargetType.PRODUCTION, PascalTargetType.TESTS);
     }
 
-    /*@NotNull
-    @Override
-    public List<? extends TargetBuilder<?, ?>> createBuilders() {
-        return Arrays.asList(new PascalBuilder());
-    }*/
-
     @NotNull
     @Override
     public List<? extends ModuleLevelBuilder> createModuleLevelBuilders() {

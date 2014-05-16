@@ -1,4 +1,4 @@
-package com.siberika.idea.pascal.sdk;
+package com.siberika.idea.pascal.jps.sdk;
 
 import com.intellij.openapi.projectRoots.SdkAdditionalData;
 
@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class PascalSdkData implements SdkAdditionalData {
 
+    public static final String DATA_KEY_COMPILER_OPTIONS = "compilerOptions";
+    public static final String DATA_KEY_DECOMPILER_CACHE = "decompilerCache";
     private final Map<String, Object> data;
 
     public PascalSdkData() {

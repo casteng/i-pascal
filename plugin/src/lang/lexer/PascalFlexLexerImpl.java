@@ -16,9 +16,9 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.text.CharArrayCharSequence;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.sdk.DefinesParser;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
-import com.siberika.idea.pascal.util.FileUtil;
 
 import java.io.File;
 import java.io.FileReader;
