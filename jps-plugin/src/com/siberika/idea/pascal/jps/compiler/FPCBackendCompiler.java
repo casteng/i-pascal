@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.Processor;
 import com.siberika.idea.pascal.jps.PascalBundle;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
@@ -71,7 +72,7 @@ public class FPCBackendCompiler {
 
         if (pascalSdkData != null) {
             String compilerOptions = pascalSdkData.get(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
-            if (compilerOptions != null) {
+            if (!StringUtil.isEmpty(compilerOptions)) {
                 commandLine.add(compilerOptions);
             }
         }
