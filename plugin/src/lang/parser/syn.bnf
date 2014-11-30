@@ -185,6 +185,7 @@
         CHARNUM="#"
         KEYWORDESCAPE="&"
 
+        INCLUDE="include"
         CT_DEFINE="ct_define"
         CT_UNDEFINE="ct_undefine"
         CT_IFDEF="ct_ifdef"
@@ -395,11 +396,11 @@ ClassHelperDecl             ::= CLASS HELPER [ClassParent] FOR TypeID structItem
 InterfaceTypeDecl           ::= interfaceKey [ClassParent] [interfaceGuid] structItem* END
                               | interfaceKey [ClassParent] {pin(".*")=interfaceKey name="interface declaration"}
 ObjectDecl                  ::= OBJECT [ClassParent] structItem* END {pin=1 name="object declaration"}
-RecordDecl                  ::= simpleRecord | variantRecord {name="record declaration"}
+RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
 private simpleRecord        ::= RECORD recordFieldSemi* structItem* END {pin=1}
 private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END {pin=1}
 private recover_not_end     ::= !(END)
-private recover_field       ::= !(identifier ":" | END)
+private recover_field       ::= !(identifier ":" | END | CASE)
 private recordFieldSemi     ::= ClassField {recoverWhile=recover_field}
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3}
 RecordFields        ::= [field] (';' field)* [';']  //===***
