@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.sdk;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.AdditionalDataConfigurable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -34,6 +35,8 @@ import java.util.List;
  * Date: 10/01/2013
  */
 public class FPCSdkType extends BasePascalSdkType {
+
+    public static final Logger LOG = Logger.getInstance(FPCSdkType.class.getName());
 
     @NotNull
     public static FPCSdkType getInstance() {
@@ -77,14 +80,15 @@ public class FPCSdkType extends BasePascalSdkType {
         return getIcon();
     }
 
-    public static final List<String> DEFAULT_SDK_LOCATIONS = Arrays.asList("/usr/lib/codetyphon/fpc", "/usr/lib/fpc", "/usr/share/fpc");
+    public static final List<String> DEFAULT_SDK_LOCATIONS = Arrays.asList(
+            "/usr/lib/codetyphon/fpc", "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
 
     @Nullable
     @Override
     public String suggestHomePath() {
         if (SystemInfo.isWindows) {
-            return "C:\\fpc\\bin";
-        } else if (SystemInfo.isLinux) {
+            return "C:\\fpc";
+        } else if (SystemInfo.isUnix) {
             for (String path : DEFAULT_SDK_LOCATIONS) {
                 if (FileUtil.exists(path)) {
                     return path;
@@ -96,6 +100,7 @@ public class FPCSdkType extends BasePascalSdkType {
 
     @Override
     public boolean isValidSdkHome(@NotNull final String path) {
+        LOG.info("Checking SDK path: " + path);
         final File fpcExe = PascalSdkUtil.getCompilerExecutable(path);
         return fpcExe.isFile() && fpcExe.canExecute();
     }
@@ -109,6 +114,7 @@ public class FPCSdkType extends BasePascalSdkType {
 
     @Nullable
     public String getVersionString(String sdkHome) {
+        LOG.info("Getting version for SDK path: " + sdkHome);
         return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
     }
 
@@ -142,6 +148,7 @@ public class FPCSdkType extends BasePascalSdkType {
     }
 
     private static void configureSdkPaths(@NotNull final Sdk sdk) {
+        LOG.info("Setting up SDK paths for SDK at " + sdk.getHomePath());
         final SdkModificator[] sdkModificatorHolder = new SdkModificator[]{null};
         final SdkModificator sdkModificator = sdk.getSdkModificator();
         File rtlDir = new File(sdk.getHomePath() + File.separatorChar + "units" + File.separatorChar + PascalSdkUtil.target + File.separatorChar + "rtl");

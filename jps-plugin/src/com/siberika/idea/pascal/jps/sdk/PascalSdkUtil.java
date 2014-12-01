@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.jps.sdk;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.SystemInfo;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +14,9 @@ import java.util.regex.Pattern;
  * Date: 09/05/2014
  */
 public class PascalSdkUtil {
+
+    public static final Logger LOG = Logger.getInstance(PascalSdkUtil.class.getName());
+
     public static final String FPC_PARAMS_VERSION_GET = "-iV";
     public static final Pattern VERSION_PATTERN = Pattern.compile("\\d+\\.\\d+\\.\\d+");
 
@@ -20,32 +24,39 @@ public class PascalSdkUtil {
 
     @NotNull
     public static File getCompilerExecutable(@NotNull final String sdkHome) {
+        LOG.info("Getting executable: " + sdkHome);
         return getUtilExecutable(sdkHome, "bin", "fpc");
     }
 
     @NotNull
     public static File getPPUDumpExecutable(@NotNull final String sdkHome) {
+        LOG.info("Getting ppudump: " + sdkHome);
         return getUtilExecutable(sdkHome, "bin", "ppudump");
     }
 
     //TODO: take target directory from compiler target
     @NotNull
     static File getUtilExecutable(@NotNull final String sdkHome, @NotNull final String dir, @NotNull final String exe) {
+        LOG.info("Getting util executable: " + sdkHome + ", dir: " + dir + ", file: " + exe);
         File binDir = new File(sdkHome, dir);
         File sdkHomeDir = new File(sdkHome);
         if (!binDir.exists() && sdkHomeDir.isDirectory()) {
+            LOG.info(binDir.getAbsolutePath() + " not found");
             String currentVersion = getVersionDir(sdkHomeDir);
             if (currentVersion != null) {
                 binDir = new File(new File(sdkHome, currentVersion), dir);
             }
         }
         if (!binDir.exists()) {
+            LOG.info("Binary directory not found");
             throw new RuntimeException("SDK not found");
         }
+        LOG.info("Binary directory found at " + binDir.getAbsolutePath());
         for (File targetDir : FileUtil.listDirs(binDir)) {
             File executable = getExecutable(targetDir.getAbsolutePath(), exe);
             if (executable.canExecute()) {
                 target = targetDir.getName();
+                LOG.info("Found target " + target);
                 return executable;
             }
         }

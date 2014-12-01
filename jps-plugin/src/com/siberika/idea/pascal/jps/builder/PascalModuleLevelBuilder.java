@@ -52,7 +52,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
     public ExitCode build(final CompileContext context, ModuleChunk chunk,
                           DirtyFilesHolder<JavaSourceRootDescriptor, ModuleBuildTarget> dirtyFilesHolder,
                           OutputConsumer outputConsumer) throws ProjectBuildException, IOException {
-        context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.ERROR, "Don't close messages"));
+//        context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.ERROR, "Don't close messages"));
         Map<ModuleBuildTarget, List<File>> files = collectChangedFiles(context, dirtyFilesHolder);
         if (files.isEmpty()) {
             context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.INFO, "No changes detected"));
