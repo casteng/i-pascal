@@ -17,7 +17,7 @@ public class PascalBundle {
   private static Reference<ResourceBundle> ourBundle;
 
   @NonNls
-  public static final String BUNDLE = "com.siberika.idea.pascal.PascalBundle";
+  public static final String BUNDLE = "PascalBundle";
 
   public static String message(@PropertyKey(resourceBundle = BUNDLE)String key, Object... params) {
     return CommonBundle.message(getBundle(), key, params);

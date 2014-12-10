@@ -19,6 +19,7 @@ public class PascalSdkUtil {
 
     public static final String FPC_PARAMS_VERSION_GET = "-iV";
     public static final Pattern VERSION_PATTERN = Pattern.compile("\\d+\\.\\d+\\.\\d+");
+    public static final String DEFAULT_BIN_UNIX = "/usr/bin";
 
     public static String target;
 
@@ -47,9 +48,14 @@ public class PascalSdkUtil {
                 binDir = new File(new File(sdkHome, currentVersion), dir);
             }
         }
-        if (!binDir.exists()) {
-            LOG.info("Binary directory not found");
-            throw new RuntimeException("SDK not found");
+        if (!binDir.exists()) {                  // Default directory where fpc and ppudump executables are located
+            binDir = "bin".equals(dir) ? getDefaultBinDir(exe) : null;
+            if ((null != binDir) && binDir.exists()) {
+                return binDir;
+            } else {
+                LOG.info("Binary directory not found");
+                throw new RuntimeException("SDK not found");
+            }
         }
         LOG.info("Binary directory found at " + binDir.getAbsolutePath());
         for (File targetDir : FileUtil.listDirs(binDir)) {
@@ -61,6 +67,10 @@ public class PascalSdkUtil {
             }
         }
         return binDir;
+    }
+
+    private static File getDefaultBinDir(String exe) {
+        return new File(DEFAULT_BIN_UNIX, exe);
     }
 
     @Nullable

@@ -39,10 +39,6 @@
     </application-components>
 
     <project-components>
-        <component>
-            <!--<implementation-class>com.siberika.idea.pascal.lang.psi.PascalPsiManager</implementation-class>-->
-            <implementation-class>com.siberika.idea.pascal.compiler.PasCompilerManager</implementation-class>
-        </component>
     </project-components>
 
     <actions>

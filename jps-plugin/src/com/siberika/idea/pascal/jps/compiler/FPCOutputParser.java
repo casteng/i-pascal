@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.jps.compiler;
 
-import com.intellij.compiler.OutputParser;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -14,7 +13,7 @@ import java.util.regex.Pattern;
  * Author: George Bakhtadze
  * Date: 1/6/13
  */
-public class FPCOutputParser extends OutputParser {
+public class FPCOutputParser {
 
     public static final Logger LOG = Logger.getInstance(FPCOutputParser.class.getName());
 
@@ -23,17 +22,6 @@ public class FPCOutputParser extends OutputParser {
     @NonNls private static final Pattern PATTERN_ERROR = Pattern.compile(PATTERN_COMMON + "(Error:|Fatal:)" + PATTERN_MESSAGE);
     @NonNls private static final Pattern PATTERN_WARNING = Pattern.compile(PATTERN_COMMON + "(Warning:|warning:)" + PATTERN_MESSAGE);
     @NonNls private static final Pattern PATTERN_INFO = Pattern.compile(PATTERN_COMMON + PATTERN_MESSAGE);
-
-    @Override
-    public boolean processMessageLine(Callback callback) {
-        final String line = callback.getNextLine();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(line);
-        }
-
-        return processLine(null, line);
-    }
 
     public static boolean processLine(CompilerMessager messager, String line) {
         if (line == null) {

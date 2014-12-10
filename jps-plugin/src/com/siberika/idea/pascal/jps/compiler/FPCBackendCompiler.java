@@ -52,13 +52,18 @@ public class FPCBackendCompiler {
         final ArrayList<String> commandLine = new ArrayList<String>();
         createStartupCommandImpl(sdkHomePath, moduleName, outputDir,
                 sdkLibFiles, moduleLibFiles,
-                files, moduleData != null ? new File(moduleData.get(JpsPascalModuleType.USERDATA_KEY_MAIN_FILE.toString())) : null,
+                files, getMainFile(moduleData),
                 isRebuild,
                 pascalSdkData, commandLine);
         if (commandLine.size() == 0) {
             throw new IllegalArgumentException(getMessage(null, "compile.errorCall"));
         }
         return commandLine.toArray(new String[commandLine.size()]);
+    }
+
+    private File getMainFile(ParamMap moduleData) {
+        String fileName = moduleData != null ? moduleData.get(JpsPascalModuleType.USERDATA_KEY_MAIN_FILE.toString()) : null;
+        return fileName != null ? new File(fileName) : null;
     }
 
     private void createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDir,

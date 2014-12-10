@@ -153,7 +153,9 @@ public class FPCSdkType extends BasePascalSdkType {
         final SdkModificator sdkModificator = sdk.getSdkModificator();
         File rtlDir = new File(sdk.getHomePath() + File.separatorChar + "units" + File.separatorChar + PascalSdkUtil.target + File.separatorChar + "rtl");
         final VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(rtlDir);
-        sdkModificator.addRoot(dir, OrderRootType.SOURCES);
+        if (dir != null) {
+            sdkModificator.addRoot(dir, OrderRootType.SOURCES);
+        }
 
         sdkModificatorHolder[0] = sdkModificator;
 

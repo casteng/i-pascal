@@ -89,7 +89,11 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
                         files.get(target), ParamMap.getJpsParams(module.getProperties()),
                         JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
                         ParamMap.getJpsParams(sdk.getSdkProperties()));
-                launchCompiler(messager, cmdLine);
+                int exitCode = launchCompiler(messager, cmdLine);
+                if (exitCode != 0) {
+                    messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
+                    return ExitCode.ABORT;
+                }
             } else {
                 log(context, "Pascal SDK is not defined for module " + module.getName());
             }
@@ -103,7 +107,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
         return ExitCode.OK;
     }
 
-    private void launchCompiler(CompilerMessager messager, String[] cmdLine) throws IOException {
+    private int launchCompiler(CompilerMessager messager, String[] cmdLine) throws IOException {
         messager.info("Command line: ", null, -1l, -1l);
         for (String s : cmdLine) {
             messager.info(s, null, -1l, -1l);
@@ -114,6 +118,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
         handler.addProcessListener(adapter);
         handler.startNotify();
         handler.waitFor();
+        return process.exitValue();
     }
 
     private List<File> getFiles(List<JpsModuleSourceRoot> sourceRoots) {
