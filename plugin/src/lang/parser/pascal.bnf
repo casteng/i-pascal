@@ -62,7 +62,6 @@
         INLINE="inline"
         PACKED="packed"
         PROPERTY="property"
-        ARRAY="array"
         SET="set"
         FILE="file"
 
@@ -201,7 +200,7 @@
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   extends(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
-  extends("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"
+  extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl";
 
 }
 
@@ -393,7 +392,7 @@ InterfaceTypeDecl           ::= interfaceKey [ClassParent] [interfaceGuid] struc
 ObjectDecl                  ::= OBJECT [ClassParent] structItem* END {pin=1 name="object declaration"}
 RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
 private simpleRecord        ::= RECORD recordFieldSemi* structItem* END {pin=1}
-private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END {pin=1}
+private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END
 private recover_not_end     ::= !(END)
 private recover_field       ::= !(identifier ":" | END | CASE)
 private recordFieldSemi     ::= ClassField {recoverWhile=recover_field}

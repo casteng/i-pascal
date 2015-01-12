@@ -61,6 +61,7 @@
         INLINE="inline"
         PACKED="packed"
         PROPERTY="property"
+        ARRAY="array"
         SET="set"
         FILE="file"
 
@@ -202,6 +203,7 @@
         STRING_LITERAL="regexp:'[^']*'"
         NUMBER_INT='regexp:[0-9]+'
         NUMBER_HEX='regexp:\$[0-9abcdef]+'
+        WHITESPACE='regexp:[\ \n\r\t\f]'
   ]
 
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
@@ -398,7 +400,7 @@ InterfaceTypeDecl           ::= interfaceKey [ClassParent] [interfaceGuid] struc
 ObjectDecl                  ::= OBJECT [ClassParent] structItem* END {pin=1 name="object declaration"}
 RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
 private simpleRecord        ::= RECORD recordFieldSemi* structItem* END {pin=1}
-private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END {pin=1}
+private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END
 private recover_not_end     ::= !(END)
 private recover_field       ::= !(identifier ":" | END | CASE)
 private recordFieldSemi     ::= ClassField {recoverWhile=recover_field}
