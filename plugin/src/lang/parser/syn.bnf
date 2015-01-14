@@ -222,8 +222,8 @@ private progWithHead        ::= ProgramModuleHead progWoHead
 private progWoHead          ::= [UsesFileClause] BlockGlobal "."
 
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "."
-UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1}
-UsesClause                  ::= USES namespaceNameList {pin=1}
+UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
+UsesClause                  ::= USES namespaceNameList {pin=1 recoverWhile=rec_interface}
 
 private moduleLibrary       ::= LibraryModuleHead [UsesFileClause] BlockGlobal "." {pin=1}
 LibraryModuleHead           ::= LIBRARY NamespaceIdent HintingDirective* ";" {pin=1}
@@ -233,10 +233,11 @@ PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1}
 RequiresClause              ::= REQUIRES namespaceNameList {pin=1}
 ContainsClause              ::= CONTAINS namespaceFileNameList {pin=1}
 
-UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 name="interface section"}
-private rec_interface       ::= !(IMPLEMENTATION)
+UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
+private rec_module       ::= !(INTERFACE | interfaceDecl | IMPLEMENTATION | INITIALIZATION | FINALIZATION | END ".")
+private rec_interface       ::= !(interfaceDecl | IMPLEMENTATION | INITIALIZATION | FINALIZATION | END ".")
 
-private interfaceDecl       ::= commonDecl | routineDecl | exportsSection | assemblyAttribute
+private interfaceDecl       ::= commonDecl | routineDecl | exportsSection | assemblyAttribute {recoverWhile=rec_interface}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
 private exportsSection      ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
 private exportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
@@ -404,7 +405,7 @@ private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END
 private recover_not_end     ::= !(END)
 private recover_field       ::= !(END)
 private recordFieldSemi     ::= ClassField {}
-private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* //{pin=3}
+private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3}
 RecordFields        ::= [field] (';' field)* [';']  //===***
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1}
 private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
@@ -540,7 +541,7 @@ Ident_kw                    ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF 
 private identifier          ::= KEYWORDESCAPE ReservedWord | Ident_kw | NAME
 ReservedWord	            ::=	NAME //===***
 private identList	        ::=	identListItem identListRest*
-private identListRest       ::= "," identListItem {pin=1 }
+private identListRest       ::= "," identListItem {pin=1}
 private identListItem       ::= NamedIdent
 
 ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression"}
