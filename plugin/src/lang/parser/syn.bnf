@@ -23,141 +23,141 @@
   tokens = [
         STRING_LITERAL="STRING_LITERAL"
 
-        AND='regexp:[Aa]nd'
-        MOD="mod"
-        OR="regexp:[Oo]r"
-        IDIV="div"
-        SHR="shr"
-        SHL="shl"
-        IN='regexp:[Ii][Nn]'
+        AND='regexp:(?i)and'
+        MOD="regexp:(?i)mod"
+        OR="regexp:(?i)or"
+        IDIV="regexp:(?i)div"
+        SHR="regexp:(?i)shr"
+        SHL="regexp:(?i)shl"
+        IN='regexp:(?i)in'
 
-        AS="as"
-        IS="is"
-        NIL="nil"
+        AS="regexp:(?i)as"
+        IS="regexp:(?i)is"
+        NIL="regexp:(?i)nil"
 
         CLASS='regexp:[Cc]lass'
-        DISPINTERFACE="dispinterface"
+        DISPINTERFACE="regexp:(?i)dispinterface"
 
-        TRY='regexp:[Tt]ry'
+        TRY='regexp:(?i)try'
         RAISE='regexp:[Rr]aise'
-        EXCEPT="except"
-        ON="on"
-        FINALLY="finally"
+        EXCEPT="regexp:(?i)except"
+        ON="regexp:(?i)on"
+        FINALLY="regexp:(?i)finally"
 
-        PROGRAM="program"
+        PROGRAM="regexp:(?i)program"
         UNIT='regexp:[Uu]nit'
-        LIBRARY="library"
-        PACKAGE="package"
+        LIBRARY="regexp:(?i)library"
+        PACKAGE="regexp:(?i)package"
         USES='regexp:[Uu]ses'
-        EXPORTS="exports"
-        FINALIZATION="finalization"
-        INITIALIZATION="initialization"
+        EXPORTS="regexp:(?i)exports"
+        FINALIZATION="regexp:(?i)finalization"
+        INITIALIZATION="regexp:(?i)initialization"
 
-        THREADVAR="threadvar"
-        ABSOLUTE="absolute"
-        OUT="out"
-        CONSTREF="constref"
+        THREADVAR="regexp:(?i)threadvar"
+        ABSOLUTE="regexp:(?i)absolute"
+        OUT="regexp:(?i)out"
+        CONSTREF="regexp:(?i)constref"
         RESOURCESTRING='regexp:[Rr]esource[Ss]tring'
-        INLINE="inline"
-        PACKED="packed"
-        PROPERTY="property"
-        SET="set"
-        FILE="file"
+        INLINE="regexp:(?i)inline"
+        PACKED="regexp:(?i)packed"
+        PROPERTY="regexp:(?i)property"
+        SET="regexp:(?i)set"
+        FILE="regexp:(?i)file"
 
-        ASM="asm"
-        GOTO="goto"
-        LABEL="label"
+        ASM="regexp:(?i)asm"
+        GOTO="regexp:(?i)goto"
+        LABEL="regexp:(?i)label"
         WITH='regexp:[Ww]ith'
-        EXIT="exit"
-        CONTINUE="continue"
-        BREAK="break"
+        EXIT="regexp:(?i)exit"
+        CONTINUE="regexp:(?i)continue"
+        BREAK="regexp:(?i)break"
 
         CONSTRUCTOR='regexp:[Cc]onstructor'
         DESTRUCTOR='regexp:[Dd]estructor'
-        INHERITED="inherited"
-        OBJECT="object"
-        OPERATOR="operator"
-        REINTRODUCE="reintroduce"
-        SELF="self"
+        INHERITED="regexp:(?i)inherited"
+        OBJECT="regexp:(?i)object"
+        OPERATOR="regexp:(?i)operator"
+        REINTRODUCE="regexp:(?i)reintroduce"
+        SELF="regexp:(?i)self"
 
-        NOT='regexp:[Nn]ot'
-        XOR="xor"
+        NOT='regexp:(?i)not'
+        XOR="regexp:(?i)xor"
 
-        TO='regexp:[Tt]o'
-        DOWNTO="downto"
+        TO='regexp:(?i)to'
+        DOWNTO="regexp:(?i)downto"
         REPEAT='regexp:[Rr]epeat'
 
-        STATIC="static"
-        SEALED="sealed"
-        FINAL="final"
-        HELPER="helper"
-        EXPORT="export"
-        DISPID="dispid"
-        ABSTRACT="abstract"
+        STATIC="regexp:(?i)static"
+        SEALED="regexp:(?i)sealed"
+        FINAL="regexp:(?i)final"
+        HELPER="regexp:(?i)helper"
+        EXPORT="regexp:(?i)export"
+        DISPID="regexp:(?i)dispid"
+        ABSTRACT="regexp:(?i)abstract"
 
-        STRICT="strict"
-        PUBLISHED="published"
-        PUBLIC="public"
-        PROTECTED="protected"
-        PRIVATE="private"
-        AUTOMATED="automated"
+        STRICT="regexp:(?i)strict"
+        PUBLISHED="regexp:(?i)published"
+        PUBLIC="regexp:(?i)public"
+        PROTECTED="regexp:(?i)protected"
+        PRIVATE="regexp:(?i)private"
+        AUTOMATED="regexp:(?i)automated"
 
-        MESSAGE="message"
-        FORWARD="forward"
-        EXTERNAL="external"
-        EXPERIMENTAL="experimental"
-        DEPRECATED="deprecated"
-        ASSEMBLER="assembler"
+        MESSAGE="regexp:(?i)message"
+        FORWARD="regexp:(?i)forward"
+        EXTERNAL="regexp:(?i)external"
+        EXPERIMENTAL="regexp:(?i)experimental"
+        DEPRECATED="regexp:(?i)deprecated"
+        ASSEMBLER="regexp:(?i)assembler"
 
-        INDEX="index"
-        DEFAULT="default"
+        INDEX="regexp:(?i)index"
+        DEFAULT="regexp:(?i)default"
 
-        VIRTUAL="virtual"
-        DYNAMIC="dynamic"
-        OVERRIDE="override"
-        OVERLOAD="overload"
+        VIRTUAL="regexp:(?i)virtual"
+        DYNAMIC="regexp:(?i)dynamic"
+        OVERRIDE="regexp:(?i)override"
+        OVERLOAD="regexp:(?i)overload"
 
-        REGISTER="register"
-        STDCALL="stdcall"
-        PLATFORM="platform"
-        PASCAL="pascal"
-        CDECL="cdecl"
-        SAFECALL="safecall"
+        REGISTER="regexp:(?i)register"
+        STDCALL="regexp:(?i)stdcall"
+        PLATFORM="regexp:(?i)platform"
+        PASCAL="regexp:(?i)pascal"
+        CDECL="regexp:(?i)cdecl"
+        SAFECALL="regexp:(?i)safecall"
 
-        REFERENCE="reference"
+        REFERENCE="regexp:(?i)reference"
 
-        IMPLEMENTS="implements"
-        REQUIRES="requires"
-        CONTAINS="contains"
+        IMPLEMENTS="regexp:(?i)implements"
+        REQUIRES="regexp:(?i)requires"
+        CONTAINS="regexp:(?i)contains"
 
-        FALSE='regexp:[Ff]alse'
-        TRUE='regexp:[Tt]rue'
+        FALSE='regexp:(?i)false'
+        TRUE='regexp:(?i)true'
 
-        INTERFACE="interface"
-        IMPLEMENTATION="implementation"
+        INTERFACE="regexp:(?i)interface"
+        IMPLEMENTATION="regexp:(?i)implementation"
 
-        VAR='regexp:[Vv][Aa][Rr]'
-        CONST='regexp:[Cc]onst'
-        TYPE="type"
-        ARRAY='regexp:[Aa]rray'
-        RECORD='regexp:[Rr]ecord'
-        PROCEDURE='regexp:[Pp]rocedure'
+        VAR='regexp:(?i)var'
+        CONST='regexp:(?i)const'
+        TYPE="regexp:(?i)type"
+        ARRAY='regexp:(?i)array'
+        RECORD='regexp:(?i)record'
+        PROCEDURE='regexp:(?i)procedure'
         FUNCTION='regexp:[Ff]unction'
-        OF="of"
+        OF="regexp:(?i)of"
 
-        CASE="case"
-        BEGIN='regexp:[Bb]egin'
-        END='regexp:[Ee]nd'
-        FOR='regexp:[Ff]or'
-        UNTIL='regexp:[Uu]ntil'
-        WHILE='regexp:[Ww]hile'
-        DO='regexp:[Dd][Oo]'
-        IF='regexp:[Ii]f'
-        THEN='regexp:[Tt]hen'
-        ELSE="else"
+        CASE="regexp:(?i)case"
+        BEGIN='regexp:(?i)begin'
+        END='regexp:(?i)end'
+        FOR='regexp:(?i)for'
+        UNTIL='regexp:(?i)until'
+        WHILE='regexp:(?i)while'
+        DO='regexp:(?i)do'
+        IF='regexp:(?i)if'
+        THEN='regexp:(?i)then'
+        ELSE="regexp:(?i)else"
 
-        READ="read"
-        WRITE="write"
+        READ="regexp:(?i)read"
+        WRITE="regexp:(?i)write"
 
         POWER="**"
         MULT="*"
