@@ -386,7 +386,7 @@ RecordFields        ::= [field] (';' field)* [';']  //===***
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1}
 private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
 
-RecordHelperDecl            ::= (RECORD HELPER) FOR TypeID structItem* END {pin=1}
+RecordHelperDecl            ::= RECORD HELPER FOR TypeID structItem* END {pin=2}
 
 ClassState          ::= SEALED | ABSTRACT
 
