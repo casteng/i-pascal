@@ -294,7 +294,7 @@ private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeD
 
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
-private structItem          ::= commonDecl | routineDecl | ClassField | Visibility
+private structItem          ::= commonDecl | routineDecl | ClassField | Visibility {recoverWhile=rec_section}
 DeclSection	                ::=	MethodImplDecl | RoutineImplDecl | commonDecl | LabelDeclSection | exportsSection | assemblyAttribute
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
@@ -359,7 +359,7 @@ private constDeclaration    ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" 
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
-TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3 }
+TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3}
 GenericTypeIdent    ::= identifier [GenericDefinition]
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
 SimpleGenericDefinition ::= "<" identifier IdentsRest* ">" {pin=1}                     //TODO use meta rule
@@ -387,8 +387,9 @@ ObjectDecl                  ::= OBJECT [ClassParent] structItem* END {pin=1 name
 RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
 private simpleRecord        ::= RECORD recordFieldSemi* structItem* END {pin=1}
 private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END
-private recordFieldSemi     ::= ClassField {}
+private recordFieldSemi     ::= ClassField {recoverWhile=rec_section}
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3}
+private rec_type ::= !(";" | NAME ":" | END)
 RecordFields        ::= [field] (';' field)* [';']  //===***
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1}
 private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
@@ -507,6 +508,7 @@ private identifier          ::= KEYWORDESCAPE ReservedWord | Ident_kw | NAME
 ReservedWord	            ::=	NAME //===***
 private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}
+private rec_identList ::= !("," | ":" | ")")// & rec_section
 private identListItem       ::= NamedIdent
 
 ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression"}
