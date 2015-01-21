@@ -238,7 +238,8 @@ private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
 private rec_section         ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | END | (NAME "="))
-primary rec_block ::= !(END) & rec_interface
+private rec_type         ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | (NAME "="))
+private rec_routine ::= rec_section & rec_interface
 
     private rec__local_decl          ::= '.' | BEGIN | varKey | rec__routine_key | constKey | PROPERTY | TYPE | LABEL
     private rec__global_decl         ::= rec__local_decl | FINALIZATION | INITIALIZATION | END
@@ -270,7 +271,7 @@ private methodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | C
 private procKey             ::= FUNCTION | PROCEDURE
 
 ExportedRoutine             ::= routineDeclaration {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
-private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl) ";" functionDirective* {pin=2}
+private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl) ";" functionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=2}
 private exportedProc        ::= methodKey procName [GenericDefinition] [FormalParameterSection] {pin=1}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
@@ -295,7 +296,7 @@ private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeD
 
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
-private structItem          ::= commonDecl | routineDecl | ClassField | Visibility {recoverWhile=rec_block}
+private structItem          ::= commonDecl | routineDecl | ClassFieldSemi | Visibility
 DeclSection	                ::=	MethodImplDecl | RoutineImplDecl | commonDecl | LabelDeclSection | exportsSection | assemblyAttribute
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
@@ -360,7 +361,7 @@ private constDeclaration    ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" 
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
-TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3}
+TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {recoverWhile=rec_type}
 GenericTypeIdent    ::= identifier [GenericDefinition]
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
 SimpleGenericDefinition ::= "<" identifier IdentsRest* ">" {pin=1}                     //TODO use meta rule
@@ -377,25 +378,33 @@ TypeID              ::=	FullyQualifiedIdent
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringType | SimpleType | [TYPE] TypeID [GenericPostfix] | variantType
 
-ClassField                  ::= field ';' //TODO: remove ";"
+private rec_struct_field    ::= !(";" | ")" | END)
+private rec_struct_outer    ::= !(END)
 
-ClassTypeDecl               ::= CLASS (classBody | [ClassParent]) {pin=1 name="class declaration"}
-private classBody           ::= [ClassState] [ClassParent] structItem* END
-ClassHelperDecl             ::= (CLASS HELPER) [ClassParent] FOR TypeID structItem* END {pin=1 name="class helper declaration"}
-InterfaceTypeDecl           ::= interfaceKey [ClassParent] [interfaceGuid] structItem* END
+ClassFieldSemi              ::= field ';' //TODO: remove ";"
+ClassTypeDecl               ::= CLASS ((classBody END) | [ClassParent]) {pin=1 name="class declaration"}
+private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
+
+ClassHelperDecl             ::= CLASS HELPER classHelperBody END {name="class helper declaration"}
+private classHelperBody     ::= [ClassParent] FOR TypeID structItem* {pin=2 recoverWhile=rec_struct_outer}
+
+InterfaceTypeDecl           ::= interfaceKey interfaceBody END
                               | interfaceKey [ClassParent] {pin(".*")=interfaceKey name="interface declaration"}
-ObjectDecl                  ::= OBJECT [ClassParent] structItem* END {pin=1 name="object declaration"}
-RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
-private simpleRecord        ::= RECORD recordFieldSemi* structItem* END {pin=1}
-private variantRecord       ::= RECORD recordFieldSemi* recordVariantSection END
-private recordFieldSemi     ::= ClassField {recoverWhile=rec_section}
-private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3}
-private rec_type ::= !(";" | NAME ":" | END)
-RecordFields        ::= [field] (';' field)* [';']  //===***
-private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1}
-private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")" {pin=3}
+private interfaceBody       ::= [ClassParent] [interfaceGuid] structItem* {recoverWhile=rec_struct_outer}
+ObjectDecl                  ::= OBJECT objectBody END {pin=1 name="object declaration"}
+private objectBody          ::= [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
-RecordHelperDecl            ::= RECORD HELPER FOR TypeID structItem* END {pin=2}
+RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
+private simpleRecord        ::= RECORD recordBody END {pin=1}
+private recordBody          ::= ClassFieldSemi* structItem* {recoverWhile=rec_struct_outer}
+
+private variantRecord       ::= RECORD ClassFieldSemi* recordVariantSection END {pin=3}
+private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
+RecordFields        ::= [field] (';' field)* [';']  //===***
+private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
+private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")"
+
+RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2}
 
 ClassState          ::= SEALED | ABSTRACT
 
@@ -509,7 +518,6 @@ private identifier          ::= KEYWORDESCAPE ReservedWord | Ident_kw | NAME
 ReservedWord	            ::=	NAME //===***
 private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}
-private rec_identList ::= !("," | ":" | ")")// & rec_section
 private identListItem       ::= NamedIdent
 
 ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression"}
