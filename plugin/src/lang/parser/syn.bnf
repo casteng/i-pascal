@@ -234,12 +234,14 @@ RequiresClause              ::= REQUIRES namespaceNameList {pin=1}
 ContainsClause              ::= CONTAINS namespaceFileNameList {pin=1}
 
 UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
+
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
-private rec_section         ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | END | (NAME "="))
-private rec_type         ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | (NAME "="))
-private rec_routine ::= rec_section & rec_interface
+private rec_section         ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | BEGIN | END | (NAME "="))
+private rec_type            ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | (NAME "="))
+private rec_routine         ::= rec_section & rec_interface
+private rec_semi            ::= !(";") & rec_section
 
     private rec__local_decl          ::= '.' | BEGIN | varKey | rec__routine_key | constKey | PROPERTY | TYPE | LABEL
     private rec__global_decl         ::= rec__local_decl | FINALIZATION | INITIALIZATION | END
@@ -283,20 +285,13 @@ MethodImplDecl              ::= routineDeclaration [MethodBody]     //TODO: remo
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
 ClassMethod                 ::= routineDeclaration {name="method declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}  //TODO: remove
 
-ProcedureReference          ::= REFERENCE TO procedureTypeHeading {pin=1}
-private procedureTypeHeading ::= funcHeading | procHeading;
-private funcHeading         ::= FUNCTION [FormalParameterSection] ":" [CustomAttribute] TypeDecl [";" callConvention+] {pin=1}
-private procHeading         ::= PROCEDURE [FormalParameterSection] {pin=1}
-
-ClosureExpression           ::= (funcHeading | procHeading) BlockGlobal
-
 private complexType         ::= [PACKED] complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
 private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
-private structItem          ::= commonDecl | routineDecl | ClassFieldSemi | Visibility
+private structItem          ::= commonDecl | routineDecl | ClassField | Visibility
 DeclSection	                ::=	MethodImplDecl | RoutineImplDecl | commonDecl | LabelDeclSection | exportsSection | assemblyAttribute
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
@@ -381,7 +376,7 @@ TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringT
 private rec_struct_field    ::= !(";" | ")" | END)
 private rec_struct_outer    ::= !(END)
 
-ClassFieldSemi              ::= field ';' //TODO: remove ";"
+ClassField              ::= field ';' //TODO: remove ";"
 ClassTypeDecl               ::= CLASS ((classBody END) | [ClassParent]) {pin=1 name="class declaration"}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
@@ -396,9 +391,9 @@ private objectBody          ::= [ClassParent] structItem* {recoverWhile=rec_stru
 
 RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
 private simpleRecord        ::= RECORD recordBody END {pin=1}
-private recordBody          ::= ClassFieldSemi* structItem* {recoverWhile=rec_struct_outer}
+private recordBody          ::= ClassField* structItem* {recoverWhile=rec_struct_outer}
 
-private variantRecord       ::= RECORD ClassFieldSemi* recordVariantSection END {pin=3}
+private variantRecord       ::= RECORD ClassField* recordVariantSection END {pin=3}
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
 RecordFields        ::= [field] (';' field)* [';']  //===***
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
@@ -441,9 +436,14 @@ private stringType          ::= "string" ["[" Expression "]"] | "AnsiString" [co
 private codePageNumber      ::= "(" ConstExpressionOrd ")" {pin=1}
 private variantType         ::= identifier
 
-ProcedureType       ::= MethodType | SimpleProcedureType | ProcedureReference
-SimpleProcedureType ::= procedureTypeHeading
-MethodType          ::= procedureTypeHeading OF OBJECT {pin=3}
+ProcedureType               ::= SimpleProcedureType | ProcedureReference
+SimpleProcedureType         ::= procedureTypeHeading {recoverWhile=rec_semi}
+ClosureExpression           ::= (funcHeading | procHeading) BlockGlobal
+
+ProcedureReference          ::= REFERENCE TO procedureTypeHeading {pin=1}
+private procedureTypeHeading ::= (funcHeading | procHeading) [OF OBJECT]
+private funcHeading         ::= FUNCTION [FormalParameterSection] ":" [CustomAttribute] TypeDecl [";" callConvention+] {pin=1}
+private procHeading         ::= PROCEDURE [FormalParameterSection] [";" callConvention+] {pin=1}
 
 SimpleType          ::= EnumType | SubRangeType
 SubRangeType        ::= RangeBound RANGE RangeBound
