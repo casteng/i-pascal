@@ -211,7 +211,7 @@ Module                      ::= moduleUnit | ModuleProgram | moduleLibrary | mod
 
 ModuleProgram               ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead progWoHead
-private progWoHead          ::= [UsesFileClause] BlockGlobal "."
+private progWoHead          ::= [UsesFileClause] BlockGlobal "." {recoverWhile=rec_section_global}
 
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "."
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
@@ -231,9 +231,12 @@ private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
 private rec_section         ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | BEGIN | END | (NAME "="))
+private rec_section_global  ::= !(".") & rec_section
 private rec_type            ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | (NAME "="))
 private rec_routine         ::= rec_section & rec_interface
 private rec_semi            ::= !(";") & rec_section
+private rec_struct_field    ::= !(";" | ")" | END)
+private rec_struct_outer    ::= !(END)
 
     private rec__local_decl          ::= '.' | BEGIN | varKey | rec__routine_key | constKey | PROPERTY | TYPE | LABEL
     private rec__global_decl         ::= rec__local_decl | FINALIZATION | INITIALIZATION | END
@@ -305,10 +308,11 @@ private namespaceFileName	::=	NamespaceIdent [IN quotedString] {}
 private namespaceNameList   ::= NamespaceIdent namespaceNamesRest* ";"
 private namespaceNamesRest  ::= "," NamespaceIdent {pin=1 }
 
-BlockGlobal	                ::=	[';'] DeclSection* BlockBody {pin=2 }
-BlockBody	        ::=	CompoundStatement |	AssemblerStatement
+BlockGlobal	                ::=	[';'] DeclSection* BlockBody
+BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
-AssemblerStatement  ::= ASM assemblerItem* END
+AssemblerStatement          ::= ASM asmBlock END
+private asmBlock            ::= assemblerItem* {recoverWhile=rec_struct_outer}
 private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | identifier | NUMBER_INT | NUMBER_HEX | NUMBER_BIN
 
 private functionDirective   ::= overloadDirective | externalDirective | oldCallConventionDirectiveSemi
@@ -364,9 +368,6 @@ TypeDeclsRest       ::= "," TypeDecl {pin=1}
 TypeID              ::=	FullyQualifiedIdent
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringType | SimpleType | [TYPE] TypeID [GenericPostfix] | variantType
-
-private rec_struct_field    ::= !(";" | ")" | END)
-private rec_struct_outer    ::= !(END)
 
 ClassField              ::= field ';' //TODO: remove ";"
 ClassTypeDecl               ::= CLASS ((classBody END) | [ClassParent]) {pin=1 name="class declaration"}
@@ -444,10 +445,11 @@ EnumType            ::= "(" EnumEl EnumRest* ")" {pin=1}
 EnumRest            ::= "," EnumEl {pin=1}
 EnumEl              ::= identifier ["=" Expression] {}
 
-CompoundStatement           ::= BEGIN [StatementList] END {pin=1}
-StatementList               ::= [statement] statements* {}
-private statements          ::= ";" [statement] {}
-private statement           ::= [LabelId ":" ] statementPart
+CompoundStatement           ::= BEGIN statementBlock END {pin=1}
+private statementBlock      ::= [StatementList] {recoverWhile=rec_struct_outer}
+StatementList               ::= [statement] statements*
+private statements          ::= ";" [statement]
+private statement           ::= [LabelId ":" ] statementPart {recoverWhile=rec_semi}
 private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | CompoundStatement | IfStatement | TryStatement | simpleStatement | stmtEmpty
