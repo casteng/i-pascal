@@ -219,7 +219,7 @@ Module                      ::= moduleUnit | ModuleProgram | moduleLibrary | mod
 
 ModuleProgram               ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead progWoHead
-private progWoHead          ::= [UsesFileClause] BlockGlobal "." {recoverWhile=rec_section_global}
+private progWoHead          ::= [UsesFileClause] BlockGlobal "." {pin=3 recoverWhile=rec_section_global}
 
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "."
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
@@ -235,35 +235,19 @@ ContainsClause              ::= CONTAINS namespaceFileNameList {pin=1}
 
 UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
 
+private rec_block_global_end ::= !(".")
+private rec_block_local_end      ::= rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
-private rec_section         ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | BEGIN | END | (NAME "="))
+private rec_section         ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | IMPLEMENTATION | BEGIN | END | (NAME "="))
 private rec_section_global  ::= !(".") & rec_section
-private rec_type            ::= !(CLASS | TYPE | varKey | constKey | rec__routine_key | IMPLEMENTATION | (NAME "="))
+private rec_type            ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | IMPLEMENTATION | (NAME "="))
 private rec_routine         ::= rec_section & rec_interface
 private rec_semi            ::= !(";") & rec_section
 private rec_struct_field    ::= !(";" | ")" | END)
 private rec_struct_outer    ::= !(END)
-
-    private rec__local_decl          ::= '.' | BEGIN | varKey | rec__routine_key | constKey | PROPERTY | TYPE | LABEL
-    private rec__global_decl         ::= rec__local_decl | FINALIZATION | INITIALIZATION | END
-                                  | CLASS | EXPORTS | INTERFACE | IMPLEMENTATION | USES | CONTAINS | REQUIRES
-    private rec__routine_key         ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
-
-    private rec_statement   ::= !(';' | rec__block_end | rec__stmt_start | rec__stmt_middle | rec__block_start | varKey | constKey | TYPE | procKey)
-
-    private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
-                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | Ident_kw | KEYWORDESCAPE | '^' | '.' | '[' | '('
-    private rec__stmt_middle         ::= DO | ELSE | THEN
-    private rec__block_start         ::= BEGIN | INITIALIZATION | FINALIZATION
-    private rec__block_end           ::= END | UNTIL | EXCEPT | FINALLY
-    private rec__after_expr          ::= TO | DO | THEN | OF | DOWNTO | EXCEPT | INDEX | ELSE
-                                  | "name" | OVERLOAD | inlineDirective | callConvention | oldCallConventionDirective
-                                  | DEPRECATED | EXPERIMENTAL | PLATFORM | LIBRARY | "varargs" | EXTERNAL | "unsafe"
-                                  | REINTRODUCE | bindingDirective | abstractDirective | ClassPropertySpecifier
-    private rec_expression ::= !(';' | relOp | mulOp | addOp | END | ')' | ',' | ']' | ':' | after_expr)
-
+private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 
 private interfaceDecl       ::= commonDecl | routineDecl | exportsSection | assemblyAttribute {recoverWhile=rec_section}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
@@ -316,7 +300,8 @@ private namespaceFileName	::=	NamespaceIdent [IN quotedString] {}
 private namespaceNameList   ::= NamespaceIdent namespaceNamesRest* ";"
 private namespaceNamesRest  ::= "," NamespaceIdent {pin=1 }
 
-BlockGlobal	                ::=	[';'] DeclSection* BlockBody
+BlockGlobal	                ::=	[';'] DeclSection* BlockBody {recoverWhile=rec_block_global_end}
+BlockLocal 	                ::=	[';'] DeclSection* BlockBody
 BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
 AssemblerStatement          ::= ASM asmBlock END
@@ -335,7 +320,7 @@ ProcBodyBlock               ::= ProcForwardDecl | procExternalDecl | BlockGlobal
 private procExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* functionDirective* {pin=1}
 ProcForwardDecl             ::= FORWARD ";" functionDirective* {pin=1}
 
-MethodBody          ::= BlockGlobal ";"
+MethodBody          ::= BlockLocal ";"
 private dispIDDirective     ::= DISPID Expression ";" {pin=1}
 private callConventionSemi  ::= callConvention ";"
 private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT
@@ -398,7 +383,7 @@ private variantRecord       ::= RECORD ClassField* recordVariantSection END {pin
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
 RecordFields        ::= [field] (';' field)* [';']  //===***
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
-private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")"
+private recordVariant       ::= Expression ("," Expression)* ":" "(" RecordFields ")"   // rethink expression, separate simpler expressions?
 
 RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2}
 
@@ -453,14 +438,18 @@ EnumType            ::= "(" EnumEl EnumRest* ")" {pin=1}
 EnumRest            ::= "," EnumEl {pin=1}
 EnumEl              ::= identifier ["=" Expression] {}
 
+    private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
+                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | Ident_kw | KEYWORDESCAPE | '^' | '.' | '[' | '('
+    private rec__stmt_middle         ::= DO | ELSE | THEN
+
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}
-private statementBlock      ::= [StatementList] {recoverWhile=rec_struct_outer}
+private statementBlock      ::= [StatementList] {recoverWhile=rec_block_local_end}
 StatementList               ::= [statement] statements*
 private statements          ::= ";" [statement]
-private statement           ::= [LabelId ":" ] statementPart {recoverWhile=rec_semi}
+private statement           ::= [LabelId ":" ] statementPart //{recoverWhile=rec_statement}
 private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
-                              | CompoundStatement | IfStatement | TryStatement | simpleStatement | stmtEmpty
+                              | IfStatement | TryStatement | simpleStatement | CompoundStatement | stmtEmpty
 
 private simpleStatement     ::= GotoStatement | StmtSimpleOrAssign
 StmtSimpleOrAssign          ::= Designator [assignPart]
@@ -475,7 +464,7 @@ FieldId                     ::= identifier
 RepeatStatement     ::= REPEAT [StatementList] UNTIL Expression {pin=1}
 WhileStatement      ::= WHILE Expression DO statement {pin=1}
 ForStatement        ::= FOR Designator (ForCycle | IN) Expression DO statement {pin=1}
-ForCycle    ::= ":=" Expression (TO | DOWNTO)
+ForCycle            ::= ":=" Expression (TO | DOWNTO)
 
 IfStatement                 ::= IF Expression THEN statement [ELSE statement] {pin=1}
 
@@ -522,29 +511,33 @@ private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}
 private identListItem       ::= NamedIdent
 
+ConstExpression	            ::=	RecordConstExpr | NewConstExpression | Expression {recoverWhile=rec_expr_colon name="constant expression"}
 ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression"}
-ConstExpression	            ::=	Expression | NewConstExpression | RecordConstExpression {name="constant expression"}
 NewConstExpression	        ::=	LPAREN ConstExpression (COMMA ConstExpression)* RPAREN | Expression
-RecordConstExpression       ::= Expression | RecordConstValue;
-RecordConstValue            ::= "(" recordValue recordValueRest* ")" {pin=1}
+private RecordConstExpr     ::= RecordConstValue | Expression;
+private RecordConstValue    ::= "(" recordConstInner ")"
+private recordConstInner    ::= recordValue recordValueRest* {recoverWhile=rec_record_colon}
 private recordValueRest     ::= ";" recordValue
-private recordValue         ::= identifier ":" RecordConstExpression
+private recordValue         ::= identifier ":" RecordConstExpr
 
-Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
-                                INHERITED [TypeID] DesignatorItem2? | EntityID DesignatorItemEx* | DesignatorItemEx+
+private Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
+                                INHERITED [TypeID] exprParentheses? | EntityID DesignatorItemEx* | DesignatorItemEx+
+private rec_record_colon    ::= !(")" | END)
+private rec_expr_colon      ::= !(")" | ";")
 
-DesignatorItem      ::= "^" | "." FieldId | "[" ExpressionsList "]"
-DesignatorItemEx    ::= DesignatorItem | DesignatorItem2
-DesignatorItem2     ::= "(" [ExpressionColon ExpressionColons*] ")"// {pin=1}
-ExpressionColon     ::= Expression [ColonConstruct] {}
-ExpressionColons    ::= "," ExpressionColon
-ColonConstruct      ::= ":" Expression [ ":" Expression ]
+private DesignatorItem      ::= "^" | "." FieldId | "[" ExpressionsList "]"
+private DesignatorItemEx    ::= DesignatorItem | exprParentheses
+private exprParentheses     ::= "(" exprInParentheses ")" {pin=1}
+private exprInParentheses   ::= [ExpressionColon ExpressionColons*] {recoverWhile=rec_expr_colon}
+private ExpressionColon     ::= Expression [ColonConstruct] {}
+private ExpressionColons    ::= "," ExpressionColon
+private ColonConstruct      ::= ":" Expression [ ":" Expression ]
 
 private primary             ::= AT primary | AT AT primary | NOT primary | PLUS primary | MINUS primary
                               | NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL
                               | StringFactor | SetSection | Designator
 
-primaryOrd                  ::= NOT primaryOrd | PLUS primaryOrd | MINUS primaryOrd | NUMBER_INT | NUMBER_HEX | TRUE | FALSE | NIL
+private primaryOrd          ::= NOT primaryOrd | PLUS primaryOrd | MINUS primaryOrd | NUMBER_INT | NUMBER_HEX | TRUE | FALSE | NIL
                               | "(" ExpressionOrd ")" | StringFactor | Designator
 
 private relOp               ::= "<" | ">" | "<=" | ">=" | "<>" | "=" | IN | IS
