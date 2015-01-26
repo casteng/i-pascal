@@ -240,9 +240,9 @@ private rec_block_local_end      ::= rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
-private rec_section         ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | IMPLEMENTATION | BEGIN | END | (NAME "="))
+private rec_section         ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility | IMPLEMENTATION | BEGIN | END | (NAME "="))
 private rec_section_global  ::= !(".") & rec_section
-private rec_type            ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | IMPLEMENTATION | (NAME "="))
+private rec_type            ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility | IMPLEMENTATION | (NAME "="))
 private rec_routine         ::= rec_section & rec_interface
 private rec_semi            ::= !(";") & rec_section
 private rec_struct_field    ::= !(";" | ")" | END)

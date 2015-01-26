@@ -232,9 +232,9 @@ private rec_block_local_end      ::= rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
-private rec_section         ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | IMPLEMENTATION | BEGIN | END | (NAME "="))
+private rec_section         ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility | IMPLEMENTATION | BEGIN | END | (NAME "="))
 private rec_section_global  ::= !(".") & rec_section
-private rec_type            ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | IMPLEMENTATION | (NAME "="))
+private rec_type            ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility | IMPLEMENTATION | (NAME "="))
 private rec_routine         ::= rec_section & rec_interface
 private rec_semi            ::= !(";") & rec_section
 private rec_struct_field    ::= !(";" | ")" | END)
@@ -375,7 +375,7 @@ private variantRecord       ::= RECORD ClassField* recordVariantSection END {pin
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
 RecordFields        ::= [field] (';' field)* [';']  //===***
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
-private recordVariant       ::= ConstExpression ("," ConstExpression)* ":" "(" RecordFields ")"
+private recordVariant       ::= Expression ("," Expression)* ":" "(" RecordFields ")"   // rethink expression, separate simpler expressions?
 
 RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2}
 
