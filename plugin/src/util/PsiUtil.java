@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.util;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.text.BlockSupport;
@@ -46,6 +47,7 @@ import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
@@ -414,5 +416,19 @@ public class PsiUtil {
     public static boolean allowsForwardReference(PsiElement element) {
         return (element instanceof PascalNamedElement) &&
                (PsiUtil.isPointerTypeDeclaration((PascalNamedElement) element) || PsiUtil.isClassRefDeclaration((PascalNamedElement) element));
+    }
+
+    public static boolean isStructureMember(PsiElement element) {
+        return (element.getParent() != null) && (element.getParent() instanceof PasClassTypeDecl);
+    }
+
+    public static String getQualifiedMethodName(PsiNamedElement element) {
+        if (PsiUtil.isStructureMember(element)) {
+            PasEntityScopeImpl owner = PasEntityScopeImpl.findOwner(element);
+            if (null != owner) {
+                return getQualifiedMethodName(owner) + "." + element.getName();
+            }
+        }
+        return element != null ? element.getName() : "";
     }
 }

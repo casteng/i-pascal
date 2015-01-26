@@ -18,7 +18,6 @@ import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasHandlerList;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
-import com.siberika.idea.pascal.lang.psi.PasRecordConstValue;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
@@ -95,7 +94,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
 
     private void foldEnums(PsiElement root, List<FoldingDescriptor> descriptors) {
         @SuppressWarnings("unchecked")
-        Collection<PascalPsiElement> enums = PsiUtil.findChildrenOfAnyType(root, PasEnumType.class, PasRecordConstValue.class);
+        Collection<PasEnumType> enums = PsiUtil.findChildrenOfAnyType(root, PasEnumType.class);
         for (final PascalPsiElement enumType : enums) {
             TextRange range = new TextRange(enumType.getTextRange().getStartOffset()+1, enumType.getTextRange().getEndOffset()-1);
             if (range.getLength() > 0) {

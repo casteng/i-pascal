@@ -28,7 +28,6 @@ import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasContainsClause;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
-import com.siberika.idea.pascal.lang.psi.PasDesignator;
 import com.siberika.idea.pascal.lang.psi.PasEntityID;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
@@ -169,7 +168,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private static PsiElement skipToExpressionParent(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
-                PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class, PasDesignator.class,
+                PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class,
                 PasStmtSimpleOrAssign.class, PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class);
     }
 

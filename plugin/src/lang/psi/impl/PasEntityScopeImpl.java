@@ -55,7 +55,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
 
     @Nullable
     @SuppressWarnings("unchecked")
-    public static PasEntityScopeImpl findOwner(PascalRoutineImpl element) {
+    public static PasEntityScopeImpl findOwner(PsiElement element) {
         return PsiTreeUtil.getParentOfType(element,
                 PasClassHelperDeclImpl.class, PasClassTypeDeclImpl.class, PasInterfaceTypeDeclImpl.class, PasObjectDeclImpl.class, PasRecordHelperDeclImpl.class, PasRecordDeclImpl.class);
     }
@@ -140,7 +140,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
                 addFields(child, visibility);
             } else if (child.getClass() == PasClassFieldImpl.class) {
                 addFields(child, visibility);
-            } else if (child.getClass() == PasClassMethodImpl.class) {
+            } else if (child.getClass() == PasExportedRoutineImpl.class) {
                 addField((PascalNamedElement) child, PasField.Type.ROUTINE, visibility);
             } else if (child.getClass() == PasClassPropertyImpl.class) {
                 addField((PascalNamedElement) child, PasField.Type.PROPERTY, visibility);

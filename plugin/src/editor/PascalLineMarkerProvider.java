@@ -8,23 +8,22 @@ import com.intellij.codeInsight.daemon.impl.PsiElementListNavigator;
 import com.intellij.icons.AllIcons;
 import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.ConstantFunction;
 import com.intellij.util.SmartList;
-import com.siberika.idea.pascal.lang.psi.PasClassMethod;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasImplDeclSectionImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasMethodImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -50,18 +49,12 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
                 if (!targets.isEmpty()) {
                     result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, "Go to implementation", getHandler(targets)));
                 }
-            } else if (routineDecl instanceof PasClassMethod) {
-                targets = getImplementationMethodTargets(routineDecl);
-                if (!targets.isEmpty()) {
-                    result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, "Go to implementation", getHandler(targets)));
+            } else if (routineDecl instanceof PasMethodImplDeclImpl) {
+                if (!StringUtil.isEmpty(routineDecl.getNamespace())) {
+                    targets = getInterfaceMethodTargets(routineDecl);
+                } else {
+                    targets = getInterfaceRoutinesTargets(routineDecl);
                 }
-            } else if (routineDecl instanceof PasRoutineImplDecl) {
-                targets = getInterfaceRoutinesTargets(routineDecl);
-                if (!targets.isEmpty()) {
-                    result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementingMethod, "Go to interface", getHandler(targets)));
-                }
-            } else if (routineDecl instanceof PasMethodImplDecl) {
-                targets = getInterfaceMethodTargets(routineDecl);
                 if (!targets.isEmpty()) {
                     result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementingMethod, "Go to interface", getHandler(targets)));
                 }
@@ -141,19 +134,8 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     @SuppressWarnings("unchecked")
     private Collection<PsiElement> getImplementationRoutinesTargets(PascalRoutineImpl routineDecl) {
         Collection<PsiElement> result = new SmartList<PsiElement>();
-        findImplTargets(result, routineDecl.getContainingFile(), routineDecl.getName(), PascalRoutineImpl.class);
-        return result;
-    }
-
-    private Collection<PsiElement> getImplementationMethodTargets(PascalRoutineImpl routineDecl) {
-        Collection<PsiElement> result = new SmartList<PsiElement>();
-        PasEntityScopeImpl owner = PasEntityScopeImpl.findOwner(routineDecl);
-        if (null == owner) {
-            return result;
-        }
-
-        findImplTargets(result, routineDecl.getContainingFile(), owner.getName() + "." + routineDecl.getName(), PascalRoutineImpl.class);
-
+        String name = PsiUtil.getQualifiedMethodName(routineDecl);
+        findImplTargets(result, routineDecl.getContainingFile(), name, PascalRoutineImpl.class);
         return result;
     }
 
