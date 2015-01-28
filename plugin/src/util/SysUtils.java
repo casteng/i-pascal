@@ -4,6 +4,7 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessOutput;
+import com.intellij.openapi.diagnostic.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,6 +15,8 @@ import java.io.File;
  * Date: 10/01/2013
  */
 public class SysUtils {
+    public static final Logger LOG = Logger.getInstance(SysUtils.class.getName());
+
     public static final int STANDARD_TIMEOUT = 10 * 1000;
     @NotNull
     public static ProcessOutput getProcessOutput(@NotNull final String workDir, @NotNull final String exePath,
@@ -57,12 +60,14 @@ public class SysUtils {
         } catch (final ExecutionException e) {
             return null;
         }
-        if (processOutput.getExitCode() != 0) {
+        int exitCode = processOutput.getExitCode();
+        final String stdout = processOutput.getStdout().trim();
+        if (exitCode != 0) {
+            LOG.error("Error running {}. Code: {}", exePath, String.valueOf(exitCode));
+            LOG.debug("Output: {}", stdout);
             return null;
         }
-        final String stdout = processOutput.getStdout().trim();
         if (stdout.isEmpty()) return null;
-
         return stdout;
     }
 }

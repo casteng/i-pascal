@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.compiled;
 import com.intellij.openapi.diagnostic.Logger;
 import com.siberika.idea.pascal.PascalBundle;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -46,7 +47,7 @@ public class PPUDumpParser {
         return handler.result;
     }
 
-    public static Section parse(String xml, PPUDecompilerCache cache) throws ParseException, ParserConfigurationException, SAXException, IOException {
+    public static Section parse(@NotNull String xml, PPUDecompilerCache cache) throws ParseException, ParserConfigurationException, SAXException, IOException {
         return parse(new ByteArrayInputStream(xml.getBytes("utf-8")), cache);
     }
 

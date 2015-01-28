@@ -83,8 +83,8 @@
 
         <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
 
-        <contentBasedClassFileProcessor implementation="com.siberika.idea.pascal.lang.compiled.PPUContentBasedClassFileProcessor"/>
-        <psi.clsDecompiledFileProvider implementation="com.siberika.idea.pascal.lang.compiled.PPUClsFileDecompiledPsiFileProvider"/>
+        <!--<contentBasedClassFileProcessor implementation="com.siberika.idea.pascal.lang.compiled.PPUContentBasedClassFileProcessor"/>-->
+        <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>-->
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
 

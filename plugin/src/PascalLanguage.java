@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal;
 
 import com.intellij.lang.Language;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * User: George Bakhtadze
@@ -19,6 +20,7 @@ public class PascalLanguage extends Language {
         return false;
     }
 
+    @NotNull
     @Override
     public String getDisplayName() {
         return "Pascal Source";

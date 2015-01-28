@@ -52,7 +52,7 @@ public class PPUFileType implements FileType {
 
     @Nullable
     @Override
-    public String getCharset(@NotNull VirtualFile file, byte[] content) {
+    public String getCharset(@NotNull VirtualFile file, @NotNull byte[] content) {
         return null;
     }
 

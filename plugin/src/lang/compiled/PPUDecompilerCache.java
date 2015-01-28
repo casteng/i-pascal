@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.SysUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -77,9 +78,10 @@ public class PPUDecompilerCache {
                 if (!ppuDump.isFile() || !ppuDump.canExecute()) {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.ppudump", ppuDump.getCanonicalPath()));
                 }
-                xml = SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(),
-                        PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
-                //TODO: null check
+                xml = SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
+                if (StringUtils.isEmpty(xml)) {
+                    xml = "<interface></interface>";
+                }
                 return PPUDumpParser.parse(xml, self);
             } catch (IOException e) {
                 LOG.error(e.getMessage(), e);
