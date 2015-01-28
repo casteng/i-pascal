@@ -63,7 +63,7 @@ public class SysUtils {
         int exitCode = processOutput.getExitCode();
         final String stdout = processOutput.getStdout().trim();
         if (exitCode != 0) {
-            LOG.error("Error running {}. Code: {}", exePath, String.valueOf(exitCode));
+            LOG.error(String.format("Error running %s. Code: %d", exePath, exitCode));
             LOG.debug("Output: {}", stdout);
             return null;
         }

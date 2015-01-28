@@ -9,6 +9,12 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.7</p>
+        <ul>
+          <li>IDEA 14 support</li>
+          <li>Stable parser</li>
+          <li>Standard FPC installation layouts support (including OSX)</li>
+        </ul>
         <p>0.6</p>
         <ul>
           <li>PPU viewer</li>

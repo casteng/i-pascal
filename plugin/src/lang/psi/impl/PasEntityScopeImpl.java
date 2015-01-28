@@ -147,11 +147,11 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
             } else if (child.getClass() == PasVisibilityImpl.class) {
                 visibility = getVisibility(child);
             } else if (child.getClass() == PasRecordFieldsImpl.class) {
-                addVariantRecordFields(child, visibility);
+                addFields(child, visibility);
             }
             child = child.getNextSibling();
         }
-        System.out.println(getName() + ": buildMembers: " + members.size() + "members");
+        System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
     private void addVariantRecordFields(PsiElement element, PasField.Visibility visibility) {
