@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.6</version>
+    <version>0.7</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
     <description><![CDATA[
@@ -95,6 +95,6 @@
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
 
-        <compileServer.plugin classpath="jps-plugin.jar"/>
+        <compileServer.plugin classpath="jps_plugin.jar"/>
     </extensions>
 </idea-plugin>
