@@ -61,9 +61,11 @@ import com.siberika.idea.pascal.lang.psi.PasUsesFileClause;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -82,21 +84,30 @@ public class PascalCompletionContributor extends CompletionContributor {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), new CompletionProvider<CompletionParameters>() {
             @Override
             protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
-                PsiElement originalPos = skipToExpressionParent(parameters.getOriginalPosition());
-                PsiElement pos = skipToExpressionParent(parameters.getPosition());
+                PsiElement originalPos = parameters.getOriginalPosition();
+                PsiElement pos = parameters.getPosition();
+                PsiElement prev = pos.getPrevSibling();
+                PsiElement oPrev = originalPos.getPrevSibling();
+                System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos.getParent(), pos.getParent()));
+                originalPos = skipToExpressionParent(parameters.getOriginalPosition());
+                pos = skipToExpressionParent(parameters.getPosition());
+                prev = pos.getPrevSibling();
+                oPrev = originalPos.getPrevSibling();
                 int level = PsiUtil.getElementLevel(originalPos);
-                if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {
-                    //noinspection ConstantConditions
-                    if ((PsiUtil.isInstanceOfAny(parameters.getOriginalPosition().getParent(), PasSubIdent.class, PasStmtSimpleOrAssign.class))) {
+                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos.getParent(), pos.getParent(), level));
+                if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
+                    if (isIdent(parameters.getPosition().getParent()) || isIdent(parameters.getOriginalPosition().getParent())) {
                         addEntities(result, parameters.getPosition(), PasField.TYPES_ALL);
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
-                } else if (PsiTreeUtil.instanceOf(originalPos, PasStatementList.class, PasCompoundStatement.class) ||
+                } else if (PsiTreeUtil.instanceOf(originalPos, PasStatementList.class, PasCompoundStatement.class) ||           // identifier completion in left part of assignment
                         PsiTreeUtil.instanceOf(pos, PasStatementList.class, PasCompoundStatement.class)) {
-                    if ((parameters.getPosition() instanceof PasSubIdent) || (parameters.getPosition().getParent() instanceof PasSubIdent)) {
+                    if (isIdent(parameters.getPosition().getParent())) {
                         addEntities(result, parameters.getPosition(), PasField.TYPES_ASSIGNABLE);
                     }
-                    appendTokenSet(result, PascalLexer.STATEMENTS);
+                    if (!isQualifiedIdent(parameters.getPosition().getParent())) {
+                        appendTokenSet(result, PascalLexer.STATEMENTS);
+                    }
                     if (PsiTreeUtil.getParentOfType(parameters.getPosition(), PasRepeatStatement.class, PasWhileStatement.class, PasForStatement.class) != null) {
                         appendTokenSet(result, PascalLexer.STATEMENTS_IN_CYCLE);
                     }
@@ -143,9 +154,23 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     }
 
+    private boolean isQualifiedIdent(PsiElement parent) {
+        if (isIdent(parent)) {
+            PsiElement par = parent.getParent();
+            if (par instanceof PasFullyQualifiedIdent) {
+                return !StringUtils.isEmpty(((PasFullyQualifiedIdent) par).getNamespace());
+            }
+        }
+        return false;
+    }
+
+    private boolean isIdent(PsiElement parent) {
+        return parent instanceof PasSubIdent;
+    }
+
     private static void addEntities(CompletionResultSet result, PsiElement originalPosition, Set<PasField.Type> types) {
         NamespaceRec namespace = new NamespaceRec((PasSubIdent) originalPosition.getParent());
-        result.addAllElements(PasReferenceUtil.getEntities(namespace, types));
+        result.caseInsensitive().addAllElements(PasReferenceUtil.getEntities(namespace, types));
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
@@ -153,8 +178,11 @@ public class PascalCompletionContributor extends CompletionContributor {
             pos = originalPos;
         }
         if (pos instanceof PasEntityScope) {
-            appendTokenSet(result, PascalLexer.VISIBILITY);
-            appendTokenSet(result, PascalLexer.STRUCT_DECLARATIONS);
+            if (pos instanceof PascalStructType) {
+                appendTokenSet(result, PascalLexer.VISIBILITY);
+            } else {
+                appendTokenSet(result, PascalLexer.STRUCT_DECLARATIONS);
+            }
             PsiElement el = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class);
             if ((el instanceof PasClassMethod) || (el instanceof PasHintingDirective)) {
                 appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);

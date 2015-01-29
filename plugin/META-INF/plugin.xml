@@ -12,6 +12,7 @@
         <p>0.7</p>
         <ul>
           <li>IDEA 14 support</li>
+          <li>Improved completion</li>
           <li>Stable parser</li>
           <li>Standard FPC installation layouts support (including OSX)</li>
         </ul>
