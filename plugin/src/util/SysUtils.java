@@ -5,6 +5,8 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessOutput;
 import com.intellij.openapi.diagnostic.Logger;
+import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.PascalException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,7 +55,7 @@ public class SysUtils {
     }
 
     @Nullable
-    public static String runAndGetStdOut(String workDir, String exePath, String...params) {
+    public static String runAndGetStdOut(String workDir, String exePath, String...params) throws PascalException {
         final ProcessOutput processOutput;
         try {
             processOutput = getProcessOutput(workDir, exePath, params);
@@ -62,10 +64,12 @@ public class SysUtils {
         }
         int exitCode = processOutput.getExitCode();
         final String stdout = processOutput.getStdout().trim();
-        if (exitCode != 0) {
+        final String stderr = processOutput.getStderr().trim();
+        if ((exitCode != 0) && (stdout.isEmpty())) {
             LOG.error(String.format("Error running %s. Code: %d", exePath, exitCode));
-            LOG.debug("Output: {}", stdout);
-            return null;
+            LOG.error("Output: {}", stdout);
+            LOG.error("Error: {}", stderr);
+            throw new PascalException(PascalBundle.message("decompile.unknown.error", stderr));
         }
         if (stdout.isEmpty()) return null;
         return stdout;

@@ -7,6 +7,7 @@ import com.intellij.psi.AbstractElementManipulator;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Author: George Bakhtadze
@@ -14,7 +15,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
  */
 public class PascalNamedManipulator extends AbstractElementManipulator<PascalNamedElement> {
     @Override
-    public PascalNamedElement handleContentChange(PascalNamedElement element, TextRange range, String newContent) throws IncorrectOperationException {
+    public PascalNamedElement handleContentChange(@NotNull PascalNamedElement element, @NotNull TextRange range, String newContent) throws IncorrectOperationException {
         if ((element.getContainingFile() != null) && (element.getContainingFile().getVirtualFile() != null)) {
             @SuppressWarnings("ConstantConditions")
             final Document document = FileDocumentManager.getInstance().getDocument(element.getContainingFile().getVirtualFile());

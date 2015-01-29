@@ -13,6 +13,7 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
@@ -115,7 +116,12 @@ public class FPCSdkType extends BasePascalSdkType {
     @Nullable
     public String getVersionString(String sdkHome) {
         LOG.info("Getting version for SDK path: " + sdkHome);
-        return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
+        try {
+            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
+        } catch (PascalException e) {
+            LOG.error(e.getMessage(), e);
+        }
+        return null;
     }
 
     @Override

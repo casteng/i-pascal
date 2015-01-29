@@ -10,13 +10,13 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.SysUtils;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -79,9 +79,6 @@ public class PPUDecompilerCache {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.ppudump", ppuDump.getCanonicalPath()));
                 }
                 xml = SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
-                if (StringUtils.isEmpty(xml)) {
-                    xml = "<interface></interface>";
-                }
                 return PPUDumpParser.parse(xml, self);
             } catch (IOException e) {
                 LOG.error(e.getMessage(), e);
@@ -94,6 +91,8 @@ public class PPUDecompilerCache {
                 } else {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.parse.error", xml));
                 }
+            } catch (PascalException e1) {
+                return new PPUDumpParser.Section(e1.getMessage());
             } catch (Exception e) {
                 LOG.error(e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.unknown.error", xml));
@@ -112,7 +111,7 @@ public class PPUDecompilerCache {
                     res = res.substring(i1+8, i2);
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error(e.getMessage(), e);
         }
         return res;
