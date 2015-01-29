@@ -211,7 +211,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private static void appendTokenSet(CompletionResultSet result, TokenSet tokenSet) {
         for (IElementType op : tokenSet.getTypes()) {
-            result.addElement(getElement(op.toString()));
+            result.caseInsensitive().addElement(getElement(op.toString()));
         }
     }
 
@@ -239,7 +239,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     private void appendTokenSetUnique(CompletionResultSet result, TokenSet tokenSet, PsiElement position) {
         for (IElementType op : tokenSet.getTypes()) {
             if ((TOKEN_TO_PSI.get(op) == null) || (PsiTreeUtil.findChildOfType(position, TOKEN_TO_PSI.get(op), true) == null)) {
-                result.addElement(LookupElementBuilder.create(op.toString()).withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO)));
+                result.caseInsensitive().addElement(LookupElementBuilder.create(op.toString()).withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO)));
             }
         }
     }
@@ -247,7 +247,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     private void appendTokenSetIfAbsent(CompletionResultSet result, TokenSet tokenSet, PsiElement position, Class<? extends PsiElement>...classes) {
         for (IElementType op : tokenSet.getTypes()) {
             if (PsiTreeUtil.findChildOfAnyType(position, classes) == null) {
-                result.addElement(LookupElementBuilder.create(op.toString()).withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO)));
+                result.caseInsensitive().addElement(LookupElementBuilder.create(op.toString()).withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO)));
             }
         }
     }
