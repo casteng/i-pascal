@@ -81,8 +81,8 @@ public class FPCSdkType extends BasePascalSdkType {
         return getIcon();
     }
 
-    private static final List<String> DEFAULT_SDK_LOCATIONS_UNIX = Arrays.asList("/usr/lib/codetyphon/fpc", "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
-    private static final List<String> DEFAULT_SDK_LOCATIONS_WINDOWS = Arrays.asList("c:\\codetyphon\\fpc", "c:\\fpc");
+    private static final List<String> DEFAULT_SDK_LOCATIONS_UNIX = Arrays.asList("/usr/lib/codetyphon/fpc", "/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
+    private static final List<String> DEFAULT_SDK_LOCATIONS_WINDOWS = Arrays.asList("c:\\codetyphon\\fpc", "c:\\codetyphon\\fpc32", "c:\\fpc");
 
     @Nullable
     @Override
@@ -110,7 +110,7 @@ public class FPCSdkType extends BasePascalSdkType {
     public String suggestSdkName(@Nullable final String currentSdkName, @NotNull final String sdkHome) {
         String version = getVersionString(sdkHome);
         if (version == null) return "Free Pascal v. ?? at " + sdkHome;
-        return "Free Pascal v. " + version;
+        return "Free Pascal v. " + version + " | " + getTargetString(sdkHome);
     }
 
     @Nullable
@@ -118,6 +118,17 @@ public class FPCSdkType extends BasePascalSdkType {
         LOG.info("Getting version for SDK path: " + sdkHome);
         try {
             return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
+        } catch (PascalException e) {
+            LOG.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+    @Nullable
+    public static String getTargetString(String sdkHome) {
+        LOG.info("Getting version for SDK path: " + sdkHome);
+        try {
+            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_TARGET_GET);
         } catch (PascalException e) {
             LOG.error(e.getMessage(), e);
         }
@@ -157,15 +168,15 @@ public class FPCSdkType extends BasePascalSdkType {
         LOG.info("Setting up SDK paths for SDK at " + sdk.getHomePath());
         final SdkModificator[] sdkModificatorHolder = new SdkModificator[]{null};
         final SdkModificator sdkModificator = sdk.getSdkModificator();
-        File rtlDir = new File(sdk.getHomePath() + File.separatorChar + "units" + File.separatorChar + PascalSdkUtil.target + File.separatorChar + "rtl");
-        final VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(rtlDir);
-        if (dir != null) {
-            sdkModificator.addRoot(dir, OrderRootType.SOURCES);
-        }
-
-        sdkModificatorHolder[0] = sdkModificator;
-
-        if (sdkModificatorHolder[0] != null) {
+        String target = getTargetString(sdk.getHomePath());
+        if (target != null) {
+            target = target.replace(' ', '-');
+            File rtlDir = new File(sdk.getHomePath() + File.separatorChar + sdk.getVersionString() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + "rtl");
+            final VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(rtlDir);
+            if (dir != null) {
+                sdkModificator.addRoot(dir, OrderRootType.CLASSES);
+            }
+            sdkModificatorHolder[0] = sdkModificator;
             sdkModificatorHolder[0].commitChanges();
         }
     }

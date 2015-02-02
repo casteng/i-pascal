@@ -18,6 +18,7 @@ public class PascalSdkUtil {
     public static final Logger LOG = Logger.getInstance(PascalSdkUtil.class.getName());
 
     public static final String FPC_PARAMS_VERSION_GET = "-iV";
+    public static final String FPC_PARAMS_TARGET_GET = "-iTPTO";
     public static final Pattern VERSION_PATTERN = Pattern.compile("\\d+\\.\\d+\\.\\d+");
     public static final String DEFAULT_BIN_UNIX = "/usr/bin";
 
