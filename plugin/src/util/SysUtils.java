@@ -66,9 +66,9 @@ public class SysUtils {
         final String stdout = processOutput.getStdout().trim();
         final String stderr = processOutput.getStderr().trim();
         if ((exitCode != 0) && (stdout.isEmpty())) {
-            LOG.error(String.format("Error running %s. Code: %d", exePath, exitCode));
-            LOG.error("Output: {}", stdout);
-            LOG.error("Error: {}", stderr);
+            LOG.warn(String.format("Error running %s. Code: %d", exePath, exitCode));
+            LOG.warn(String.format("Output: %s", stdout));
+            LOG.warn(String.format("Error: %s", stderr));
             throw new PascalException(PascalBundle.message("decompile.unknown.error", stderr));
         }
         if (stdout.isEmpty()) return null;

@@ -399,7 +399,7 @@ public class GeneratedParserUtilBase {
 
         Frame frame = state.frameStack.pollLast();
         if (frame == null || level != frame.level) {
-            LOG.error("Unbalanced error section: got " + frame + ", expected level " + level);
+            LOG.warn("Unbalanced error section: got " + frame + ", expected level " + level);
             if (frame != null) state.FRAMES.recycle(frame);
             close_marker_impl_(frame, marker, elementType, result);
             return;
@@ -566,7 +566,7 @@ public class GeneratedParserUtilBase {
     public static void report_error_(PsiBuilder builder_, ErrorState state, boolean advance) {
         Frame frame = state.frameStack.isEmpty()? null : state.frameStack.getLast();
         if (frame == null) {
-            LOG.error("unbalanced enter/exit section call: got null");
+            LOG.warn("unbalanced enter/exit section call: got null");
             return;
         }
         int position = builder_.rawTokenIndex();

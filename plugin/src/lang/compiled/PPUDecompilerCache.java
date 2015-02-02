@@ -79,7 +79,11 @@ public class PPUDecompilerCache {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.ppudump", ppuDump.getCanonicalPath()));
                 }
                 xml = SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
-                return PPUDumpParser.parse(xml, self);
+                if (xml != null) {
+                    return PPUDumpParser.parse(xml, self);
+                } else {
+                    return new PPUDumpParser.Section(PascalBundle.message("decompile.empty.ppudump.result"));
+                }
             } catch (IOException e) {
                 LOG.error(e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.io.error"));
