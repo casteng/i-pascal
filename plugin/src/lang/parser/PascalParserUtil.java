@@ -25,7 +25,6 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
-import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -33,7 +32,6 @@ import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -148,14 +146,14 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     private static void retrieveFunctionResultReference(Collection<PascalNamedElement> result, PascalNamedElement current) {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(current);
-        if ((section instanceof PasRoutineImplDecl) || (section instanceof PasMethodImplDecl)) {
+        if (section instanceof PascalRoutineImpl) {
             result.add(((PascalRoutineImpl) section));
         }
     }
 
     private static void retrieveDefaultNamespaceEntities(Collection<PascalNamedElement> result, PascalNamedElement current) {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(current);
-        if (section instanceof PasMethodImplDecl) {
+        if (section instanceof PascalRoutineImpl) {
             // add class declarations
             for (PsiElement element : section.getChildren()) {
                 if (element instanceof PascalQualifiedIdent) {
@@ -177,10 +175,10 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     private static void retrieveMethodSelfReference(Collection<PascalNamedElement> result, PascalNamedElement self) {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(self);
-        if (section instanceof PasMethodImplDecl) {
+        if (section instanceof PascalRoutineImpl) {
             PasModule module = PsiUtil.getModule(section);
             if (module != null) {
-                PasField field = module.getField(((PasMethodImplDecl) section).getNamespace());
+                PasField field = module.getField(((PascalRoutineImpl) section).getNamespace());
                 if ((field != null) && (field.type == PasField.Type.TYPE)) {
                     result.add(field.element);
                     return;

@@ -24,7 +24,6 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameterList;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
-import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
@@ -34,7 +33,6 @@ import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
-import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -206,7 +204,7 @@ public class PsiUtil {
     }
 
     public static boolean isRoutineName(@NotNull PascalNamedElement element) {
-        return (element.getParent() instanceof PasExportedRoutine) || (element.getParent() instanceof PasRoutineImplDecl);
+        return (element.getParent() instanceof PasExportedRoutine) || (element.getParent() instanceof PascalRoutineImpl);
     }
 
     public static boolean isUsedUnitName(@NotNull PascalNamedElement element) {
@@ -339,7 +337,7 @@ public class PsiUtil {
             //noinspection unchecked
             if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection,
                     PasClassTypeDecl.class, PasClassHelperDecl.class, PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordDecl.class, PasRecordHelperDecl.class,
-                    PasRoutineImplDecl.class, PasMethodImplDecl.class, PasClosureExpression.class)) {
+                    PascalRoutineImpl.class, PasClosureExpression.class)) {
                 return false;
             }
             innerSection = PsiUtil.getNearestAffectingDeclarationsRoot(innerSection);
