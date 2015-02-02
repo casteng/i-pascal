@@ -52,10 +52,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -78,18 +79,19 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return parseAsTree(state, builder_, level, DUMMY_BLOCK, true, parser, TRUE_CONDITION);
     }
 
-    @SuppressWarnings("unchecked")
-    @Deprecated
-    public static List<PascalNamedElement> findTypes(Project project) {
-        final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
-        processProjectElements(project, new PsiElementProcessor<PasGenericTypeIdent>() {
+    public static Collection<PascalNamedElement> findSymbols(Project project, final String pattern) {
+        final Set<PascalNamedElement> result = new HashSet<PascalNamedElement>();
+        final Pattern p = Pattern.compile("\\w*" + pattern + "\\w*");
+        processProjectElements(project, new PsiElementProcessor<PascalNamedElement>() {
             @Override
-            public boolean execute(@NotNull PasGenericTypeIdent element) {
-                result.add(element);
+            public boolean execute(@NotNull PascalNamedElement element) {
+                if (p.matcher(element.getName()).matches()) {
+                    result.add(element);
+                }
                 return true;
             }
-        }, PasGenericTypeIdent.class);
-        return result;
+        }, PascalNamedElement.class);
+        return new ArrayList<PascalNamedElement>(result);
     }
 
     @SuppressWarnings("unchecked")

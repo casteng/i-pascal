@@ -142,4 +142,21 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     public PsiReference[] getReferences() {
         return ReferenceProvidersRegistry.getReferencesFromProviders(this);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PascalNamedElementImpl that = (PascalNamedElementImpl) o;
+
+        if (!getName().equals(that.getName())) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return getName().hashCode();
+    }
 }
