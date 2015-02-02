@@ -102,16 +102,16 @@ public class PascalCompletionContributor extends CompletionContributor {
                     appendTokenSet(result, PascalLexer.VALUES);
                 } else if (PsiTreeUtil.instanceOf(originalPos, PasStatementList.class, PasCompoundStatement.class) ||           // identifier completion in left part of assignment
                         PsiTreeUtil.instanceOf(pos, PasStatementList.class, PasCompoundStatement.class)) {
-                    if (isIdent(parameters.getPosition().getParent())) {
+                    if (isIdent(parameters.getPosition().getParent())) {                                                        // complete identifier variants
                         addEntities(result, parameters.getPosition(), PasField.TYPES_ASSIGNABLE);
                     }
-                    if (!isQualifiedIdent(parameters.getPosition().getParent())) {
+                    if (!isQualifiedIdent(parameters.getPosition().getParent())) {                                              // statements variants
                         appendTokenSet(result, PascalLexer.STATEMENTS);
                     }
                     if (PsiTreeUtil.getParentOfType(parameters.getPosition(), PasRepeatStatement.class, PasWhileStatement.class, PasForStatement.class) != null) {
                         appendTokenSet(result, PascalLexer.STATEMENTS_IN_CYCLE);
                     }
-                    if ((level <= 3) && (originalPos.getParent() instanceof PasUnitInitialization)) {
+                    if ((level <= 3) && (originalPos.getParent() instanceof PasUnitInitialization)) {                           //
                         appendTokenSetUnique(result, TokenSet.create(PascalLexer.FINALIZATION), parameters.getOriginalFile());
                     }
                 } else {
@@ -130,9 +130,9 @@ public class PascalCompletionContributor extends CompletionContributor {
                                 PasProgramModuleHead.class, PasUnitModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);
                     }
                 }
-                if (posIs(originalPos, pos, PasUnitInterface.class, PasImplDeclSection.class, PasDeclSection.class, PasBlockGlobal.class)) {
+                if (posIs(originalPos, pos, PasUnitInterface.class, PasImplDeclSection.class, PasDeclSection.class, PasBlockGlobal.class, PasUnitImplementation.class)) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
-                } else if (posIs(originalPos, pos, PasVarSection.class, PasConstSection.class, PasTypeSection.class, PasRoutineImplDecl.class) && parameters.getPosition() instanceof LeafPsiElement) {
+                } else if (posIs(originalPos, pos, PasVarSection.class, PasConstSection.class, PasTypeSection.class, PasMethodImplDecl.class) && parameters.getPosition() instanceof LeafPsiElement) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
                 } else if (posIs(originalPos, pos, PasExportedRoutine.class, PasDeclSection.class) && parameters.getPosition().getParent() instanceof PsiErrorElement) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);

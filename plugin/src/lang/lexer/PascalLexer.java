@@ -10,6 +10,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 
 public class PascalLexer extends MergingLexerAdapter implements PasTypes {
     public static final TokenSet KEYWORDS = TokenSet.create(
+            BEGIN, END,
             CLASS, DISPINTERFACE,
             PROGRAM, UNIT, LIBRARY, PACKAGE,
             USES, INTERFACE, IMPLEMENTATION,

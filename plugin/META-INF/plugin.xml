@@ -65,7 +65,6 @@
         <lang.foldingBuilder language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalFoldingBuilder"/>
 
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
-        <!--<lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalCommenter"/>-->
 
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>
@@ -90,7 +89,6 @@
 
         <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
 
-        <!--<contentBasedClassFileProcessor implementation="com.siberika.idea.pascal.lang.compiled.PPUContentBasedClassFileProcessor"/>-->
         <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>-->
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>

@@ -183,6 +183,6 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
     }
 
     public boolean isCacheActual(List<Map<String, PasField>> cache, long stamp) {
-        return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
+        return (getContainingFile() != null) && (cache != null) && (getContainingFile().getModificationStamp() == stamp);
     }
 }
