@@ -14,7 +14,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.ConstantFunction;
 import com.intellij.util.SmartList;
-import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -145,12 +144,10 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         if ((section != null) && (section.getParent() != null)) {
             for (PsiElement child : section.getChildren()) {
                 if (child.getClass() == PasImplDeclSectionImpl.class) {
-                    for (PsiElement decl : PsiUtil.findImmChildrenOfAnyType(child, PasDeclSection.class)) {
-                        for (PsiElement element : PsiUtil.findImmChildrenOfAnyType(decl, clazz)) {
-                            PascalNamedElement routine = (PascalNamedElement) element;
-                            if ((routine.getName().equalsIgnoreCase(name))) {
-                                result.add(routine);
-                            }
+                    for (PsiElement element : PsiUtil.findImmChildrenOfAnyType(child, clazz)) {
+                        PascalNamedElement routine = (PascalNamedElement) element;
+                        if ((routine.getName().equalsIgnoreCase(name))) {
+                            result.add(routine);
                         }
                     }
                 }

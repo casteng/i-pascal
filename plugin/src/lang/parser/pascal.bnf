@@ -200,9 +200,12 @@
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.PascalStructType"
+  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|ClassMethod|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
   extends(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
-  extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl";
-
+  extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"
+  extends("ExportedRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
+  extends("RoutineImplDecl|MethodImplDecl|ClassMethod")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
+  implements("RoutineImplDecl|MethodImplDecl")="com.siberika.idea.pascal.lang.psi.PascalNamedElement,com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
 }
 
 external pascal             ::= parsePascal Module
@@ -242,9 +245,9 @@ private rec_struct_field    ::= !(";" | ")" | END)
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 
-private interfaceDecl       ::= commonDecl | routineDecl | exportsSection | assemblyAttribute {recoverWhile=rec_section}
+private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
-private exportsSection      ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
+ExportsSection              ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
 private exportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
 
 private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | LE | GT | GE
@@ -252,18 +255,16 @@ private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
 private procKey             ::= FUNCTION | PROCEDURE
 
-ExportedRoutine             ::= routineDeclaration {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}
+ExportedRoutine             ::= routineDeclaration
 private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl) ";" functionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=2}
 private exportedProc        ::= methodKey procName [GenericDefinition] [FormalParameterSection] {pin=1}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
 
-RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="procedure or function declaration"
-                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
+RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="procedure or function declaration"}
 MethodImplDecl              ::= routineDeclaration [MethodBody]     //TODO: remove
-                                {extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl" implements="com.siberika.idea.pascal.lang.psi.PascalNamedElement"}
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
-ClassMethod                 ::= routineDeclaration {name="method declaration" extends="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"}  //TODO: remove
+ClassMethod                 ::= routineDeclaration {name="method declaration"}  //TODO: remove
 
 private complexType         ::= [PACKED] complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
@@ -272,10 +273,10 @@ private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeD
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
 private structItem          ::= commonDecl | routineDecl | ClassField | Visibility
-DeclSection	                ::=	MethodImplDecl | RoutineImplDecl | commonDecl | LabelDeclSection | exportsSection | assemblyAttribute
+private declSection	        ::=	MethodImplDecl | RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
-ImplDeclSection             ::= DeclSection* {}
+ImplDeclSection             ::= declSection* {}
 private unitBlock           ::= [UnitInitialization] [UnitFinalization] END | CompoundStatement | END {}
 UnitInitialization          ::= INITIALIZATION StatementList {pin=1 name="initialization section"}
 UnitFinalization            ::= FINALIZATION StatementList  {pin=1 name="finalization section"}
@@ -293,8 +294,8 @@ private namespaceFileName	::=	NamespaceIdent [IN quotedString] {}
 private namespaceNameList   ::= NamespaceIdent namespaceNamesRest* ";"
 private namespaceNamesRest  ::= "," NamespaceIdent {pin=1 }
 
-BlockGlobal	                ::=	[';'] DeclSection* BlockBody {recoverWhile=rec_block_global_end}
-BlockLocal 	                ::=	[';'] DeclSection* BlockBody
+BlockGlobal	                ::=	[';'] declSection* BlockBody {recoverWhile=rec_block_global_end}
+BlockLocal 	                ::=	[';'] declSection* BlockBody
 BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
 AssemblerStatement          ::= ASM asmBlock END
@@ -327,14 +328,14 @@ LabelDeclSection	        ::=	LABEL label labelsRest* ";" {pin=1 name="label decl
 private labelsRest          ::= "," label {}
 private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 
-VarSection	                ::=	varKey varDeclaration+ {pin=1 name="var section"}
+VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section"}
 private varKey	            ::=	VAR | THREADVAR
-private varDeclaration	    ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 }
+VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 }
 VarValueSpec	            ::=	ABSOLUTE identifier | ABSOLUTE ConstExpressionOrd | EQ ConstExpression
 
-ConstSection                ::= constKey constDeclaration+ {pin=1 name="const section"}
+ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section"}
 private constKey            ::= CONST |	RESOURCESTRING
-private constDeclaration    ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2 }
+ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2 }
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
