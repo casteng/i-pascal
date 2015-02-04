@@ -7,6 +7,7 @@ import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.codeInsight.daemon.impl.PsiElementListNavigator;
 import com.intellij.icons.AllIcons;
 import com.intellij.ide.util.DefaultPsiElementCellRenderer;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.NavigatablePsiElement;
@@ -38,6 +39,8 @@ import java.util.List;
  * Date: 05/09/2013
  */
 public class PascalLineMarkerProvider implements LineMarkerProvider {
+
+    public static final Logger LOG = Logger.getInstance(PascalLineMarkerProvider.class.getName());
 
     private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result) {
         if (element instanceof PascalRoutineImpl) {
@@ -96,8 +99,12 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     }
 
     private Collection<PsiElement> getInterfaceRoutinesTargets(PascalRoutineImpl routineDecl) {
-        PsiElement section = PsiUtil.getModuleInterfaceSection(routineDecl.getContainingFile());
         Collection<PsiElement> result = new SmartList<PsiElement>();
+        if (null == routineDecl.getContainingFile()) {
+            LOG.warn(String.format("Containing file is null for class %s, name %s", routineDecl.getClass().getSimpleName(), routineDecl.getName()));
+            return result;
+        }
+        PsiElement section = PsiUtil.getModuleInterfaceSection(routineDecl.getContainingFile());
         if (section == null) {
             return result;
         }
@@ -140,6 +147,10 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     @SuppressWarnings("unchecked")
     private static <T extends PascalNamedElement> void findImplTargets(Collection<PsiElement> result, PsiFile file, String name, Class<T> clazz) {
+        if (null == file) {
+            LOG.warn(String.format("findImplTargets: Containing file is null name %s", name));
+            return;
+        }
         PsiElement section = PsiUtil.getModuleImplementationSection(file);
         if ((section != null) && (section.getParent() != null)) {
             for (PsiElement child : section.getChildren()) {

@@ -349,6 +349,9 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 return o2.getTextRange().getStartOffset() - o1.getTextRange().getStartOffset();
             }
         });
+        if (null == element.getContainingFile()) {
+            return result;
+        }
         int offset = element.getTextRange().getStartOffset();
         if (PsiUtil.allowsForwardReference(element)) {
             offset = element.getContainingFile().getTextLength();
@@ -389,7 +392,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             @Nullable
             @Override
             public String getLocationString() {
-                return element.getContainingFile().getName();
+                return element.getContainingFile() != null ? element.getContainingFile().getName() : "-";
             }
 
             @Nullable

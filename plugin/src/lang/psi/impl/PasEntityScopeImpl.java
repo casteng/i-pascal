@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -27,6 +28,8 @@ import java.util.Set;
  * Date: 07/09/2013
  */
 public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implements PasEntityScope {
+
+    public static final Logger LOG = Logger.getInstance(PasEntityScopeImpl.class.getName());
 
     private List<Map<String, PasField>> members = null;
     private Set<PascalNamedElement> redeclaredMembers = null;
@@ -124,7 +127,13 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
     }
 
     synchronized private void buildMembers() {
-        if (isCacheActual(members, buildStamp)) { return; }  // TODO: check correctness
+        if (null == getContainingFile()) {
+            PascalPsiImplUtil.logNullContainingFile(this);
+            return;
+        }
+        if (isCacheActual(members, buildStamp)) {
+            return;
+        }  // TODO: check correctness
         buildStamp = getContainingFile().getModificationStamp();
         members = new ArrayList<Map<String, PasField>>(PasField.Visibility.values().length);
         for (PasField.Visibility visibility : PasField.Visibility.values()) {

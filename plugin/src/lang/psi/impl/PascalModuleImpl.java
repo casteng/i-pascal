@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.diagnostic.Logger;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -23,6 +24,8 @@ import java.util.Set;
  * Date: 14/09/2013
  */
 public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntityScope {
+
+    public static final Logger LOG = Logger.getInstance(PascalModuleImpl.class.getName());
 
     private Map<String, PasField> privateMembers = null;
     private Map<String, PasField> publicMembers = null;
@@ -121,6 +124,10 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     }
 
     public boolean isCacheActual(Map<String, PasField> cache, long stamp) {
+        if (null == getContainingFile()) {
+            PascalPsiImplUtil.logNullContainingFile(this);
+            return false;
+        }
         return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
     }
 }

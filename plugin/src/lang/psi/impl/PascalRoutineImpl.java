@@ -54,6 +54,10 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
     }
 
     synchronized private void buildMembers() {
+        if (null == getContainingFile()) {
+            PascalPsiImplUtil.logNullContainingFile(this);
+            return;
+        }
         if (isCacheActual(members, buildStamp)) { return; }  // TODO: check correctness
         buildStamp = getContainingFile().getModificationStamp();
         members = new LinkedHashMap<String, PasField>();
@@ -103,7 +107,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
     }
 
     public boolean isCacheActual(Map<String, PasField> cache, long stamp) {
-        return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
+        return (cache != null) && (getContainingFile() != null) && (getContainingFile().getModificationStamp() == stamp);
     }
 
     public PasFullyQualifiedIdent getFunctionTypeIdent() {
