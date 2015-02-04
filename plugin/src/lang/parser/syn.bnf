@@ -334,16 +334,16 @@ private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section"}
 private varKey	            ::=	VAR | THREADVAR
-VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 }
+VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=2 recoverWhile=rec_section}
 VarValueSpec	            ::=	ABSOLUTE identifier | ABSOLUTE ConstExpressionOrd | EQ ConstExpression
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section"}
 private constKey            ::= CONST |	RESOURCESTRING
-ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2 }
+ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2 recoverWhile=rec_section}
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
-TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {recoverWhile=rec_type}
+TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3 recoverWhile=rec_section}
 GenericTypeIdent    ::= identifier [GenericDefinition]
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
 SimpleGenericDefinition ::= "<" identifier IdentsRest* ">" {pin=1}                     //TODO use meta rule
