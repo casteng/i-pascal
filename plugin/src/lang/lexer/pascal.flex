@@ -48,10 +48,12 @@ STRING_LITERAL  = "'"{STRING_ELEMENT}*"'"
 CT_DEFINE          = "{$DEFINE " !([^]* "}" [^]*) ("}")?
 CT_UNDEFINE        = "{$UNDEF " !([^]* "}" [^]*) ("}")?
 
+CT_IF           = "{$IF " !([^]* "}" [^]*) ("}")?
 CT_IFDEF        = "{$IFDEF " !([^]* "}" [^]*) ("}")?
 CT_IFNDEF       = "{$IFNDEF " !([^]* "}" [^]*) ("}")?
 CT_ELSE         = "{$ELSE" !([^]* "}" [^]*) ("}")?
 CT_ENDIF        = "{$ENDIF" !([^]* "}" [^]*) ("}")?
+CT_IFEND        = "{$IFEND" !([^]* "}" [^]*) ("}")?
 
 N               = [0-9]+
 NUM_INT         = {N}
@@ -68,6 +70,7 @@ NUM_BIN         = {N}[bB]
     {CT_IFNDEF}     { return handleIfNDef(yytext()); }
     {CT_ELSE}       { return handleElse(); }
     {CT_ENDIF}      { return handleEndIf(); }
+    {CT_IFEND}      { return handleEndIf(); }
     {IDENTIFIER}    { return COMMENT; }
     {WHITESPACE}    { return TokenType.WHITE_SPACE; }
     .               { return COMMENT; }
@@ -246,10 +249,12 @@ NUM_BIN         = {N}[bB]
     {CT_DEFINE}     { define(yytext()); return CT_DEFINE; }
     {CT_UNDEFINE}   { unDefine(yytext()); return CT_UNDEFINE; }
 
+    {CT_IF}         { return handleIfDef(yytext()); }
     {CT_IFDEF}      { return handleIfDef(yytext()); }
     {CT_IFNDEF}     { return handleIfNDef(yytext()); }
     {CT_ELSE}       { return handleElse(); }
     {CT_ENDIF}      { return handleEndIf(); }
+    {CT_IFEND}      { return handleEndIf(); }
 
     {INCLUDE}       { return handleInclude(yytext()); }
 
