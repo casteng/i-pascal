@@ -91,9 +91,10 @@ public class PascalCompletionContributor extends CompletionContributor {
                 originalPos = skipToExpressionParent(parameters.getOriginalPosition());
                 pos = skipToExpressionParent(parameters.getPosition());
                 prev = pos.getPrevSibling();
-                oPrev = originalPos.getPrevSibling();
+                oPrev = originalPos != null ? originalPos.getPrevSibling() : null;
                 int level = PsiUtil.getElementLevel(originalPos);
-                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos.getParent(), pos.getParent(), level));
+                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev,
+                        originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
                     if (isIdent(parameters.getPosition().getParent()) || isIdent(parameters.getOriginalPosition().getParent())) {
                         addEntities(result, parameters.getPosition(), PasField.TYPES_ALL);
@@ -110,7 +111,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                     if (PsiTreeUtil.getParentOfType(parameters.getPosition(), PasRepeatStatement.class, PasWhileStatement.class, PasForStatement.class) != null) {
                         appendTokenSet(result, PascalLexer.STATEMENTS_IN_CYCLE);
                     }
-                    if ((level <= 3) && (originalPos.getParent() instanceof PasUnitInitialization)) {                           //
+                    if ((level <= 3) && (originalPos != null) && (originalPos.getParent() instanceof PasUnitInitialization)) {                           //
                         appendTokenSetUnique(result, TokenSet.create(PascalLexer.FINALIZATION), parameters.getOriginalFile());
                     }
                 } else {
