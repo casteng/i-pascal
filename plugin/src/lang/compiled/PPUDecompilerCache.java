@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -85,10 +84,10 @@ public class PPUDecompilerCache {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.empty.ppudump.result"));
                 }
             } catch (IOException e) {
-                LOG.error(e.getMessage(), e);
+                LOG.warn(e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.io.error"));
             } catch (ParseException e) {
-                LOG.error(e.getMessage(), e);
+                LOG.warn(e.getMessage(), e);
                 String ver = getPPUDumpVersion(ppuDump);
                 if (ver.compareTo(PPUDUMP_VERSION_MIN) < 0) {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.version.error", ver, PPUDUMP_VERSION_MIN));
@@ -98,7 +97,7 @@ public class PPUDecompilerCache {
             } catch (PascalException e1) {
                 return new PPUDumpParser.Section(e1.getMessage());
             } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
+                LOG.warn(e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.unknown.error", xml));
             }
         }
@@ -116,7 +115,7 @@ public class PPUDecompilerCache {
                 }
             }
         } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
+            LOG.warn(e.getMessage(), e);
         }
         return res;
     }
@@ -126,7 +125,7 @@ public class PPUDecompilerCache {
         if (!unitFiles.isEmpty()) {
             try {
                 return cache.get(FileUtil.getNameWithoutExtension(unitFiles.iterator().next().getName()));
-            } catch (ExecutionException e) {
+            } catch (Exception e) {
                 LOG.warn(e.getMessage(), e);
             }
         }

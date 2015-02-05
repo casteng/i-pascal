@@ -119,7 +119,7 @@ public class FPCSdkType extends BasePascalSdkType {
         try {
             return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
         } catch (PascalException e) {
-            LOG.error(e.getMessage(), e);
+            LOG.warn(e.getMessage(), e);
         }
         return null;
     }
@@ -130,7 +130,7 @@ public class FPCSdkType extends BasePascalSdkType {
         try {
             return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_TARGET_GET);
         } catch (PascalException e) {
-            LOG.error(e.getMessage(), e);
+            LOG.warn(e.getMessage(), e);
         }
         return null;
     }
