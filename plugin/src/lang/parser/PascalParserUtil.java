@@ -403,7 +403,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 if (element instanceof PascalRoutineImpl) {
                     return element.getText();
                 }
-                return element.getName();
+                return element.getName() + getType(element);
             }
 
             @Nullable
@@ -418,6 +418,25 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 return PascalIcons.GENERAL;
             }
         };
+    }
+
+    private static String getType(PascalNamedElement item) {
+        if (item instanceof PasClassTypeDecl) {
+            return " [Class]";
+        } else if (item instanceof PasRecordDecl) {
+            return " [Record]";
+        } else if (item instanceof PasObjectDecl) {
+            return " [Oject]";
+        } else if (item instanceof PasClassHelperDecl) {
+            return " [Class helper]";
+        } else if (item instanceof PasRecordHelperDecl) {
+            return " [Record helper]";
+        } else if (item instanceof PasConstDeclaration) {
+            return " [Const]";
+        } else if (item instanceof PasTypeDecl) {
+            return " [Type]";
+        }
+        return "";
     }
 
     /**

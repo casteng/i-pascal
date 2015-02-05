@@ -36,4 +36,5 @@ public class PascalClassByNameContributor implements ChooseByNameContributor {
         Collection<PascalNamedElement> items = PascalParserUtil.findClasses(project, pattern);
         return items.toArray(new NavigationItem[items.size()]);
     }
+
 }

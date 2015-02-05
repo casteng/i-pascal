@@ -56,7 +56,8 @@ public class PPUDecompilerCache {
             BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE, decompilerCache);
         }
         String unitName = FileUtil.getNameWithoutExtension(com.siberika.idea.pascal.jps.util.FileUtil.getFilename(filename));
-        return decompilerCache.getContents(unitName).getResult();                 // TODO: check for null
+        PPUDumpParser.Section stub = decompilerCache.getContents(unitName);
+        return stub != null ? stub.getResult() : "";
     }
 
     private class Loader extends CacheLoader<String, PPUDumpParser.Section> {
