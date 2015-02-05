@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
+import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -39,6 +40,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -90,7 +92,22 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
                 return true;
             }
-        }, PascalNamedElement.class);
+        }, PascalStructType.class, PasConstDeclaration.class);
+        return new ArrayList<PascalNamedElement>(result);
+    }
+
+    public static Collection<PascalNamedElement> findClasses(Project project, final String pattern) {
+        final Set<PascalNamedElement> result = new HashSet<PascalNamedElement>();
+        final Pattern p = Pattern.compile("\\w*" + pattern + "\\w*");
+        processProjectElements(project, new PsiElementProcessor<PascalStructType>() {
+            @Override
+            public boolean execute(@NotNull PascalStructType element) {
+                if (p.matcher(element.getName()).matches()) {
+                    result.add(element);
+                }
+                return true;
+            }
+        }, PasClassTypeDecl.class, PasObjectDecl.class, PasClassHelperDecl.class, PasRecordHelperDecl.class);
         return new ArrayList<PascalNamedElement>(result);
     }
 

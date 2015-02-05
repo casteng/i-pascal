@@ -73,7 +73,10 @@
 
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
         <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
+
         <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
+        <gotoClassContributor implementation="com.siberika.idea.pascal.lang.references.PascalClassByNameContributor"/>
+
         <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
                                  implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
         <editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>
