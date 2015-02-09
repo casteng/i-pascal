@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +44,10 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
 
     private static final List<String> COMPILABLE_EXTENSIONS = Arrays.asList("pas", "inc", "dpr", "pp", "lpr");
     public static final String NAME = "FPC";
+    private static final String FILE_EXT_PPU = ".ppu";
 
     public PascalModuleLevelBuilder() {
-        super(BuilderCategory.TRANSLATOR);
+        super(BuilderCategory.OVERWRITING_TRANSLATOR);
     }
 
     @Override
@@ -53,7 +55,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
                           DirtyFilesHolder<JavaSourceRootDescriptor, ModuleBuildTarget> dirtyFilesHolder,
                           OutputConsumer outputConsumer) throws ProjectBuildException, IOException {
 //        context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.ERROR, "Don't close messages"));
-        Map<ModuleBuildTarget, List<File>> files = collectChangedFiles(context, dirtyFilesHolder);
+        final Map<ModuleBuildTarget, List<File>> files = collectChangedFiles(context, dirtyFilesHolder);
         if (files.isEmpty()) {
             context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.INFO, "No changes detected"));
             return ExitCode.NOTHING_DONE;
@@ -84,6 +86,13 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
                 List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
                 sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
                 File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
+
+                for (File file : files.get(target)) {
+                    File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + FILE_EXT_PPU);
+                    messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1l, -1l);
+                    outputConsumer.registerOutputFile(chunk.representativeTarget(), compiled, Collections.singleton(file.getCanonicalPath()));
+                }
+
                 String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
                         sdkFiles, getFiles(module.getSourceRoots()),
                         files.get(target), ParamMap.getJpsParams(module.getProperties()),
@@ -186,4 +195,6 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
     public String getPresentableName() {
         return NAME;
     }
+
+
 }

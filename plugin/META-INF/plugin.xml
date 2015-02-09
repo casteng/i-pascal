@@ -73,6 +73,7 @@
 
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
         <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
+        <!--<referencesSearch implementation="com.siberika.idea.pascal.lang.references.PascalReferencesSearcher"/>-->
 
         <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
         <gotoClassContributor implementation="com.siberika.idea.pascal.lang.references.PascalClassByNameContributor"/>
@@ -96,6 +97,6 @@
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
 
-        <compileServer.plugin classpath="jps_plugin.jar"/>
+        <compileServer.plugin classpath="jps-plugin.jar"/>
     </extensions>
 </idea-plugin>
