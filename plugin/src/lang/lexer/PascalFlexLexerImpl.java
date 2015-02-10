@@ -8,6 +8,7 @@ import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.search.FileTypeIndex;
@@ -79,15 +80,22 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     synchronized private void initDefines() {
         if (defines != null) { return; }
         defines = new HashSet<String>();
-        if ((project != null) && (virtualFile != null)) {
-            Module module = ModuleUtil.findModuleForFile(virtualFile, project);
-            if (module != null) {
-                final Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
-                if ((null != sdk) && (sdk.getSdkType() instanceof FPCSdkType)) {
-                    defines.addAll(DefinesParser.getDefaultDefines(DefinesParser.COMPILER_FPC, sdk.getVersionString()));
-                }
+        if ((project != null)) {
+            final Sdk sdk = getSdk(project, virtualFile);
+            if ((null != sdk) && (sdk.getSdkType() instanceof FPCSdkType)) {
+                defines.addAll(DefinesParser.getDefaultDefines(DefinesParser.COMPILER_FPC, sdk.getVersionString()));
             }
         }
+    }
+
+    private Sdk getSdk(Project project, VirtualFile virtualFile) {
+        if (virtualFile != null) {
+            Module module = ModuleUtil.findModuleForFile(virtualFile, project);
+            if (module != null) {
+                return ModuleRootManager.getInstance(module).getSdk();
+            }
+        }
+        return ProjectRootManager.getInstance(project).getProjectSdk();
     }
 
     private IElementType doHandleIfDef(CharSequence sequence, boolean negate) {
@@ -141,7 +149,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if ((project != null) && (virtualFile != null)) {
             try {
                 VirtualFile incFile = getIncludedFile(project, virtualFile, name);
-                if (incFile != null) {
+                if ((incFile != null) && (incFile.getCanonicalPath() != null)) {
                     Reader reader = new FileReader(incFile.getCanonicalPath());
                     PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, incFile);
                     Document doc = FileDocumentManager.getInstance().getDocument(incFile);
