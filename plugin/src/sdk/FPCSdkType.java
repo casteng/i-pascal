@@ -171,7 +171,10 @@ public class FPCSdkType extends BasePascalSdkType {
         String target = getTargetString(sdk.getHomePath());
         if (target != null) {
             target = target.replace(' ', '-');
-            File rtlDir = new File(sdk.getHomePath() + File.separatorChar + sdk.getVersionString() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + "rtl");
+            File rtlDir = new File(sdk.getHomePath() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + "rtl");
+            if (!rtlDir.exists()) {
+                rtlDir = new File(sdk.getHomePath() + File.separatorChar + sdk.getVersionString() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + "rtl");
+            }
             final VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(rtlDir);
             if (dir != null) {
                 sdkModificator.addRoot(dir, OrderRootType.CLASSES);
