@@ -213,18 +213,18 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
      */
     @SuppressWarnings("ConstantConditions")
     private static void addUsedUnitDeclarations(Collection<PascalNamedElement> result, PascalNamedElement current) {
-        for (String unitName : EXPLICIT_UNITS) {
-            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(current), unitName);
-        }
         for (PasNamespaceIdent usedUnitName : PsiUtil.getUsedUnits(current.getContainingFile())) {
-            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName());
+            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName(), current.getName());
+        }
+        for (String unitName : EXPLICIT_UNITS) {
+            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(current), unitName, current.getName());
         }
     }
 
-    private static void addUnitDeclarations(Collection<PascalNamedElement> result, Project project, Module module, String unitName) {
+    private static void addUnitDeclarations(Collection<PascalNamedElement> result, Project project, Module module, String unitName, String name) {
         PascalNamedElement usedUnit = PasReferenceUtil.findUnit(project, module, unitName);
         if (usedUnit != null) {
-            addDeclarations(result, PsiUtil.getModuleInterfaceSection(usedUnit), unitName);
+            addDeclarations(result, PsiUtil.getModuleInterfaceSection(usedUnit), name);
         }
     }
 
@@ -462,8 +462,8 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         PasNamespaceIdent usedModule = getUsedModuleName(element);
         if (usedModule != null) {
             return PasReferenceUtil.findUsedModuleReferences(usedModule);
-        } else if (PsiUtil.isTypeName(element)) {
-            result.addAll(findTypes(element, key));
+       /* } else if (PsiUtil.isTypeName(element)) {
+            result.addAll(findTypes(element, key));*/
         } else if (PsiUtil.isEntityName(element)) {
             //result.addAll(findTypes(element, key));
             NamespaceRec namespaceRec;

@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
@@ -200,7 +201,12 @@ public class PsiUtil {
     }
 
     public static boolean isTypeName(@NotNull PsiElement element) {
-        return (element.getClass() == PasGenericTypeIdentImpl.class) || (element.getParent().getClass() == PasTypeIDImpl.class);
+        PsiElement el = PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PsiWhiteSpace.class, PsiErrorElement.class);
+        return checkClass(el, PasGenericTypeIdentImpl.class) || checkClass(el, PasTypeIDImpl.class);
+    }
+
+    private static boolean checkClass(PsiElement element, Class clazz) {
+        return (element != null) && (element.getClass() == clazz);
     }
 
     public static boolean isRoutineName(@NotNull PascalNamedElement element) {
