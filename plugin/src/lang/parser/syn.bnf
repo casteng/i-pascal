@@ -248,6 +248,7 @@ private rec_semi            ::= !(";") & rec_section
 private rec_struct_field    ::= !(";" | ")" | END)
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
+private rec_name            ::= !(NAME (":" | ",") ) & rec_section
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
@@ -272,7 +273,7 @@ ClassMethod                 ::= routineDeclaration {name="method declaration"}  
 
 private complexType         ::= [PACKED] complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
-private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
+private structTypeDecl      ::= ClassHelperDecl | ClassForwardDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
@@ -334,12 +335,12 @@ private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section"}
 private varKey	            ::=	VAR | THREADVAR
-VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=2 recoverWhile=rec_section}
+VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=2 recoverWhile=rec_name}
 VarValueSpec	            ::=	ABSOLUTE identifier | ABSOLUTE ConstExpressionOrd | EQ ConstExpression
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section"}
 private constKey            ::= CONST |	RESOURCESTRING
-ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2 recoverWhile=rec_section}
+ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2 recoverWhile=rec_name}
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
@@ -360,7 +361,9 @@ TypeID              ::=	FullyQualifiedIdent
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringType | SimpleType | [TYPE] TypeID [GenericPostfix] | variantType
 
-ClassField              ::= field ';' //TODO: remove ";"
+private ClassForwardDecl    ::= CLASS [ClassParent] {pin=1 name="forward class declaration"}
+
+ClassField                  ::= field ';' //TODO: remove ";"
 ClassTypeDecl               ::= CLASS ((classBody END) | [ClassParent]) {pin=1 name="class declaration"}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
@@ -521,7 +524,7 @@ private recordValue         ::= identifier ":" RecordConstExpr
 private Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
                                 INHERITED [TypeID] exprParentheses? | EntityID DesignatorItemEx* | DesignatorItemEx+
 private rec_record_colon    ::= !(")" | END)
-private rec_expr_colon      ::= !(")" | ";")
+private rec_expr_colon      ::= !(")" | ";") & rec_section
 
 private DesignatorItem      ::= "^" | "." FieldId | "[" ExpressionsList "]"
 private DesignatorItemEx    ::= DesignatorItem | exprParentheses
