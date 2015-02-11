@@ -20,10 +20,6 @@ public class PascalLexerEditorHighlighter extends LexerEditorHighlighter {
     public PascalLexerEditorHighlighter(@NotNull SyntaxHighlighter highlighter, @NotNull EditorColorsScheme scheme, @Nullable Project project, @Nullable VirtualFile virtualFile) {
         super(highlighter, scheme);
         PascalFlexLexerImpl pascalFlexLexer = getPascalFlexLexerImpl();
-        if (pascalFlexLexer != null) {
-            pascalFlexLexer.project = project;
-            pascalFlexLexer.virtualFile = virtualFile;
-        }
     }
 
     @Override

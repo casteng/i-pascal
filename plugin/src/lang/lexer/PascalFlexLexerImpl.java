@@ -1,6 +1,10 @@
 package com.siberika.idea.pascal.lang.lexer;
 
+import com.intellij.ide.DataManager;
 import com.intellij.lexer.FlexAdapter;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
@@ -39,23 +43,23 @@ import java.util.regex.Pattern;
  */
 public class PascalFlexLexerImpl extends _PascalLexer {
 
+    private static final Logger LOG = Logger.getInstance(PascalFlexLexerImpl.class);
+
     private int curLevel = -1;
     private int inactiveLevel = -1;
 
     private Set<String> defines = null;
 
-    Project project;
-    VirtualFile virtualFile;
+    private final VirtualFile virtualFile;
 
-    public PascalFlexLexerImpl(Reader in, Project project, VirtualFile virtualFile) {
+    PascalFlexLexerImpl(Reader in, VirtualFile virtualFile) {
         super(in);
-        this.project = project;
         this.virtualFile = virtualFile;
     }
 
     public Set<String> getDefines() {
-        if (null == defines) {
-            initDefines();
+        if ((null == defines) || (defines.isEmpty())) {
+            initDefines(getProject(), getVirtualFile());
         }
         return defines;
     }
@@ -77,8 +81,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         getDefines().remove(name);
     }
 
-    synchronized private void initDefines() {
-        if (defines != null) { return; }
+    synchronized private void initDefines(Project project, VirtualFile virtualFile) {
         defines = new HashSet<String>();
         if ((project != null)) {
             final Sdk sdk = getSdk(project, virtualFile);
@@ -86,6 +89,41 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                 defines.addAll(DefinesParser.getDefaultDefines(DefinesParser.COMPILER_FPC, sdk.getVersionString()));
             }
         }
+    }
+
+    private <T> T getData(String s) {
+        DataContext res = DataManager.getInstance().getDataContextFromFocus().getResultSync(100);
+        if (res != null) {
+            return (T) res.getData(s);
+        }
+        return null;
+    }
+
+    private Project getProject() {
+        Project result = getData(PlatformDataKeys.PROJECT.getName());
+        if (!isValidProject(result)) {
+            LOG.warn("Couldn't determine active project");
+        }
+        return result;
+    }
+
+    private VirtualFile getVirtualFile() {
+        if (virtualFile != null) {
+            return virtualFile;
+        }
+        VirtualFile result = getData(PlatformDataKeys.VIRTUAL_FILE.getName());
+        if (!isValidFile(result)) {
+            LOG.warn("Couldn't determine active file");
+        }
+        return result;
+    }
+
+    private boolean isValidFile(VirtualFile result) {
+        return result != null;
+    }
+
+    private static boolean isValidProject(Project project) {
+        return (project != null) && (ProjectRootManager.getInstance(project) != null);
     }
 
     private Sdk getSdk(Project project, VirtualFile virtualFile) {
@@ -145,13 +183,14 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     @Override
     public IElementType handleInclude(CharSequence sequence) {
         String name = extractIncludeName(sequence);
-
+        Project project = getProject();
+        VirtualFile virtualFile = getVirtualFile();
         if ((project != null) && (virtualFile != null)) {
             try {
                 VirtualFile incFile = getIncludedFile(project, virtualFile, name);
                 if ((incFile != null) && (incFile.getCanonicalPath() != null)) {
                     Reader reader = new FileReader(incFile.getCanonicalPath());
-                    PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, incFile);
+                    PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, incFile);
                     Document doc = FileDocumentManager.getInstance().getDocument(incFile);
                     if (doc != null) {
                         lexer.reset(doc.getCharsSequence(), 0);
