@@ -269,7 +269,7 @@ ClassMethod                 ::= routineDeclaration {name="method declaration"}  
 
 private complexType         ::= [PACKED] complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
-private structTypeDecl      ::= ClassHelperDecl | ClassForwardDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
+private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
@@ -340,7 +340,9 @@ ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" 
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
-TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" TypeDecl HintingDirective* ";" {pin=3 recoverWhile=rec_section}
+TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" type {pin=3 recoverWhile=rec_section}
+private type                ::= (ClassForwardDecl ";") | (TypeDecl HintingDirective* ";")
+
 GenericTypeIdent    ::= identifier [GenericDefinition]
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
 SimpleGenericDefinition ::= "<" identifier IdentsRest* ">" {pin=1}                     //TODO use meta rule
@@ -357,7 +359,7 @@ TypeID              ::=	FullyQualifiedIdent
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringType | SimpleType | [TYPE] TypeID [GenericPostfix] | variantType
 
-private ClassForwardDecl    ::= CLASS [ClassParent] {pin=1 name="forward class declaration"}
+private ClassForwardDecl    ::= CLASS [ClassParent] {name="forward class declaration"}
 
 ClassField                  ::= field ';' //TODO: remove ";"
 ClassTypeDecl               ::= CLASS ((classBody END) | [ClassParent]) {pin=1 name="class declaration"}

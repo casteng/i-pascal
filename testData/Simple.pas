@@ -3,16 +3,16 @@ unit Simple;
 interface
 
 type
-  TResourceStringRecord = record helper
+  TResourceStringRecord = record
     Name2, CurrentValue, DefaultValue: AnsiString;
-    H ashValue: LongWord;
+    HashValue: LongWord;
     //class function a: int;
     constructor b(a, b: int);
   end;
   
   TResourceStringRecord = object
       Name2, CurrentValue, DefaultValue: AnsiString;
-      H ashValue: LongWord;
+      HashValue: LongWord;
       //class function a: int;
       constructor b(a, b: int);
     end;
@@ -34,7 +34,10 @@ Function MidStr(const AText: AnsiString; const AStart, ACount: Integer): AnsiStr
 implementation
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString;
+var
+  Value: TResourceStringRecord;
 begin
+  Value;
   if ((Value mod 2)=1) then
     raise Exception.Create('MyProp can only contain even value');
   FMyInt:=Value;

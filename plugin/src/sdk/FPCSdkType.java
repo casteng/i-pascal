@@ -18,7 +18,6 @@ import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
-import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.util.SysUtils;
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
@@ -82,7 +81,7 @@ public class FPCSdkType extends BasePascalSdkType {
     }
 
     private static final List<String> DEFAULT_SDK_LOCATIONS_UNIX = Arrays.asList("/usr/lib/codetyphon/fpc", "/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
-    private static final List<String> DEFAULT_SDK_LOCATIONS_WINDOWS = Arrays.asList("c:\\codetyphon\\fpc", "c:\\codetyphon\\fpc32", "c:\\fpc");
+    private static final List<String> DEFAULT_SDK_LOCATIONS_WINDOWS = Arrays.asList("c:\\codetyphon\\fpc", "c:\\codetyphon\\fpc\\fpc32", "c:\\fpc");
 
     @Nullable
     @Override
@@ -92,7 +91,7 @@ public class FPCSdkType extends BasePascalSdkType {
             paths = DEFAULT_SDK_LOCATIONS_WINDOWS;
         }
         for (String path : paths) {
-            if (FileUtil.exists(path)) {
+            if (new File(path).exists()) {
                 return path;
             }
         }

@@ -14,4 +14,6 @@
     <routine>copy</routine>
     <routine>concat</routine>
     <routine>slice</routine>
+    <routine>inc</routine>
+    <routine>dec</routine>
 </builtins>
