@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
+import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasUnitFinalization;
 import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
@@ -70,11 +71,15 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
 
         for (final PsiElement block : blocks) {
             int foldStart = block.getFirstChild() != null ? block.getFirstChild().getTextRange().getEndOffset() : block.getTextRange().getStartOffset();
-            TextRange range = new TextRange(foldStart, block.getTextRange().getEndOffset());
+            TextRange range = getRange(foldStart, block.getTextRange().getEndOffset());
             if (range.getLength() > 1) {
                 descriptors.add(new FoldingDescriptor(block.getNode(), range, null));
             }
         }
+    }
+
+    private TextRange getRange(int start, int end) {
+        return new TextRange(start, end);
     }
 
     private void foldCase(PsiElement root, List<FoldingDescriptor> descriptors) {
@@ -85,7 +90,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                 caseItem = PsiUtil.getNextSibling(caseItem);
             }
             int foldStart = caseItem != null ? caseItem.getTextRange().getStartOffset() : caseStatement.getTextRange().getStartOffset();
-            TextRange range = new TextRange(foldStart, caseStatement.getTextRange().getEndOffset());
+            TextRange range = getRange(foldStart, caseStatement.getTextRange().getEndOffset());
             if (range.getLength() > 0) {
                 descriptors.add(new FoldingDescriptor(caseStatement.getNode(), range, null));
             }
@@ -96,9 +101,18 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         @SuppressWarnings("unchecked")
         Collection<PasEnumType> enums = PsiUtil.findChildrenOfAnyType(root, PasEnumType.class);
         for (final PascalPsiElement enumType : enums) {
-            TextRange range = new TextRange(enumType.getTextRange().getStartOffset()+1, enumType.getTextRange().getEndOffset()-1);
-            if (range.getLength() > 0) {
-                descriptors.add(new FoldingDescriptor(enumType.getNode(), range, null));
+            final PasTypeDeclaration decl = PsiTreeUtil.getParentOfType(enumType, PasTypeDeclaration.class);
+            if (decl != null) {
+                TextRange range = getRange(decl.getTextRange().getStartOffset() + 1, decl.getTextRange().getEndOffset());
+                if (range.getLength() > 0) {
+                    descriptors.add(new FoldingDescriptor(decl.getNode(), range, null) {
+                        @Nullable
+                        @Override
+                        public String getPlaceholderText() {
+                            return decl.getGenericTypeIdent().getName().substring(1) + "=(...);";
+                        }
+                    });
+                }
             }
         }
     }
