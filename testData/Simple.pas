@@ -10,7 +10,7 @@ type
     constructor b(a, b: int);
   end;
   
-  TResourceStringRecord = object
+  TResourceStringRecord2 = object
       Name2, CurrentValue, DefaultValue: AnsiString;
       HashValue: LongWord;
       //class function a: int;
@@ -44,9 +44,14 @@ begin
 end;
 
 Function RightStr(const AText: AnsiString; const ACount: Integer): AnsiString;
+const
+  cc: TResourceStringRecord = ();
+var j: Integer;
+    i: TResourceStringRecord;
 begin
   j:=length(ASubText);
-  i:=length(AText);
+  i.CurrentValue;
+  cc.DefaultValue;
   if AStart>i then
     aStart:=i+1;
   k:=i+1-AStart;
