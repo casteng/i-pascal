@@ -299,7 +299,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
             }
         }
-        if (PsiUtil.isVariableDecl(entityDecl) || PsiUtil.isFieldDecl(entityDecl) || PsiUtil.isPropertyDecl(entityDecl)) { // variable declaration case
+        if (PsiUtil.isVariableDecl(entityDecl) || PsiUtil.isConstDecl(entityDecl) || PsiUtil.isFieldDecl(entityDecl) || PsiUtil.isPropertyDecl(entityDecl)) { // variable declaration case
             PascalPsiElement varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeDecl.class);
             if (null == varDecl) {
                 varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeID.class);

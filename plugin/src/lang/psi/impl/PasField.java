@@ -5,6 +5,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +18,7 @@ public class PasField {
 
     public static final Set<Type> TYPES_ALL = new HashSet<Type>(Arrays.asList(Type.values()));
     public static final Set<Type> TYPES_ASSIGNABLE = new HashSet<Type>(Arrays.asList(Type.VARIABLE, Type.PROPERTY));
-    public static final Set<Type> TYPES_TYPE = new HashSet<Type>(Arrays.asList(Type.TYPE));
+    public static final Set<Type> TYPES_TYPE = new HashSet<Type>(Collections.singletonList(Type.TYPE));
 
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 

@@ -17,6 +17,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
+import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasEntityID;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
@@ -42,7 +43,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasUsesFileClause;
-import com.siberika.idea.pascal.lang.psi.PasVarSection;
+import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
@@ -68,7 +69,7 @@ import java.util.List;
  */
 public class PsiUtil {
 
-    public static final int MAX_NON_BREAKING_NAMESPACES = 2;
+    private static final int MAX_NON_BREAKING_NAMESPACES = 2;
 
     @NotNull
     public static <T extends PsiElement> Collection<T> findChildrenOfAnyType(@Nullable final PsiElement element,
@@ -201,6 +202,9 @@ public class PsiUtil {
     }
 
     public static boolean isTypeName(@NotNull PsiElement element) {
+        if (checkClass(element, PasGenericTypeIdentImpl.class)) {
+            return true;
+        }
         PsiElement el = PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PsiWhiteSpace.class, PsiErrorElement.class);
         return checkClass(el, PasGenericTypeIdentImpl.class) || checkClass(el, PasTypeIDImpl.class);
     }
@@ -393,7 +397,16 @@ public class PsiUtil {
      * @return true if the entityDecl is a declaration of variable or formal parameter
      */
     public static boolean isVariableDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasVarSection) || (entityDecl.getParent() instanceof PasFormalParameter);
+        return (entityDecl.getParent() instanceof PasVarDeclaration) || (entityDecl.getParent() instanceof PasFormalParameter);
+    }
+
+    /**
+     * Checks if the entityDecl is a declaration of constant
+     * @param entityDecl entity declaration to check
+     * @return true if the entityDecl is a declaration of variable or formal parameter
+     */
+    public static boolean isConstDecl(PascalNamedElement entityDecl) {
+        return (entityDecl.getParent() instanceof PasConstDeclaration);
     }
 
     /**
@@ -435,4 +448,5 @@ public class PsiUtil {
         }
         return element != null ? element.getName() : "";
     }
+
 }

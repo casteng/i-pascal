@@ -219,9 +219,9 @@ public class PasReferenceUtil {
         }
         if (typeDecl != null) {
             PasEntityScope strucTypeDecl = PsiTreeUtil.getChildOfType(typeDecl, PasEntityScope.class);
-            if (strucTypeDecl != null) {   // structured type
+            if (strucTypeDecl != null) {            // Inline structured type declaration
                 return strucTypeDecl;
-            } else {                       // regular type
+            } else {                                // regular type
                 PasFullyQualifiedIdent typeId = PsiTreeUtil.findChildOfType(typeDecl, PasFullyQualifiedIdent.class, true);
                 if (typeId != null) {
                     PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(ident.element);
