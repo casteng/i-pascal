@@ -16,4 +16,5 @@
     <routine>slice</routine>
     <routine>inc</routine>
     <routine>dec</routine>
+    <routine>string</routine>
 </builtins>

@@ -23,6 +23,7 @@ import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitFinalization;
 import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PasUnitInitialization;
@@ -132,13 +133,15 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                     sibling = PsiUtil.getNextSibling(sibling);
                 }
 
-                descriptors.add(new FoldingDescriptor(lastComment.getNode(), commentRange, null) {
-                    @Nullable
-                    @Override
-                    public String getPlaceholderText() {
-                        return "{...}";
-                    }
-                });
+                if ((commentRange.getLength() > lastComment.getTextLength()) || (lastComment.getTextLength() > 160) || (lastComment.getText().indexOf('\n') >= 0)) {
+                    descriptors.add(new FoldingDescriptor(lastComment.getNode(), commentRange, null) {
+                        @Nullable
+                        @Override
+                        public String getPlaceholderText() {
+                            return "{...}";
+                        }
+                    });
+                }
             }
         }
     }
@@ -151,6 +154,6 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
 
     @Override
     public boolean isCollapsedByDefault(@NotNull ASTNode node) {
-        return false;
+        return node.getElementType() == PasTypes.COMMENT;
     }
 }
