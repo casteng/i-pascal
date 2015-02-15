@@ -47,6 +47,7 @@ import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
@@ -151,8 +152,11 @@ public class PsiUtil {
             }
         }
         PascalPsiElement parent = getParentDeclRoot(element);
-        if ((element instanceof PasNamedIdent) && (parent instanceof PascalRoutineImpl) && (element.getParent() == parent)) {
-            // Make routine itself belong to parent root
+        if ((element instanceof PasNamedIdent) &&
+                // Make routine itself belong to parent root
+                ((parent instanceof PascalRoutineImpl) && (element.getParent() == parent))
+                // Make class parent belong to parent root
+             || ((parent instanceof PasEntityScope) && (element.getParent().getParent().getClass() == PasClassParentImpl.class))) {
             return getNearestAffectingDeclarationsRoot(parent);
         } else if (PsiUtil.isInstanceOfAny(parent, PasFormalParameterSection.class, PasBlockGlobal.class)) {
             // Make routine local variable or parameters belong to the routine
@@ -313,8 +317,8 @@ public class PsiUtil {
         return result;
     }
 
-    public static <T extends PascalNamedElement> void retrieveEntitiesFromSection(PasEntityScope owner, PsiElement section,
-                                                                                  PasField.Visibility visibility, FieldCollector fieldCollector, Class<? extends T>... classes) {
+    public static <T extends PascalNamedElement> void retrieveEntitiesFromSection(@NotNull PasEntityScope owner, PsiElement section, @NotNull PasField.Visibility visibility,
+                                                                                  FieldCollector fieldCollector, Class<? extends T>... classes) {
         if (section != null) {
             for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
                 if (isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), owner)) {

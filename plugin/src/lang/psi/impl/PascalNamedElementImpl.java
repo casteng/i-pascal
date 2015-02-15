@@ -4,15 +4,18 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.roots.FileIndexFacade;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
@@ -140,7 +143,13 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     @NotNull
     public PsiReference[] getReferences() {
-        return ReferenceProvidersRegistry.getReferencesFromProviders(this);
+        String text = getName();
+        if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent) || (this.getParent() instanceof PascalRoutineImpl)) {
+            return new PsiReference[]{
+                    new PascalReference(this, new TextRange(0, text.length()))
+            };
+        }
+        return new PsiReference[0];
     }
 
     @Override
@@ -150,7 +159,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
         PascalNamedElementImpl that = (PascalNamedElementImpl) o;
 
-        if (!getName().equals(that.getName())) return false;
+        if (!getName().equalsIgnoreCase(that.getName())) return false;
 
         return true;
     }

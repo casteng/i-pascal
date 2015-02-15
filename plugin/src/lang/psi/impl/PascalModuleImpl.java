@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -129,5 +130,11 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
             return false;
         }
         return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
+    }
+
+    @Nullable
+    @Override
+    public PasFullyQualifiedIdent getParentScope() {
+        return null;  // TODO: return used units (separate interface/implementation?)
     }
 }

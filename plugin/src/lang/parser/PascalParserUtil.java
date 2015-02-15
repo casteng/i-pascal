@@ -257,6 +257,13 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 namespaces.next();
                 Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, namespaces.getCurrent().getName(),
                         getEndOffset(section), PasNamedIdent.class, PasGenericTypeIdent.class);
+
+                if (entities.isEmpty() && (section instanceof PasEntityScope)) {
+                    section = retrieveNamespace(((PasEntityScope) section).getParentScope(), namespaces.isFirst());
+                    entities = retrieveEntitiesFromSection(section, namespaces.getCurrent().getName(),
+                            getEndOffset(section), PasNamedIdent.class, PasGenericTypeIdent.class);
+                }
+
                 for (PascalNamedElement element : entities) {
                     doFindVariables(result, element, namespaces);
                 }
@@ -265,7 +272,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         }
     }
 
-    private static PsiElement getExplicitUnitSection(NamespaceRec namespaces) {
+    private static PasEntityScope getExplicitUnitSection(NamespaceRec namespaces) {
         if (namespaces.isFirst()) {
             for (String unitName : EXPLICIT_UNITS) {
                 if (unitName.equalsIgnoreCase(namespaces.getCurrent().getName())) {
@@ -276,16 +283,19 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return null;
     }
 
-    private final static int getEndOffset(PsiElement section) {
-        return section.getTextRange().getEndOffset();
+    private static int getEndOffset(PsiElement section) {
+        return section != null ? section.getTextRange().getEndOffset() : -1;
     }
 
     @SuppressWarnings("ConstantConditions")
-    private static PsiElement retrieveNamespace(PascalNamedElement entityDecl, boolean canBeUnit) {
+    private static PasEntityScope retrieveNamespace(PascalNamedElement entityDecl, boolean canBeUnit) {
+        if (null == entityDecl) {
+            return null;
+        }
         if (canBeUnit && (entityDecl instanceof PasNamespaceIdent)) {                                         // unit reference case
             PasNamespaceIdent usedModuleName = getUsedModuleName(entityDecl);
             if (usedModuleName != null) {
-                PascalNamedElement unit = PasReferenceUtil.findUnit(usedModuleName.getProject(), ModuleUtilCore.findModuleForPsiElement(usedModuleName), usedModuleName.getName());
+                PasEntityScope unit = PasReferenceUtil.findUnit(usedModuleName.getProject(), ModuleUtilCore.findModuleForPsiElement(usedModuleName), usedModuleName.getName());
                 if (unit != null) {
                     return unit;
                 }
@@ -312,8 +322,10 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                     }
                 }
             }
-        } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {                                    // type declaration case
+        } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {  // type declaration case
             return getStructTypeByIdent(entityDecl);
+        } else if (entityDecl instanceof PasFullyQualifiedIdent) {
+            return getStructTypeByTypeIdent((PasFullyQualifiedIdent) entityDecl);
         } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
             PasFullyQualifiedIdent typeIdent = ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
             if (typeIdent != null) {
@@ -335,21 +347,24 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 return strucTypeDecl;
             } else {                       // regular type
                 PasFullyQualifiedIdent typeId = PsiTreeUtil.findChildOfType(typeDecl, PasFullyQualifiedIdent.class, true);
-                if (typeId != null) {
-                    PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(typeIdent);
-                    Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, typeId.getName(),
-                            getEndOffset(section), PasGenericTypeIdent.class);
-                    for (PascalNamedElement element : entities) {
-                        return getStructTypeByIdent(element);
-                    }
-                    return null;
-                } else {
-                    return null;
-                }
+                return getStructTypeByTypeIdent(typeId);
             }
-        } else {
-            return null;
         }
+        return null;
+    }
+
+    @Nullable
+    public static PasEntityScope getStructTypeByTypeIdent(@Nullable PasFullyQualifiedIdent typeId) {
+        if (typeId != null) {
+            PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(typeId);
+            Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, typeId.getName(),
+                    getEndOffset(section), PasGenericTypeIdent.class);
+            addUsedUnitDeclarations(entities, typeId);
+            for (PascalNamedElement element : entities) {
+                return getStructTypeByIdent(element);
+            }
+        }
+        return null;
     }
 
     /**
@@ -377,6 +392,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return result;
     }
 
+    @NotNull
     private static <T extends PascalNamedElement> Collection<PascalNamedElement> retrieveEntitiesFromSection(PsiElement section, String key, int maxOffset, Class<? extends T>...classes) {
         //System.out.println("get \"" + key + "\" in " + section);
         final Set<PascalNamedElement> result = new LinkedHashSet<PascalNamedElement>();
@@ -384,6 +400,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
                 if (((null == key) || key.equalsIgnoreCase(namedElement.getName()))) {
                     if ((namedElement.getTextRange().getStartOffset() < maxOffset) && isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
+                        result.remove(namedElement);
                         result.add(namedElement);
                     } else {
                         //System.out.println("not match in: " + PsiUtil.getNearestAffectingDeclarationsRoot(namedElement));

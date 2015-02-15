@@ -17,4 +17,6 @@ public interface PasEntityScope extends PascalNamedElement {
     PasField getField(final String name);
     @NotNull
     Collection<PasField> getAllFields();
+    @Nullable
+    PasFullyQualifiedIdent getParentScope();
 }

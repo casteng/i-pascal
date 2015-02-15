@@ -114,4 +114,10 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         PasTypeDecl type = PsiTreeUtil.getChildOfType(this, PasTypeDecl.class);
         return PsiTreeUtil.findChildOfType(type, PasFullyQualifiedIdent.class);
     }
+
+    @Nullable
+    @Override
+    public PasFullyQualifiedIdent getParentScope() {
+        return null;
+    }
 }

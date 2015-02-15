@@ -5,9 +5,12 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -147,8 +150,6 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         while (child != null) {
             if (child.getClass() == PasClassFieldImpl.class) {
                 addFields(child, visibility);
-            } else if (child.getClass() == PasClassFieldImpl.class) {
-                addFields(child, visibility);
             } else if (child.getClass() == PasExportedRoutineImpl.class) {
                 addField((PascalNamedElement) child, PasField.Type.ROUTINE, visibility);
             } else if (child.getClass() == PasClassPropertyImpl.class) {
@@ -163,17 +164,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
-    private void addVariantRecordFields(PsiElement element, PasField.Visibility visibility) {
-        PsiElement child = element.getFirstChild();
-        while (child != null) {
-            if (child.getClass() == PasClassFieldImpl.class) {
-                addFields(child, visibility);
-            }
-            child = child.getNextSibling();
-        }
-    }
-
-    private void addFields(PsiElement element, PasField.Visibility visibility) {
+    private void addFields(PsiElement element, @NotNull PasField.Visibility visibility) {
         PsiElement child = element.getFirstChild();
         while (child != null) {
             if (child.getClass() == PasNamedIdentImpl.class) {
@@ -183,7 +174,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         }
     }
 
-    private void addField(PascalNamedElement element, PasField.Type type, PasField.Visibility visibility) {
+    private void addField(PascalNamedElement element, PasField.Type type, @NotNull PasField.Visibility visibility) {
         PasField field = new PasField(this, element, element.getName(), type, visibility);
         if (members.get(visibility.ordinal()) == null) {
             members.set(visibility.ordinal(), new LinkedHashMap<String, PasField>());
@@ -193,5 +184,22 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
 
     public boolean isCacheActual(List<Map<String, PasField>> cache, long stamp) {
         return (getContainingFile() != null) && (cache != null) && (getContainingFile().getModificationStamp() == stamp);
+    }
+
+    @Nullable
+    @Override
+    public PasFullyQualifiedIdent getParentScope() {
+        PasClassParent parent = null;
+        if (getClass() == PasClassTypeDeclImpl.class) {
+            parent = ((PasClassTypeDeclImpl) this).getClassParent();
+        }
+
+        if (parent != null) {
+            for (PasTypeID typeID : parent.getTypeIDList()) {
+                return typeID.getFullyQualifiedIdent();
+            }
+        }
+
+        return null;
     }
 }

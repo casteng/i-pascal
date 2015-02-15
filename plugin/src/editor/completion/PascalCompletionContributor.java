@@ -103,7 +103,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 } else if (PsiTreeUtil.instanceOf(originalPos, PasStatementList.class, PasCompoundStatement.class) ||           // identifier completion in left part of assignment
                         PsiTreeUtil.instanceOf(pos, PasStatementList.class, PasCompoundStatement.class)) {
                     if (isIdent(parameters.getPosition().getParent())) {                                                        // complete identifier variants
-                        addEntities(result, parameters.getPosition(), PasField.TYPES_ASSIGNABLE);
+                        addEntities(result, parameters.getPosition(), PasField.TYPES_LEFT_SIDE);
                     }
                     if (!isQualifiedIdent(parameters.getPosition().getParent())) {                                              // statements variants
                         appendTokenSet(result, PascalLexer.STATEMENTS);
