@@ -104,13 +104,13 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         for (final PascalPsiElement enumType : enums) {
             final PasTypeDeclaration decl = PsiTreeUtil.getParentOfType(enumType, PasTypeDeclaration.class);
             if (decl != null) {
-                TextRange range = getRange(decl.getTextRange().getStartOffset() + 1, decl.getTextRange().getEndOffset());
+                TextRange range = getRange(decl.getGenericTypeIdent().getTextRange().getEndOffset(), decl.getTextRange().getEndOffset());
                 if (range.getLength() > 0) {
                     descriptors.add(new FoldingDescriptor(decl.getNode(), range, null) {
                         @Nullable
                         @Override
                         public String getPlaceholderText() {
-                            return decl.getGenericTypeIdent().getName().substring(1) + "=(...);";
+                            return "=(...);";
                         }
                     });
                 }
@@ -119,11 +119,11 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
     }
 
     private void foldComments(PsiElement root, List<FoldingDescriptor> descriptors) {
-        Collection<PsiComment> comments = PsiTreeUtil.findChildrenOfType(root, PsiComment.class);
+        final Collection<PsiComment> comments = PsiTreeUtil.findChildrenOfType(root, PsiComment.class);
         TextRange commentRange = null;
         PsiComment lastComment = null;
         for (final PsiComment comment : comments) {
-            if ((null == lastComment) || (!commentRange.contains(comment.getTextRange().getStartOffset()))) {
+            if ((null == lastComment) || (commentRange.getEndOffset() < comment.getTextRange().getStartOffset())) {
                 lastComment = comment;
                 commentRange = comment.getTextRange();
                 // Merge sibling comments
@@ -133,14 +133,12 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                     sibling = PsiUtil.getNextSibling(sibling);
                 }
 
-                if ((commentRange.getLength() > lastComment.getTextLength()) || (lastComment.getTextLength() > 160) || (lastComment.getText().indexOf('\n') >= 0)) {
-                    descriptors.add(new FoldingDescriptor(lastComment.getNode(), commentRange, null) {
-                        @Nullable
-                        @Override
-                        public String getPlaceholderText() {
-                            return "{...}";
-                        }
-                    });
+                int lfPos = lastComment.getText().indexOf('\n') + lastComment.getTextOffset();
+                if (lfPos < lastComment.getTextOffset()) {
+                    lfPos = lastComment.getTextRange().getEndOffset();
+                }
+                if (lfPos < commentRange.getEndOffset()) {
+                    descriptors.add(new FoldingDescriptor(lastComment.getNode(), getRange(lfPos, commentRange.getEndOffset()), null));
                 }
             }
         }
