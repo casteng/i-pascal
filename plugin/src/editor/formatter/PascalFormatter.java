@@ -5,6 +5,8 @@ import com.intellij.formatting.Block;
 import com.intellij.formatting.FormattingModel;
 import com.intellij.formatting.FormattingModelBuilder;
 import com.intellij.formatting.FormattingModelProvider;
+import com.intellij.formatting.Indent;
+import com.intellij.formatting.SpacingBuilder;
 import com.intellij.formatting.Wrap;
 import com.intellij.formatting.WrapType;
 import com.intellij.lang.ASTNode;
@@ -12,6 +14,9 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
+import com.intellij.psi.tree.TokenSet;
+import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,10 +25,12 @@ import org.jetbrains.annotations.Nullable;
  * Date: 01/10/2013
  */
 public class PascalFormatter implements FormattingModelBuilder {
+    private static final TokenSet TOKENS_BEFORE_BEGIN = TokenSet.create(PasTypes.DO, PasTypes.THEN);
+
     @NotNull
     @Override
     public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-        Block block = new PascalBlock(element.getNode(), Wrap.createWrap(WrapType.NONE, false), Alignment.createAlignment());
+        Block block = new PascalBlock(null, element.getNode(), settings, Wrap.createWrap(WrapType.NONE, false), Alignment.createAlignment(), Indent.getNoneIndent());
         return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
     }
 
@@ -31,5 +38,20 @@ public class PascalFormatter implements FormattingModelBuilder {
     @Override
     public TextRange getRangeAffectingIndent(PsiFile file, int offset, ASTNode elementAtOffset) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    static SpacingBuilder createSpacingBuilder(CodeStyleSettings settings) {
+        return new SpacingBuilder(settings, PascalLanguage.INSTANCE)
+                .after(PasTypes.SEMI).lineBreakInCode()
+                .between(PasTypes.COMMA, PasTypes.NAMED_IDENT).spacing(1, 1, 0, true, 1)
+                .before(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
+                .after(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
+                .afterInside(PasTypes.BEGIN, PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
+                .between(PasTypes.COLON, PasTypes.TYPE_DECL).spacing(1, 1, 0, true, 1)
+                .before(PasTypes.BLOCK_BODY).lineBreakInCode()
+                .before(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
+                .after(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
+                .between(PasTypes.STATEMENT_LIST, PasTypes.END).lineBreakInCode()
+                ;
     }
 }
