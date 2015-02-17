@@ -33,6 +33,8 @@ public class PascalBlock extends AbstractBlock implements Block {
     private final CodeStyleSettings mySettings;
     private final Indent myIndent;
 
+    private static final TokenSet TOKENS_INDENTED = TokenSet.create(PasTypes.STATEMENT_LIST, PasTypes.VAR_DECLARATION, PasTypes.CONST_DECLARATION, PasTypes.TYPE_DECLARATION, PasTypes.CLASS_FIELD);
+
     public PascalBlock(@Nullable PascalBlock parent, @NotNull ASTNode node, @NotNull CodeStyleSettings settings, @Nullable Wrap wrap, @Nullable Alignment alignment, Indent indent) {
         super(node, wrap, null);
         mySpacingBuilder = PascalFormatter.createSpacingBuilder(settings);
@@ -73,7 +75,7 @@ public class PascalBlock extends AbstractBlock implements Block {
     }
 
     private Indent getBlockIndent(@Nullable ASTNode childNode) {
-        if (myNode.getElementType() == PasTypes.STATEMENT_LIST) {
+        if (TOKENS_INDENTED.contains(myNode.getElementType())) {
             return Indent.getNormalIndent();
         }
         return Indent.getNoneIndent();
@@ -122,7 +124,7 @@ public class PascalBlock extends AbstractBlock implements Block {
 
     private Indent getChildBlockIndent(ASTNode childNode) {
         if (childNode != null) {
-            if (childNode.getElementType() == PasTypes.COMPOUND_STATEMENT) {
+            if (TOKENS_INDENTED.contains(childNode.getElementType())) {
                 return Indent.getNormalIndent();
             }
         }

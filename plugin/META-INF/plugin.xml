@@ -94,6 +94,7 @@
         <lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCommenter"/>
 
         <lang.formatter language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalFormatter"/>
+        <!--<lang.smartEnterProcessor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalSmartEnterProcessor"/>-->
 
         <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
 

@@ -44,14 +44,25 @@ public class PascalFormatter implements FormattingModelBuilder {
         return new SpacingBuilder(settings, PascalLanguage.INSTANCE)
                 .after(PasTypes.SEMI).lineBreakInCode()
                 .between(PasTypes.COMMA, PasTypes.NAMED_IDENT).spacing(1, 1, 0, true, 1)
-                .before(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
-                .after(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
+                .around(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
+
                 .afterInside(PasTypes.BEGIN, PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
+                .afterInside(PasTypes.VAR, PasTypes.VAR_SECTION).lineBreakInCode()
+                .afterInside(PasTypes.CONST, PasTypes.CONST_SECTION).lineBreakInCode()
+                .afterInside(PasTypes.TYPE, PasTypes.TYPE_SECTION).lineBreakInCode()
+
+                .beforeInside(PasTypes.VAR, PasTypes.VAR_SECTION).blankLines(1)
+                .beforeInside(PasTypes.CONST, PasTypes.CONST_SECTION).blankLines(1)
+                .beforeInside(PasTypes.TYPE, PasTypes.TYPE_SECTION).blankLines(1)
+
                 .between(PasTypes.COLON, PasTypes.TYPE_DECL).spacing(1, 1, 0, true, 1)
                 .before(PasTypes.BLOCK_BODY).lineBreakInCode()
                 .before(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
                 .after(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
                 .between(PasTypes.STATEMENT_LIST, PasTypes.END).lineBreakInCode()
+                .after(PasTypes.INTERFACE).blankLines(1)
+                .after(PasTypes.IMPLEMENTATION).blankLines(1)
+                .after(PasTypes.BLOCK_BODY).blankLines(1)
                 ;
     }
 }
