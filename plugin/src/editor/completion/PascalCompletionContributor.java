@@ -43,7 +43,7 @@ import com.siberika.idea.pascal.lang.psi.PasProcForwardDecl;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
-import com.siberika.idea.pascal.lang.psi.PasStatementList;
+import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasStmtSimpleOrAssign;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -100,8 +100,8 @@ public class PascalCompletionContributor extends CompletionContributor {
                         addEntities(result, parameters.getPosition(), PasField.TYPES_ALL);
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
-                } else if (PsiTreeUtil.instanceOf(originalPos, PasStatementList.class, PasCompoundStatement.class) ||           // identifier completion in left part of assignment
-                        PsiTreeUtil.instanceOf(pos, PasStatementList.class, PasCompoundStatement.class)) {
+                } else if (PsiTreeUtil.instanceOf(originalPos, PasStatement.class, PasCompoundStatement.class) ||           // identifier completion in left part of assignment
+                        PsiTreeUtil.instanceOf(pos, PasStatement.class, PasCompoundStatement.class)) {
                     if (isIdent(parameters.getPosition().getParent())) {                                                        // complete identifier variants
                         addEntities(result, parameters.getPosition(), PasField.TYPES_LEFT_SIDE);
                     }

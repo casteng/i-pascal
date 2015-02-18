@@ -279,8 +279,8 @@ private declSection	        ::=	MethodImplDecl | RoutineImplDecl | commonDecl | 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
 ImplDeclSection             ::= declSection* {}
 private unitBlock           ::= [UnitInitialization] [UnitFinalization] END | CompoundStatement | END {}
-UnitInitialization          ::= INITIALIZATION StatementList {pin=1 name="initialization section"}
-UnitFinalization            ::= FINALIZATION StatementList  {pin=1 name="finalization section"}
+UnitInitialization          ::= INITIALIZATION statementList {pin=1 name="initialization section"}
+UnitFinalization            ::= FINALIZATION statementList  {pin=1 name="finalization section"}
 
 ProgramModuleHead	        ::= PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1 }
 ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
@@ -442,10 +442,10 @@ EnumEl              ::= identifier ["=" Expression] {}
     private rec__stmt_middle         ::= DO | ELSE | THEN
 
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}
-private statementBlock      ::= [StatementList] {recoverWhile=rec_block_local_end}
-StatementList               ::= [statement] statements*
-private statements          ::= ";" [statement]
-private statement           ::= [LabelId ":" ] statementPart //{recoverWhile=rec_statement}
+private statementBlock      ::= [statementList] {recoverWhile=rec_block_local_end}
+private statementList       ::= [Statement] statements*
+private statements          ::= ";" [Statement]
+Statement                   ::= [LabelId ":" ] statementPart //{recoverWhile=rec_statement}
 private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | IfStatement | TryStatement | simpleStatement | CompoundStatement | stmtEmpty
@@ -460,24 +460,24 @@ stmtEmpty           ::= //empty
 EntityID                    ::= FullyQualifiedIdent
 FieldId                     ::= identifier
 
-RepeatStatement     ::= REPEAT [StatementList] UNTIL Expression {pin=1}
-WhileStatement      ::= WHILE Expression DO statement {pin=1}
-ForStatement        ::= FOR Designator (ForCycle | IN) Expression DO statement {pin=1}
+RepeatStatement     ::= REPEAT [statementList] UNTIL Expression {pin=1}
+WhileStatement      ::= WHILE Expression DO Statement {pin=1}
+ForStatement        ::= FOR Designator (ForCycle | IN) Expression DO Statement {pin=1}
 ForCycle            ::= ":=" Expression (TO | DOWNTO)
 
-IfStatement                 ::= IF Expression THEN statement [ELSE statement] {pin=1}
+IfStatement                 ::= IF Expression THEN Statement [ELSE Statement] {pin=1}
 
-CaseStatement       ::= CASE Expression OF CaseItem* [ELSE StatementList [";"] ] END {pin=1}
-CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" statement [";"] {pin=3}
+CaseStatement       ::= CASE Expression OF CaseItem* [ELSE statementList [";"] ] END {pin=1}
+CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" Statement [";"] {pin=3}
 CaseLabel	        ::=	ConstExpressionOrd [RANGE ConstExpressionOrd] //{}
 
-TryStatement                ::= TRY StatementList (tryExcept | tryFinally) END {pin=1}
-private tryFinally          ::= FINALLY StatementList
+TryStatement                ::= TRY statementList (tryExcept | tryFinally) END {pin=1}
+private tryFinally          ::= FINALLY statementList
 private tryExcept           ::= EXCEPT HandlerList
-HandlerList                 ::= Handler+ [ELSE StatementList] | StatementList
-Handler                     ::= ON identifier ":" TypeID "do" statement ";" {pin=1}
+HandlerList                 ::= Handler+ [ELSE statementList] | statementList
+Handler                     ::= ON identifier ":" TypeID "do" Statement ";" {pin=1}
 
-WithStatement               ::= WITH Designator designatorsRest* DO statement {pin=1}
+WithStatement               ::= WITH Designator designatorsRest* DO Statement {pin=1}
 private designatorsRest     ::= "," Designator {}
 
 RaiseStatement              ::= RAISE [Designator] ["at" Designator] {pin=1}
