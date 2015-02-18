@@ -166,6 +166,6 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Override
     public int hashCode() {
-        return getName().hashCode();
+        return getName().toUpperCase().hashCode();
     }
 }
