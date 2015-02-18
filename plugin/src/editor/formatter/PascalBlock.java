@@ -59,7 +59,7 @@ public class PascalBlock extends AbstractBlock implements Block {
         mySettings = settings;
         myParent = parent;
         myIndent = indent;
-        System.out.println("block: " + block2Str(this));
+        //System.out.println("block: " + block2Str(this));
     }
 
     @Override
@@ -93,6 +93,7 @@ public class PascalBlock extends AbstractBlock implements Block {
                 mySubBlocks.add(makeSubBlock(node));
             }
         }*/
+
         return mySubBlocks;
     }
 

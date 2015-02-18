@@ -6,15 +6,13 @@ uses SysUtils;
 
 type
     TResourceStringRecord = record
-        Name2, CurrentValue, DefaultValue: AnsiString;
-        HashValue: LongWord;
+        Name2, CurrentValue, DefaultValue: AnsiString;HashValue: LongWord;
     //class function a: int;
         constructor b(a, b: int);
     end;
 
     TResourceStringRecord2 = object
-        Name2, CurrentValue, DefaultValue: AnsiString;
-        HashValue: LongWord;
+        Name2, CurrentValue, DefaultValue: AnsiString;HashValue: LongWord;
     //class function a: int;
         constructor b(a, b: int);
     end;
@@ -26,8 +24,7 @@ type
     end;
 
     TStringSearchOption = (soDown, soMatchCase, soWholeWord);
-    TStringSearchOptions = set of TStringSearchOption;
-    TStringSeachOption = TStringSearchOption;
+    TStringSearchOptions = set of TStringSearchOption;TStringSeachOption = TStringSearchOption;
 
     Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; inline;
     Function RightStr(const AText: AnsiString; const ACount: Integer): AnsiString;

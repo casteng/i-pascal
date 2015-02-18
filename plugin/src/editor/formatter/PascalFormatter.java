@@ -37,7 +37,7 @@ public class PascalFormatter implements FormattingModelBuilder {
     @NotNull
     @Override
     public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-        Block block = new PascalBlock(null, element.getNode(), settings, Wrap.createWrap(WrapType.NONE, false), Alignment.createAlignment(), Indent.getNoneIndent());
+        Block block = new PascalBlock(null, element.getContainingFile().getNode(), settings, Wrap.createWrap(WrapType.NONE, false), Alignment.createAlignment(), Indent.getNoneIndent());
         return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
     }
 
