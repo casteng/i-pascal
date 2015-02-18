@@ -27,7 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 %}
 
 
-WHITESPACE      = [\ \n\r\t\f]
+WHITESPACE      = [\ \n\r\t\f]+
 
 INCLUDE_START   = "{$INCLUDE " | "{$I "
 INCLUDE         = {INCLUDE_START} [^}]+ "}"
