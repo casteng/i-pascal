@@ -11,6 +11,7 @@ import com.intellij.util.indexing.FileBasedIndex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -29,11 +30,12 @@ public class ModuleUtil {
     }
 
     public static Collection<VirtualFile> getAllCompiledModuleFilesByName(@NotNull Module module, String name) {
-        if (module != null) {
-            return FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, name + ".ppu",
-                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module));
+        Collection<VirtualFile> res = new ArrayList<VirtualFile>();
+        for (String unitName : new String[]{name, name.toLowerCase(), name.toUpperCase()}) {
+            res.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, unitName + ".ppu",
+                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
         }
-        return Collections.emptyList();
+        return res;
     }
 
     /**
