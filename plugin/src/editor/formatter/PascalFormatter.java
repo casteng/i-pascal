@@ -23,17 +23,17 @@ import org.jetbrains.annotations.Nullable;
 public class PascalFormatter implements FormattingModelBuilder {
     private static final TokenSet TOKENS_CLASS_DECL = TokenSet.create(PasTypes.CLASS_FIELD, PasTypes.EXPORTED_ROUTINE, PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD, PasTypes.CLASS_METHOD_RESOLUTION, PasTypes.VISIBILITY);
 
-    static final TokenSet TOKENS_USED = TokenSet.create(
+    /*static final TokenSet TOKENS_USED = TokenSet.create(
             PasTypes.COMMA, PasTypes.NAMED_IDENT, PasTypes.LPAREN, PasTypes.ASSIGN_OP, PasTypes.ASSIGN_PART, PasTypes.BEGIN,
             PasTypes.COMPOUND_STATEMENT, PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION,
             PasTypes.COLON, PasTypes.TYPE_DECL, PasTypes.BLOCK_BODY, PasTypes.STATEMENT, PasTypes.END,
             PasTypes.INTERFACE, PasTypes.IMPLEMENTATION, PasTypes.BLOCK_BODY
-    );
+    );*/
 
     @NotNull
     @Override
     public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-        Block block = new PascalBlock(null, element.getContainingFile().getNode(), settings, null, null, null);
+        Block block = new PascalBlock(element.getContainingFile().getNode(), settings, null, null);
         return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
     }
 
