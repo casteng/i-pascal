@@ -1,14 +1,10 @@
 package com.siberika.idea.pascal.editor.formatter;
 
-import com.intellij.formatting.Alignment;
 import com.intellij.formatting.Block;
 import com.intellij.formatting.FormattingModel;
 import com.intellij.formatting.FormattingModelBuilder;
 import com.intellij.formatting.FormattingModelProvider;
-import com.intellij.formatting.Indent;
 import com.intellij.formatting.SpacingBuilder;
-import com.intellij.formatting.Wrap;
-import com.intellij.formatting.WrapType;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -37,7 +33,7 @@ public class PascalFormatter implements FormattingModelBuilder {
     @NotNull
     @Override
     public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-        Block block = new PascalBlock(null, element.getContainingFile().getNode(), settings, Wrap.createWrap(WrapType.NONE, false), Alignment.createAlignment(), Indent.getNoneIndent());
+        Block block = new PascalBlock(null, element.getContainingFile().getNode(), settings, null, null, null);
         return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
     }
 
@@ -50,7 +46,8 @@ public class PascalFormatter implements FormattingModelBuilder {
     static SpacingBuilder createSpacingBuilder(CodeStyleSettings settings) {
         return new SpacingBuilder(settings, PascalLanguage.INSTANCE)
                 .between(PasTypes.COMMA, PasTypes.NAMED_IDENT).spacing(1, 1, 0, true, 1)
-                .before(PasTypes.LPAREN).spacing(0, 0, 0, true, 1)
+                .between(PasTypes.COMMA, PasTypes.EXPRESSION).spacing(1, 1, 0, true, 1)
+                .between(PasTypes.ENTITY_ID, PasTypes.LPAREN).spacing(0, 0, 0, true, 1)
                 .after(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
                 .before(PasTypes.ASSIGN_PART).spacing(1, 1, 0, true, 1)
 

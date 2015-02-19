@@ -2,47 +2,61 @@ unit Simple;
 
 interface
 
-uses SysUtils;
+uses
+    SysUtils, StrUtils,
+    //aaa
+    types;
 
 type
     TResourceStringRecord = record
-        Name2, CurrentValue, DefaultValue: AnsiString;HashValue: LongWord;
-    //class function a: int;
+        Name2, CurrentValue, DefaultValue: AnsiString;
+        HashValue: LongWord;
+        {class function a: int;}
         constructor b(a, b: int);
     end;
 
+    TEnum = (eOne,
+        // dasd
+        eTwo,
+        //sda
+        eThree);
+
     TResourceStringRecord2 = object
-        Name2, CurrentValue, DefaultValue: AnsiString;HashValue: LongWord;
-    //class function a: int;
+        Name2, CurrentValue, DefaultValue: AnsiString;
+        HashValue: LongWord;
+        procedure ba(); virtual; abstract;
+        //class function a: int;
         constructor b(a, b: int);
+        property cc: Int read getcc; default;
     end;
 
     TVector2s = packed record
     case Integer of
-    0:(X, Y: Single);
-    1:(V: array[0..1] of Single);
+        0:(X, Y: Single);
+        1:(V: array[0..1] of Single);
     end;
 
     TStringSearchOption = (soDown, soMatchCase, soWholeWord);
     TStringSearchOptions = set of TStringSearchOption;TStringSeachOption = TStringSearchOption;
 
+
     Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; inline;
-    Function RightStr(const AText: AnsiString; const ACount: Integer): AnsiString;
+    Function RightStr(const AText: AnsiString; const ACount: Integer): AnsiString; register;
     Function MidStr(const AText: AnsiString; const AStart, ACount: Integer): AnsiString; inline;
 
 implementation
 
-Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString;
+Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
     Value: TResourceStringRecord;
 begin
-    Value;
+    Value := 2 <> (a=1);
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
     FMyInt := Value;
 end;
 
-Function RightStr(const AText: AnsiString; const ACount: Integer): AnsiString;
+Function RightStr (const AText: AnsiString; const ACount: Integer): AnsiString;
 const
     cc: TResourceStringRecord = ();
 var
@@ -57,20 +71,18 @@ begin
     k := i+1-AStart;
     if ALength> k then
         ALength := k;
-    SetLength(Result,i+j-ALength);
-    move(AText[1],result[1],AStart-1);
-    move(ASubText[1],result[AStart],j);
-    move(AText[AStart+ALength], Result[AStart+j],i+1-AStart-ALength);
+    SetLength(Result, i+j-ALength);
+    move(AText[1], result[1], AStart-1);
+    move(ASubText[1], result[AStart], j);
+    move(AText[AStart+ALength], Result[AStart+j], i+1-AStart-ALength);
 end;
 
 Function MidStr(const AText: AnsiString; const AStart, ACount: Integer): AnsiString;
 begin
-    with ResourceStringTable do
-    begin
-        for i:=0 to Count-1 do
-        begin
+    with ResourceStringTable do begin
+        for i:=0 to Count-1 do begin
             ResStr := Tables[I].TableStart;
-        { Skip first entry (name of the Unit) }
+            // Skip first entry (name of the Unit) }
             inc(ResStr);
             while ResStr<Tables[I].TableEnd do
             begin
