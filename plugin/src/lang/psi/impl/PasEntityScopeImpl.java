@@ -156,7 +156,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
                 addField((PascalNamedElement) child, PasField.Type.PROPERTY, visibility);
             } else if (child.getClass() == PasVisibilityImpl.class) {
                 visibility = getVisibility(child);
-            } else if (child.getClass() == PasRecordFieldsImpl.class) {
+            } else if (child.getClass() == PasRecordVariantImpl.class) {
                 addFields(child, visibility);
             }
             child = child.getNextSibling();

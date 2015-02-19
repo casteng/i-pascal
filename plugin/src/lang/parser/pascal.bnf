@@ -380,9 +380,9 @@ private recordBody          ::= ClassField* structItem* {recoverWhile=rec_struct
 
 private variantRecord       ::= RECORD ClassField* recordVariantSection END {pin=3}
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
-RecordFields        ::= [field] (';' field)* [';']  //===***
-private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
-private recordVariant       ::= Expression ("," Expression)* ":" "(" RecordFields ")"   // rethink expression, separate simpler expressions?
+private recordFields        ::= [field] (';' field)* [';']  //===***
+private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
+RecordVariant               ::= Expression ("," Expression)* ":" "(" recordFields ")"   // rethink expression, separate simpler expressions?
 
 RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2}
 
