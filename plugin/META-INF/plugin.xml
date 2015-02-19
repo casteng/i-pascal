@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.7.1</version>
+    <version>0.7.5</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.7.5</p>
+        <ul>
+          <li>code formatter</li>
+        </ul>
         <p>0.7.1</p>
         <ul>
           <li>regression fixes</li>
@@ -16,9 +20,9 @@
         <p>0.7</p>
         <ul>
           <li>IDEA 14 support</li>
-          <li>Improved completion</li>
-          <li>Stable parser</li>
-          <li>Standard FPC installation layouts support (including OSX)</li>
+          <li>improved completion</li>
+          <li>stable parser</li>
+          <li>standard FPC installation layouts support (including OSX)</li>
         </ul>
         <p>0.6</p>
         <ul>
