@@ -10,8 +10,10 @@ public interface PascalFlexLexer {
     void define(CharSequence sequence);
     void unDefine(CharSequence sequence);
 
+    IElementType handleIf(CharSequence sequence);
     IElementType handleIfDef(CharSequence sequence);
     IElementType handleIfNDef(CharSequence sequence);
+    IElementType handleIfOpt(CharSequence sequence);
     IElementType handleElse();
     IElementType handleEndIf();
 

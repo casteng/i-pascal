@@ -147,6 +147,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     @Override
+    public IElementType handleIf(CharSequence sequence) {
+        return doHandleIfDef(sequence, false);
+    }
+
+    @Override
     public IElementType handleIfDef(CharSequence sequence) {
         return doHandleIfDef(sequence, false);
     }
@@ -154,6 +159,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     @Override
     public IElementType handleIfNDef(CharSequence sequence) {
         return doHandleIfDef(sequence, true);
+    }
+
+    @Override
+    public IElementType handleIfOpt(CharSequence sequence) {
+        return doHandleIfDef("NOT DEFINED", true);
     }
 
     @Override

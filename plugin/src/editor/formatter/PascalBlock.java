@@ -17,8 +17,8 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +45,10 @@ public class PascalBlock extends AbstractBlock implements Block {
     private static final TokenSet TOKENS_NO_LF_AFTER_SEMI = TokenSet.create(PasTypes.FORMAL_PARAMETER_LIST, PasTypes.EXPORTED_ROUTINE, PasTypes.METHOD_IMPL_DECL,
             PasTypes.CLASS_PROPERTY_SPECIFIER, PasTypes.PROCEDURE_REFERENCE);
 
-    private static final TokenSet TOKENS_ENTER_INDENTED = TokenSet.create(PasTypes.STATEMENT);
+    private static final TokenSet TOKENS_COMMENT = TokenSet.create(PasTypes.COMMENT, PasTypes.CT_DEFINE, PasTypes.CT_ELSE, PasTypes.CT_ENDIF, PasTypes.CT_IF,
+            PasTypes.CT_IFDEF, PasTypes.CT_IFNDEF, PasTypes.CT_IFOPT, PasTypes.CT_UNDEFINE);
+
+    private static final TokenSet TOKENS_ENTER_INDENTED = TokenSet.create(PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION);
 
     private static final TokenSet TOKEN_COMMENT_NORMALINDENT = TokenSet.create(PasTypes.COMPOUND_STATEMENT, PasTypes.USES_CLAUSE);
 
@@ -74,7 +77,7 @@ public class PascalBlock extends AbstractBlock implements Block {
         mySpacingBuilder = PascalFormatter.createSpacingBuilder(settings);
         mySettings = settings;
         myIndent = indent;
-        System.out.println("block: " + block2Str(this));
+//        System.out.println("block: " + block2Str(this));
     }
 
     @Override
@@ -127,7 +130,7 @@ public class PascalBlock extends AbstractBlock implements Block {
 
     private Indent getBlockIndent(@Nullable ASTNode childNode) {
         if (childNode != null) {
-            if (childNode.getElementType() == PasTypes.COMMENT) {
+            if (TOKENS_COMMENT.contains(childNode.getElementType())) {
                 System.out.println("Comment ind: " + myNode + " . " + childNode);
                 // Not move at leftmost position, indent usually, not indent in already indented contexts such as statement
                 Indent commentIndent = Indent.getAbsoluteNoneIndent();
@@ -211,12 +214,12 @@ public class PascalBlock extends AbstractBlock implements Block {
 
     private Indent getChildBlockIndent(ASTNode childNode) {
         if ((childNode != null) && (childNode.getTreeParent() != null)) {
-            PsiElement psi = childNode.getPsi();
-            if (TOKENS_ENTER_INDENTED.contains(childNode.getTreeParent().getElementType())) {
+            if ((TOKENS_ENTER_INDENTED.contains(childNode.getElementType())) || (childNode.getTreeParent().getElementType() == PasTypes.STATEMENT)) {
                 //System.out.println("Enter ind: " + myNode + " . " + childNode);
                 return Indent.getNormalIndent();
             }
-            if (psi instanceof PasEntityScope) {
+            PsiElement psi = childNode.getPsi();
+            if (psi instanceof PascalStructType) {
                 //System.out.println("Enter scoped: " + myNode + " . " + childNode);
                 return Indent.getNormalIndent(true);
             }
