@@ -29,9 +29,15 @@ public class ModuleUtil {
         }
     }
 
-    public static Collection<VirtualFile> getAllCompiledModuleFilesByName(@NotNull Module module, String name) {
+    /* 1. Search for the original file name,
+       2. Search for the filename all lowercased.
+       3. Search for the filename all uppercased.
+       Unit  names that are longer than 8 characters will first be looked for with  their  full length.
+       If the unit is not found with this name, the name will be truncated to 8 characters */
+    public static Collection<VirtualFile> getAllCompiledModuleFilesByName(@NotNull Module module, @NotNull String name) {
         Collection<VirtualFile> res = new ArrayList<VirtualFile>();
-        for (String unitName : new String[]{name, name.toLowerCase(), name.toUpperCase()}) {
+        String[] nameVariants = name.length() > 8 ? new String[] {name, name.toLowerCase(), name.toUpperCase(), name.substring(0, 8)} : new String[] {name, name.toLowerCase(), name.toUpperCase()};
+        for (String unitName : nameVariants) {
             res.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, unitName + ".ppu",
                     GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
         }

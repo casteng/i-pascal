@@ -121,7 +121,7 @@ public class PPUDecompilerCache {
         return res;
     }
 
-    PPUDumpParser.Section getContents(String unitName) {
+    PPUDumpParser.Section getContents(@NotNull String unitName) {
         Collection<VirtualFile> unitFiles = ModuleUtil.getAllCompiledModuleFilesByName(module, unitName);
         if (!unitFiles.isEmpty()) {
             try {

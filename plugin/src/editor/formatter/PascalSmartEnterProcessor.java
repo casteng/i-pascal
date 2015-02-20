@@ -10,6 +10,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Author: George Bakhtadze
@@ -17,7 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PasStatement;
  */
 public class PascalSmartEnterProcessor extends SmartEnterProcessor {
     @Override
-    public boolean process(Project project, Editor editor, PsiFile psiFile) {
+    public boolean process(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile psiFile) {
         FeatureUsageTracker.getInstance().triggerFeatureUsed("codeassists.complete.statement");
         PsiElement el = getStatementAtCaret(editor, psiFile);
         el = PsiTreeUtil.getParentOfType(el, PasStatement.class, PasEntityScope.class);

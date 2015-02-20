@@ -17,6 +17,7 @@ import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -71,7 +72,7 @@ public class PasReferenceUtil {
      * @return unit element
      */
     @Nullable
-    public static PascalNamedElement findUnit(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
+    public static PasEntityScope findUnit(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
         final Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
                 GlobalSearchScope.allScope(project));
 
@@ -91,9 +92,13 @@ public class PasReferenceUtil {
         return null;
     }
 
-    private static boolean isUnitWithName(VirtualFile virtualFile, String name) {
-        return isUnitExtension(virtualFile) &&
-                virtualFile.getNameWithoutExtension().equalsIgnoreCase(name);
+    private static boolean isUnitWithName(VirtualFile virtualFile, @NotNull String name) {
+        return isUnitExtension(virtualFile) && isFileUnitName(virtualFile.getNameWithoutExtension(), name);
+
+    }
+
+    private static boolean isFileUnitName(@NotNull String fileNameWoExt, @NotNull String name) {
+        return fileNameWoExt.equalsIgnoreCase(name) || ((name.length() > 8) && (name.substring(0, 8).equalsIgnoreCase(fileNameWoExt)));
     }
 
     private static boolean isUnitExtension(VirtualFile virtualFile) {
@@ -140,6 +145,7 @@ public class PasReferenceUtil {
         // First entry in FQN
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.getCurrent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
+        // Retrieve all namespaces affecting first FQN level
         while (section != null) {
             namespaces.add(PsiUtil.getDeclRootScope(section));
             section = fqn.isFirst() ? PsiUtil.getNearestAffectingDeclarationsRoot(namespaces.get(namespaces.size()-1)) : null;
@@ -152,6 +158,7 @@ public class PasReferenceUtil {
         Collection<LookupElement> result = new ArrayList<LookupElement>();
         while (!fqn.isTarget() && (namespaces != null)) {
             PasField field = null;
+            // Scan namespaces and get one matching field
             for (PasEntityScope namespace : namespaces) {
                 field = namespace.getField(fqn.getCurrent().getName());
                 if (field != null) { break; }
@@ -160,6 +167,12 @@ public class PasReferenceUtil {
             if (field != null) {
                 PasEntityScope newNS = retrieveNamespace(field, fqn.isFirst());
                 namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
+                while (newNS != null) {              // Scan namespace's parent namespaces (class parents etc)
+                    newNS = PascalParserUtil.getStructTypeByTypeIdent(newNS.getParentScope());
+                    if (newNS != null) {
+                        namespaces.add(newNS);
+                    }
+                }
             }
 
             fqn.next();
@@ -168,7 +181,7 @@ public class PasReferenceUtil {
         if (fqn.isTarget() && (namespaces != null)) {
             for (PasEntityScope namespace : namespaces) {
                 for (PasField pasField : namespace.getAllFields()) {
-                    if ((pasField.element != null) && (types.contains(pasField.type)) && isVisibleFrom(pasField.element, fqn)) {
+                    if ((pasField.element != null) && (types.contains(pasField.type)) && isVisibleWithinUnit(pasField, fqn)) {
                         result.add(LookupElementBuilder.createWithIcon(pasField.element));
                     }
                 }
@@ -177,9 +190,15 @@ public class PasReferenceUtil {
         return result;
     }
 
-    private static boolean isVisibleFrom(PascalNamedElement declaration, NamespaceRec fqn) {
-        return (declaration.getTextRange().getStartOffset() <= fqn.getCurrent().getTextRange().getStartOffset()) ||
-                PsiUtil.allowsForwardReference(fqn.getParentIdent());
+    private static boolean isVisibleWithinUnit(@NotNull PasField field, NamespaceRec fqn) {
+        if ((field.element != null) && (field.element.getContainingFile() == fqn.getParentIdent().getContainingFile())) {
+            // check if declaration comes earlier then usage or declaration allows forward mode
+            return (field.element.getTextRange().getStartOffset() <= fqn.getCurrent().getTextRange().getStartOffset())
+                    || PsiUtil.allowsForwardReference(field.element);
+        } else {
+            // check if field visibility allows usage from another unit
+            return PasField.isAllowed(field.visibility, PasField.Visibility.PROTECTED);
+        }
     }
 
     /**
