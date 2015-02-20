@@ -2,19 +2,21 @@ package com.siberika.idea.pascal.editor;
 
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.application.Result;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.pom.Navigatable;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
-import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -52,45 +54,48 @@ public class PasActionCreateVar extends BaseIntentionAction {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void invoke(@NotNull final Project project, Editor editor, final PsiFile file) throws IncorrectOperationException {
+    public void invoke(@NotNull final Project project, final Editor editor, final PsiFile file) throws IncorrectOperationException {
+        final Document document = editor.getDocument();
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
                 PsiElement root = PsiUtil.getNearestAffectingDeclarationsRoot(element);
                 if (null == root) { root = file; }
                 final PsiElement section = root;
-                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+
+                new WriteCommandAction(project){
                     @Override
-                    public void run() {
-                        CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-                            @Override
-                            public void run() {
-                                PasVarSection varSection = PsiUtil.findInSameSection(section, PasVarSection.class);
-                                if (null == varSection) {
-                                    PsiElement block = PsiUtil.findInSameSection(section,
-                                            PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
-                                    if (block != null) {
-                                        block.getParent().getNode().addLeaf(PasTypes.VAR_SECTION, "var " + element.getName() + ": ;\n", block.getNode());
-                                        moveCaretToAdded(block, -2);
-                                        PsiUtil.rebuildPsi(block.getParent());
-                                    }
-                                } else {
-                                    varSection.getNode().addLeaf(PasTypes.NAME, "\n" + element.getName() + ": ;", null);
-                                    moveCaretToAdded(varSection.getLastChild(), 1 + element.getName().length() + 2);
-                                    PsiUtil.rebuildPsi(varSection.getParent());
-                                }
+                    protected void run(@NotNull Result result) throws Throwable {
+                        PsiElement parent = PsiUtil.findInSameSection(section, PasVarSection.class);
+                        String text = null;
+                        int offset = 0;
+                        if (null == parent) {
+                            parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
+                            if (parent != null) {
+                                text = "var " + element.getName() + ": T;\n";
+                                offset = parent.getTextOffset();
                             }
-                        }, getText(), null);
+                        } else {
+                            text = "\n" + element.getName() + ": T;";
+                            offset = parent.getTextRange().getEndOffset();
+                        }
+
+                        if ((parent != null)) {
+                            document.insertString(offset, text);
+                            editor.getCaretModel().moveToOffset(offset + text.length() - 1 - (text.endsWith("\n") ? 1 : 0));
+                            PsiDocumentManager.getInstance(project).commitDocument(document);
+                            CodeStyleManager.getInstance(parent.getManager()).reformat(parent, true);
+                        }
                     }
-                });
+                }.execute();
             }
         });
     }
 
-    private void moveCaretToAdded(@Nullable PsiElement block, int offsetFromEnd) {
+    private void moveCaretToAdded(Editor editor, @Nullable PsiElement block, int offsetFromEnd) {
         if (null == block) { return; }
         ((Navigatable) block.getNavigationElement()).navigate(true);
-        Editor editor = FileEditorManager.getInstance(block.getProject()).getSelectedTextEditor();
+        // = FileEditorManager.getInstance(block.getProject()).getSelectedTextEditor();
         if (editor != null) {
             editor.getCaretModel().moveToOffset(editor.getCaretModel().getOffset() + offsetFromEnd);
         }
