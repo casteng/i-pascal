@@ -33,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -106,6 +105,7 @@ public class PasReferenceUtil {
             || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension());
     }
 
+    @Deprecated
     public static Collection<LookupElement> getEntities(final PsiElement element, Set<PasField.Type> types) {
         Collection<PascalNamedElement> result = new TreeSet<PascalNamedElement>(); // TODO: add comparator
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(element);
@@ -121,6 +121,7 @@ public class PasReferenceUtil {
     /**
      * Recursively goes up by entity declaration scopes and adds declared entities to result
      */
+    @Deprecated
     private static void doGetEntities(Collection<PascalNamedElement> result, PsiElement section, int startOffset, Set<PasField.Type> types, Set<String> filter) {
         if (null == section) { return; }
         if (section instanceof PasEntityScope) {
@@ -143,16 +144,12 @@ public class PasReferenceUtil {
      */
     public static Collection<LookupElement> getEntities(final NamespaceRec fqn, Set<PasField.Type> types) {
         // First entry in FQN
-        PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.getCurrent());
+        PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.isEmpty() ? fqn.getParentIdent() : fqn.getCurrent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
         // Retrieve all namespaces affecting first FQN level
         while (section != null) {
             namespaces.add(PsiUtil.getDeclRootScope(section));
             section = fqn.isFirst() ? PsiUtil.getNearestAffectingDeclarationsRoot(namespaces.get(namespaces.size()-1)) : null;
-        }
-
-        if (namespaces.isEmpty() || (null == namespaces.get(0))) {
-            return Collections.emptyList();
         }
 
         Collection<LookupElement> result = new ArrayList<LookupElement>();
@@ -190,10 +187,16 @@ public class PasReferenceUtil {
         return result;
     }
 
-    private static boolean isVisibleWithinUnit(@NotNull PasField field, NamespaceRec fqn) {
+    private static boolean isVisibleWithinUnit(@NotNull PasField field, @NotNull NamespaceRec fqn) {
         if ((field.element != null) && (field.element.getContainingFile() == fqn.getParentIdent().getContainingFile())) {
             // check if declaration comes earlier then usage or declaration allows forward mode
-            return (field.element.getTextRange().getStartOffset() <= fqn.getCurrent().getTextRange().getStartOffset())
+            int offs;
+            if (fqn.isEmpty()) {
+                offs = fqn.getParentIdent().getTextRange().getStartOffset();
+            } else {
+                offs = fqn.getCurrent().getTextRange().getStartOffset();
+            }
+            return (field.element.getTextRange().getStartOffset() <= offs)
                     || PsiUtil.allowsForwardReference(field.element);
         } else {
             // check if field visibility allows usage from another unit

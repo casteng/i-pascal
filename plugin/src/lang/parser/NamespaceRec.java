@@ -7,6 +7,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -15,9 +16,16 @@ import java.util.List;
 */
 public class NamespaceRec {
     private final List<PascalNamedElement> levels;
-    private final PascalQualifiedIdent parentIdent;
+    private final PsiElement parentIdent;
     private final int target;
     private int current;
+
+    public NamespaceRec(PsiElement context) {
+        levels = Collections.emptyList();
+        parentIdent = context;
+        target = 0;
+        current = 0;
+    }
 
     public NamespaceRec(PasSubIdent subIdent) {
         this(getParent(subIdent), subIdent);
@@ -87,7 +95,7 @@ public class NamespaceRec {
         return levels.size();
     }
 
-    public PascalQualifiedIdent getParentIdent() {
+    public PsiElement getParentIdent() {
         return parentIdent;
     }
 

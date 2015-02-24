@@ -27,7 +27,7 @@ type
         procedure ba(); virtual; abstract;
         //class function a: int;
         constructor b(a, b: int);
-        property cc: Int read getcc; default;
+        property cc: Int read ba; default;
     end;
 
     TVector2s = packed record

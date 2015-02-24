@@ -152,12 +152,12 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return result;
     }
 
-    private static void retrieveBuiltinReferences(Collection<PascalNamedElement> result, PascalNamedElement ident) {
-        if (null == ident) { return; }
+    private static void retrieveBuiltinReferences(Collection<PascalNamedElement> result, PsiElement ident) {
+        if (!(ident instanceof PascalNamedElement)) { return; }
         for (PasField field : BuiltinsParser.getBuiltins()) {
-            if (field.name.equalsIgnoreCase(ident.getName())) {
+            if (field.name.equalsIgnoreCase(((PascalNamedElement) ident).getName())) {
                 PasModule module = PsiUtil.getModule(ident);
-                result.add(module != null ? module : ident);
+                result.add(module != null ? module : (PascalNamedElement) ident);
                 return;
             }
         }
