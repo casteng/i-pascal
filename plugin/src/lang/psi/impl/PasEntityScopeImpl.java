@@ -137,7 +137,6 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         if (isCacheActual(members, buildStamp)) {
             return;
         }  // TODO: check correctness
-        buildStamp = getContainingFile().getModificationStamp();
         members = new ArrayList<Map<String, PasField>>(PasField.Visibility.values().length);
         for (PasField.Visibility visibility : PasField.Visibility.values()) {
             members.add(visibility.ordinal(), new LinkedHashMap<String, PasField>());
@@ -161,6 +160,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
             }
             child = child.getNextSibling();
         }
+        buildStamp = getContainingFile().getModificationStamp();
         System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
