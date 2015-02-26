@@ -9,8 +9,10 @@ import com.intellij.psi.PsiElementResolveResult;
 import com.intellij.psi.PsiPolyVariantReferenceBase;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
-import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,10 +73,11 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
         @NotNull
         @Override
         public ResolveResult[] resolve(@NotNull PascalReference pascalReference, boolean incompleteCode) {
-            final Collection<PascalNamedElement> references = PascalParserUtil.findAllReferences(pascalReference.getElement(), pascalReference.key);
+            //final Collection<PascalNamedElement> references = PascalParserUtil.findAllReferences(pascalReference.getElement(), pascalReference.key);
+            final Collection<PsiElement> references = PasReferenceUtil.resolve(NamespaceRec.fromElement(pascalReference.getElement()), PasField.TYPES_ALL);
             // return only first reference
-            for (PascalNamedElement namedElement : references) {
-                return PsiElementResolveResult.createResults(Arrays.asList(namedElement));
+            for (PsiElement el : references) {
+                return PsiElementResolveResult.createResults(Arrays.asList(el));
             }
             return PsiElementResolveResult.createResults(references);
         }

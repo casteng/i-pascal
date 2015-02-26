@@ -59,7 +59,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -295,9 +294,9 @@ public class PsiUtil {
 
     @NotNull
     @SuppressWarnings("unchecked")
-    public static List<PasNamespaceIdent> getUsedUnits(PsiFile file) {
-        List<PasNamespaceIdent> result = new ArrayList<PasNamespaceIdent>();
-        Collection<PascalPsiElement> usesClauses = findChildrenOfAnyType(file, PasUsesClause.class, PasUsesFileClause.class);
+    public static List<PasNamespaceIdent> getUsedUnits(PsiElement parent) {
+        List<PasNamespaceIdent> result = new SmartList<PasNamespaceIdent>();
+        Collection<PascalPsiElement> usesClauses = findChildrenOfAnyType(parent, PasUsesClause.class, PasUsesFileClause.class);
         for (PascalPsiElement usesClause : usesClauses) {
             for (PsiElement usedUnitName : usesClause.getChildren()) {
                 if (usedUnitName.getClass() == PasNamespaceIdentImpl.class) {
@@ -453,4 +452,7 @@ public class PsiUtil {
         return element != null ? element.getName() : "";
     }
 
+    public static boolean isIdent(PsiElement parent) {
+        return parent instanceof PasSubIdent;
+    }
 }

@@ -5,6 +5,7 @@ import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.util.PsiUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -99,4 +100,17 @@ public class NamespaceRec {
         return parentIdent;
     }
 
+    public static NamespaceRec fromElement(PsiElement element) {
+        NamespaceRec namespace;
+        if (PsiUtil.isIdent(element)) {
+            namespace = new NamespaceRec((PasSubIdent) element);
+        } else {
+            namespace = new NamespaceRec(element);
+        }
+        return namespace;
+    }
+
+    public String getCurrentName() {
+        return current < levels.size() ? getCurrent().getName() : null;
+    }
 }

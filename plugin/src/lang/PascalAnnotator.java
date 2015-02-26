@@ -19,9 +19,11 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.siberika.idea.pascal.editor.PasActionCreateVar;
 import com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighter;
-import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +38,7 @@ public class PascalAnnotator implements Annotator {
     public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
         if (PsiUtil.isEntityName(element)) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
-            Collection<PascalNamedElement> refs = PascalParserUtil.findAllReferences(element, namedElement.getName());
+            Collection<PsiElement> refs = PasReferenceUtil.resolve(NamespaceRec.fromElement(element), PasField.TYPES_ALL);
             if (refs.isEmpty()) {
                 holder.createErrorAnnotation(element, "Undeclared identifier").registerFix(new PasActionCreateVar(namedElement));
             }

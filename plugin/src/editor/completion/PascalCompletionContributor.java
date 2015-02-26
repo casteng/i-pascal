@@ -96,7 +96,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev,
                         originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
-                    if (isIdent(parameters.getOriginalPosition().getParent())) {
+                    if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent())) {
                         addEntities(result, parameters.getOriginalPosition(), PasField.TYPES_ALL);
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
@@ -108,7 +108,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                     }
                     if (pos instanceof PasStatement) {                                                                          // identifier completion in left part of assignment
                         addEntities(result, parPos, PasField.TYPES_LEFT_SIDE);                                                  // complete identifier variants
-                        if (!isIdent(parameters.getOriginalPosition().getParent()) && (pos instanceof PasCompoundStatement)) {
+                        if (!PsiUtil.isIdent(parameters.getOriginalPosition().getParent()) && (pos instanceof PasCompoundStatement)) {
                             appendTokenSet(result, PascalLexer.STATEMENTS);                                                     // statements variants
                         }
                         if (PsiTreeUtil.getParentOfType(parameters.getOriginalPosition(), PasForStatement.class, PasWhileStatement.class, PasRepeatStatement.class) != null) {
@@ -157,7 +157,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private boolean isQualifiedIdent(PsiElement parent) {
-        if (isIdent(parent)) {
+        if (PsiUtil.isIdent(parent)) {
             PsiElement par = parent.getParent();
             if (par instanceof PasFullyQualifiedIdent) {
                 return !StringUtils.isEmpty(((PasFullyQualifiedIdent) par).getNamespace());
@@ -166,13 +166,9 @@ public class PascalCompletionContributor extends CompletionContributor {
         return false;
     }
 
-    private static boolean isIdent(PsiElement parent) {
-        return parent instanceof PasSubIdent;
-    }
-
     private static void addEntities(CompletionResultSet result, PsiElement position, Set<PasField.Type> types) {
         NamespaceRec namespace;
-        if (isIdent(position.getParent())) {
+        if (PsiUtil.isIdent(position.getParent())) {
             namespace = new NamespaceRec((PasSubIdent) position.getParent());
         } else {
             namespace = new NamespaceRec(position);

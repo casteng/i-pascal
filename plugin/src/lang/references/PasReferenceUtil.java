@@ -24,8 +24,10 @@ import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -261,4 +263,69 @@ public class PasReferenceUtil {
             return null;
         }
     }
+
+//-------------------------------------------------------------------
+
+    /**
+     *  for each entry in FQN before target:
+     *    find entity corresponding to NS in current scope
+     *    if the entity represents a namespace - retrieve and make current
+     *  for namespace of target entry add all its entities
+     */
+    public static Collection<PsiElement> resolve(final NamespaceRec fqn, Set<PasField.Type> types) {
+        // First entry in FQN
+        PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.isEmpty() ? fqn.getParentIdent() : fqn.getCurrent());
+        List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
+        // Retrieve all namespaces affecting first FQN level
+        while (section != null) {
+            addNamespaces(namespaces, section);
+            section = fqn.isFirst() ? PsiUtil.getNearestAffectingDeclarationsRoot(namespaces.get(namespaces.size() - 1)) : null;
+        }
+
+        Collection<PsiElement> result = new ArrayList<PsiElement>();
+        while (!fqn.isTarget() && (namespaces != null)) {
+            PasField field = null;
+            // Scan namespaces and get one matching field
+            for (PasEntityScope namespace : namespaces) {
+                field = namespace.getField(fqn.getCurrent().getName());
+                if (field != null) { break; }
+            }
+            namespaces = null;
+            if (field != null) {
+                PasEntityScope newNS = retrieveNamespace(field, fqn.isFirst());
+                namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
+                while (newNS != null) {              // Scan namespace's parent namespaces (class parents etc)
+                    newNS = PascalParserUtil.getStructTypeByTypeIdent(newNS.getParentScope());
+                    if (newNS != null) {
+                        namespaces.add(newNS);
+                    }
+                }
+            }
+            fqn.next();
+        }
+
+        if (fqn.isTarget() && (namespaces != null)) {
+            for (PasEntityScope namespace : namespaces) {
+                for (PasField pasField : namespace.getAllFields()) {
+                    if ((pasField.element != null) && (types.contains(pasField.type)) &&
+                            pasField.name.equalsIgnoreCase(fqn.getCurrentName()) && isVisibleWithinUnit(pasField, fqn)) {
+                        result.add(pasField.element);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private static void addNamespaces(List<PasEntityScope> namespaces, PsiElement section) {
+        namespaces.add(PsiUtil.getDeclRootScope(section));
+        if (section instanceof PasUnitImplementation) {
+            section = PsiTreeUtil.getParentOfType(section, PascalModuleImpl.class);
+        }
+        if (section instanceof PascalModuleImpl) {
+            namespaces.addAll(((PascalModuleImpl) section).getPrivateUnits());
+            namespaces.addAll(((PascalModuleImpl) section).getPublicUnits());
+        }
+    }
+
 }
