@@ -92,7 +92,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private <T> T getData(String s) {
-        DataContext res = DataManager.getInstance().getDataContextFromFocus().getResultSync(100);
+        DataContext res = DataManager.getInstance().getDataContextFromFocus().getResultSync(1);
         if (res != null) {
             return (T) res.getData(s);
         }

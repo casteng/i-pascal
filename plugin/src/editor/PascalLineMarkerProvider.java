@@ -12,7 +12,6 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.util.ConstantFunction;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -42,12 +41,12 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     public static final Logger LOG = Logger.getInstance(PascalLineMarkerProvider.class.getName());
 
-    private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result) {
+    private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result, PsiElement implSection, PsiElement intfSection) {
         if (element instanceof PascalRoutineImpl) {
             PascalRoutineImpl routineDecl = (PascalRoutineImpl) element;
             Collection<PsiElement> targets;
             if (routineDecl instanceof PasExportedRoutine) {
-                targets = getImplementationRoutinesTargets(routineDecl);
+                targets = getImplementationRoutinesTargets(routineDecl, implSection);
                 if (!targets.isEmpty()) {
                     result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, "Go to implementation", getHandler(targets)));
                 }
@@ -82,9 +81,22 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     @Override
     public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
-        for (PsiElement psiElement : elements) {
-            collectNavigationMarkers(psiElement, result);
+        System.out.println(String.format("Line markers: size: %d", elements.size()));
+        long time = System.nanoTime();
+        int i = 0;
+        if (elements.isEmpty()) {
+            return;
         }
+        PsiElement implSection = PsiUtil.getModuleImplementationSection(elements.get(0).getContainingFile());
+        PsiElement intfSection = PsiUtil.getModuleInterfaceSection(elements.get(0).getContainingFile());
+        for (PsiElement psiElement : elements) {
+            collectNavigationMarkers(psiElement, result, implSection, intfSection);
+            i++;
+            if ((i % 1000)== 0) {
+                System.out.println("Elements processed: " + i);
+            }
+        }
+        System.out.println(String.format("Line markers done in %.3f seconds", (System.nanoTime() - time) / 1000000000.0));
     }
 
     private GutterIconNavigationHandler<PsiElement> getHandler(@NotNull final Collection<PsiElement> targets) {
@@ -138,22 +150,17 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     }
 
     @SuppressWarnings("unchecked")
-    private Collection<PsiElement> getImplementationRoutinesTargets(PascalRoutineImpl routineDecl) {
+    private Collection<PsiElement> getImplementationRoutinesTargets(PascalRoutineImpl routineDecl, PsiElement section) {
         Collection<PsiElement> result = new SmartList<PsiElement>();
         String name = PsiUtil.getQualifiedMethodName(routineDecl);
-        findImplTargets(result, routineDecl.getContainingFile(), name, PascalRoutineImpl.class);
+        findImplTargets(result, section, name, PascalRoutineImpl.class);
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends PascalNamedElement> void findImplTargets(Collection<PsiElement> result, PsiFile file, String name, Class<T> clazz) {
-        if (null == file) {
-            LOG.warn(String.format("findImplTargets: Containing file is null name %s", name));
-            return;
-        }
-        PsiElement section = PsiUtil.getModuleImplementationSection(file);
-        if ((section != null) && (section.getParent() != null)) {
-            for (PsiElement child : section.getChildren()) {
+    private static <T extends PascalNamedElement> void findImplTargets(Collection<PsiElement> result, PsiElement implSection, String name, Class<T> clazz) {
+        if ((implSection != null) && (implSection.getParent() != null)) {
+            for (PsiElement child : implSection.getChildren()) {
                 if (child.getClass() == PasImplDeclSectionImpl.class) {
                     for (PsiElement element : PsiUtil.findImmChildrenOfAnyType(child, clazz)) {
                         PascalNamedElement routine = (PascalNamedElement) element;

@@ -8,7 +8,7 @@ uses
     types;
 
 type
-    TResourceStringRecord = record
+    TRecord = record
         Name2, CurrentValue, DefaultValue: AnsiString;
         HashValue: LongWord;
         {class function a: int;}
@@ -21,7 +21,7 @@ type
         //sda
         eThree);
 
-    TResourceStringRecord2 = object
+    TObj = object
         Name2, CurrentValue, DefaultValue: AnsiString;
         HashValue: LongWord;
         procedure ba(); virtual; abstract;
@@ -36,6 +36,11 @@ type
         1:(V: array[0..1] of Single);
     end;
 
+    TC = class(TVector2s)
+    private
+        name: string;
+    end;
+
     TStringSearchOption = (soDown, soMatchCase, soWholeWord);
     TStringSearchOptions = set of TStringSearchOption;TStringSeachOption = TStringSearchOption;
 
@@ -48,9 +53,10 @@ implementation
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
-    Value: TResourceStringRecord;
+    Value: TC;
 begin
-    Value := 2 <> (a=1);
+    Value := 2 <> (aa=1);
+    Value.X;
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
     FMyInt := Value;
@@ -58,7 +64,7 @@ end;
 
 Function RightStr (const AText: AnsiString; const ACount: Integer): AnsiString;
 const
-    cc: TResourceStringRecord = ();
+    cc: TCHelper = ();
 var
     j: Integer;
     i: TResourceStringRecord;
@@ -66,7 +72,7 @@ begin
     j := length(ASubText);
     i.CurrentValue;
     cc.DefaultValue;
-    if AStart>i then
+    if ACount>i then
         aStart := i+1;
     k := i+1-AStart;
     if ALength> k then
