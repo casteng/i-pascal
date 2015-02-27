@@ -169,7 +169,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     private static void addEntities(CompletionResultSet result, PsiElement position, Set<PasField.Type> types) {
         NamespaceRec namespace;
         if (PsiUtil.isIdent(position.getParent())) {
-            namespace = new NamespaceRec((PasSubIdent) position.getParent());
+            namespace = NamespaceRec.fromElement(position.getParent());
         } else {
             namespace = NamespaceRec.fromElement(position);
         }

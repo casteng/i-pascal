@@ -32,8 +32,6 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
-import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -307,7 +305,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         if (canBeUnit && (entityDecl instanceof PascalRoutineImpl)) {                                         // routine self-reference case
             PasFullyQualifiedIdent typeName = ((PascalRoutineImpl) entityDecl).getFunctionTypeIdent();
             if (typeName != null) {
-                for (PascalNamedElement strucTypeIdent : findVariables(new NamespaceRec(typeName, null), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
+                for (PascalNamedElement strucTypeIdent : findVariables(NamespaceRec.fromElement(typeName), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
                     return getStructTypeByIdent(strucTypeIdent);
                 }
             }
@@ -320,7 +318,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             if (varDecl != null) {
                 PascalNamedElement typeIdent = PsiTreeUtil.findChildOfType(varDecl, PascalQualifiedIdent.class, true);
                 if (typeIdent != null) {
-                    for (PascalNamedElement strucTypeIdent : findVariables(new NamespaceRec((PascalQualifiedIdent) typeIdent, null), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
+                    for (PascalNamedElement strucTypeIdent : findVariables(NamespaceRec.fromElement(typeIdent), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
                         return getStructTypeByIdent(strucTypeIdent);
                     }
                 }
@@ -332,7 +330,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
             PasFullyQualifiedIdent typeIdent = ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
             if (typeIdent != null) {
-                for (PascalNamedElement strucTypeIdent : findVariables(new NamespaceRec(typeIdent, null), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
+                for (PascalNamedElement strucTypeIdent : findVariables(NamespaceRec.fromElement(typeIdent), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
                     return getStructTypeByIdent(strucTypeIdent);
                 }
             }
@@ -487,11 +485,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         } else if (PsiUtil.isEntityName(element)) {
             //result.addAll(findTypes(element, key));
             NamespaceRec namespaceRec;
-            if (element instanceof PasSubIdent) {
-                namespaceRec = new NamespaceRec((PasSubIdent) element);
-            } else {
-                namespaceRec = new NamespaceRec((PasRefNamedIdent) element);
-            }
+            namespaceRec = NamespaceRec.fromElement(element);
             result.addAll(findVariables(namespaceRec, PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class));
             //result.addAll(findConstants(element, key));
             //List<PascalNamedElement> modules = findModules(element, key);

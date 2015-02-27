@@ -134,7 +134,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
     private void buildParentScopes() {
         PasClassQualifiedIdent ident = PsiTreeUtil.getChildOfType(this, PasClassQualifiedIdent.class);
         if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
-            NamespaceRec fqn = new NamespaceRec(ident, ident.getSubIdentList().get(ident.getSubIdentList().size()-2));
+            NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
             parentScopes = Collections.emptyList();                             // To prevent infinite recursion
             Collection<PsiElement> types = PasReferenceUtil.resolve(fqn, PasField.TYPES_TYPE);
             for (PsiElement e : types) {

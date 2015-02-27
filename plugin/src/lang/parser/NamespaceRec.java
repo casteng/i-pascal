@@ -28,13 +28,13 @@ public class NamespaceRec {
         current = 0;
     }
 
-    public NamespaceRec(PasSubIdent subIdent) {
+    private NamespaceRec(PasSubIdent subIdent) {
         this(getParent(subIdent), subIdent);
     }
 
-    public NamespaceRec(PasRefNamedIdent element) {
+    private NamespaceRec(PasRefNamedIdent element) {
         levels = new ArrayList<PascalNamedElement>(1);
-        parentIdent = null;
+        parentIdent = element.getParent();
         levels.add(element);
         target = 0;
         current = 0;
@@ -47,7 +47,7 @@ public class NamespaceRec {
     /**
      * Creates instance from qualified ident with specified target subident
      */
-    public NamespaceRec(PascalQualifiedIdent qualifiedIdent, PasSubIdent targetIdent) {
+    private NamespaceRec(PascalQualifiedIdent qualifiedIdent, PasSubIdent targetIdent) {
         assert (targetIdent == null) || (targetIdent.getParent() == qualifiedIdent);
         int targetInd = -1;
         levels = new ArrayList<PascalNamedElement>();
@@ -94,6 +94,13 @@ public class NamespaceRec {
     }
 
     public static NamespaceRec fromElement(PsiElement element) {
+        if (element instanceof PasSubIdent) {
+            return new NamespaceRec((PascalQualifiedIdent) element.getParent(), (PasSubIdent) element);
+        } else if (element instanceof PascalQualifiedIdent) {
+            return new NamespaceRec((PascalQualifiedIdent) element, null);
+        } else if (element instanceof PasRefNamedIdent) {
+            return new NamespaceRec((PasRefNamedIdent) element);
+        }
         NamespaceRec namespace;
         if (PsiUtil.isIdent(element)) {
             namespace = new NamespaceRec((PasSubIdent) element);
