@@ -6,7 +6,6 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -43,6 +42,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     private List<PasEntityScope> publicUnits = Collections.emptyList();
     private long buildPrivateStamp = 0;
     private long buildPublicStamp = 0;
+    private List<PasEntityScope> parentScopes;
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -120,7 +120,12 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
             result.add(PasReferenceUtil.findUnit(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), ident.getName()));
         }
         for (String unitName : PascalParserUtil.EXPLICIT_UNITS) {
-            result.add(PasReferenceUtil.findUnit(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), unitName));
+            if (!unitName.equalsIgnoreCase(getName())) {
+                PasEntityScope unit = PasReferenceUtil.findUnit(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), unitName);
+                if (unit != null) {
+                    result.add(unit);
+                }
+            }
         }
         return result;
     }
@@ -162,12 +167,6 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
     }
 
-    @Nullable
-    @Override
-    public PasFullyQualifiedIdent getParentScope() {
-        return null;  // TODO: return used units (separate interface/implementation?)
-    }
-
     public List<PasEntityScope> getPrivateUnits() {
         return privateUnits;
     }
@@ -175,4 +174,17 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     public List<PasEntityScope> getPublicUnits() {
         return publicUnits;
     }
+
+    @Nullable
+    @Override
+    public List<PasEntityScope> getParentScope() {
+        if (null == parentScopes) {
+            buildParentScopes();
+        }
+        return parentScopes;
+    }
+
+    private void buildParentScopes() {
+    }
+
 }

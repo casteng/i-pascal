@@ -5,9 +5,9 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -39,6 +39,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
     private long buildStamp = 0;
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
+    private List<PasEntityScope> parentScopes;
 
     static {
         STR_TO_VIS = new HashMap<String, PasField.Visibility>(PasField.Visibility.values().length);
@@ -91,7 +92,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
 
     @Nullable
     @Override
-    public PasField getField(String name) {
+    synchronized public PasField getField(String name) {
         if (!isCacheActual(members, buildStamp)) { // TODO: check correctness
             buildMembers();
         }
@@ -106,7 +107,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
 
     @NotNull
     @Override
-    public Collection<PasField> getAllFields() {
+    synchronized public Collection<PasField> getAllFields() {
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
         }
@@ -129,7 +130,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         return STR_TO_VIS.get(sb.toString());
     }
 
-    synchronized private void buildMembers() {
+    private void buildMembers() {
         if (null == getContainingFile()) {
             PascalPsiImplUtil.logNullContainingFile(this);
             return;
@@ -188,18 +189,24 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
 
     @Nullable
     @Override
-    public PasFullyQualifiedIdent getParentScope() {
+    synchronized public List<PasEntityScope> getParentScope() {
+        if (null == parentScopes) {
+            buildParentScopes();
+        }
+        return parentScopes;
+    }
+
+    private void buildParentScopes() {
         PasClassParent parent = null;
         if (getClass() == PasClassTypeDeclImpl.class) {
             parent = ((PasClassTypeDeclImpl) this).getClassParent();
         }
-
         if (parent != null) {
+            parentScopes = new ArrayList<PasEntityScope>(parent.getTypeIDList().size());
             for (PasTypeID typeID : parent.getTypeIDList()) {
-                return typeID.getFullyQualifiedIdent();
+                parentScopes.add(PascalParserUtil.getStructTypeByTypeIdent(typeID.getFullyQualifiedIdent()));
             }
         }
-
-        return null;
     }
+
 }

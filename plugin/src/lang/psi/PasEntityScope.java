@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Author: George Bakhtadze
@@ -18,5 +19,5 @@ public interface PasEntityScope extends PascalNamedElement {
     @NotNull
     Collection<PasField> getAllFields();
     @Nullable
-    PasFullyQualifiedIdent getParentScope();
+    List<PasEntityScope> getParentScope();
 }

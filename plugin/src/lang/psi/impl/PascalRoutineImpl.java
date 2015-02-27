@@ -1,7 +1,11 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
@@ -11,12 +15,14 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.FieldCollector;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,6 +38,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
     private Set<PascalNamedElement> redeclaredMembers = null;
     private long buildStamp = 0;
     //private List<PasFormalParameter> formalParameters;
+    private List<PasEntityScope> parentScopes;
 
     @Nullable
     public abstract PasFormalParameterSection getFormalParameterSection();
@@ -117,7 +124,28 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
 
     @Nullable
     @Override
-    public PasFullyQualifiedIdent getParentScope() {
-        return null;
+    synchronized public List<PasEntityScope> getParentScope() {
+        if (null == parentScopes) {
+            buildParentScopes();
+        }
+        return parentScopes;
+    }
+
+    private void buildParentScopes() {
+        PasClassQualifiedIdent ident = PsiTreeUtil.getChildOfType(this, PasClassQualifiedIdent.class);
+        if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
+            NamespaceRec fqn = new NamespaceRec(ident, ident.getSubIdentList().get(ident.getSubIdentList().size()-2));
+            parentScopes = Collections.emptyList();                             // To prevent infinite recursion
+            Collection<PsiElement> types = PasReferenceUtil.resolve(fqn, PasField.TYPES_TYPE);
+            for (PsiElement e : types) {
+                if (e instanceof PascalNamedElement) {
+                    PasEntityScope struct = PascalParserUtil.getStructTypeByIdent((PascalNamedElement) e);
+                    if (struct != null) {
+                        parentScopes = Collections.singletonList(struct);
+                    }
+                }
+
+            }
+        }
     }
 }

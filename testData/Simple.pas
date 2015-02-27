@@ -67,7 +67,7 @@ const
     cc: TCHelper = ();
 var
     j: Integer;
-    i: TResourceStringRecord;
+    i: TRecord;
 begin
     j := length(ASubText);
     i.CurrentValue;
