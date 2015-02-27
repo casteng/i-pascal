@@ -60,6 +60,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import static com.google.common.collect.Iterables.getFirst;
+
 /**
  * Author: George Bakhtadze
  * Date: 12/9/12
@@ -259,7 +261,8 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                         getEndOffset(section), PasNamedIdent.class, PasGenericTypeIdent.class);
 
                 if (entities.isEmpty() && (section instanceof PasEntityScope)) {
-                    section = retrieveNamespace(((PasEntityScope) section).getParentScope(), namespaces.isFirst());
+                    PasEntityScope parentScope = ((PasEntityScope) section).getParentScope() != null ? getFirst(((PasEntityScope) section).getParentScope(), null) : null;
+                    section = retrieveNamespace(parentScope, namespaces.isFirst());
                     entities = retrieveEntitiesFromSection(section, namespaces.getCurrent().getName(),
                             getEndOffset(section), PasNamedIdent.class, PasGenericTypeIdent.class);
                 }
@@ -339,7 +342,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     @Nullable
-    private static PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent) {
+    public static PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent) {
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(typeIdent, PasTypeDecl.class);
         if (typeDecl != null) {
             PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
@@ -354,7 +357,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     @Nullable
-    public static PasEntityScope getStructTypeByTypeIdent(@Nullable PasFullyQualifiedIdent typeId) {
+    public static PasEntityScope getStructTypeByTypeIdent(@Nullable PascalQualifiedIdent typeId) {
         if (typeId != null) {
             PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(typeId);
             Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, typeId.getName(),

@@ -21,7 +21,7 @@ public class NamespaceRec {
     private final int target;
     private int current;
 
-    public NamespaceRec(PsiElement context) {
+    private NamespaceRec(PsiElement context) {
         levels = Collections.emptyList();
         parentIdent = context;
         target = 0;
@@ -44,18 +44,19 @@ public class NamespaceRec {
         return subIdent.getParent() instanceof PascalQualifiedIdent ? (PascalQualifiedIdent) subIdent.getParent() : null;
     }
 
-    public NamespaceRec(PascalQualifiedIdent qualifiedIdent, PasSubIdent subIdent) {
-        assert (subIdent == null) || (subIdent.getParent() == qualifiedIdent);
+    /**
+     * Creates instance from qualified ident with specified target subident
+     */
+    public NamespaceRec(PascalQualifiedIdent qualifiedIdent, PasSubIdent targetIdent) {
+        assert (targetIdent == null) || (targetIdent.getParent() == qualifiedIdent);
         int targetInd = -1;
         levels = new ArrayList<PascalNamedElement>();
         parentIdent = qualifiedIdent;
-        for (PsiElement subEl : parentIdent.getChildren()) {
-            if (subEl instanceof PasSubIdent) {
-                if (subEl == subIdent) {
-                    targetInd = levels.size();
-                }
-                levels.add((PascalNamedElement) subEl);
+        for (PasSubIdent subEl : qualifiedIdent.getSubIdentList()) {
+            if (subEl == targetIdent) {
+                targetInd = levels.size();
             }
+            levels.add(subEl);
         }
         if (-1 == targetInd) {
             targetInd = levels.size() - 1;
@@ -84,16 +85,8 @@ public class NamespaceRec {
         return current == 0;
     }
 
-    public boolean isLast() {
-        return current >= levels.size()-1;
-    }
-
     public boolean isTarget() {
         return current == target;
-    }
-
-    public int getSize() {
-        return levels.size();
     }
 
     public PsiElement getParentIdent() {
@@ -113,4 +106,5 @@ public class NamespaceRec {
     public String getCurrentName() {
         return current < levels.size() ? getCurrent().getName() : null;
     }
+
 }

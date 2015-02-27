@@ -171,7 +171,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         if (PsiUtil.isIdent(position.getParent())) {
             namespace = new NamespaceRec((PasSubIdent) position.getParent());
         } else {
-            namespace = new NamespaceRec(position);
+            namespace = NamespaceRec.fromElement(position);
         }
         result.caseInsensitive().addAllElements(PasReferenceUtil.getEntities(namespace, types));
     }
