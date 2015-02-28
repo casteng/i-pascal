@@ -12,7 +12,6 @@ import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
-import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
@@ -25,16 +24,12 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterList;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
-import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
-import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
-import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -102,10 +97,11 @@ public class PsiUtil {
 
         Collection<T> result = new SmartList<T>();
         for (PsiElement each : element.getChildren()) {
-                if (PsiTreeUtil.instanceOf(each, classes)) {
-                    result.add((T) each);
-                }
-        };
+            if (PsiTreeUtil.instanceOf(each, classes)) {
+                result.add((T) each);
+            }
+        }
+
         return result;
     }
 
@@ -117,13 +113,14 @@ public class PsiUtil {
                 if (PsiTreeUtil.instanceOf(each, classes)) {
                     return (T) each;
                 }
-            };
+            }
         }
         return null;
     }
 
     /**
      * Searches for a next sibling element ignoring whitespace elements
+     *
      * @param element - element from where to search
      * @return next sibling element or null if not found
      */
@@ -139,6 +136,7 @@ public class PsiUtil {
     /**
      * Returns nearest declarations root element which affects the given element, including formal parameters clause,
      * declaration section, structured type declaration, module declaration
+     *
      * @param element - element which should be affected by declarations found
      * @return nearest declarations root element which affects the given element
      */
@@ -155,7 +153,7 @@ public class PsiUtil {
                 // Make routine itself belong to parent root
                 ((parent instanceof PascalRoutineImpl) && (element.getParent() == parent))
                 // Make class parent belong to parent root
-             || ((parent instanceof PasEntityScope) && (element.getParent().getParent().getClass() == PasClassParentImpl.class))) {
+                || ((parent instanceof PasEntityScope) && (element.getParent().getParent().getClass() == PasClassParentImpl.class))) {
             return getNearestAffectingDeclarationsRoot(parent);
         } else if (PsiUtil.isInstanceOfAny(parent, PasFormalParameterSection.class, PasBlockGlobal.class)) {
             // Make routine local variable or parameters belong to the routine
@@ -192,7 +190,7 @@ public class PsiUtil {
     }
 
     public static String getElDebugContext(PsiElement current) {
-        return current != null ? "\"" + (current instanceof PascalNamedElement ? ((PascalNamedElement)current).getName() : "")
+        return current != null ? "\"" + (current instanceof PascalNamedElement ? ((PascalNamedElement) current).getName() : "")
                 + "\" [" + current.getClass().getSimpleName() + "]" + getParentStr(current.getParent()) : "-";
     }
 
@@ -233,7 +231,7 @@ public class PsiUtil {
      * @return true if the element is a pointer type declaration. I.e. "TType = ^element".
      */
     public static boolean isPointerTypeDeclaration(@NotNull PascalNamedElement element) {
-         return PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class, PasTypeIDImpl.class, PasTypeDecl.class) instanceof PasPointerType;
+        return PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class, PasTypeIDImpl.class, PasTypeDecl.class) instanceof PasPointerType;
     }
 
     /**
@@ -258,6 +256,7 @@ public class PsiUtil {
 
     /**
      * Returns module containing the element
+     *
      * @param element - element
      * @return module containing the element
      */
@@ -268,6 +267,7 @@ public class PsiUtil {
 
     /**
      * Returns interface section of module specified by section
+     *
      * @param section - can be PasModule or PsiFile
      * @return interface section of module
      */
@@ -279,6 +279,7 @@ public class PsiUtil {
 
     /**
      * Returns implementation section of module specified by section
+     *
      * @param section - can be PasModule or PsiFile
      * @return unit implementation section or module itself if the module is not a unit
      */
@@ -320,7 +321,7 @@ public class PsiUtil {
                                                                                   FieldCollector fieldCollector, Class<? extends T>... classes) {
         if (section != null) {
             for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
-                if (isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), owner)) {
+                if (isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
                     if (!PsiUtil.isModuleName(namedElement) && !PsiUtil.isFormalParameterName(namedElement)) {
                         String name = namedElement.getName();
                         if (!fieldCollector.fieldExists(namedElement)) {
@@ -348,9 +349,7 @@ public class PsiUtil {
                 return true;
             }
             //noinspection unchecked
-            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection,
-                    PasClassTypeDecl.class, PasClassHelperDecl.class, PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordDecl.class, PasRecordHelperDecl.class,
-                    PascalRoutineImpl.class, PasClosureExpression.class)) {
+            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection, PasEntityScope.class, PasClosureExpression.class)) {
                 return false;
             }
             innerSection = PsiUtil.getNearestAffectingDeclarationsRoot(innerSection);
@@ -374,7 +373,7 @@ public class PsiUtil {
     }
 
     @Nullable
-    public static <T extends PsiElement> T findInSameSection(PsiElement section, Class<? extends T>...classes) {
+    public static <T extends PsiElement> T findInSameSection(PsiElement section, Class<? extends T>... classes) {
         T element = PsiTreeUtil.findChildOfAnyType(section, classes);
         if ((element != null) && (isSameAffectingScope(getNearestAffectingDeclarationsRoot(element), section))) {
             return element;
@@ -396,6 +395,7 @@ public class PsiUtil {
 
     /**
      * Checks if the entityDecl is a declaration of variable or formal parameter
+     *
      * @param entityDecl entity declaration to check
      * @return true if the entityDecl is a declaration of variable or formal parameter
      */
@@ -405,6 +405,7 @@ public class PsiUtil {
 
     /**
      * Checks if the entityDecl is a declaration of constant
+     *
      * @param entityDecl entity declaration to check
      * @return true if the entityDecl is a declaration of variable or formal parameter
      */
@@ -428,14 +429,14 @@ public class PsiUtil {
         } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {                                    // type declaration case
             return entityDecl;
         } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
-            return  ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
+            return ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
         }
         return null;
     }
 
     public static boolean allowsForwardReference(PsiElement element) {
         return (element instanceof PascalNamedElement) &&
-               (PsiUtil.isPointerTypeDeclaration((PascalNamedElement) element) || PsiUtil.isClassRefDeclaration((PascalNamedElement) element));
+                (PsiUtil.isPointerTypeDeclaration((PascalNamedElement) element) || PsiUtil.isClassRefDeclaration((PascalNamedElement) element));
     }
 
     public static boolean isStructureMember(PsiElement element) {
@@ -455,4 +456,40 @@ public class PsiUtil {
     public static boolean isIdent(PsiElement parent) {
         return parent instanceof PasSubIdent;
     }
+
+    public static boolean isElementValid(PsiElement element) {
+        return element.isValid();
+        //return (ModuleUtilCore.findModuleForPsiElement(element) != null);
+    }
+
+//--------------------------------------------------------------------------------------------------------------
+
+    // Processes specified section's childs
+    public static <T extends PascalNamedElement> void processEntitiesInSection(@NotNull PasEntityScope owner, PsiElement section,
+                                                                               @NotNull PasField.Visibility visibility, FieldCollector fieldCollector,
+                                                                               Class<? extends T>... classes) {
+        if (null == section) {
+            return;
+        }
+        for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
+            if (isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
+                if (!PsiUtil.isModuleName(namedElement) && !PsiUtil.isFormalParameterName(namedElement)) {
+                    String name = namedElement.getName();
+                    if (!fieldCollector.fieldExists(namedElement)) {
+                        PasField.Type type = PasField.Type.VARIABLE;
+                        if (PsiUtil.isTypeName(namedElement)) {
+                            type = PasField.Type.TYPE;
+                        } else if (PsiUtil.isRoutineName(namedElement)) {
+                            type = PasField.Type.ROUTINE;
+                        } else if (PsiUtil.isUsedUnitName(namedElement)) {
+                            type = PasField.Type.UNIT;
+                        }
+                        fieldCollector.addField(name, new PasField(owner, namedElement, name, type, visibility));
+                    }
+
+                }
+            }
+        }
+    }
+
 }
