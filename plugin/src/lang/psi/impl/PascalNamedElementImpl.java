@@ -159,6 +159,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
         PascalNamedElementImpl that = (PascalNamedElementImpl) o;
 
+        if (!getParent().equals(that.getParent())) return false;
         if (!getName().equalsIgnoreCase(that.getName())) return false;
 
         return true;
@@ -166,6 +167,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Override
     public int hashCode() {
-        return getName().toUpperCase().hashCode();
+        int result = getName().toUpperCase().hashCode();
+        result = 31 * result + (getParent() != null ? getParent().hashCode() : 0);
+        return result;
     }
+
 }
