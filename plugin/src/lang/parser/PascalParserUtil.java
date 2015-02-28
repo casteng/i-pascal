@@ -26,6 +26,7 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -132,7 +133,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return false;
     }
 
-    private static Collection<PascalNamedElement> findVariables(NamespaceRec namespaces, Class<? extends PascalNamedElement>...classes) {
+    private static Collection<PascalNamedElement> findVariables(NamespaceRec namespaces, Class<? extends PascalNamedElement>...classes) throws PasInvalidScopeException {
         Collection<PascalNamedElement> result = new LinkedHashSet<PascalNamedElement>();
         if (!namespaces.isEmpty()) {
             Collection<PascalNamedElement> entitiesDecl = retrieveSortedVisibleEntitiesDecl(namespaces.getCurrent(), namespaces.getCurrent().getName(), classes);
@@ -170,7 +171,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         }
     }
 
-    private static void retrieveDefaultNamespaceEntities(Collection<PascalNamedElement> result, PascalNamedElement current) {
+    private static void retrieveDefaultNamespaceEntities(Collection<PascalNamedElement> result, PascalNamedElement current) throws PasInvalidScopeException {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(current);
         if (section instanceof PascalRoutineImpl) {
             // add class declarations
@@ -192,7 +193,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         }
     }
 
-    private static void retrieveMethodSelfReference(Collection<PascalNamedElement> result, PascalNamedElement self) {
+    private static void retrieveMethodSelfReference(Collection<PascalNamedElement> result, PascalNamedElement self) throws PasInvalidScopeException {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(self);
         if (section instanceof PascalRoutineImpl) {
             PasModule module = PsiUtil.getModule(section);
@@ -241,7 +242,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         }
     }
 
-    private static void doFindVariables(Collection<PascalNamedElement> result, PascalNamedElement entityDecl, NamespaceRec namespaces) {
+    private static void doFindVariables(Collection<PascalNamedElement> result, PascalNamedElement entityDecl, NamespaceRec namespaces) throws PasInvalidScopeException {
         if (namespaces.isTarget()) {
             result.add(entityDecl);
         } else {
@@ -289,7 +290,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private static PasEntityScope retrieveNamespace(PascalNamedElement entityDecl, boolean canBeUnit) {
+    private static PasEntityScope retrieveNamespace(PascalNamedElement entityDecl, boolean canBeUnit) throws PasInvalidScopeException {
         if (null == entityDecl) {
             return null;
         }
@@ -474,7 +475,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     @NotNull
-    public static Collection<PascalNamedElement> findAllReferences(PsiElement element, String key) {
+    public static Collection<PascalNamedElement> findAllReferences(PsiElement element, String key) throws PasInvalidScopeException {
         LOG.debug("*** refs(" + key + ")" + PsiUtil.getElDebugContext(element));
         Collection<PascalNamedElement> result = new LinkedHashSet<PascalNamedElement>();
         PasNamespaceIdent usedModule = getUsedModuleName(element);

@@ -16,6 +16,7 @@ import com.intellij.util.ConstantFunction;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -41,7 +42,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     public static final Logger LOG = Logger.getInstance(PascalLineMarkerProvider.class.getName());
 
-    private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result, PsiElement implSection, PsiElement intfSection) {
+    private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result, PsiElement implSection, PsiElement intfSection) throws PasInvalidScopeException {
         if (element instanceof PascalRoutineImpl) {
             PascalRoutineImpl routineDecl = (PascalRoutineImpl) element;
             Collection<PsiElement> targets;
@@ -87,14 +88,18 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         if (elements.isEmpty()) {
             return;
         }
-        PsiElement implSection = PsiUtil.getModuleImplementationSection(elements.get(0).getContainingFile());
-        PsiElement intfSection = PsiUtil.getModuleInterfaceSection(elements.get(0).getContainingFile());
-        for (PsiElement psiElement : elements) {
-            collectNavigationMarkers(psiElement, result, implSection, intfSection);
-            i++;
-            if ((i % 1000)== 0) {
-                System.out.println("Elements processed: " + i);
+        try {
+            PsiElement implSection = PsiUtil.getModuleImplementationSection(elements.get(0).getContainingFile());
+            PsiElement intfSection = PsiUtil.getModuleInterfaceSection(elements.get(0).getContainingFile());
+            for (PsiElement psiElement : elements) {
+                collectNavigationMarkers(psiElement, result, implSection, intfSection);
+                i++;
+                if ((i % 1000) == 0) {
+                    System.out.println("Elements processed: " + i);
+                }
             }
+        } catch (PasInvalidScopeException e) {
+            e.printStackTrace();
         }
         System.out.println(String.format("Line markers done in %.3f seconds", (System.nanoTime() - time) / 1000000000.0));
     }
@@ -131,7 +136,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         return result;
     }
 
-    private Collection<PsiElement> getInterfaceMethodTargets(@NotNull PascalRoutineImpl routineDecl) {
+    private Collection<PsiElement> getInterfaceMethodTargets(@NotNull PascalRoutineImpl routineDecl) throws PasInvalidScopeException {
         Collection<PsiElement> result = new SmartList<PsiElement>();
         PasModule module = PsiUtil.getModule(routineDecl);
         if (module != null) {

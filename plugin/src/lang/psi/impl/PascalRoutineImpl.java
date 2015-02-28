@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -53,14 +54,14 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
 
     @Nullable
     @Override
-    public PasField getField(String name) {
+    synchronized public PasField getField(String name) throws PasInvalidScopeException {
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
         }
         return members.get(name);
     }
 
-    synchronized private void buildMembers() {
+    private void buildMembers() throws PasInvalidScopeException {
         if (null == getContainingFile()) {
             PascalPsiImplUtil.logNullContainingFile(this);
             return;
@@ -78,7 +79,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         }
 
         //noinspection unchecked
-        PsiUtil.retrieveEntitiesFromSection(this, this, PasField.Visibility.STRICT_PRIVATE,
+        PsiUtil.processEntitiesInSection(this, this, PasField.Visibility.STRICT_PRIVATE,
                 new FieldCollector() {
                     @Override
                     public boolean fieldExists(PascalNamedElement element) {
@@ -106,14 +107,17 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
 
     @NotNull
     @Override
-    public Collection<PasField> getAllFields() {
+    synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
         }
         return members.values();
     }
 
-    public boolean isCacheActual(Map<String, PasField> cache, long stamp) {
+    private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {
+        if (!PsiUtil.isElementValid(this)) {
+            throw new PasInvalidScopeException(this);
+        }
         return (cache != null) && (getContainingFile() != null) && (getContainingFile().getModificationStamp() == stamp);
     }
 
@@ -147,5 +151,11 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
 
             }
         }
+    }
+
+    @Override
+    synchronized public void invalidateCache() {
+        System.out.println("*** invalidating cache");
+        members = null;
     }
 }

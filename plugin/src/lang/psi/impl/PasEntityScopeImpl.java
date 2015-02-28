@@ -8,6 +8,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -92,7 +93,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
 
     @Nullable
     @Override
-    synchronized public PasField getField(String name) {
+    synchronized public PasField getField(String name) throws PasInvalidScopeException {
         if (!isCacheActual(members, buildStamp)) { // TODO: check correctness
             buildMembers();
         }
@@ -107,7 +108,10 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
 
     @NotNull
     @Override
-    synchronized public Collection<PasField> getAllFields() {
+    synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
+        if (!PsiUtil.isElementValid(this)) {
+            throw new PasInvalidScopeException(this);
+        }
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
         }
@@ -130,7 +134,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         return STR_TO_VIS.get(sb.toString());
     }
 
-    private void buildMembers() {
+    private void buildMembers() throws PasInvalidScopeException {
         if (null == getContainingFile()) {
             PascalPsiImplUtil.logNullContainingFile(this);
             return;
@@ -183,7 +187,10 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         members.get(visibility.ordinal()).put(field.name, field);
     }
 
-    public boolean isCacheActual(List<Map<String, PasField>> cache, long stamp) {
+    private boolean isCacheActual(List<Map<String, PasField>> cache, long stamp) throws PasInvalidScopeException {
+        if (!PsiUtil.isElementValid(this)) {
+            throw new PasInvalidScopeException(this);
+        }
         return (getContainingFile() != null) && (cache != null) && (getContainingFile().getModificationStamp() == stamp);
     }
 
@@ -209,4 +216,9 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         }
     }
 
+    @Override
+    synchronized public void invalidateCache() {
+        System.out.println("*** invalidating cache");
+        members = null;
+    }
 }
