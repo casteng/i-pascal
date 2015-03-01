@@ -362,11 +362,17 @@ public class PsiUtil {
     }
 
     @NotNull
-    public static List<PasFormalParameter> getFormalParameters(PasFormalParameterSection paramsSection) {
+    public static List<PasNamedIdent> getFormalParameters(PasFormalParameterSection paramsSection) {
         if (paramsSection != null) {
             PasFormalParameterList paramList = paramsSection.getFormalParameterList();
             if (paramList != null) {
-                return paramList.getFormalParameterList();
+                List<PasNamedIdent> result = new SmartList<PasNamedIdent>();
+                for (PasFormalParameter parameter : paramList.getFormalParameterList()) {
+                    for (PasNamedIdent ident : parameter.getNamedIdentList()) {
+                        result.add(ident);
+                    }
+                }
+                return result;
             }
         }
         return Collections.emptyList();

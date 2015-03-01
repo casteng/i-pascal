@@ -40,7 +40,7 @@ public class PascalBlock extends AbstractBlock implements Block {
     private static final TokenSet TOKENS_PARENT_INDENTED = TokenSet.create(PasTypes.STATEMENT, PasTypes.VAR_DECLARATION, PasTypes.CONST_DECLARATION, PasTypes.TYPE_DECLARATION,
             PasTypes.CLASS_TYPE_DECL, PasTypes.RECORD_DECL, PasTypes.OBJECT_DECL, PasTypes.CLASS_HELPER_DECL, PasTypes.INTERFACE_TYPE_DECL, PasTypes.RECORD_HELPER_DECL,
             PasTypes.CLASS_FIELD, PasTypes.EXPORTED_ROUTINE, PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD, PasTypes.CLASS_METHOD_RESOLUTION, PasTypes.USES_CLAUSE, PasTypes.RECORD_VARIANT,
-            PasTypes.ENUM_TYPE, PasTypes.ENUM_EL, PasTypes.ENUM_REST);
+            PasTypes.ENUM_TYPE);
 
     private static final TokenSet TOKENS_NO_LF_AFTER_SEMI = TokenSet.create(PasTypes.FORMAL_PARAMETER_LIST, PasTypes.EXPORTED_ROUTINE, PasTypes.METHOD_IMPL_DECL,
             PasTypes.CLASS_PROPERTY_SPECIFIER, PasTypes.PROCEDURE_REFERENCE);

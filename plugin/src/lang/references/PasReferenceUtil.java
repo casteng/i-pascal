@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -321,13 +322,28 @@ public class PasReferenceUtil {
                         }
                     }
                 }
+                if (!fqn.isEmpty() && (fqn.isFirst())) {
+                    addBuiltins(result, fqn, types);
+                }
             }
         } catch (PasInvalidScopeException e) {
-            for (PasEntityScope namespace : namespaces) {
-                namespace.invalidateCache();
+            if (namespaces != null) {
+                for (PasEntityScope namespace : namespaces) {
+                    namespace.invalidateCache();
+                }
             }
         }
         return result;
+    }
+
+    private static void addBuiltins(Collection<PsiElement> result, NamespaceRec fqn, Set<PasField.Type> types) {
+        for (PasField field : BuiltinsParser.getBuiltins()) {
+            if (types.contains(field.type) && field.name.equalsIgnoreCase(fqn.getCurrent().getName())) {
+                PasModule module = PsiUtil.getModule(fqn.getParentIdent());
+                result.add(module != null ? module : fqn.getParentIdent());
+                return;
+            }
+        }
     }
 
     private static PasEntityScope getNearestAffectingScope(PsiElement element) {

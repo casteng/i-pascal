@@ -201,11 +201,11 @@
 
   implements(".+Statement")="com.siberika.idea.pascal.lang.psi.PasStatement"
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
-  implements(".*ModuleHead|.*Ident|ClassProperty|FormalParameter|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.PascalStructType,com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|ClassMethod|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
   extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
-  extends(".*ModuleHead|.*Ident|ClassProperty|FormalParameter|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
+  extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
   extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl"
   extends("ExportedRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
   extends("RoutineImplDecl|MethodImplDecl|ClassMethod")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
@@ -437,9 +437,9 @@ private procHeading         ::= PROCEDURE [FormalParameterSection] [";" callConv
 SimpleType          ::= EnumType | SubRangeType
 SubRangeType        ::= RangeBound RANGE RangeBound
 RangeBound          ::= ConstExpressionOrd
-EnumType            ::= "(" EnumEl EnumRest* ")" {pin=1}
-EnumRest            ::= "," EnumEl {pin=1}
-EnumEl              ::= identifier ["=" Expression] {}
+EnumType            ::= "(" enumEl enumRest* ")" {pin=1}
+private enumRest    ::= "," enumEl {pin=1}
+private enumEl      ::= NamedIdent ["=" Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
                                   | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | Ident_kw | KEYWORDESCAPE | '^' | '.' | '[' | '('

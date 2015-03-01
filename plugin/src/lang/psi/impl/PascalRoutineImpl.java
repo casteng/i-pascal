@@ -7,7 +7,6 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -74,8 +73,8 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         redeclaredMembers = new LinkedHashSet<PascalNamedElement>();
         System.out.println("routine buildMembers: " + getName());
 
-        List<PasFormalParameter> params = PsiUtil.getFormalParameters(getFormalParameterSection());
-        for (PasFormalParameter parameter : params) {
+        List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
+        for (PasNamedIdent parameter : params) {
             addField(parameter, PasField.Type.VARIABLE);
         }
 
@@ -102,7 +101,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
             members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.Type.VARIABLE, PasField.Visibility.PRIVATE));
         }
-        System.out.println(getName() + ": buildMembers: " + members.size() + "members");
+        System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
     private void addField(PascalNamedElement element, PasField.Type type) {

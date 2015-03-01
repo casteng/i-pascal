@@ -1,5 +1,6 @@
 <builtins>
     <type>___DUMMY__TYPE___</type>
+    <type>string</type>
     <routine>assert</routine>
     <routine>SizeOf</routine>
     <routine>ord</routine>
@@ -16,5 +17,7 @@
     <routine>slice</routine>
     <routine>inc</routine>
     <routine>dec</routine>
-    <routine>string</routine>
+    <routine>high</routine>
+    <routine>low</routine>
+    <routine>Assigned</routine>
 </builtins>
