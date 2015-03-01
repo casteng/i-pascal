@@ -98,7 +98,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
             buildMembers();
         }
         for (PasField.Visibility visibility : PasField.Visibility.values()) {
-            PasField result = members.get(visibility.ordinal()).get(name);
+            PasField result = members.get(visibility.ordinal()).get(name.toUpperCase());
             if (null != result) {
                 return result;
             }
@@ -149,6 +149,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         assert members.size() == PasField.Visibility.values().length;
         redeclaredMembers = new LinkedHashSet<PascalNamedElement>();
 
+        addField(this, "Self", PasField.Type.VARIABLE, PasField.Visibility.PRIVATE);
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
         while (child != null) {
@@ -180,11 +181,15 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
     }
 
     private void addField(PascalNamedElement element, PasField.Type type, @NotNull PasField.Visibility visibility) {
-        PasField field = new PasField(this, element, element.getName(), type, visibility);
+        addField(element, element.getName(), type, visibility);
+    }
+
+    private void addField(PascalNamedElement element, String name, PasField.Type type, @NotNull PasField.Visibility visibility) {
+        PasField field = new PasField(this, element, name, type, visibility);
         if (members.get(visibility.ordinal()) == null) {
             members.set(visibility.ordinal(), new LinkedHashMap<String, PasField>());
         }
-        members.get(visibility.ordinal()).put(field.name, field);
+        members.get(visibility.ordinal()).put(name.toUpperCase(), field);
     }
 
     private boolean isCacheActual(List<Map<String, PasField>> cache, long stamp) throws PasInvalidScopeException {

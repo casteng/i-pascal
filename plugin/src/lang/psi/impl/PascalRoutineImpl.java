@@ -35,6 +35,7 @@ import java.util.Set;
  * Date: 06/09/2013
  */
 public abstract class PascalRoutineImpl extends PascalNamedElementImpl implements PasEntityScope {
+    public static final String BUILTIN_RESULT = "Result";
     private Map<String, PasField> members;
     private Set<PascalNamedElement> redeclaredMembers = null;
     private long buildStamp = 0;
@@ -58,7 +59,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
         }
-        return members.get(name);
+        return members.get(name.toUpperCase());
     }
 
     private void buildMembers() throws PasInvalidScopeException {
@@ -83,7 +84,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
                 new FieldCollector() {
                     @Override
                     public boolean fieldExists(PascalNamedElement element) {
-                        if (members.containsKey(element.getName())) {
+                        if (members.containsKey(element.getName().toUpperCase())) {
                             redeclaredMembers.add(element);
                             return true;
                         } else {
@@ -93,16 +94,20 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
 
                     @Override
                     public void addField(String name, PasField field) {
-                        members.put(name, field);
+                        members.put(name.toUpperCase(), field);
                     }
                 },
-                PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
+                PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class
+        );
+        if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
+            members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.Type.VARIABLE, PasField.Visibility.PRIVATE));
+        }
         System.out.println(getName() + ": buildMembers: " + members.size() + "members");
     }
 
     private void addField(PascalNamedElement element, PasField.Type type) {
         PasField field = new PasField(this, element, element.getName(), type, PasField.Visibility.STRICT_PRIVATE);
-        members.put(field.name, field);
+        members.put(field.name.toUpperCase(), field);
     }
 
     @NotNull
