@@ -94,7 +94,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                 new FieldCollector() {
                     @Override
                     public boolean fieldExists(PascalNamedElement element) {
-                        if (privateMembers.containsKey(element.getName())) {
+                        if (privateMembers.containsKey(element.getName().toUpperCase())) {
                             redeclaredPrivateMembers.add(element);
                             return true;
                         } else {
@@ -105,7 +105,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                     @Override
                     public void addField(String name, PasField field) {
                         System.out.println(String.format("Impl: %s.%s", getName(), field.name));
-                        privateMembers.put(name, field);
+                        privateMembers.put(name.toUpperCase(), field);
                     }
                 },
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
@@ -142,13 +142,16 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         if (isCacheActual(publicMembers, buildPublicStamp)) { return; } // TODO: check correctness
         publicMembers = new LinkedHashMap<String, PasField>();
         redeclaredPublicMembers = new LinkedHashSet<PascalNamedElement>();
+
+        publicMembers.put(getName().toUpperCase(), new PasField(this, this, getName(), PasField.Type.UNIT, PasField.Visibility.PUBLIC));
+
         PsiElement section = PsiUtil.getModuleInterfaceSection(this);
         //noinspection unchecked
         PsiUtil.processEntitiesInSection(this, section, PasField.Visibility.PUBLIC,
                 new FieldCollector() {
                     @Override
                     public boolean fieldExists(PascalNamedElement element) {
-                        if (publicMembers.containsKey(element.getName())) {
+                        if (publicMembers.containsKey(element.getName().toUpperCase())) {
                             redeclaredPublicMembers.add(element);
                             return true;
                         } else {
@@ -159,7 +162,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                     @Override
                     public void addField(String name, PasField field) {
                         System.out.println(String.format("Intf: %s.%s", getName(), field.name));
-                        publicMembers.put(name, field);
+                        publicMembers.put(name.toUpperCase(), field);
                     }
                 },
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);

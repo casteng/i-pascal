@@ -479,7 +479,7 @@ public class PsiUtil {
         }
         for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
             if (isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
-                if (!PsiUtil.isModuleName(namedElement) && !PsiUtil.isFormalParameterName(namedElement)) {
+                if (!PsiUtil.isFormalParameterName(namedElement) && !PsiUtil.isUsedUnitName(namedElement)) {
                     String name = namedElement.getName();
                     if (!fieldCollector.fieldExists(namedElement)) {
                         PasField.Type type = PasField.Type.VARIABLE;
@@ -487,8 +487,6 @@ public class PsiUtil {
                             type = PasField.Type.TYPE;
                         } else if (PsiUtil.isRoutineName(namedElement)) {
                             type = PasField.Type.ROUTINE;
-                        } else if (PsiUtil.isUsedUnitName(namedElement)) {
-                            type = PasField.Type.UNIT;
                         }
                         fieldCollector.addField(name, new PasField(owner, namedElement, name, type, visibility));
                     }
