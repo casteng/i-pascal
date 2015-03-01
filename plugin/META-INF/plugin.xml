@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.8</p>
+        <ul>
+          <li>references/find usages rework</li>
+        </ul>
         <p>0.7.5</p>
         <ul>
           <li>code formatter</li>
@@ -79,7 +83,7 @@
         <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />
         <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
 
-        <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
+        <!--<psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>-->
         <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
         <!--<referencesSearch implementation="com.siberika.idea.pascal.lang.references.PascalReferencesSearcher"/>-->
 

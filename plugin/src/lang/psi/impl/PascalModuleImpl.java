@@ -55,12 +55,12 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         if (!isCacheActual(publicMembers, buildPublicStamp)) {
             buildPublicMembers();
         }
-        PasField result = publicMembers.get(name);
+        PasField result = publicMembers.get(name.toUpperCase());
         if (null == result) {
             if (!isCacheActual(privateMembers, buildPrivateStamp)) {
                 buildPrivateMembers();
             }
-            result = privateMembers.get(name);
+            result = privateMembers.get(name.toUpperCase());
         }
         return result;
     }
