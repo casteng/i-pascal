@@ -19,6 +19,7 @@ import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasEntityID;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterList;
@@ -409,14 +410,14 @@ public class PsiUtil {
         return (entityDecl.getParent() instanceof PasVarDeclaration) || (entityDecl.getParent() instanceof PasFormalParameter);
     }
 
-    /**
-     * Checks if the entityDecl is a declaration of constant
-     *
-     * @param entityDecl entity declaration to check
-     * @return true if the entityDecl is a declaration of variable or formal parameter
-     */
+    // Checks if the entityDecl is a declaration of constant
     public static boolean isConstDecl(PascalNamedElement entityDecl) {
         return (entityDecl.getParent() instanceof PasConstDeclaration);
+    }
+
+    // Checks if the entityDecl is a declaration of an enumeration constant
+    private static boolean isEnumDecl(PascalNamedElement entityDecl) {
+        return (entityDecl.getParent() instanceof PasEnumType);
     }
 
     /**
@@ -477,16 +478,18 @@ public class PsiUtil {
         if (null == section) {
             return;
         }
-        for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
-            if (isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
-                if (!PsiUtil.isFormalParameterName(namedElement) && !PsiUtil.isUsedUnitName(namedElement)) {
+        for (PascalNamedElement namedElement : findChildrenOfAnyType(section, classes)) {
+            if (isSameAffectingScope(getNearestAffectingDeclarationsRoot(namedElement), section)) {
+                if (!isFormalParameterName(namedElement) && !isUsedUnitName(namedElement)) {
                     String name = namedElement.getName();
                     if (!fieldCollector.fieldExists(namedElement)) {
                         PasField.Type type = PasField.Type.VARIABLE;
-                        if (PsiUtil.isTypeName(namedElement)) {
+                        if (isTypeName(namedElement)) {
                             type = PasField.Type.TYPE;
-                        } else if (PsiUtil.isRoutineName(namedElement)) {
+                        } else if (isRoutineName(namedElement)) {
                             type = PasField.Type.ROUTINE;
+                        } else if (isConstDecl(namedElement) || isEnumDecl(namedElement)) {
+                            type = PasField.Type.CONSTANT;
                         }
                         fieldCollector.addField(name, new PasField(owner, namedElement, name, type, visibility));
                     }

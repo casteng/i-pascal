@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
+import com.google.common.base.Objects;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
@@ -154,7 +155,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
         PascalNamedElementImpl that = (PascalNamedElementImpl) o;
 
-        if (!getParent().equals(that.getParent())) return false;
+        if (!Objects.equal(getParent(), that.getParent())) return false;
         if (!getName().equalsIgnoreCase(that.getName())) return false;
 
         return true;

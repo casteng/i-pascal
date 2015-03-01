@@ -316,8 +316,9 @@ public class PasReferenceUtil {
             if (fqn.isTarget() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
                     for (PasField pasField : namespace.getAllFields()) {
-                        if ((pasField.element != null) && (types.contains(pasField.type)) &&
-                                pasField.name.equalsIgnoreCase(fqn.getCurrentName()) && isVisibleWithinUnit(pasField, fqn)) {
+                        if ((pasField.element != null) && isFieldMatches(pasField, fqn, types) &&
+                                !result.contains(pasField.element) &&
+                                isVisibleWithinUnit(pasField, fqn)) {
                             result.add(pasField.element);
                         }
                     }
@@ -338,12 +339,16 @@ public class PasReferenceUtil {
 
     private static void addBuiltins(Collection<PsiElement> result, NamespaceRec fqn, Set<PasField.Type> types) {
         for (PasField field : BuiltinsParser.getBuiltins()) {
-            if (types.contains(field.type) && field.name.equalsIgnoreCase(fqn.getCurrent().getName())) {
+            if (isFieldMatches(field, fqn, types)) {
                 PasModule module = PsiUtil.getModule(fqn.getParentIdent());
                 result.add(module != null ? module : fqn.getParentIdent());
                 return;
             }
         }
+    }
+
+    private static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.Type> types) {
+        return types.contains(field.type) && field.name.equalsIgnoreCase(fqn.getCurrentName());
     }
 
     private static PasEntityScope getNearestAffectingScope(PsiElement element) {
