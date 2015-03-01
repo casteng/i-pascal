@@ -5,6 +5,8 @@ import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import org.jetbrains.annotations.NotNull;
@@ -40,15 +42,18 @@ public class PascalFindUsagesProvider implements FindUsagesProvider {
         } else if (element instanceof PasUnitModuleHead) {
             return "unit";
         } else {
-            return "";
+            if (element.getParent() instanceof PasEnumType) {
+                return "enumeration";
+            }
+            return "identifier";
         }
     }
 
     @NotNull
     @Override
     public String getDescriptiveName(@NotNull PsiElement element) {
-        if (element instanceof PasGenericTypeIdent) {
-            return ((PasGenericTypeIdent) element).getName();
+        if (element instanceof PasEntityScope) {
+            return ((PasEntityScope) element).getName();
         } else {
             return "";
         }

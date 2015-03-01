@@ -209,7 +209,7 @@ public class PasReferenceUtil {
                 offs = fqn.getCurrent().getTextRange().getStartOffset();
             }
             return (field.element.getTextRange().getStartOffset() <= offs)
-                    || PsiUtil.allowsForwardReference(field.element);
+                    || PsiUtil.allowsForwardReference(fqn.getParentIdent());
         } else {
             // check if field visibility allows usage from another unit
             return PasField.isAllowed(field.visibility, PasField.Visibility.PROTECTED);

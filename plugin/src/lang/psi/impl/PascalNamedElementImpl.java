@@ -14,8 +14,6 @@ import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
-import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
@@ -144,12 +142,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     public PsiReference[] getReferences() {
         String text = getName();
-        if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent) || (this.getParent() instanceof PascalRoutineImpl)) {
-            return new PsiReference[]{
-                    new PascalReference(this, new TextRange(0, text.length()))
-            };
-        }
-        return new PsiReference[0];
+        return new PsiReference[]{
+                new PascalReference(this, new TextRange(0, text.length()))
+        };
     }
 
     @Override
