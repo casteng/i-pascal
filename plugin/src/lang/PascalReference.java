@@ -39,7 +39,8 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         final ResolveCache resolveCache = ResolveCache.getInstance(myElement.getProject());
-        return resolveCache.resolveWithCaching(this, Resolver.INSTANCE, true, incompleteCode, myElement.getContainingFile());
+        //return resolveCache.resolveWithCaching(this, Resolver.INSTANCE, true, incompleteCode, myElement.getContainingFile());
+        return Resolver.INSTANCE.resolve(this, incompleteCode);
     }
 
     @Nullable
