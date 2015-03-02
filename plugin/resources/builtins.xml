@@ -19,5 +19,9 @@
     <routine>dec</routine>
     <routine>high</routine>
     <routine>low</routine>
+    <routine>succ</routine>
+    <routine>prev</routine>
+    <routine>include</routine>
+    <routine>exclude</routine>
     <routine>Assigned</routine>
 </builtins>
