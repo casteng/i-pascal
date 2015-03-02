@@ -9,6 +9,7 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,12 +23,17 @@ public class NamespaceRec {
     private final int target;
     private int current;
 
-    private NamespaceRec(PsiElement context) {
-        assert context != null;
-        levels = Collections.emptyList();
-        parentIdent = context;
-        target = 0;
-        current = 0;
+    private static final List<String> EMPTY_LEVELS = Collections.emptyList();
+
+    private NamespaceRec(@NotNull List<String> levels, @NotNull PsiElement parentIdent, int target) {
+        this.levels = levels;
+        this.parentIdent = parentIdent;
+        this.target = target;
+        this.current = 0;
+    }
+
+    private NamespaceRec(@NotNull PsiElement context) {
+        this(EMPTY_LEVELS, context, 0);
     }
 
     private NamespaceRec(@NotNull PasSubIdent subIdent) {
@@ -35,15 +41,8 @@ public class NamespaceRec {
     }
 
     private NamespaceRec(@NotNull PasRefNamedIdent element) {
-        levels = new SmartList<String>();
-        parentIdent = element.getParent() != null ? element.getParent() : element;
+        this(new SmartList<String>(), element.getParent() != null ? element.getParent() : element, 0);
         levels.add(element.getName());
-        target = 0;
-        current = 0;
-    }
-
-    private static PascalQualifiedIdent getParent(PasSubIdent subIdent) {
-        return subIdent.getParent() instanceof PascalQualifiedIdent ? (PascalQualifiedIdent) subIdent.getParent() : null;
     }
 
     /**
@@ -65,6 +64,10 @@ public class NamespaceRec {
         }
         target = targetInd;
         current = 0;
+    }
+
+    private static PascalQualifiedIdent getParent(PasSubIdent subIdent) {
+        return subIdent.getParent() instanceof PascalQualifiedIdent ? (PascalQualifiedIdent) subIdent.getParent() : null;
     }
 
     /*public PascalNamedElement getCurrent() {
@@ -96,7 +99,7 @@ public class NamespaceRec {
         return parentIdent;
     }
 
-    public static NamespaceRec fromElement(PsiElement element) {
+    public static NamespaceRec fromElement(@NotNull PsiElement element) {
         if (element instanceof PasSubIdent) {
             return new NamespaceRec((PascalQualifiedIdent) element.getParent(), (PasSubIdent) element);
         } else if (element instanceof PascalQualifiedIdent) {
@@ -111,6 +114,11 @@ public class NamespaceRec {
             namespace = new NamespaceRec(element);
         }
         return namespace;
+    }
+
+    public static NamespaceRec fromFQN(@NotNull PsiElement context, @NotNull String fqn) {
+        List<String> lvls = Arrays.asList(fqn.split("\\."));
+        return new NamespaceRec(lvls, context, lvls.size()-1);
     }
 
     public String getCurrentName() {

@@ -274,6 +274,11 @@ public class PasReferenceUtil {
 //-------------------------------------------------------------------
 
     @Nullable
+    private static PasEntityScope retrieveFieldUnitScope(PasField field) {
+        return (PasEntityScope) field.element;
+    }
+
+    @Nullable
     private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field) {
         PasTypeID typeId = null;
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(field.element, PasTypeDecl.class);
@@ -333,7 +338,13 @@ public class PasReferenceUtil {
                 }
                 namespaces = null;
                 if (field != null) {
-                    PasEntityScope newNS = retrieveFieldTypeScope(field);
+                    PasEntityScope newNS;
+                    if (field.type == PasField.Type.UNIT) {
+                        newNS = fqn.isFirst() ? retrieveFieldUnitScope(field) : null;                    // First qualifier can be unit name
+                    } else {
+                        newNS = retrieveFieldTypeScope(field);
+                    }
+
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
                     addParentNamespaces(namespaces, newNS);
                 }
@@ -375,7 +386,7 @@ public class PasReferenceUtil {
     }
 
     private static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.Type> types) {
-        return types.contains(field.type) && field.name.equalsIgnoreCase(fqn.getCurrentName());
+        return (!fqn.isTarget() || types.contains(field.type)) && field.name.equalsIgnoreCase(fqn.getCurrentName());
     }
 
     private static PasEntityScope getNearestAffectingScope(PsiElement element) {

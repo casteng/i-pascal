@@ -498,4 +498,7 @@ public class PsiUtil {
         }
     }
 
+    public static boolean isFromSystemUnit(PsiElement element) {
+        return "$system.pas".equalsIgnoreCase(element.getContainingFile().getName());
+    }
 }

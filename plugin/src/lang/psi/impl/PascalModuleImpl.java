@@ -113,6 +113,9 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
 
         privateUnits = retrieveUsedUnits(section);
+        for (PasEntityScope unit : privateUnits) {
+            privateMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.Type.UNIT, PasField.Visibility.PRIVATE));
+        }
 
         buildPrivateStamp = getContainingFile().getModificationStamp();
         System.out.println(String.format("Unit %s private: %d, used: %d", getName(), privateMembers.size(), privateUnits != null ? privateUnits.size() : 0));
@@ -171,6 +174,10 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                 },
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
         publicUnits = retrieveUsedUnits(section);
+        for (PasEntityScope unit : publicUnits) {
+            publicMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.Type.UNIT, PasField.Visibility.PRIVATE));
+        }
+
         buildPublicStamp = getContainingFile().getModificationStamp();
         System.out.println(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
     }

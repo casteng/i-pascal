@@ -22,6 +22,11 @@ type
         name: string;
     end;
 
+    TC2 = class
+    private
+        name2: string;
+    end;
+
     TStringSearchOption = (soDown, soMatchCase, soWholeWord);
     TStringSearchOptions = set of TStringSearchOption;TStringSeachOption = TStringSearchOption;
 
@@ -35,10 +40,12 @@ implementation
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
     Value: Simple.TC;
+    V2: TC2;
     Obj: TObject;
 begin
     Obj.Create();
     Value.Create();
+    v2.Create();
     Value := 2 <> (aa=1);
     Value.X;
     if ((Value mod 2)=1) then

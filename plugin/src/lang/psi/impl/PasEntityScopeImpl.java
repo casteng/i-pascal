@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -210,17 +211,23 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
     }
 
     private void buildParentScopes() {
+        NamespaceRec fqn = null;
         PasClassParent parent = null;
         if (getClass() == PasClassTypeDeclImpl.class) {
             parent = ((PasClassTypeDeclImpl) this).getClassParent();
         }
+        parentScopes = new SmartList<PasEntityScope>();
         if (parent != null) {
-            parentScopes = new ArrayList<PasEntityScope>(parent.getTypeIDList().size());
             for (PasTypeID typeID : parent.getTypeIDList()) {
-                PasEntityScope scope = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(typeID.getFullyQualifiedIdent()));
-                if (scope != null) {
-                    parentScopes.add(scope);
-                }
+                fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
+            }
+        } else if (!PsiUtil.isFromSystemUnit(this)) {
+            fqn = NamespaceRec.fromFQN(this, "system.TObject");
+        }
+        if (fqn != null) {
+            PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn);
+            if (scope != null) {
+                parentScopes.add(scope);
             }
         }
     }
