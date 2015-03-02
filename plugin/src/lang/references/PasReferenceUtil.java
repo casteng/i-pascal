@@ -283,6 +283,10 @@ public class PasReferenceUtil {
         PasTypeID typeId = null;
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(field.element, PasTypeDecl.class);
         if (typeDecl != null) {
+            PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
+            if (strucTypeDecl != null) {
+                return strucTypeDecl;
+            }
             typeId = typeDecl.getTypeID();
         }
         if (null == typeId) {
