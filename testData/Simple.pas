@@ -15,28 +15,9 @@ type
         constructor b(a, b: int);
     end;
 
-    TEnum = (eOne,
-        // dasd
-        eTwo,
-        //sda
-        eThree);
+    TEnum = (eOne, eTwo, eThree);
 
-    TObj = object
-        Name2, CurrentValue, DefaultValue: AnsiString;
-        HashValue: LongWord;
-        procedure ba(); virtual; abstract;
-        //class function a: int;
-        constructor b(a, b: int);
-        property cc: Int read ba; default;
-    end;
-
-    TVector2s = packed record
-    case Integer of
-        0:(X, Y: Single);
-        1:(V: array[0..1] of Single);
-    end;
-
-    TC = class(TVector2s)
+    TC = class(TObject)
     private
         name: string;
     end;
@@ -53,8 +34,11 @@ implementation
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
-    Value: TC;
+    Value: Simple.TC;
+    Obj: TObject;
 begin
+    Obj.Create();
+    Value.Create();
     Value := 2 <> (aa=1);
     Value.X;
     if ((Value mod 2)=1) then

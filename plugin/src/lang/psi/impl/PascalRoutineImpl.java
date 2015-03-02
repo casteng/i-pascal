@@ -71,7 +71,6 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         members = new LinkedHashMap<String, PasField>();
 
         redeclaredMembers = new LinkedHashSet<PascalNamedElement>();
-        System.out.println("routine buildMembers: " + getName());
 
         List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
         for (PasNamedIdent parameter : params) {
@@ -101,7 +100,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
             members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.Type.VARIABLE, PasField.Visibility.PRIVATE));
         }
-        System.out.println(getName() + ": buildMembers: " + members.size() + " members");
+        //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
     private void addField(PascalNamedElement element, PasField.Type type) {

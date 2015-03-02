@@ -5,7 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
@@ -13,6 +13,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -216,7 +217,10 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         if (parent != null) {
             parentScopes = new ArrayList<PasEntityScope>(parent.getTypeIDList().size());
             for (PasTypeID typeID : parent.getTypeIDList()) {
-                parentScopes.add(PascalParserUtil.getStructTypeByTypeIdent(typeID.getFullyQualifiedIdent()));
+                PasEntityScope scope = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(typeID.getFullyQualifiedIdent()));
+                if (scope != null) {
+                    parentScopes.add(scope);
+                }
             }
         }
     }

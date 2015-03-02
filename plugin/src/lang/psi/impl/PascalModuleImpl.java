@@ -107,7 +107,6 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
 
                     @Override
                     public void addField(String name, PasField field) {
-                        System.out.println(String.format("Impl: %s.%s", getName(), field.name));
                         privateMembers.put(name.toUpperCase(), field);
                     }
                 },
@@ -167,7 +166,6 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
 
                     @Override
                     public void addField(String name, PasField field) {
-                        System.out.println(String.format("Intf: %s.%s", getName(), field.name));
                         publicMembers.put(name.toUpperCase(), field);
                     }
                 },

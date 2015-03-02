@@ -17,6 +17,7 @@ import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
@@ -152,7 +153,7 @@ public class PasReferenceUtil {
      */
     public static Collection<LookupElement> getEntities(final NamespaceRec fqn, Set<PasField.Type> types) {
         // First entry in FQN
-        PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.isEmpty() ? fqn.getParentIdent() : fqn.getCurrent());
+        PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
         // Retrieve all namespaces affecting first FQN level
         while (section != null) {
@@ -166,7 +167,7 @@ public class PasReferenceUtil {
                 PasField field = null;
                 // Scan namespaces and get one matching field
                 for (PasEntityScope namespace : namespaces) {
-                    field = namespace.getField(fqn.getCurrent().getName());
+                    field = namespace.getField(fqn.getCurrentName());
                     if (field != null) { break; }
                 }
                 namespaces = null;
@@ -203,11 +204,7 @@ public class PasReferenceUtil {
         if ((field.element != null) && (field.element.getContainingFile() == fqn.getParentIdent().getContainingFile())) {
             // check if declaration comes earlier then usage or declaration allows forward mode
             int offs;
-            if (fqn.isEmpty()) {
-                offs = fqn.getParentIdent().getTextRange().getStartOffset();
-            } else {
-                offs = fqn.getCurrent().getTextRange().getStartOffset();
-            }
+            offs = fqn.getParentIdent().getTextRange().getStartOffset();
             return (field.element.getTextRange().getStartOffset() <= offs)
                     || PsiUtil.allowsForwardReference(fqn.getParentIdent());
         } else {
@@ -276,6 +273,36 @@ public class PasReferenceUtil {
 
 //-------------------------------------------------------------------
 
+    @Nullable
+    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field) {
+        PasTypeID typeId = null;
+        PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(field.element, PasTypeDecl.class);
+        if (typeDecl != null) {
+            typeId = typeDecl.getTypeID();
+        }
+        if (null == typeId) {
+            typeId = PsiTreeUtil.getChildOfType(typeDecl, PasTypeID.class);
+        }
+        if (typeDecl != null) {
+            return typeId != null ? PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent())) : null;
+        }
+        return null;
+    }
+
+    @Nullable
+    public static PasEntityScope resolveTypeScope(NamespaceRec fqn) {
+        Collection<PsiElement> types = resolve(fqn, PasField.TYPES_TYPE);
+        for (PsiElement e : types) {
+            if (e instanceof PascalNamedElement) {
+                PasEntityScope struct = PascalParserUtil.getStructTypeByIdent((PascalNamedElement) e);
+                if (struct != null) {
+                    return struct;
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      *  for each entry in FQN before target:
      *    find entity corresponding to NS in current scope
@@ -284,7 +311,7 @@ public class PasReferenceUtil {
      */
     public static Collection<PsiElement> resolve(final NamespaceRec fqn, Set<PasField.Type> types) {
         // First entry in FQN
-        PasEntityScope scope = getNearestAffectingScope(fqn.isEmpty() ? fqn.getParentIdent() : fqn.getCurrent());
+        PasEntityScope scope = getNearestAffectingScope(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
         Collection<PsiElement> result = new ArrayList<PsiElement>();
 
@@ -299,14 +326,14 @@ public class PasReferenceUtil {
                 PasField field = null;
                 // Scan namespaces and get one matching field
                 for (PasEntityScope namespace : namespaces) {
-                    field = namespace.getField(fqn.getCurrent().getName());
+                    field = namespace.getField(fqn.getCurrentName());
                     if (field != null) {
                         break;
                     }
                 }
                 namespaces = null;
                 if (field != null) {
-                    PasEntityScope newNS = retrieveNamespace(field, fqn.isFirst());
+                    PasEntityScope newNS = retrieveFieldTypeScope(field);
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
                     addParentNamespaces(namespaces, newNS);
                 }

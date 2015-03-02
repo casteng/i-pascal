@@ -136,12 +136,12 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     private static Collection<PascalNamedElement> findVariables(NamespaceRec namespaces, Class<? extends PascalNamedElement>...classes) throws PasInvalidScopeException {
         Collection<PascalNamedElement> result = new LinkedHashSet<PascalNamedElement>();
         if (!namespaces.isEmpty()) {
-            Collection<PascalNamedElement> entitiesDecl = retrieveSortedVisibleEntitiesDecl(namespaces.getCurrent(), namespaces.getCurrent().getName(), classes);
-            if ("result".equalsIgnoreCase(namespaces.getCurrent().getName()) && entitiesDecl.isEmpty()) {
-                retrieveFunctionResultReference(entitiesDecl, namespaces.getCurrent());
+            Collection<PascalNamedElement> entitiesDecl = retrieveSortedVisibleEntitiesDecl(namespaces.getParentIdent(), namespaces.getCurrentName(), classes);
+            if ("result".equalsIgnoreCase(namespaces.getCurrentName()) && entitiesDecl.isEmpty()) {
+                retrieveFunctionResultReference(entitiesDecl, namespaces.getParentIdent());
             }
             if (entitiesDecl.isEmpty()) {
-                retrieveDefaultNamespaceEntities(entitiesDecl, namespaces.getCurrent());
+                retrieveDefaultNamespaceEntities(entitiesDecl, namespaces.getParentIdent(), namespaces.getCurrentName());
             }
             for (PascalNamedElement entity : entitiesDecl) {
                 doFindVariables(result, entity, namespaces);
@@ -164,14 +164,14 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         }
     }
 
-    private static void retrieveFunctionResultReference(Collection<PascalNamedElement> result, PascalNamedElement current) {
+    private static void retrieveFunctionResultReference(Collection<PascalNamedElement> result, PsiElement current) {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(current);
         if (section instanceof PascalRoutineImpl) {
             result.add(((PascalRoutineImpl) section));
         }
     }
 
-    private static void retrieveDefaultNamespaceEntities(Collection<PascalNamedElement> result, PascalNamedElement current) throws PasInvalidScopeException {
+    private static void retrieveDefaultNamespaceEntities(Collection<PascalNamedElement> result, PsiElement current, String name) throws PasInvalidScopeException {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(current);
         if (section instanceof PascalRoutineImpl) {
             // add class declarations
@@ -180,20 +180,20 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                     Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, ((PascalQualifiedIdent) element).getNamespace(),
                             getEndOffset(section), PasGenericTypeIdent.class);
                     for (PascalNamedElement namedElement : entities) {
-                        addDeclarations(result, getStructTypeByIdent(namedElement), current.getName());
+                        addDeclarations(result, getStructTypeByIdent(namedElement), name);
                     }
                 }
             }
-            if ("self".equalsIgnoreCase(current.getName())) {
+            if ("self".equalsIgnoreCase(name)) {
                 retrieveMethodSelfReference(result, current);
             }
         }
         if (result.isEmpty()) {
-            addUsedUnitDeclarations(result, current);
+            addUsedUnitDeclarations(result, current, name);
         }
     }
 
-    private static void retrieveMethodSelfReference(Collection<PascalNamedElement> result, PascalNamedElement self) throws PasInvalidScopeException {
+    private static void retrieveMethodSelfReference(Collection<PascalNamedElement> result, PsiElement self) throws PasInvalidScopeException {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(self);
         if (section instanceof PascalRoutineImpl) {
             PasModule module = PsiUtil.getModule(section);
@@ -213,12 +213,12 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
      * @param current element which should be affected by a unit declaration in order to be added to result
      */
     @SuppressWarnings("ConstantConditions")
-    private static void addUsedUnitDeclarations(Collection<PascalNamedElement> result, PascalNamedElement current) {
+    private static void addUsedUnitDeclarations(Collection<PascalNamedElement> result, PsiElement current, String name) {
         for (PasNamespaceIdent usedUnitName : PsiUtil.getUsedUnits(current.getContainingFile())) {
-            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName(), current.getName());
+            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName(), name);
         }
         for (String unitName : EXPLICIT_UNITS) {
-            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(current), unitName, current.getName());
+            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(current), unitName, name);
         }
     }
 
@@ -246,7 +246,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         if (namespaces.isTarget()) {
             result.add(entityDecl);
         } else {
-            assert namespaces.getCurrent() != null;
+            assert namespaces.getCurrentName() != null;
             PsiElement section = getExplicitUnitSection(namespaces);
             section = section != null ? section : retrieveNamespace(entityDecl, namespaces.isFirst());
             // Check if the new section is another unit and use its interface section in this case
@@ -256,13 +256,13 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
             if (section != null) {
                 namespaces.next();
-                Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, namespaces.getCurrent().getName(),
+                Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, namespaces.getCurrentName(),
                         getEndOffset(section), PasNamedIdent.class, PasGenericTypeIdent.class);
 
                 if (entities.isEmpty() && (section instanceof PasEntityScope)) {
                     PasEntityScope parentScope = ((PasEntityScope) section).getParentScope() != null ? getFirst(((PasEntityScope) section).getParentScope(), null) : null;
                     section = retrieveNamespace(parentScope, namespaces.isFirst());
-                    entities = retrieveEntitiesFromSection(section, namespaces.getCurrent().getName(),
+                    entities = retrieveEntitiesFromSection(section, namespaces.getCurrentName(),
                             getEndOffset(section), PasNamedIdent.class, PasGenericTypeIdent.class);
                 }
 
@@ -277,8 +277,8 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     private static PasEntityScope getExplicitUnitSection(NamespaceRec namespaces) {
         if (namespaces.isFirst()) {
             for (String unitName : EXPLICIT_UNITS) {
-                if (unitName.equalsIgnoreCase(namespaces.getCurrent().getName())) {
-                    return PasReferenceUtil.findUnit(namespaces.getCurrent().getProject(), ModuleUtilCore.findModuleForPsiElement(namespaces.getCurrent()), namespaces.getCurrent().getName());
+                if (unitName.equalsIgnoreCase(namespaces.getCurrentName())) {
+                    return PasReferenceUtil.findUnit(namespaces.getParentIdent().getProject(), ModuleUtilCore.findModuleForPsiElement(namespaces.getParentIdent()), namespaces.getCurrentName());
                 }
             }
         }
@@ -361,7 +361,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(typeId);
             Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, typeId.getName(),
                     getEndOffset(section), PasGenericTypeIdent.class);
-            addUsedUnitDeclarations(entities, typeId);
+            addUsedUnitDeclarations(entities, typeId, typeId.getName());
             for (PascalNamedElement element : entities) {
                 return getStructTypeByIdent(element);
             }
