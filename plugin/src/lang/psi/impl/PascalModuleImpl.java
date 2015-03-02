@@ -89,6 +89,9 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         redeclaredPrivateMembers = new LinkedHashSet<PascalNamedElement>();
 
         PsiElement section = PsiUtil.getModuleImplementationSection(this);
+        if (null == section) {
+            section = this;
+        }
         //noinspection unchecked
         PsiUtil.processEntitiesInSection(this, section, PasField.Visibility.PRIVATE,
                 new FieldCollector() {
@@ -146,6 +149,9 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         publicMembers.put(getName().toUpperCase(), new PasField(this, this, getName(), PasField.Type.UNIT, PasField.Visibility.PUBLIC));
 
         PsiElement section = PsiUtil.getModuleInterfaceSection(this);
+        if (null == section) {
+            return;
+        }
         //noinspection unchecked
         PsiUtil.processEntitiesInSection(this, section, PasField.Visibility.PUBLIC,
                 new FieldCollector() {

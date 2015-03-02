@@ -36,7 +36,6 @@ import com.siberika.idea.pascal.lang.psi.PasHintingDirective;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasProcForwardDecl;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
@@ -126,7 +125,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 } else if (level <= 3) {
                     appendTokenSetUnique(result, PascalLexer.TOP_LEVEL_DECLARATIONS, parameters.getOriginalFile());
                     appendTokenSetUnique(result, TokenSet.create(PascalLexer.USES), parameters.getOriginalFile());
-                    PasModuleProgram program = pos instanceof PasModuleProgram ? (PasModuleProgram) pos : PsiTreeUtil.getPrevSiblingOfType(pos.getNextSibling(), PasModuleProgram.class);
+                    PasModule program = pos instanceof PasModule ? (PasModule) pos : PsiTreeUtil.getPrevSiblingOfType(pos.getNextSibling(), PasModule.class);
                     if ((pos instanceof PsiFile) || ((program != null) && (program.getProgramModuleHead() == null))) {
                         appendTokenSetIfAbsent(result, PascalLexer.MODULE_HEADERS, parameters.getOriginalFile(),
                                 PasProgramModuleHead.class, PasUnitModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);

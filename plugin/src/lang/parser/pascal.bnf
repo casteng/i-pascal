@@ -213,11 +213,11 @@
 }
 
 external pascal             ::= parsePascal Module
-Module                      ::= moduleUnit | ModuleProgram | moduleLibrary | modulePackage
+Module                      ::= moduleUnit | moduleProgram | moduleLibrary | modulePackage
                             {extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
                              implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 
-ModuleProgram               ::= progWithHead | progWoHead
+private moduleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead progWoHead
 private progWoHead          ::= [UsesFileClause] BlockGlobal "." {pin=3 recoverWhile=rec_section_global}
 

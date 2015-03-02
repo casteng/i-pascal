@@ -27,7 +27,6 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasModuleProgram;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
@@ -168,7 +167,7 @@ public class PsiUtil {
         return PsiTreeUtil.getParentOfType(element,
                 PascalRoutineImpl.class, PasFormalParameterSection.class,
                 PasClosureExpression.class,
-                PasModuleProgram.class, PasUnitImplementation.class,
+                PasUnitImplementation.class,
                 PasBlockGlobal.class,
                 PasModule.class,
                 PasUnitInterface.class,

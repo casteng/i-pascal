@@ -152,7 +152,6 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
                         parentScopes = Collections.singletonList(struct);
                     }
                 }
-
             }
         }
     }
