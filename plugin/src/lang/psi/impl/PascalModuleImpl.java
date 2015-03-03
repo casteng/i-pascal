@@ -92,25 +92,8 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         if (null == section) {
             section = this;
         }
-        //noinspection unchecked
-        PsiUtil.processEntitiesInSection(this, section, PasField.Visibility.PRIVATE,
-                new FieldCollector() {
-                    @Override
-                    public boolean fieldExists(PascalNamedElement element) {
-                        if (privateMembers.containsKey(element.getName().toUpperCase())) {
-                            redeclaredPrivateMembers.add(element);
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
 
-                    @Override
-                    public void addField(String name, PasField field) {
-                        privateMembers.put(name.toUpperCase(), field);
-                    }
-                },
-                PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
+        collectFields(section, privateMembers, redeclaredPrivateMembers);
 
         privateUnits = retrieveUsedUnits(section);
         for (PasEntityScope unit : privateUnits) {
@@ -154,25 +137,9 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         if (null == section) {
             return;
         }
-        //noinspection unchecked
-        PsiUtil.processEntitiesInSection(this, section, PasField.Visibility.PUBLIC,
-                new FieldCollector() {
-                    @Override
-                    public boolean fieldExists(PascalNamedElement element) {
-                        if (publicMembers.containsKey(element.getName().toUpperCase())) {
-                            redeclaredPublicMembers.add(element);
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
 
-                    @Override
-                    public void addField(String name, PasField field) {
-                        publicMembers.put(name.toUpperCase(), field);
-                    }
-                },
-                PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
+        collectFields(section, publicMembers, redeclaredPublicMembers);
+
         publicUnits = retrieveUsedUnits(section);
         for (PasEntityScope unit : publicUnits) {
             publicMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.Type.UNIT, PasField.Visibility.PRIVATE));
@@ -180,6 +147,34 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
 
         buildPublicStamp = getContainingFile().getModificationStamp();
         System.out.println(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void collectFields(PsiElement section, final Map<String, PasField> members, final Set<PascalNamedElement> redeclaredMembers) {
+        PsiUtil.processEntitiesInSection(this, section, PasField.Visibility.PRIVATE,
+                new FieldCollector() {
+                    @Override
+                    public boolean fieldExists(PascalNamedElement element) {
+                        PasField existing = members.get(element.getName().toUpperCase());
+                        if (existing != null) {
+                            if (!PsiUtil.isForwardClassDecl(existing.element)) {         // Otherwise replace with full declaration
+                                redeclaredMembers.add(element);
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+
+                    @Override
+                    public void addField(String name, PasField field) {
+                        PasField existing = members.get(field.name.toUpperCase());
+                        if (existing != null) {
+                            field.offset = existing.offset;
+                        }
+                        members.put(name.toUpperCase(), field);
+                    }
+                },
+                PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
     }
 
     private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {

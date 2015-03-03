@@ -15,6 +15,7 @@ import java.util.Set;
 * Date: 14/09/2013
 */
 public class PasField {
+
     public enum Type {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY}
 
     public static final Set<Type> TYPES_ALL = new HashSet<Type>(Arrays.asList(Type.values()));
@@ -35,6 +36,7 @@ public class PasField {
     public final Type type;
     @NotNull
     public final Visibility visibility;
+    public int offset;
 
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility) {
         this.owner = owner;
@@ -42,6 +44,7 @@ public class PasField {
         this.name = name;
         this.type = type;
         this.visibility = visibility;
+        this.offset = element != null ? element.getTextOffset() : 0;
         //System.out.println(this);
     }
 

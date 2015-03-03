@@ -205,11 +205,11 @@ public class PasReferenceUtil {
             // check if declaration comes earlier then usage or declaration allows forward mode
             int offs;
             offs = fqn.getParentIdent().getTextRange().getStartOffset();
-            return (field.element.getTextRange().getStartOffset() <= offs)
+            return (field.offset <= offs)
                     || PsiUtil.allowsForwardReference(fqn.getParentIdent());
         } else {
             // check if field visibility allows usage from another unit
-            return PasField.isAllowed(field.visibility, PasField.Visibility.PROTECTED);
+            return PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE);
         }
     }
 

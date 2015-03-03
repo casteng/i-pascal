@@ -5,6 +5,8 @@ import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.impl.PsiImplUtil;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.text.BlockSupport;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -34,6 +36,7 @@ import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
@@ -492,7 +495,6 @@ public class PsiUtil {
                         }
                         fieldCollector.addField(name, new PasField(owner, namedElement, name, type, visibility));
                     }
-
                 }
             }
         }
@@ -501,4 +503,19 @@ public class PsiUtil {
     public static boolean isFromSystemUnit(PsiElement element) {
         return "$system.pas".equalsIgnoreCase(element.getContainingFile().getName());
     }
+
+    public static boolean isForwardClassDecl(PascalNamedElement element) {
+        LeafPsiElement leaf1 = getLeafSiblingOfType(element, LeafPsiElement.class);
+        LeafPsiElement leaf2 = leaf1 != null ? getLeafSiblingOfType(leaf1, LeafPsiElement.class) : null;
+        return ((leaf2 != null) && (leaf2.getElementType() == PasTypes.CLASS));
+    }
+
+    public static <T extends PsiElement> T getLeafSiblingOfType(@Nullable PsiElement sibling, @NotNull Class<T> aClass) {
+        T result = PsiTreeUtil.getNextSiblingOfType(sibling, aClass);
+        while ((result != null) && (PsiImplUtil.isWhitespaceOrComment(result.getNode()))) {
+            result = PsiTreeUtil.getNextSiblingOfType(result, aClass);
+        }
+        return result;
+    }
+
 }
