@@ -290,12 +290,9 @@ public class PasReferenceUtil {
             typeId = typeDecl.getTypeID();
         }
         if (null == typeId) {
-            typeId = PsiTreeUtil.getChildOfType(typeDecl, PasTypeID.class);
+            typeId = PsiTreeUtil.getChildOfType(typeDecl != null ? typeDecl : field.element, PasTypeID.class);
         }
-        if (typeDecl != null) {
-            return typeId != null ? PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent())) : null;
-        }
-        return null;
+        return typeId != null ? PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent())) : null;
     }
 
     @Nullable
