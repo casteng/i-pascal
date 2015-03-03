@@ -24,4 +24,7 @@
     <routine>include</routine>
     <routine>exclude</routine>
     <routine>Assigned</routine>
+    <routine>SetString</routine>
+    <routine>new</routine>
+    <routine>dispose</routine>
 </builtins>
