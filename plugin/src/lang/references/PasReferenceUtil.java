@@ -19,8 +19,10 @@ import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -281,9 +283,15 @@ public class PasReferenceUtil {
     @Nullable
     private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field) {
         PasTypeID typeId = null;
-        PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(field.element, PasTypeDecl.class);
+        PasTypeDecl typeDecl;
+        if (((field.element instanceof PasMethodImplDecl) || (field.element instanceof PasExportedRoutine))
+                && (field.element.getFirstChild() != null)) {                                                    // resolve function type
+            typeDecl = PsiTreeUtil.getNextSiblingOfType(field.element.getFirstChild(), PasTypeDecl.class);
+        } else {
+            typeDecl = PsiTreeUtil.getNextSiblingOfType(field.element, PasTypeDecl.class);
+        }
         if (typeDecl != null) {
-            PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
+            PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);    // immediate type
             if (strucTypeDecl != null) {
                 return strucTypeDecl;
             }
