@@ -80,8 +80,9 @@ public class FPCSdkType extends BasePascalSdkType {
         return getIcon();
     }
 
-    private static final List<String> DEFAULT_SDK_LOCATIONS_UNIX = Arrays.asList("/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc", "/usr/lib/fpc",
-            "/usr/share/fpc", "/usr/local/lib/fpc", "/usr/local");
+    private static final List<String> DEFAULT_SDK_LOCATIONS_UNIX = Arrays.asList(
+            "/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
+            "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
     private static final List<String> DEFAULT_SDK_LOCATIONS_WINDOWS = Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
 
     @Nullable

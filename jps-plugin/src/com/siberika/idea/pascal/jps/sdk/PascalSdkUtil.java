@@ -43,13 +43,18 @@ public class PascalSdkUtil {
         File binDir = new File(sdkHome, dir);
         File sdkHomeDir = new File(sdkHome);
         if (!binDir.exists() && sdkHomeDir.isDirectory()) {
-            LOG.info(binDir.getAbsolutePath() + " not found");
+            LOG.info(binDir.getAbsolutePath() + " not found, trying $SDKHome/$Version/bin/...");
             String currentVersion = getVersionDir(sdkHomeDir);
             if (currentVersion != null) {
                 binDir = new File(new File(sdkHome, currentVersion), dir);
+                if (!binDir.exists()) {
+                    LOG.info(binDir.getAbsolutePath() + " not found, trying without $SDKHome/$Version/...");
+                    binDir = new File(sdkHome, currentVersion);
+                }
             }
         }
         if (!binDir.exists()) {                  // Default directory where fpc and ppudump executables are located
+            LOG.info(binDir.getAbsolutePath() + " not found, trying default executable path...");
             binDir = "bin".equals(dir) ? getDefaultBinDir(exe) : null;
             if ((null != binDir) && binDir.exists()) {
                 return binDir;
