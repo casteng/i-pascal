@@ -24,6 +24,7 @@ import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.sdk.DefinesParser;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.FileReader;
@@ -195,7 +196,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         String name = extractIncludeName(sequence);
         Project project = getProject();
         VirtualFile virtualFile = getVirtualFile();
-        if ((project != null) && (virtualFile != null)) {
+        if ((!StringUtils.isEmpty(name)) && (project != null) && (virtualFile != null)) {
             try {
                 VirtualFile incFile = getIncludedFile(project, virtualFile, name);
                 if ((incFile != null) && (incFile.getCanonicalPath() != null)) {

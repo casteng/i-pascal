@@ -20,7 +20,7 @@ public class PascalSdkUtil {
     public static final String FPC_PARAMS_VERSION_GET = "-iV";
     public static final String FPC_PARAMS_TARGET_GET = "-iTPTO";
     public static final Pattern VERSION_PATTERN = Pattern.compile("\\d+\\.\\d+\\.\\d+");
-    public static final String DEFAULT_BIN_UNIX = "/usr/bin";
+    public static final String[] DEFAULT_BIN_UNIX = {"/usr/bin", "/usr/local/bin"};
 
     public static String target;
 
@@ -37,6 +37,13 @@ public class PascalSdkUtil {
     }
 
     //TODO: take target directory from compiler target
+    /*
+      /$dir/
+      /$ver/$dir/
+      /$ver
+      => $default
+      => $bindir/[$target]/$exe
+     */
     @NotNull
     static File getUtilExecutable(@NotNull final String sdkHome, @NotNull final String dir, @NotNull final String exe) {
         LOG.info("Getting util executable: " + sdkHome + ", dir: " + dir + ", file: " + exe);
@@ -51,17 +58,20 @@ public class PascalSdkUtil {
                     LOG.info(binDir.getAbsolutePath() + " not found, trying without $SDKHome/$Version/...");
                     binDir = new File(sdkHome, currentVersion);
                 }
+            } else {
+                binDir = sdkHomeDir;
             }
         }
-        if (!binDir.exists()) {                  // Default directory where fpc and ppudump executables are located
+        if (!binDir.exists() && "bin".equals(dir)) {                  // Default directory where fpc and ppudump executables are located
             LOG.info(binDir.getAbsolutePath() + " not found, trying default executable path...");
-            binDir = "bin".equals(dir) ? getDefaultBinDir(exe) : null;
-            if ((null != binDir) && binDir.exists()) {
-                return binDir;
-            } else {
-                LOG.info("Binary directory not found");
-                throw new RuntimeException("SDK not found");
+            for (String defaultBinDir : DEFAULT_BIN_UNIX) {
+                File executable = new File(defaultBinDir, exe);
+                if (executable.exists() && executable.canExecute()) {
+                    return executable;
+                }
             }
+            LOG.info("Binary directory not found");
+            throw new RuntimeException("SDK not found");
         }
         LOG.info("Binary directory found at " + binDir.getAbsolutePath());
         for (File targetDir : FileUtil.listDirs(binDir)) {
@@ -72,11 +82,7 @@ public class PascalSdkUtil {
                 return executable;
             }
         }
-        return binDir;
-    }
-
-    private static File getDefaultBinDir(String exe) {
-        return new File(DEFAULT_BIN_UNIX, exe);
+        return getExecutable(binDir.getAbsolutePath(), exe);
     }
 
     @Nullable
