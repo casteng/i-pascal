@@ -518,4 +518,21 @@ public class PsiUtil {
         return result;
     }
 
+    @Nullable
+    public static PasEntityScope getElementPasModule(@NotNull PsiElement element) {
+        return PsiTreeUtil.findChildOfType(element.getContainingFile(), PasModule.class);
+    }
+
+    public static boolean isTypeDeclPointingToSelf(@NotNull PascalNamedElement typeIdent) {
+        PsiElement parent = typeIdent.getParent();
+        if (parent instanceof PasTypeDeclaration) {
+            PasTypeDecl typeDecl = ((PasTypeDeclaration) parent).getTypeDecl();
+            PasTypeID typeId = typeDecl != null ? typeDecl.getTypeID() : null;
+            if (typeId != null) {
+                System.out.println("!!!! isTypeDeclPointingToSelf");
+                return typeIdent.getName().equalsIgnoreCase(typeId.getFullyQualifiedIdent().getName());
+            }
+        }
+        return false;
+    }
 }

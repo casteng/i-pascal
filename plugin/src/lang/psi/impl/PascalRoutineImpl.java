@@ -146,7 +146,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
             Collection<PsiElement> types = PasReferenceUtil.resolve(fqn, PasField.TYPES_TYPE);
             for (PsiElement e : types) {
                 if (e instanceof PascalNamedElement) {
-                    PasEntityScope struct = PascalParserUtil.getStructTypeByIdent((PascalNamedElement) e);
+                    PasEntityScope struct = PascalParserUtil.getStructTypeByIdent((PascalNamedElement) e, 0);
                     if (struct != null) {
                         parentScopes = Collections.singletonList(struct);
                     }

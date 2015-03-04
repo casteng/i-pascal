@@ -70,6 +70,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     private static final Logger LOG = Logger.getInstance(PascalParserUtil.class);
 
     public static final Collection<String> EXPLICIT_UNITS = Arrays.asList("system");
+    private static final int MAX_STRUCT_TYPE_RESOLVE_RECURSION = 16;
 
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {
         PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
@@ -180,7 +181,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                     Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, ((PascalQualifiedIdent) element).getNamespace(),
                             getEndOffset(section), PasGenericTypeIdent.class);
                     for (PascalNamedElement namedElement : entities) {
-                        addDeclarations(result, getStructTypeByIdent(namedElement), name);
+                        addDeclarations(result, getStructTypeByIdent(namedElement, 0), name);
                     }
                 }
             }
@@ -307,7 +308,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             PasFullyQualifiedIdent typeName = ((PascalRoutineImpl) entityDecl).getFunctionTypeIdent();
             if (typeName != null) {
                 for (PascalNamedElement strucTypeIdent : findVariables(NamespaceRec.fromElement(typeName), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
-                    return getStructTypeByIdent(strucTypeIdent);
+                    return getStructTypeByIdent(strucTypeIdent, 0);
                 }
             }
         }
@@ -320,19 +321,19 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 PascalNamedElement typeIdent = PsiTreeUtil.findChildOfType(varDecl, PascalQualifiedIdent.class, true);
                 if (typeIdent != null) {
                     for (PascalNamedElement strucTypeIdent : findVariables(NamespaceRec.fromElement(typeIdent), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
-                        return getStructTypeByIdent(strucTypeIdent);
+                        return getStructTypeByIdent(strucTypeIdent, 0);
                     }
                 }
             }
         } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {  // type declaration case
-            return getStructTypeByIdent(entityDecl);
+            return getStructTypeByIdent(entityDecl, 0);
         } else if (entityDecl instanceof PasFullyQualifiedIdent) {
-            return getStructTypeByTypeIdent((PasFullyQualifiedIdent) entityDecl);
+            return getStructTypeByTypeIdent((PasFullyQualifiedIdent) entityDecl, 0);
         } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
             PasFullyQualifiedIdent typeIdent = ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
             if (typeIdent != null) {
                 for (PascalNamedElement strucTypeIdent : findVariables(NamespaceRec.fromElement(typeIdent), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
-                    return getStructTypeByIdent(strucTypeIdent);
+                    return getStructTypeByIdent(strucTypeIdent, 0);
                 }
             }
         }
@@ -341,29 +342,35 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     @Nullable
-    public static PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent) {
+    public static PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent, int recursionCount) {
+        if (recursionCount > MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
+            return PsiUtil.getElementPasModule(typeIdent);
+        }
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(typeIdent, PasTypeDecl.class);
+        if (PsiUtil.isTypeDeclPointingToSelf(typeIdent)) {
+            return PsiUtil.getElementPasModule(typeIdent);
+        }
         if (typeDecl != null) {
             PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
             if (strucTypeDecl != null) {   // structured type
                 return strucTypeDecl;
             } else {                       // regular type
                 PasFullyQualifiedIdent typeId = PsiTreeUtil.findChildOfType(typeDecl, PasFullyQualifiedIdent.class, true);
-                return getStructTypeByTypeIdent(typeId);
+                return getStructTypeByTypeIdent(typeId, recursionCount);
             }
         }
         return null;
     }
 
     @Nullable
-    public static PasEntityScope getStructTypeByTypeIdent(@Nullable PascalQualifiedIdent typeId) {
+    public static PasEntityScope getStructTypeByTypeIdent(@Nullable PascalQualifiedIdent typeId, int recursionCount) {
         if (typeId != null) {
             PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(typeId);
             Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, typeId.getName(),
                     getEndOffset(section), PasGenericTypeIdent.class);
             addUsedUnitDeclarations(entities, typeId, typeId.getName());
             for (PascalNamedElement element : entities) {
-                return getStructTypeByIdent(element);
+                return getStructTypeByIdent(element, recursionCount + 1);
             }
         }
         return null;
