@@ -138,7 +138,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     private Collection<PsiElement> getInterfaceMethodTargets(@NotNull PascalRoutineImpl routineDecl) throws PasInvalidScopeException {
         Collection<PsiElement> result = new SmartList<PsiElement>();
-        PasModule module = PsiUtil.getModule(routineDecl);
+        PasModule module = PsiUtil.getElementPasModule(routineDecl);
         if (module != null) {
             PasField typeMember = module.getField(routineDecl.getNamespace());
             if ((typeMember != null) && (typeMember.type == PasField.Type.TYPE)) {

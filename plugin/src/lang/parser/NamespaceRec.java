@@ -5,6 +5,7 @@ import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +58,7 @@ public class NamespaceRec {
             if (subEl == targetIdent) {
                 targetInd = levels.size();
             }
-            levels.add(subEl.getName());
+            levels.add(subEl.getName().replace(PasField.DUMMY_IDENTIFIER, ""));
         }
         if (-1 == targetInd) {
             targetInd = levels.size() - 1;
@@ -117,8 +118,11 @@ public class NamespaceRec {
     }
 
     public static NamespaceRec fromFQN(@NotNull PsiElement context, @NotNull String fqn) {
-        List<String> lvls = Arrays.asList(fqn.split("\\."));
-        return new NamespaceRec(lvls, context, lvls.size()-1);
+        String[] lvls = fqn.split("\\.");
+        if ((lvls.length > 0) && (lvls[lvls.length - 1].endsWith(PasField.DUMMY_IDENTIFIER))) {
+            lvls[lvls.length - 1] = lvls[lvls.length - 1].replace(PasField.DUMMY_IDENTIFIER, "");
+        }
+        return new NamespaceRec(Arrays.asList(lvls), context, lvls.length-1);
     }
 
     public String getCurrentName() {

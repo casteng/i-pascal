@@ -1,10 +1,8 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
@@ -143,14 +141,9 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
             NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
             parentScopes = Collections.emptyList();                             // To prevent infinite recursion
-            Collection<PsiElement> types = PasReferenceUtil.resolve(fqn, PasField.TYPES_TYPE);
-            for (PsiElement e : types) {
-                if (e instanceof PascalNamedElement) {
-                    PasEntityScope struct = PascalParserUtil.getStructTypeByIdent((PascalNamedElement) e, 0);
-                    if (struct != null) {
-                        parentScopes = Collections.singletonList(struct);
-                    }
-                }
+            PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn);
+            if (type != null) {
+                parentScopes = Collections.singletonList(type);
             }
         }
     }

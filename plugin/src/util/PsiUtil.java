@@ -264,7 +264,7 @@ public class PsiUtil {
      * @return module containing the element
      */
     @Nullable
-    public static PasModule getModule(@NotNull PsiElement element) {
+    public static PasModule getElementPasModule(@NotNull PsiElement element) {
         return PsiTreeUtil.findChildOfType(element.getContainingFile(), PasModule.class);
     }
 
@@ -462,8 +462,8 @@ public class PsiUtil {
         return element != null ? element.getName() : "";
     }
 
-    public static boolean isIdent(PsiElement parent) {
-        return parent instanceof PasSubIdent;
+    public static boolean isIdent(PsiElement element) {
+        return element instanceof PasSubIdent;
     }
 
     public static boolean isElementValid(PsiElement element) {
@@ -516,11 +516,6 @@ public class PsiUtil {
             result = PsiTreeUtil.getNextSiblingOfType(result, aClass);
         }
         return result;
-    }
-
-    @Nullable
-    public static PasEntityScope getElementPasModule(@NotNull PsiElement element) {
-        return PsiTreeUtil.findChildOfType(element.getContainingFile(), PasModule.class);
     }
 
     public static boolean isTypeDeclPointingToSelf(@NotNull PascalNamedElement typeIdent) {

@@ -61,7 +61,7 @@ var
     i: TRecord;
 begin
     j := length(ASubText);
-    i.CurrentValue;
+    c;
     cc.DefaultValue;
     if ACount>i then
         aStart := i+1;

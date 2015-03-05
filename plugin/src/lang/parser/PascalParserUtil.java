@@ -158,7 +158,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         if (!(ident instanceof PascalNamedElement)) { return; }
         for (PasField field : BuiltinsParser.getBuiltins()) {
             if (field.name.equalsIgnoreCase(((PascalNamedElement) ident).getName())) {
-                PasModule module = PsiUtil.getModule(ident);
+                PasModule module = PsiUtil.getElementPasModule(ident);
                 result.add(module != null ? module : (PascalNamedElement) ident);
                 return;
             }
@@ -197,7 +197,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     private static void retrieveMethodSelfReference(Collection<PascalNamedElement> result, PsiElement self) throws PasInvalidScopeException {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(self);
         if (section instanceof PascalRoutineImpl) {
-            PasModule module = PsiUtil.getModule(section);
+            PasModule module = PsiUtil.getElementPasModule(section);
             if (module != null) {
                 PasField field = module.getField(((PascalRoutineImpl) section).getNamespace());
                 if ((field != null) && (field.type == PasField.Type.TYPE)) {

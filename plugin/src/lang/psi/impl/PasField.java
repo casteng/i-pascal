@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
+import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +16,8 @@ import java.util.Set;
 * Date: 14/09/2013
 */
 public class PasField {
+
+    public static final String DUMMY_IDENTIFIER = "____";
 
     public enum Type {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY}
 
@@ -37,19 +40,44 @@ public class PasField {
     @NotNull
     public final Visibility visibility;
     public int offset;
+    // Reference target
+    @Nullable
+    public final PsiElement target;
 
-    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility) {
+    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, PsiElement target) {
         this.owner = owner;
         this.element = element;
         this.name = name;
         this.type = type;
         this.visibility = visibility;
         this.offset = element != null ? element.getTextOffset() : 0;
+        this.target = target;
         //System.out.println(this);
+    }
+
+    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility) {
+        this(owner, element, name, type, visibility, null);
     }
 
     @Override
     public String toString() {
         return visibility + " " + type + ": " + (owner != null ? owner.getName() : "-") + "." + name + ", " + element;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PasField field = (PasField) o;
+
+        if (element != null ? !element.equals(field.element) : field.element != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return element != null ? element.hashCode() : 0;
     }
 }
