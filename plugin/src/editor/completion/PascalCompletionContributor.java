@@ -68,9 +68,9 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -97,11 +97,14 @@ public class PascalCompletionContributor extends CompletionContributor {
                 prev = pos.getPrevSibling();
                 oPrev = originalPos != null ? originalPos.getPrevSibling() : null;
                 int level = PsiUtil.getElementLevel(originalPos);
+
                 System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev,
                         originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
+
+                Collection<PasField> entities = new HashSet<PasField>();
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
                     if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent())) {
-                        addEntities(result, parameters.getPosition(), PasField.TYPES_ALL);
+                        addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL);
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
                 } else {
@@ -111,7 +114,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                         //parPos = parameters.getOriginalPosition();
                     }
                     if (pos instanceof PasStatement) {                                                                          // identifier completion in left part of assignment
-                        addEntities(result, parameters.getPosition(), PasField.TYPES_LEFT_SIDE);                                                  // complete identifier variants
+                        addEntities(entities, parameters.getPosition(), PasField.TYPES_LEFT_SIDE);                                                  // complete identifier variants
                         if (!PsiUtil.isIdent(parameters.getOriginalPosition().getParent()) && (pos instanceof PasCompoundStatement)) {
                             appendTokenSet(result, PascalLexer.STATEMENTS);                                                     // statements variants
                         }
@@ -143,10 +146,20 @@ public class PascalCompletionContributor extends CompletionContributor {
                 } else if (posIs(originalPos, pos, PasExportedRoutine.class, PasDeclSection.class) && parameters.getPosition().getParent() instanceof PsiErrorElement) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
                 } else if (pos instanceof PasTypeID) {                                                                          // Type declaration
-                    addEntities(result, parameters.getPosition(), PasField.TYPES_TYPE_UNIT);
+                    addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT);
                     appendTokenSet(result, PascalLexer.TYPE_DECLARATIONS);
                 }
                 handleDirectives(result, parameters, originalPos, pos);
+
+                Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
+                Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
+                for (PasField field : entities) {
+                    if ((field.element != null) && (!nameSet.contains(field.name.toUpperCase()))) {
+                        lookupElements.add(LookupElementBuilder.createWithIcon(field.element));
+                        nameSet.add(field.name.toUpperCase());
+                    }
+                }
+                result.caseInsensitive().addAllElements(lookupElements);
             }
         });
 
@@ -177,7 +190,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     * a_.bc ____
     * a.b_.c a.____
     */
-    private static void addEntities(CompletionResultSet result, PsiElement position, Set<PasField.Type> types) {
+    private static void addEntities(Collection<PasField> result, PsiElement position, Set<PasField.Type> types) {
         NamespaceRec namespace = NamespaceRec.fromFQN(position, PasField.DUMMY_IDENTIFIER);
         if (PsiUtil.isIdent(position.getParent())) {
             if (position.getParent().getParent() instanceof PascalNamedElement) {
@@ -187,14 +200,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
         namespace.clearTarget();
-        Collection<PasField> fields = PasReferenceUtil.resolve(namespace, types);
-        Collection<LookupElement> lookupElements = new ArrayList<LookupElement>(fields.size());
-        for (PasField field : fields) {
-            if (field.element != null) {
-                lookupElements.add(LookupElementBuilder.createWithIcon(field.element));
-            }
-        }
-        result.caseInsensitive().addAllElements(lookupElements);
+        result.addAll(PasReferenceUtil.resolve(namespace, types));
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
