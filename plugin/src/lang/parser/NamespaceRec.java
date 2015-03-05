@@ -1,17 +1,13 @@
 package com.siberika.idea.pascal.lang.parser;
 
 import com.intellij.psi.PsiElement;
-import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,14 +15,14 @@ import java.util.List;
 * Date: 12/08/2013
 */
 public class NamespaceRec {
-    private final List<String> levels;
+    private final String[] levels;
     private final PsiElement parentIdent;
     private final int target;
     private int current;
 
-    private static final List<String> EMPTY_LEVELS = Collections.emptyList();
+    private static final String[] EMPTY_LEVELS = {};
 
-    private NamespaceRec(@NotNull List<String> levels, @NotNull PsiElement parentIdent, int target) {
+    private NamespaceRec(@NotNull String[] levels, @NotNull PsiElement parentIdent, int target) {
         this.levels = levels;
         this.parentIdent = parentIdent;
         this.target = target;
@@ -42,8 +38,7 @@ public class NamespaceRec {
     }
 
     private NamespaceRec(@NotNull PasRefNamedIdent element) {
-        this(new SmartList<String>(), element.getParent() != null ? element.getParent() : element, 0);
-        levels.add(element.getName());
+        this(new String[] {element.getName()}, element.getParent() != null ? element.getParent() : element, 0);
     }
 
     /**
@@ -52,16 +47,17 @@ public class NamespaceRec {
     private NamespaceRec(@NotNull PascalQualifiedIdent qualifiedIdent, @Nullable PasSubIdent targetIdent) {
         assert (targetIdent == null) || (targetIdent.getParent() == qualifiedIdent);
         int targetInd = -1;
-        levels = new SmartList<String>();
+        List<PasSubIdent> idents = qualifiedIdent.getSubIdentList();
+        levels = new String[idents.size()];
         parentIdent = qualifiedIdent;
-        for (PasSubIdent subEl : qualifiedIdent.getSubIdentList()) {
-            if (subEl == targetIdent) {
-                targetInd = levels.size();
+        for (int i = 0; i < idents.size(); i++) {
+            if (idents.get(i) == targetIdent) {
+                targetInd = i;
             }
-            levels.add(subEl.getName().replace(PasField.DUMMY_IDENTIFIER, ""));
+            levels[i] = idents.get(i).getName();//.replace(PasField.DUMMY_IDENTIFIER, ""));
         }
         if (-1 == targetInd) {
-            targetInd = levels.size() - 1;
+            targetInd = levels.length - 1;
         }
         target = targetInd;
         current = 0;
@@ -84,7 +80,7 @@ public class NamespaceRec {
     }
 
     public boolean isEmpty() {
-        return levels.size() == 0;
+        return levels.length == 0;
     }
 
     public boolean isFirst() {
@@ -119,14 +115,19 @@ public class NamespaceRec {
 
     public static NamespaceRec fromFQN(@NotNull PsiElement context, @NotNull String fqn) {
         String[] lvls = fqn.split("\\.");
-        if ((lvls.length > 0) && (lvls[lvls.length - 1].endsWith(PasField.DUMMY_IDENTIFIER))) {
+        /*if ((lvls.length > 0) && (lvls[lvls.length - 1].endsWith(PasField.DUMMY_IDENTIFIER))) {
             lvls[lvls.length - 1] = lvls[lvls.length - 1].replace(PasField.DUMMY_IDENTIFIER, "");
-        }
-        return new NamespaceRec(Arrays.asList(lvls), context, lvls.length-1);
+        }*/
+        return new NamespaceRec(lvls, context, lvls.length-1);
     }
 
     public String getCurrentName() {
-        return current < levels.size() ? levels.get(current) : null;
+        return current < levels.length ? levels[current] : null;
     }
 
+    public void clearTarget() {
+        if ((target >= 0) && (levels.length > target)) {
+            levels[target] = "";
+        }
+    }
 }

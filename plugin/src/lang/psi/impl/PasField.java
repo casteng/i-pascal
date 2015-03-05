@@ -24,6 +24,7 @@ public class PasField {
     public static final Set<Type> TYPES_ALL = new HashSet<Type>(Arrays.asList(Type.values()));
     public static final Set<Type> TYPES_LEFT_SIDE = new HashSet<Type>(Arrays.asList(Type.UNIT, Type.VARIABLE, Type.PROPERTY, Type.ROUTINE));
     public static final Set<Type> TYPES_TYPE = new HashSet<Type>(Collections.singletonList(Type.TYPE));
+    public static final Set<Type> TYPES_TYPE_UNIT = new HashSet<Type>(Arrays.asList(Type.UNIT, Type.TYPE));
 
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
@@ -43,6 +44,7 @@ public class PasField {
     // Reference target
     @Nullable
     public final PsiElement target;
+    private final int cahcehdHash;
 
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, PsiElement target) {
         this.owner = owner;
@@ -53,6 +55,7 @@ public class PasField {
         this.offset = element != null ? element.getTextOffset() : 0;
         this.target = target;
         //System.out.println(this);
+        this.cahcehdHash = element != null ? element.hashCode() : 0;
     }
 
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility) {
@@ -78,6 +81,6 @@ public class PasField {
 
     @Override
     public int hashCode() {
-        return element != null ? element.hashCode() : 0;
+        return cahcehdHash;
     }
 }

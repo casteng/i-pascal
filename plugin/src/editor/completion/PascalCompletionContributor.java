@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.editor.completion;
 
 import com.intellij.codeInsight.completion.CompletionContributor;
+import com.intellij.codeInsight.completion.CompletionInitializationContext;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
@@ -55,6 +56,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasUsesFileClause;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasDeclSection;
@@ -66,6 +68,8 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -77,6 +81,7 @@ import static com.intellij.patterns.PlatformPatterns.psiElement;
  * Date: 20/09/2013
  */
 public class PascalCompletionContributor extends CompletionContributor {
+
     @SuppressWarnings("unchecked")
     public PascalCompletionContributor() {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), new CompletionProvider<CompletionParameters>() {
@@ -96,7 +101,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                         originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
                     if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent())) {
-                        addEntities(result, parameters.getOriginalPosition(), PasField.TYPES_ALL);
+                        addEntities(result, parameters.getPosition(), PasField.TYPES_ALL);
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
                 } else {
@@ -106,7 +111,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                         //parPos = parameters.getOriginalPosition();
                     }
                     if (pos instanceof PasStatement) {                                                                          // identifier completion in left part of assignment
-                        addEntities(result, parPos, PasField.TYPES_LEFT_SIDE);                                                  // complete identifier variants
+                        addEntities(result, parameters.getPosition(), PasField.TYPES_LEFT_SIDE);                                                  // complete identifier variants
                         if (!PsiUtil.isIdent(parameters.getOriginalPosition().getParent()) && (pos instanceof PasCompoundStatement)) {
                             appendTokenSet(result, PascalLexer.STATEMENTS);                                                     // statements variants
                         }
@@ -138,7 +143,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 } else if (posIs(originalPos, pos, PasExportedRoutine.class, PasDeclSection.class) && parameters.getPosition().getParent() instanceof PsiErrorElement) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
                 } else if (pos instanceof PasTypeID) {                                                                          // Type declaration
-                    addEntities(result, parameters.getOriginalPosition(), PasField.TYPES_TYPE);
+                    addEntities(result, parameters.getPosition(), PasField.TYPES_TYPE_UNIT);
                     appendTokenSet(result, PascalLexer.TYPE_DECLARATIONS);
                 }
                 handleDirectives(result, parameters, originalPos, pos);
@@ -165,14 +170,31 @@ public class PascalCompletionContributor extends CompletionContributor {
         return false;
     }
 
+    /*
+    * _: ____
+    * abc_: ____
+    * a.bc_ a.____
+    * a_.bc ____
+    * a.b_.c a.____
+    */
     private static void addEntities(CompletionResultSet result, PsiElement position, Set<PasField.Type> types) {
-        NamespaceRec namespace;
+        NamespaceRec namespace = NamespaceRec.fromFQN(position, PasField.DUMMY_IDENTIFIER);
         if (PsiUtil.isIdent(position.getParent())) {
-            namespace = NamespaceRec.fromElement(position.getParent());
-        } else {
-            namespace = NamespaceRec.fromElement(position);
+            if (position.getParent().getParent() instanceof PascalNamedElement) {
+                namespace = NamespaceRec.fromElement(position.getParent());
+            } else {
+                namespace = NamespaceRec.fromFQN(position, ((PascalNamedElement) position).getName());
+            }
         }
-        result.caseInsensitive().addAllElements(PasReferenceUtil.getEntities(namespace, types));
+        namespace.clearTarget();
+        Collection<PasField> fields = PasReferenceUtil.resolve(namespace, types);
+        Collection<LookupElement> lookupElements = new ArrayList<LookupElement>(fields.size());
+        for (PasField field : fields) {
+            if (field.element != null) {
+                lookupElements.add(LookupElementBuilder.createWithIcon(field.element));
+            }
+        }
+        result.caseInsensitive().addAllElements(lookupElements);
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
@@ -251,4 +273,9 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
+    @Override
+    public void beforeCompletion(@NotNull CompletionInitializationContext context) {
+        super.beforeCompletion(context);
+        context.setDummyIdentifier(PasField.DUMMY_IDENTIFIER);
+    }
 }
