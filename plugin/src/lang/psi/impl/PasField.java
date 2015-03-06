@@ -46,7 +46,7 @@ public class PasField {
     public final PsiElement target;
     private final int cahcehdHash;
 
-    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, PsiElement target) {
+    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, @Nullable PsiElement target) {
         this.owner = owner;
         this.element = element;
         this.name = name;
@@ -55,7 +55,7 @@ public class PasField {
         this.offset = element != null ? element.getTextOffset() : 0;
         this.target = target;
         //System.out.println(this);
-        this.cahcehdHash = element != null ? element.hashCode() : 0;
+        this.cahcehdHash = name.hashCode() * 31 + (element != null ? element.hashCode() : 0);
     }
 
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility) {
@@ -74,6 +74,7 @@ public class PasField {
 
         PasField field = (PasField) o;
 
+        if (!name.equals(field.name)) return false;
         if (element != null ? !element.equals(field.element) : field.element != null) return false;
 
         return true;
