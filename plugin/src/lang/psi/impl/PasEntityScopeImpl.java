@@ -225,7 +225,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
             fqn = NamespaceRec.fromFQN(this, "system.TObject");
         }
         if (fqn != null) {
-            PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn);
+            PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
             if (scope != null) {
                 parentScopes.add(scope);
             }

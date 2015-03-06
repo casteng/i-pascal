@@ -141,7 +141,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
             NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
             parentScopes = Collections.emptyList();                             // To prevent infinite recursion
-            PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn);
+            PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn, true);
             if (type != null) {
                 parentScopes = Collections.singletonList(type);
             }

@@ -276,12 +276,12 @@ public class PasReferenceUtil {
 //-------------------------------------------------------------------
 
     @Nullable
-    private static PasEntityScope retrieveFieldUnitScope(PasField field) {
-        return (PasEntityScope) field.element;
+    private static PasEntityScope retrieveFieldUnitScope(PasField field, boolean includeLibrary) {
+        return (field.element != null) && (includeLibrary || !PsiUtil.isFromLibrary(field.element)) ? (PasEntityScope) field.element : null;
     }
 
     @Nullable
-    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field) {
+    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, boolean includeLibrary) {
         PasTypeID typeId = null;
         PasTypeDecl typeDecl;
         if (((field.element instanceof PasMethodImplDecl) || (field.element instanceof PasExportedRoutine))
@@ -300,12 +300,12 @@ public class PasReferenceUtil {
         if (null == typeId) {
             typeId = PsiTreeUtil.getChildOfType(typeDecl != null ? typeDecl : field.element, PasTypeID.class);
         }
-        return typeId != null ? PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent())) : null;
+        return typeId != null ? PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), includeLibrary) : null;
     }
 
     @Nullable
-    public static PasEntityScope resolveTypeScope(NamespaceRec fqn) {
-        Collection<PasField> types = resolve(fqn, PasField.TYPES_TYPE);
+    public static PasEntityScope resolveTypeScope(NamespaceRec fqn, boolean includeLibrary) {
+        Collection<PasField> types = resolve(fqn, PasField.TYPES_TYPE, includeLibrary);
         for (PasField field : types) {
             PasEntityScope struct = field.element != null ? PascalParserUtil.getStructTypeByIdent(field.element, 0) : null;
             if (struct != null) {
@@ -321,7 +321,7 @@ public class PasReferenceUtil {
      *    if the entity represents a namespace - retrieve and make current
      *  for namespace of target entry add all its entities
      */
-    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.Type> types) {
+    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.Type> types, boolean includeLibrary) {
         // First entry in FQN
         PasEntityScope scope = getNearestAffectingScope(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
@@ -330,7 +330,7 @@ public class PasReferenceUtil {
         try {
             // Retrieve all namespaces affecting first FQN level
             while (scope != null) {
-                addFirstNamespaces(namespaces, scope);
+                addFirstNamespaces(namespaces, scope, includeLibrary);
                 scope = fqn.isFirst() ? getNearestAffectingScope(scope) : null;
             }
 
@@ -347,9 +347,9 @@ public class PasReferenceUtil {
                 if (field != null) {
                     PasEntityScope newNS;
                     if (field.type == PasField.Type.UNIT) {
-                        newNS = fqn.isFirst() ? retrieveFieldUnitScope(field) : null;                    // First qualifier can be unit name
+                        newNS = fqn.isFirst() ? retrieveFieldUnitScope(field, includeLibrary) : null;                    // First qualifier can be unit name
                     } else {
-                        newNS = retrieveFieldTypeScope(field);
+                        newNS = retrieveFieldTypeScope(field, includeLibrary);
                     }
 
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
@@ -413,13 +413,21 @@ public class PasReferenceUtil {
       . SELF - in method context
       . RESULT - in routine context
 */
-    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope section) throws PasInvalidScopeException {
+    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope section, boolean includeLibrary) throws PasInvalidScopeException {
         namespaces.add(section);
         if (section instanceof PascalModuleImpl) {
-            namespaces.addAll(((PascalModuleImpl) section).getPrivateUnits());
-            namespaces.addAll(((PascalModuleImpl) section).getPublicUnits());
+            addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPrivateUnits(), includeLibrary);
+            addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPublicUnits(), includeLibrary);
         }
         addParentNamespaces(namespaces, section);
+    }
+
+    private static void addUnitNamespaces(List<PasEntityScope> namespaces, List<PasEntityScope> units, boolean includeLibrary) {
+        for (PasEntityScope scope : units) {
+            if ((scope != null) && (includeLibrary || !PsiUtil.isFromLibrary(scope))) {
+                namespaces.add(scope);
+            }
+        }
     }
 
     private static void addParentNamespaces(List<PasEntityScope> namespaces, @Nullable PasEntityScope section) throws PasInvalidScopeException {

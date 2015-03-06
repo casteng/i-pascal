@@ -530,4 +530,8 @@ public class PsiUtil {
         }
         return false;
     }
+
+    public static boolean isFromLibrary(@NotNull PsiElement element) {
+        return element.isWritable();
+    }
 }

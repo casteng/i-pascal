@@ -97,14 +97,13 @@ public class PascalCompletionContributor extends CompletionContributor {
                 prev = pos.getPrevSibling();
                 oPrev = originalPos != null ? originalPos.getPrevSibling() : null;
                 int level = PsiUtil.getElementLevel(originalPos);
-
                 System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev,
                         originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
                 Collection<PasField> entities = new HashSet<PasField>();
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
                     if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent())) {
-                        addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL);
+                        addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
                 } else {
@@ -114,7 +113,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                         //parPos = parameters.getOriginalPosition();
                     }
                     if (pos instanceof PasStatement) {                                                                          // identifier completion in left part of assignment
-                        addEntities(entities, parameters.getPosition(), PasField.TYPES_LEFT_SIDE);                                                  // complete identifier variants
+                        addEntities(entities, parameters.getPosition(), PasField.TYPES_LEFT_SIDE, parameters.isExtendedCompletion());                                                  // complete identifier variants
                         if (!PsiUtil.isIdent(parameters.getOriginalPosition().getParent()) && (pos instanceof PasCompoundStatement)) {
                             appendTokenSet(result, PascalLexer.STATEMENTS);                                                     // statements variants
                         }
@@ -146,7 +145,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 } else if (posIs(originalPos, pos, PasExportedRoutine.class, PasDeclSection.class) && parameters.getPosition().getParent() instanceof PsiErrorElement) {
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
                 } else if (pos instanceof PasTypeID) {                                                                          // Type declaration
-                    addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT);
+                    addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters.isExtendedCompletion());
                     appendTokenSet(result, PascalLexer.TYPE_DECLARATIONS);
                 }
                 handleDirectives(result, parameters, originalPos, pos);
@@ -160,6 +159,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                     }
                 }
                 result.caseInsensitive().addAllElements(lookupElements);
+                result.restartCompletionWhenNothingMatches();
             }
         });
 
@@ -190,7 +190,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     * a_.bc ____
     * a.b_.c a.____
     */
-    private static void addEntities(Collection<PasField> result, PsiElement position, Set<PasField.Type> types) {
+    private static void addEntities(Collection<PasField> result, PsiElement position, Set<PasField.Type> types, boolean extendedCompletion) {
         NamespaceRec namespace = NamespaceRec.fromFQN(position, PasField.DUMMY_IDENTIFIER);
         if (PsiUtil.isIdent(position.getParent())) {
             if (position.getParent().getParent() instanceof PascalNamedElement) {
@@ -200,7 +200,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
         namespace.clearTarget();
-        result.addAll(PasReferenceUtil.resolve(namespace, types));
+        result.addAll(PasReferenceUtil.resolve(namespace, types, extendedCompletion));
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {

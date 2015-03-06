@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.7.5</version>
+    <version>0.8</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
     <description><![CDATA[
@@ -11,7 +11,8 @@
     <change-notes><![CDATA[
         <p>0.8</p>
         <ul>
-          <li>references/find usages rework</li>
+          <li>full references/find usages</li>
+          <li>completion improvement</li>
         </ul>
         <p>0.7.5</p>
         <ul>
