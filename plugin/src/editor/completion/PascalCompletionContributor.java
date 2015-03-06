@@ -154,7 +154,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
                 for (PasField field : entities) {
                     if ((field.element != null) && (!nameSet.contains(field.name.toUpperCase()))) {
-                        lookupElements.add(LookupElementBuilder.createWithIcon(field.element));
+                        lookupElements.add(getLookupElement(field));
                         nameSet.add(field.name.toUpperCase());
                     }
                 }
@@ -171,6 +171,11 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         });
 
+    }
+
+    private LookupElement getLookupElement(@NotNull PasField field) {
+        String scope = field.owner != null ? field.owner.getName() : "-";
+        return LookupElementBuilder.create(field.element).appendTailText(field.type.toString().toLowerCase(), true).withCaseSensitivity(false).withTypeText(scope, false);
     }
 
     private boolean isQualifiedIdent(PsiElement parent) {
