@@ -128,7 +128,7 @@ public class PsiUtil {
      * @return next sibling element or null if not found
      */
     @Nullable
-    public static PsiElement getNextSibling(PsiElement element) {
+    public static PsiElement getNextSibling(@NotNull PsiElement element) {
         PsiElement result = element.getNextSibling();
         while (result instanceof PsiWhiteSpace) {
             result = result.getNextSibling();

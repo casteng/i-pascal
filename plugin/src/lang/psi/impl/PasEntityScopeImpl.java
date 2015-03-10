@@ -84,7 +84,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
      * @return structured type declaration element
      */
     @Nullable
-    public static PasEntityScope getStructByNameElement(final PascalNamedElement namedElement) {  // TODO: all scopes comes after name?
+    public static PasEntityScope getStructByNameElement(@NotNull final PascalNamedElement namedElement) {  // TODO: all scopes comes after name?
         PsiElement sibling = PsiUtil.getNextSibling(namedElement);
         sibling = sibling != null ? PsiUtil.getNextSibling(sibling) : null;
         if ((sibling instanceof PasTypeDecl) && (sibling.getFirstChild() instanceof PasEntityScope)) {

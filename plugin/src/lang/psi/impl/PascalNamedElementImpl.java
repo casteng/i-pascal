@@ -141,10 +141,13 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     @NotNull
     public PsiReference[] getReferences() {
-        String text = getName();
-        return new PsiReference[]{
-                new PascalReference(this, new TextRange(0, text.length()))
-        };
+        if ((getNameElement() != null) && getTextRange().intersects(getNameElement().getTextRange())) {
+            return new PsiReference[]{
+                    new PascalReference(this, new TextRange(0, getName().length()))
+            };
+        } else {
+            return PsiReference.EMPTY_ARRAY;
+        }
     }
 
     @Override
