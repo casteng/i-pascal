@@ -5,7 +5,7 @@ interface
 uses
     SysUtils, StrUtils,
     //aaa
-    types;
+    myclass;
 
 type
     TRecord = record
@@ -25,7 +25,11 @@ type
     TC2 = class
     private
         name2: string;
+    public
+        procedure NonStat();
+        class procedure Stat();
     end;
+    CC2 = class of TTest;
 
     TStringSearchOption = (soDown, soMatchCase, soWholeWord);
     TStringSearchOptions = set of TStringSearchOption;TStringSeachOption = TStringSearchOption;
@@ -59,9 +63,10 @@ const
 var
     j: Integer;
     i: TRecord;
+    c: CC2;
 begin
     j := length(ASubText);
-    c;
+    c.Stat;
     cc.DefaultValue;
     if ACount>i then
         aStart := i+1;

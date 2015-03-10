@@ -346,10 +346,10 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         if (recursionCount > MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
             return PsiUtil.getElementPasModule(typeIdent);
         }
-        PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(typeIdent, PasTypeDecl.class);
         if (PsiUtil.isTypeDeclPointingToSelf(typeIdent)) {
             return PsiUtil.getElementPasModule(typeIdent);
         }
+        PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(typeIdent, PasTypeDecl.class);
         if (typeDecl != null) {
             PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
             if (strucTypeDecl != null) {   // structured type
