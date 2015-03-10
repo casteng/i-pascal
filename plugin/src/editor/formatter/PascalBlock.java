@@ -12,6 +12,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -48,7 +49,8 @@ public class PascalBlock extends AbstractBlock implements Block {
     private static final TokenSet TOKENS_COMMENT = TokenSet.create(PasTypes.COMMENT, PasTypes.CT_DEFINE, PasTypes.CT_ELSE, PasTypes.CT_ENDIF, PasTypes.CT_IF,
             PasTypes.CT_IFDEF, PasTypes.CT_IFNDEF, PasTypes.CT_IFOPT, PasTypes.CT_UNDEFINE);
 
-    private static final TokenSet TOKENS_ENTER_INDENTED = TokenSet.create(PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION);
+    private static final TokenSet TOKENS_ENTER_INDENTED =
+            TokenSet.create(PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION, PasTypes.USES_CLAUSE, PasTypes.COMPOUND_STATEMENT);
 
     private static final TokenSet TOKEN_COMMENT_NORMALINDENT = TokenSet.create(PasTypes.COMPOUND_STATEMENT, PasTypes.USES_CLAUSE);
 
@@ -212,19 +214,19 @@ public class PascalBlock extends AbstractBlock implements Block {
         return new ChildAttributes(getChildBlockIndent(myNode), null);
     }
 
-    private Indent getChildBlockIndent(ASTNode childNode) {
+    private static Indent getChildBlockIndent(ASTNode childNode) {
         if ((childNode != null) && (childNode.getTreeParent() != null)) {
+            System.out.println("!Enter ind: " + childNode.getTreeParent() + " . " + childNode +
+                    " | " + FormatterUtil.getPreviousNonWhitespaceSibling(childNode) + " | " + FormatterUtil.getPreviousNonWhitespaceLeaf(childNode));
             if ((TOKENS_ENTER_INDENTED.contains(childNode.getElementType())) || (childNode.getTreeParent().getElementType() == PasTypes.STATEMENT)) {
-                //System.out.println("Enter ind: " + myNode + " . " + childNode);
                 return Indent.getNormalIndent();
             }
             PsiElement psi = childNode.getPsi();
             if (psi instanceof PascalStructType) {
-                //System.out.println("Enter scoped: " + myNode + " . " + childNode);
-                return Indent.getNormalIndent(true);
+                //return Indent.getIndent(Indent.Type.NORMAL, true, false);             // When name will be included in struct type declarations
+                return Indent.getContinuationIndent(false);
             }
         }
-        System.out.println("!Enter ind: " + myNode + " . " + childNode);
         return Indent.getNoneIndent();
     }
 

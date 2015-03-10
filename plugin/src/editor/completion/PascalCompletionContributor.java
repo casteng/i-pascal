@@ -175,7 +175,8 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private LookupElement getLookupElement(@NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        return LookupElementBuilder.create(field.element).appendTailText(field.type.toString().toLowerCase(), true).withCaseSensitivity(false).withTypeText(scope, false);
+        return LookupElementBuilder.create(field.element).appendTailText(" : " + field.type.toString().toLowerCase(), true).
+                withCaseSensitivity(false).withTypeText(scope, false);
     }
 
     private boolean isQualifiedIdent(PsiElement parent) {
@@ -248,7 +249,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static LookupElement getElement(String s) {
-        return LookupElementBuilder.create(s).withIcon(PascalIcons.GENERAL).withStrikeoutness(s.equals(PasTypes.GOTO));
+        return LookupElementBuilder.create(s).withIcon(PascalIcons.GENERAL).withStrikeoutness(s.equals(PasTypes.GOTO.toString()));
     }
 
     private static Map<IElementType, Class<? extends PascalPsiElement>> TOKEN_TO_PSI = new HashMap<IElementType, Class<? extends PascalPsiElement>>();
