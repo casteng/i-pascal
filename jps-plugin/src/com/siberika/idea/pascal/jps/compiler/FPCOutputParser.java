@@ -61,8 +61,8 @@ public class FPCOutputParser {
                     url = VirtualFileManager.extractPath(VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, url));
                 }
                 try {
-                    lineNum = Integer.valueOf(matcher.group(3));
-                    colNum = Integer.valueOf(matcher.group(4));
+                    lineNum = Integer.parseInt(matcher.group(3));
+                    colNum = Integer.parseInt(matcher.group(4));
                 } catch (NumberFormatException ignore) {}
             }
             message = matcher.group(groupCount);

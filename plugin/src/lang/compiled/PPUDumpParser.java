@@ -166,9 +166,9 @@ public class PPUDumpParser {
             if (isIgnored(path)) {
                 return null;
             }
-            for (String dpath : SECTIONS.keySet()) {
-                if (path.endsWith(dpath)) {
-                    return SECTIONS.get(dpath);
+            for (Map.Entry<String, Section> entry : SECTIONS.entrySet()) {
+                if (path.endsWith(entry.getKey())) {
+                    return entry.getValue();
                 }
             }
             return null;
@@ -742,8 +742,8 @@ public class PPUDumpParser {
             sb.delete(pos, pos + len);
             sb.insert(pos, text);
             Map<Integer, String> newUndef = newUndef();
-            for (Integer offs : undefined.keySet()) {
-                newUndef.put(offs < pos ? offs : offs + text.length() - len, undefined.get(offs));
+            for (Map.Entry<Integer, String> entry : undefined.entrySet()) {
+                newUndef.put(entry.getKey() < pos ? entry.getKey() : entry.getKey() + text.length() - len, entry.getValue());
             }
             undefined = newUndef;
             return pos + text.length() - len;
@@ -760,8 +760,8 @@ public class PPUDumpParser {
         private int doInsertText(int pos, String text) {
             sb.insert(pos, text);
             Map<Integer, String> newUndef = newUndef();
-            for (Integer offs : undefined.keySet()) {
-                newUndef.put(offs < pos ? offs : offs + text.length(), undefined.get(offs));
+            for (Map.Entry<Integer, String> entry : undefined.entrySet()) {
+                newUndef.put(entry.getKey() < pos ? entry.getKey() : entry.getKey() + text.length(), entry.getValue());
             }
             undefined = newUndef;
             return pos + text.length();

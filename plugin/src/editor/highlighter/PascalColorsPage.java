@@ -20,7 +20,7 @@ import java.util.Map;
 * Date: 12/5/12
 */
 public class PascalColorsPage implements ColorSettingsPage {
-    final String DEMO_TEXT = "{ File header }\n" +
+    final static String DEMO_TEXT = "{ File header }\n" +
             "program sample;\n" +
             "var\n" +
             "  i, j: Integer;\n" +

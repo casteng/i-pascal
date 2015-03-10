@@ -71,9 +71,9 @@ public class DefinesParser {
 
     public static Set<String> getDefaultDefines(String compiler, String version) {
         Set<String> result = new HashSet<String>();
-        for (String ver : defaultDefines.keySet()) {
-            if (isVersionLessOrEqual(ver, version)) {
-                result.addAll(defaultDefines.get(ver));
+        for (Map.Entry<String, Set<String>> entry : defaultDefines.entrySet()) {
+            if (isVersionLessOrEqual(entry.getKey(), version)) {
+                result.addAll(entry.getValue());
             }
         }
         return result;
