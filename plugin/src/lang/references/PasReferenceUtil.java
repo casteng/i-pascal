@@ -28,6 +28,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
@@ -353,7 +354,7 @@ public class PasReferenceUtil {
                     }
 
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
-                    addParentNamespaces(namespaces, newNS);
+                    addParentNamespaces(namespaces, newNS, false);
                 }
                 fqn.next();
             }
@@ -419,7 +420,7 @@ public class PasReferenceUtil {
             addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPrivateUnits(), includeLibrary);
             addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPublicUnits(), includeLibrary);
         }
-        addParentNamespaces(namespaces, section);
+        addParentNamespaces(namespaces, section, true);
     }
 
     private static void addUnitNamespaces(List<PasEntityScope> namespaces, List<PasEntityScope> units, boolean includeLibrary) {
@@ -430,13 +431,15 @@ public class PasReferenceUtil {
         }
     }
 
-    private static void addParentNamespaces(List<PasEntityScope> namespaces, @Nullable PasEntityScope section) throws PasInvalidScopeException {
+    private static void addParentNamespaces(List<PasEntityScope> namespaces, @Nullable PasEntityScope section, boolean first) throws PasInvalidScopeException {
         if (null == section) {
             return;
         }
         PasEntityScope newNS = section.getParentScope() != null ? getFirst(section.getParentScope(), null) : null;
         while (newNS != null) {              // Scan namespace's parent namespaces (class parents etc)
-            namespaces.add(newNS);
+            if (first || (newNS instanceof PascalStructType)) {
+                namespaces.add(newNS);
+            }
             newNS = newNS.getParentScope() != null ? getFirst(newNS.getParentScope(), null) : null;
         }
     }

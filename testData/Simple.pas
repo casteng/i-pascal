@@ -46,12 +46,14 @@ var
     Value: Simple.TC;
     V2: TC2;
     Obj: TObject;
+    a: TLiteInterfacedObject;
 begin
     Obj.Create();
     Value.Create();
     v2.Create();
-    Value := 2 <> (aa=1);
+    Value := 2 <> (a=1);
     Value.X;
+    a._AddRef;
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
     FMyInt := Value;

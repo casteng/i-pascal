@@ -532,6 +532,6 @@ public class PsiUtil {
     }
 
     public static boolean isFromLibrary(@NotNull PsiElement element) {
-        return element.isWritable();
+        return !element.isPhysical();
     }
 }
