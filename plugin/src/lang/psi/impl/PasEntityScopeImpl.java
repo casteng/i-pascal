@@ -150,16 +150,16 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         assert members.size() == PasField.Visibility.values().length;
         redeclaredMembers = new LinkedHashSet<PascalNamedElement>();
 
-        addField(this, "Self", PasField.Type.VARIABLE, PasField.Visibility.PRIVATE);
+        addField(this, "Self", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE);
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
         while (child != null) {
             if (child.getClass() == PasClassFieldImpl.class) {
                 addFields(child, visibility);
             } else if (child.getClass() == PasExportedRoutineImpl.class) {
-                addField((PascalNamedElement) child, PasField.Type.ROUTINE, visibility);
+                addField((PascalNamedElement) child, PasField.FieldType.ROUTINE, visibility);
             } else if (child.getClass() == PasClassPropertyImpl.class) {
-                addField((PascalNamedElement) child, PasField.Type.PROPERTY, visibility);
+                addField((PascalNamedElement) child, PasField.FieldType.PROPERTY, visibility);
             } else if (child.getClass() == PasVisibilityImpl.class) {
                 visibility = getVisibility(child);
             } else if (child.getClass() == PasRecordVariantImpl.class) {
@@ -175,18 +175,18 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         PsiElement child = element.getFirstChild();
         while (child != null) {
             if (child.getClass() == PasNamedIdentImpl.class) {
-                addField((PascalNamedElement) child, PasField.Type.VARIABLE, visibility);
+                addField((PascalNamedElement) child, PasField.FieldType.VARIABLE, visibility);
             }
             child = child.getNextSibling();
         }
     }
 
-    private void addField(PascalNamedElement element, PasField.Type type, @NotNull PasField.Visibility visibility) {
-        addField(element, element.getName(), type, visibility);
+    private void addField(PascalNamedElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+        addField(element, element.getName(), fieldType, visibility);
     }
 
-    private void addField(PascalNamedElement element, String name, PasField.Type type, @NotNull PasField.Visibility visibility) {
-        PasField field = new PasField(this, element, name, type, visibility);
+    private void addField(PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+        PasField field = new PasField(this, element, name, fieldType, visibility);
         if (members.get(visibility.ordinal()) == null) {
             members.set(visibility.ordinal(), new LinkedHashMap<String, PasField>());
         }

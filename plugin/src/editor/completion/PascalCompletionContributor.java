@@ -175,7 +175,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private LookupElement getLookupElement(@NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        return LookupElementBuilder.create(field.element).appendTailText(" : " + field.type.toString().toLowerCase(), true).
+        return LookupElementBuilder.create(field.element).appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(false).withTypeText(scope, false);
     }
 
@@ -196,7 +196,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     * a_.bc ____
     * a.b_.c a.____
     */
-    private static void addEntities(Collection<PasField> result, PsiElement position, Set<PasField.Type> types, boolean extendedCompletion) {
+    private static void addEntities(Collection<PasField> result, PsiElement position, Set<PasField.FieldType> fieldTypes, boolean extendedCompletion) {
         NamespaceRec namespace = NamespaceRec.fromFQN(position, PasField.DUMMY_IDENTIFIER);
         if (PsiUtil.isIdent(position.getParent())) {
             if (position.getParent().getParent() instanceof PascalNamedElement) {
@@ -206,7 +206,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
         namespace.clearTarget();
-        result.addAll(PasReferenceUtil.resolve(namespace, types, extendedCompletion));
+        result.addAll(PasReferenceUtil.resolve(namespace, fieldTypes, extendedCompletion));
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {

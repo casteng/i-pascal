@@ -200,7 +200,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             PasModule module = PsiUtil.getElementPasModule(section);
             if (module != null) {
                 PasField field = module.getField(((PascalRoutineImpl) section).getNamespace());
-                if ((field != null) && (field.type == PasField.Type.TYPE)) {
+                if ((field != null) && (field.fieldType == PasField.FieldType.TYPE)) {
                     result.add(field.element);
                     return;
                 }

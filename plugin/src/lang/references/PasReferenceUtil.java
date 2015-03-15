@@ -114,10 +114,10 @@ public class PasReferenceUtil {
     }
 
     @Deprecated
-    public static Collection<LookupElement> getEntities(final PsiElement element, Set<PasField.Type> types) {
+    public static Collection<LookupElement> getEntities(final PsiElement element, Set<PasField.FieldType> fieldTypes) {
         Collection<PascalNamedElement> result = new TreeSet<PascalNamedElement>(); // TODO: add comparator
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(element);
-        doGetEntities(result, section, element.getTextRange().getStartOffset(), types, new HashSet<String>());
+        doGetEntities(result, section, element.getTextRange().getStartOffset(), fieldTypes, new HashSet<String>());
 
         Collection<LookupElement> res = new ArrayList<LookupElement>(result.size());
         for (PascalNamedElement namedElement : result) {
@@ -130,13 +130,13 @@ public class PasReferenceUtil {
      * Recursively goes up by entity declaration scopes and adds declared entities to result
      */
     @Deprecated
-    private static void doGetEntities(Collection<PascalNamedElement> result, PsiElement section, int startOffset, Set<PasField.Type> types, Set<String> filter) {
+    private static void doGetEntities(Collection<PascalNamedElement> result, PsiElement section, int startOffset, Set<PasField.FieldType> fieldTypes, Set<String> filter) {
         if (null == section) { return; }
         if (section instanceof PasEntityScope) {
             try {
                 for (PasField field : ((PasEntityScope) section).getAllFields()) {
                     if ((field.element != null) && (startOffset > field.element.getTextRange().getStartOffset()) &&  // TODO: pointer declaration exception
-                        types.contains(field.type) && !filter.contains(field.name.toUpperCase())) {
+                        fieldTypes.contains(field.fieldType) && !filter.contains(field.name.toUpperCase())) {
                         result.add(field.element);
                         filter.add(field.name.toUpperCase());
                     }
@@ -145,7 +145,7 @@ public class PasReferenceUtil {
                 e.printStackTrace();
             }
         }
-        doGetEntities(result, PsiUtil.getNearestAffectingDeclarationsRoot(section), startOffset, types, filter);
+        doGetEntities(result, PsiUtil.getNearestAffectingDeclarationsRoot(section), startOffset, fieldTypes, filter);
     }
 
     /**
@@ -154,7 +154,7 @@ public class PasReferenceUtil {
      *    if the entity represents a namespace - retrieve and make current
      *  for namespace of target entry add all its entities
      */
-    public static Collection<LookupElement> getEntities(final NamespaceRec fqn, Set<PasField.Type> types) {
+    public static Collection<LookupElement> getEntities(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
         // First entry in FQN
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
@@ -191,7 +191,7 @@ public class PasReferenceUtil {
             if (fqn.isTarget() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
                     for (PasField pasField : namespace.getAllFields()) {
-                        if ((pasField.element != null) && (types.contains(pasField.type)) && isVisibleWithinUnit(pasField, fqn)) {
+                        if ((pasField.element != null) && (fieldTypes.contains(pasField.fieldType)) && isVisibleWithinUnit(pasField, fqn)) {
                             result.add(LookupElementBuilder.createWithIcon(pasField.element));
                         }
                     }
@@ -219,15 +219,15 @@ public class PasReferenceUtil {
     /**
      * Recursively searches up over entity declaration scopes for an entity with the given name
      */
-    private static PasField doGetEntity(PsiElement section, String name, Set<PasField.Type> types) throws PasInvalidScopeException {
+    private static PasField doGetEntity(PsiElement section, String name, Set<PasField.FieldType> fieldTypes) throws PasInvalidScopeException {
         if (null == section) { return null; }
         if (section instanceof PasEntityScope) {
             PasField field = ((PasEntityScope) section).getField(name);
-            if ((field != null) && (types.contains(field.type))) {
+            if ((field != null) && (fieldTypes.contains(field.fieldType))) {
                 return field;
             }
         }
-        return doGetEntity(PsiUtil.getNearestAffectingDeclarationsRoot(section), name, types);
+        return doGetEntity(PsiUtil.getNearestAffectingDeclarationsRoot(section), name, fieldTypes);
     }
 
     private static PasEntityScope retrieveNamespace(PasField field, boolean canBeUnit) throws PasInvalidScopeException {
@@ -322,7 +322,7 @@ public class PasReferenceUtil {
      *    if the entity represents a namespace - retrieve and make current
      *  for namespace of target entry add all its entities
      */
-    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.Type> types, boolean includeLibrary) {
+    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypes, boolean includeLibrary) {
         // First entry in FQN
         PasEntityScope scope = getNearestAffectingScope(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
@@ -347,7 +347,7 @@ public class PasReferenceUtil {
                 namespaces = null;
                 if (field != null) {
                     PasEntityScope newNS;
-                    if (field.type == PasField.Type.UNIT) {
+                    if (field.fieldType == PasField.FieldType.UNIT) {
                         newNS = fqn.isFirst() ? retrieveFieldUnitScope(field, includeLibrary) : null;                    // First qualifier can be unit name
                     } else {
                         newNS = retrieveFieldTypeScope(field, includeLibrary);
@@ -362,7 +362,7 @@ public class PasReferenceUtil {
             if (fqn.isTarget() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
                     for (PasField pasField : namespace.getAllFields()) {
-                        if ((pasField.element != null) && isFieldMatches(pasField, fqn, types) &&
+                        if ((pasField.element != null) && isFieldMatches(pasField, fqn, fieldTypes) &&
                                 !result.contains(pasField) &&
                                 isVisibleWithinUnit(pasField, fqn)) {
                             result.add(pasField);
@@ -370,7 +370,7 @@ public class PasReferenceUtil {
                     }
                 }
                 if (!fqn.isEmpty() && (fqn.isFirst())) {
-                    addBuiltins(result, fqn, types);
+                    addBuiltins(result, fqn, fieldTypes);
                 }
             }
         } catch (PasInvalidScopeException e) {
@@ -383,18 +383,18 @@ public class PasReferenceUtil {
         return result;
     }
 
-    private static void addBuiltins(Collection<PasField> result, NamespaceRec fqn, Set<PasField.Type> types) {
+    private static void addBuiltins(Collection<PasField> result, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
         for (PasField field : BuiltinsParser.getBuiltins()) {
-            if (isFieldMatches(field, fqn, types)) {
+            if (isFieldMatches(field, fqn, fieldTypes)) {
                 PasModule module = PsiUtil.getElementPasModule(fqn.getParentIdent());
-                result.add(new PasField(field.owner, field.element, field.name, field.type, field.visibility, module != null ? module : fqn.getParentIdent(), field.typeField));
+                result.add(new PasField(field.owner, field.element, field.name, field.fieldType, field.visibility, module != null ? module : fqn.getParentIdent(), field.typeField));
                 return;
             }
         }
     }
 
-    private static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.Type> types) {
-        return (!fqn.isTarget() || types.contains(field.type)) &&
+    private static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
+        return (!fqn.isTarget() || fieldTypes.contains(field.fieldType)) &&
                 ("".equals(fqn.getCurrentName()) || field.name.equalsIgnoreCase(fqn.getCurrentName()));
     }
 

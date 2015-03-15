@@ -35,11 +35,11 @@ public class BuiltinsParser {
 
                 public void endElement(String uri, String localName, String qName) throws SAXException {
                     if (qName.equalsIgnoreCase("type")) {
-                        builtins.add(new PasField(null, null, sb.toString(), PasField.Type.TYPE, PasField.Visibility.PUBLIC));
+                        builtins.add(new PasField(null, null, sb.toString(), PasField.FieldType.TYPE, PasField.Visibility.PUBLIC));
                     } else if (qName.equalsIgnoreCase("var")) {
-                        builtins.add(new PasField(null, null, sb.toString(), PasField.Type.VARIABLE, PasField.Visibility.PUBLIC));
+                        builtins.add(new PasField(null, null, sb.toString(), PasField.FieldType.VARIABLE, PasField.Visibility.PUBLIC));
                     } else if (qName.equalsIgnoreCase("routine")) {
-                        builtins.add(new PasField(null, null, sb.toString(), PasField.Type.ROUTINE, PasField.Visibility.PUBLIC));
+                        builtins.add(new PasField(null, null, sb.toString(), PasField.FieldType.ROUTINE, PasField.Visibility.PUBLIC));
                     }
                 }
 

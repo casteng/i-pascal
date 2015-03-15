@@ -96,7 +96,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
 
         privateUnits = retrieveUsedUnits(section);
         for (PasEntityScope unit : privateUnits) {
-            privateMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.Type.UNIT, PasField.Visibility.PRIVATE));
+            privateMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
         }
 
         buildPrivateStamp = getContainingFile().getModificationStamp();
@@ -130,7 +130,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         publicMembers = new LinkedHashMap<String, PasField>();
         redeclaredPublicMembers = new LinkedHashSet<PascalNamedElement>();
 
-        publicMembers.put(getName().toUpperCase(), new PasField(this, this, getName(), PasField.Type.UNIT, PasField.Visibility.PUBLIC));
+        publicMembers.put(getName().toUpperCase(), new PasField(this, this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PUBLIC));
 
         PsiElement section = PsiUtil.getModuleInterfaceSection(this);
         if (null == section) {
@@ -141,7 +141,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
 
         publicUnits = retrieveUsedUnits(section);
         for (PasEntityScope unit : publicUnits) {
-            publicMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.Type.UNIT, PasField.Visibility.PRIVATE));
+            publicMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
         }
 
         buildPublicStamp = getContainingFile().getModificationStamp();

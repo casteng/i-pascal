@@ -72,7 +72,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
 
         List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
         for (PasNamedIdent parameter : params) {
-            addField(parameter, PasField.Type.VARIABLE);
+            addField(parameter, PasField.FieldType.VARIABLE);
         }
 
         //noinspection unchecked
@@ -96,13 +96,13 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
                 PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class
         );
         if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
-            members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.Type.VARIABLE, PasField.Visibility.PRIVATE));
+            members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE));
         }
         //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
-    private void addField(PascalNamedElement element, PasField.Type type) {
-        PasField field = new PasField(this, element, element.getName(), type, PasField.Visibility.STRICT_PRIVATE);
+    private void addField(PascalNamedElement element, PasField.FieldType fieldType) {
+        PasField field = new PasField(this, element, element.getName(), fieldType, PasField.Visibility.STRICT_PRIVATE);
         members.put(field.name.toUpperCase(), field);
     }
 

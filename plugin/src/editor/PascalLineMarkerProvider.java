@@ -141,11 +141,11 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         PasModule module = PsiUtil.getElementPasModule(routineDecl);
         if (module != null) {
             PasField typeMember = module.getField(routineDecl.getNamespace());
-            if ((typeMember != null) && (typeMember.element != null) && (typeMember.type == PasField.Type.TYPE)) {
+            if ((typeMember != null) && (typeMember.element != null) && (typeMember.fieldType == PasField.FieldType.TYPE)) {
                 PasEntityScope struct = PasEntityScopeImpl.getStructByNameElement(typeMember.element);
                 if (struct != null) {
                     PasField field = struct.getField(routineDecl.getNamePart());
-                    if ((field != null) && (field.type == PasField.Type.ROUTINE)) {
+                    if ((field != null) && (field.fieldType == PasField.FieldType.ROUTINE)) {
                         result.add(field.element);
                     }
                 }

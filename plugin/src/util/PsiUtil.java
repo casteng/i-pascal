@@ -328,15 +328,15 @@ public class PsiUtil {
                     if (!PsiUtil.isModuleName(namedElement) && !PsiUtil.isFormalParameterName(namedElement)) {
                         String name = namedElement.getName();
                         if (!fieldCollector.fieldExists(namedElement)) {
-                            PasField.Type type = PasField.Type.VARIABLE;
+                            PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
                             if (PsiUtil.isTypeName(namedElement)) {
-                                type = PasField.Type.TYPE;
+                                fieldType = PasField.FieldType.TYPE;
                             } else if (PsiUtil.isRoutineName(namedElement)) {
-                                type = PasField.Type.ROUTINE;
+                                fieldType = PasField.FieldType.ROUTINE;
                             } else if (PsiUtil.isUsedUnitName(namedElement)) {
-                                type = PasField.Type.UNIT;
+                                fieldType = PasField.FieldType.UNIT;
                             }
-                            fieldCollector.addField(name, new PasField(owner, namedElement, name, type, visibility));
+                            fieldCollector.addField(name, new PasField(owner, namedElement, name, fieldType, visibility));
                         }
 
                     }
@@ -485,15 +485,15 @@ public class PsiUtil {
                 if (!isFormalParameterName(namedElement) && !isUsedUnitName(namedElement)) {
                     String name = namedElement.getName();
                     if (!fieldCollector.fieldExists(namedElement)) {
-                        PasField.Type type = PasField.Type.VARIABLE;
+                        PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
                         if (isTypeName(namedElement)) {
-                            type = PasField.Type.TYPE;
+                            fieldType = PasField.FieldType.TYPE;
                         } else if (isRoutineName(namedElement)) {
-                            type = PasField.Type.ROUTINE;
+                            fieldType = PasField.FieldType.ROUTINE;
                         } else if (isConstDecl(namedElement) || isEnumDecl(namedElement)) {
-                            type = PasField.Type.CONSTANT;
+                            fieldType = PasField.FieldType.CONSTANT;
                         }
-                        fieldCollector.addField(name, new PasField(owner, namedElement, name, type, visibility));
+                        fieldCollector.addField(name, new PasField(owner, namedElement, name, fieldType, visibility));
                     }
                 }
             }

@@ -19,12 +19,12 @@ public class PasField {
 
     public static final String DUMMY_IDENTIFIER = "____";
 
-    public enum Type {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY}
+    public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY}
 
-    public static final Set<Type> TYPES_ALL = new HashSet<Type>(Arrays.asList(Type.values()));
-    public static final Set<Type> TYPES_LEFT_SIDE = new HashSet<Type>(Arrays.asList(Type.UNIT, Type.VARIABLE, Type.PROPERTY, Type.ROUTINE));
-    public static final Set<Type> TYPES_TYPE = new HashSet<Type>(Collections.singletonList(Type.TYPE));
-    public static final Set<Type> TYPES_TYPE_UNIT = new HashSet<Type>(Arrays.asList(Type.UNIT, Type.TYPE));
+    public static final Set<FieldType> TYPES_ALL = new HashSet<FieldType>(Arrays.asList(FieldType.values()));
+    public static final Set<FieldType> TYPES_LEFT_SIDE = new HashSet<FieldType>(Arrays.asList(FieldType.UNIT, FieldType.VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_TYPE = new HashSet<FieldType>(Collections.singletonList(FieldType.TYPE));
+    public static final Set<FieldType> TYPES_TYPE_UNIT = new HashSet<FieldType>(Arrays.asList(FieldType.UNIT, FieldType.TYPE));
 
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
@@ -37,7 +37,7 @@ public class PasField {
     @Nullable
     public final PascalNamedElement element;
     public final String name;
-    public final Type type;
+    public final FieldType fieldType;
     @NotNull
     public final Visibility visibility;
     public int offset;
@@ -47,28 +47,28 @@ public class PasField {
 
     public final PasField typeField;
 
-    private final int cahcehdHash;
+    private final int cachedHash;
 
-    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, @Nullable PsiElement target, PasField typeField) {
+    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, FieldType fieldType, @NotNull Visibility visibility, @Nullable PsiElement target, PasField typeField) {
         this.owner = owner;
         this.element = element;
         this.name = name;
-        this.type = type;
+        this.fieldType = fieldType;
         this.visibility = visibility;
         this.offset = element != null ? element.getTextOffset() : 0;
         this.target = target;
         //System.out.println(this);
-        this.cahcehdHash = name.hashCode() * 31 + (element != null ? element.hashCode() : 0);
+        this.cachedHash = name.hashCode() * 31 + (element != null ? element.hashCode() : 0);
         this.typeField = typeField;
     }
 
-    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, PasField typeField) {
-        this(owner, element, name, type, visibility, null, typeField);
+    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, FieldType fieldType, @NotNull Visibility visibility, PasField typeField) {
+        this(owner, element, name, fieldType, visibility, null, typeField);
     }
 
     @Override
     public String toString() {
-        return visibility + " " + type + ": " + (owner != null ? owner.getName() : "-") + "." + name + ", " + element;
+        return visibility + " " + fieldType + ": " + (owner != null ? owner.getName() : "-") + "." + name + ", " + element;
     }
 
     @Override
@@ -86,6 +86,6 @@ public class PasField {
 
     @Override
     public int hashCode() {
-        return cahcehdHash;
+        return cachedHash;
     }
 }
