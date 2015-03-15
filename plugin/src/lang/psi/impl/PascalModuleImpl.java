@@ -43,7 +43,6 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     private List<PasEntityScope> publicUnits = Collections.emptyList();
     private long buildPrivateStamp = 0;
     private long buildPublicStamp = 0;
-    private List<PasEntityScope> parentScopes;
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -196,16 +195,16 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         return publicUnits;
     }
 
+    @NotNull
+    @Override
+    public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
+        return Collections.emptyList();
+    }
+
     @Nullable
     @Override
-    synchronized public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
-        if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
-        }
-        if (null == parentScopes) {
-            buildParentScopes();
-        }
-        return parentScopes;
+    public PasEntityScope getOwnerScope() throws PasInvalidScopeException {
+        return null;
     }
 
     @Override
@@ -213,10 +212,6 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         System.out.println("*** invalidating cache");
         privateMembers = null;
         publicMembers = null;
-        parentScopes = null;
-    }
-
-    private void buildParentScopes() {
     }
 
 }

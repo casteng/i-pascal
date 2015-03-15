@@ -18,8 +18,10 @@ public interface PasEntityScope extends PascalNamedElement {
     PasField getField(final String name) throws PasInvalidScopeException;
     @NotNull
     Collection<PasField> getAllFields() throws PasInvalidScopeException;
-    @Nullable
+    @NotNull
     List<PasEntityScope> getParentScope() throws PasInvalidScopeException;
+    @Nullable
+    PasEntityScope getOwnerScope() throws PasInvalidScopeException;
 
     void invalidateCache();
 }

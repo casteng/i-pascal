@@ -44,9 +44,12 @@ public class PasField {
     // Reference target
     @Nullable
     public final PsiElement target;
+
+    public final PasField typeField;
+
     private final int cahcehdHash;
 
-    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, @Nullable PsiElement target) {
+    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, @Nullable PsiElement target, PasField typeField) {
         this.owner = owner;
         this.element = element;
         this.name = name;
@@ -56,10 +59,11 @@ public class PasField {
         this.target = target;
         //System.out.println(this);
         this.cahcehdHash = name.hashCode() * 31 + (element != null ? element.hashCode() : 0);
+        this.typeField = typeField;
     }
 
-    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility) {
-        this(owner, element, name, type, visibility, null);
+    public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, Type type, @NotNull Visibility visibility, PasField typeField) {
+        this(owner, element, name, type, visibility, null, typeField);
     }
 
     @Override

@@ -127,7 +127,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         return PsiTreeUtil.findChildOfType(type, PasFullyQualifiedIdent.class);
     }
 
-    @Nullable
+    @NotNull
     @Override
     synchronized public List<PasEntityScope> getParentScope() {
         if (null == parentScopes) {
@@ -145,7 +145,15 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
             if (type != null) {
                 parentScopes = Collections.singletonList(type);
             }
+        } else {
+            parentScopes = Collections.emptyList();
         }
+    }
+
+    @Nullable
+    @Override
+    public PasEntityScope getOwnerScope() throws PasInvalidScopeException {
+        return PsiUtil.getElementPasModule(this);
     }
 
     @Override

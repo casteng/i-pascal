@@ -261,7 +261,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                         getEndOffset(section), PasNamedIdent.class, PasGenericTypeIdent.class);
 
                 if (entities.isEmpty() && (section instanceof PasEntityScope)) {
-                    PasEntityScope parentScope = ((PasEntityScope) section).getParentScope() != null ? getFirst(((PasEntityScope) section).getParentScope(), null) : null;
+                    PasEntityScope parentScope = getFirst(((PasEntityScope) section).getParentScope(), null);
                     section = retrieveNamespace(parentScope, namespaces.isFirst());
                     entities = retrieveEntitiesFromSection(section, namespaces.getCurrentName(),
                             getEndOffset(section), PasNamedIdent.class, PasGenericTypeIdent.class);

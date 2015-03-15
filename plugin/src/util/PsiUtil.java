@@ -454,7 +454,7 @@ public class PsiUtil {
 
     public static String getQualifiedMethodName(PsiNamedElement element) {
         if (PsiUtil.isStructureMember(element)) {
-            PasEntityScopeImpl owner = PasEntityScopeImpl.findOwner(element);
+            PasEntityScopeImpl owner = PasEntityScopeImpl.findOwnerStruct(element);
             if (null != owner) {
                 return getQualifiedMethodName(owner) + "." + element.getName();
             }

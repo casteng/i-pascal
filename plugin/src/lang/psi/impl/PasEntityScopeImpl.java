@@ -57,15 +57,14 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         assert STR_TO_VIS.size() == PasField.Visibility.values().length;
     }
 
-    private boolean cacheStale;
-
     public PasEntityScopeImpl(ASTNode node) {
         super(node);
     }
 
+    // Returns structured type owning the field
     @Nullable
     @SuppressWarnings("unchecked")
-    public static PasEntityScopeImpl findOwner(PsiElement element) {
+    public static PasEntityScopeImpl findOwnerStruct(PsiElement element) {
         return PsiTreeUtil.getParentOfType(element,
                 PasClassHelperDeclImpl.class, PasClassTypeDeclImpl.class, PasInterfaceTypeDeclImpl.class, PasObjectDeclImpl.class, PasRecordHelperDeclImpl.class, PasRecordDeclImpl.class);
     }
@@ -201,7 +200,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         return (getContainingFile() != null) && (cache != null) && (getContainingFile().getModificationStamp() == stamp);
     }
 
-    @Nullable
+    @NotNull
     @Override
     synchronized public List<PasEntityScope> getParentScope() {
         if (null == parentScopes) {
@@ -230,6 +229,12 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
                 parentScopes.add(scope);
             }
         }
+    }
+
+    @Nullable
+    @Override
+    public PasEntityScope getOwnerScope() throws PasInvalidScopeException {
+        return PsiUtil.getElementPasModule(this);
     }
 
     @Override

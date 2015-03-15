@@ -178,7 +178,7 @@ public class PasReferenceUtil {
                     PasEntityScope newNS = retrieveNamespace(field, fqn.isFirst());
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
                     while (newNS != null) {              // Scan namespace's parent namespaces (class parents etc)
-                        newNS = newNS.getParentScope() != null ? getFirst(newNS.getParentScope(), null) : null;
+                        newNS = getFirst(newNS.getParentScope(), null);
                         if (newNS != null) {
                             namespaces.add(newNS);
                         }
@@ -387,7 +387,7 @@ public class PasReferenceUtil {
         for (PasField field : BuiltinsParser.getBuiltins()) {
             if (isFieldMatches(field, fqn, types)) {
                 PasModule module = PsiUtil.getElementPasModule(fqn.getParentIdent());
-                result.add(new PasField(field.owner, field.element, field.name, field.type, field.visibility, module != null ? module : fqn.getParentIdent()));
+                result.add(new PasField(field.owner, field.element, field.name, field.type, field.visibility, module != null ? module : fqn.getParentIdent(), field.typeField));
                 return;
             }
         }
@@ -435,12 +435,12 @@ public class PasReferenceUtil {
         if (null == section) {
             return;
         }
-        PasEntityScope newNS = section.getParentScope() != null ? getFirst(section.getParentScope(), null) : null;
+        PasEntityScope newNS = getFirst(section.getParentScope(), null);
         while (newNS != null) {              // Scan namespace's parent namespaces (class parents etc)
             if (first || (newNS instanceof PascalStructType)) {
                 namespaces.add(newNS);
             }
-            newNS = newNS.getParentScope() != null ? getFirst(newNS.getParentScope(), null) : null;
+            newNS = getFirst(newNS.getParentScope(), null);
         }
     }
 
