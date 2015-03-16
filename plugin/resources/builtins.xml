@@ -2,28 +2,28 @@
     <type>___DUMMY__TYPE___</type>
     <type>string</type>
     <routine>assert</routine>
-    <routine>SizeOf</routine>
-    <routine>ord</routine>
-    <routine>str</routine>
-    <routine>val</routine>
+    <routine type="integer">SizeOf</routine>
+    <routine type="integer">ord</routine>
+    <routine type="string">str</routine>
+    <routine type="integer">val</routine>
     <routine>write</routine>
     <routine>writeln</routine>
     <routine>read</routine>
     <routine>readln</routine>
-    <routine>length</routine>
+    <routine type="integer">length</routine>
     <routine>setLength</routine>
-    <routine>copy</routine>
-    <routine>concat</routine>
+    <routine type="string">copy</routine>
+    <routine type="string">concat</routine>
     <routine>slice</routine>
     <routine>inc</routine>
     <routine>dec</routine>
-    <routine>high</routine>
-    <routine>low</routine>
-    <routine>succ</routine>
-    <routine>prev</routine>
+    <routine type="integer">high</routine>
+    <routine type="integer">low</routine>
+    <routine type="integer">succ</routine>
+    <routine type="integer">prev</routine>
     <routine>include</routine>
     <routine>exclude</routine>
-    <routine>Assigned</routine>
+    <routine type="boolean">Assigned</routine>
     <routine>SetString</routine>
     <routine>new</routine>
     <routine>dispose</routine>

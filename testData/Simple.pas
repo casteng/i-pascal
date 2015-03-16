@@ -5,7 +5,7 @@ interface
 uses
     SysUtils, StrUtils,
     //aaa
-    types;
+    myclass;
 
 type
     TRecord = record
@@ -15,31 +15,21 @@ type
         constructor b(a, b: int);
     end;
 
-    TEnum = (eOne,
-        // dasd
-        eTwo,
-        //sda
-        eThree);
+    TEnum = (eOne, eTwo, eThree);
 
-    TObj = object
-        Name2, CurrentValue, DefaultValue: AnsiString;
-        HashValue: LongWord;
-        procedure ba(); virtual; abstract;
-        //class function a: int;
-        constructor b(a, b: int);
-        property cc: Int read ba; default;
-    end;
-
-    TVector2s = packed record
-    case Integer of
-        0:(X, Y: Single);
-        1:(V: array[0..1] of Single);
-    end;
-
-    TC = class(TVector2s)
+    TC = class(TObject)
     private
         name: string;
     end;
+
+    TC2 = class
+    private
+        name2: string;
+    public
+        procedure NonStat();
+        class procedure Stat();
+    end;
+    CC2 = class of TTest;
 
     TStringSearchOption = (soDown, soMatchCase, soWholeWord);
     TStringSearchOptions = set of TStringSearchOption;TStringSeachOption = TStringSearchOption;
@@ -53,10 +43,18 @@ implementation
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
-    Value: TC;
+    test: Simple.strutils;
+    Value: Simple.TC;
+    V2: TC2;
+    Obj: TObject;
+    a: TLiteInterfacedObject;
 begin
-    Value := 2 <> (aa=1);
-    Value.X;
+    Obj.Create();
+    Value.Create();
+    v2.Create();
+    Value := 2 <> (a=1);
+    Value.;
+    a._AddRef;
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
     FMyInt := Value;
@@ -68,9 +66,10 @@ const
 var
     j: Integer;
     i: TRecord;
+    c: CC2;
 begin
     j := length(ASubText);
-    i.CurrentValue;
+    c.Stat;
     cc.DefaultValue;
     if ACount>i then
         aStart := i+1;

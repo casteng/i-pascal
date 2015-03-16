@@ -387,7 +387,7 @@ public class PasReferenceUtil {
         for (PasField field : BuiltinsParser.getBuiltins()) {
             if (isFieldMatches(field, fqn, fieldTypes)) {
                 PasModule module = PsiUtil.getElementPasModule(fqn.getParentIdent());
-                result.add(new PasField(field.owner, field.element, field.name, field.fieldType, field.visibility, module != null ? module : fqn.getParentIdent(), field.typeField));
+                result.add(new PasField(field.owner, field.element, field.name, field.fieldType, field.visibility, module != null ? module : fqn.getParentIdent(), field.getValueType()));
                 return;
             }
         }
