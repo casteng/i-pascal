@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.Processor;
 import com.siberika.idea.pascal.jps.PascalBundle;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
@@ -15,6 +14,7 @@ import org.jetbrains.annotations.PropertyKey;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -76,10 +76,8 @@ public class FPCBackendCompiler {
         commandLine.add(executable.getPath());
 
         if (pascalSdkData != null) {
-            String compilerOptions = pascalSdkData.get(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
-            if (!StringUtil.isEmpty(compilerOptions)) {
-                commandLine.add(compilerOptions);
-            }
+            String[] compilerOptions = pascalSdkData.get(PascalSdkData.DATA_KEY_COMPILER_OPTIONS).split("\\s+");
+            Collections.addAll(commandLine, compilerOptions);
         }
         commandLine.add(COMPILER_SETTING_COMMON);
 

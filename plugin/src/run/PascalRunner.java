@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.run;
 
 import com.intellij.execution.configurations.RunProfile;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.DefaultProgramRunner;
 import com.intellij.openapi.module.Module;
@@ -25,7 +26,7 @@ public class PascalRunner extends DefaultProgramRunner {
 
     public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
         return (profile instanceof PascalRunConfiguration) &&
-                (executorId.equals(DefaultRunExecutor.EXECUTOR_ID));
+                (executorId.equals(DefaultRunExecutor.EXECUTOR_ID) || executorId.equals(DefaultDebugExecutor.EXECUTOR_ID));
     }
 
     @Nullable
