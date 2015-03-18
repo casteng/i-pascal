@@ -32,8 +32,6 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
-import com.intellij.openapi.roots.CompilerModuleExtension;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.module.PascalModuleType;
 import org.apache.log4j.Logger;
@@ -71,6 +69,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
         return new PascalRunConfiguration(getName(),  getConfigurationModule(),  getFactory());
     }
 
+    @NotNull
     public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
         return new PascalRunConfigurationEditor(this);
     }

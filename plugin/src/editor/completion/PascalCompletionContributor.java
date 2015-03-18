@@ -153,7 +153,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
                 Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
                 for (PasField field : entities) {
-                    if ((field.element != null) && (!nameSet.contains(field.name.toUpperCase()))) {
+                    if (!nameSet.contains(field.name.toUpperCase())) {
                         lookupElements.add(getLookupElement(field));
                         nameSet.add(field.name.toUpperCase());
                     }
@@ -175,7 +175,8 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private LookupElement getLookupElement(@NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        return LookupElementBuilder.create(field.element).appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
+        LookupElementBuilder lookupElement = field.element != null ? LookupElementBuilder.create(field.element) : LookupElementBuilder.create(field.name);
+        return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(false).withTypeText(scope, false);
     }
 
