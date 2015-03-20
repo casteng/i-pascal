@@ -17,7 +17,7 @@ import java.util.Set;
 */
 public class PasField {
 
-    public static final String DUMMY_IDENTIFIER = "____";
+    public static final String DUMMY_IDENTIFIER = "____;";
 
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY}
 

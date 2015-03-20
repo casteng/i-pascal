@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.editor.completion;
 import com.intellij.codeInsight.completion.CompletionConfidence;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.ThreeState;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
@@ -21,6 +22,9 @@ public class PascalCompletionConfidence extends CompletionConfidence {
             /*System.out.println("===*** shouldSkipAutopopup: " + contextElement + ", sib: " + contextElement.getPrevSibling()
                     + ", par: " + contextElement.getParent());*/
             IElementType type = contextElement.getPrevSibling().getNode().getElementType();
+            if (type == TokenType.WHITE_SPACE) {
+                type = contextElement.getNode().getElementType();
+            }
             if ((type != PasTypes.SUB_IDENT) && (type != PasTypes.NAME)) {
                 return ThreeState.YES;
             } else {
