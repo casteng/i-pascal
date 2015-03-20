@@ -37,6 +37,7 @@ import java.util.List;
 public class FPCSdkType extends BasePascalSdkType {
 
     public static final Logger LOG = Logger.getInstance(FPCSdkType.class.getName());
+    private static final String[] LIBRARY_DIRS = {"rtl", "rtl-objpas", "pthreads", "regexpr", "x11", "windows"};
 
     @NotNull
     public static FPCSdkType getInstance() {
@@ -172,17 +173,23 @@ public class FPCSdkType extends BasePascalSdkType {
         String target = getTargetString(sdk.getHomePath());
         if (target != null) {
             target = target.replace(' ', '-');
-            File rtlDir = new File(sdk.getHomePath() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + "rtl");
-            if (!rtlDir.exists()) {
-                rtlDir = new File(sdk.getHomePath() + File.separatorChar + sdk.getVersionString() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + "rtl");
-            }
-            final VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(rtlDir);
-            if (dir != null) {
-                sdkModificator.addRoot(dir, OrderRootType.CLASSES);
+            for (String dir : LIBRARY_DIRS) {
+                VirtualFile vdir = getLibrary(sdk, target, dir);
+                if (vdir != null) {
+                    sdkModificator.addRoot(vdir, OrderRootType.CLASSES);
+                }
             }
             sdkModificatorHolder[0] = sdkModificator;
             sdkModificatorHolder[0].commitChanges();
         }
+    }
+
+    private static VirtualFile getLibrary(Sdk sdk, String target, String name) {
+        File rtlDir = new File(sdk.getHomePath() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + name);
+        if (!rtlDir.exists()) {
+            rtlDir = new File(sdk.getHomePath() + File.separatorChar + sdk.getVersionString() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + name);
+        }
+        return LocalFileSystem.getInstance().findFileByIoFile(rtlDir);
     }
 
     @Override
