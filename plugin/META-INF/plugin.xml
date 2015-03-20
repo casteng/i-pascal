@@ -9,6 +9,11 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.81</p>
+        <ul>
+          <li>unit name completion</li>
+          <li>module rename refactoring</li>
+        </ul>
         <p>0.8</p>
         <ul>
           <li>full references/find usages</li>
@@ -91,6 +96,7 @@
         <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
         <gotoClassContributor implementation="com.siberika.idea.pascal.lang.references.PascalClassByNameContributor"/>
 
+        <renamePsiElementProcessor implementation="com.siberika.idea.pascal.lang.references.impl.PascalRenameProcessor"/>
         <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
                                  implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
         <editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>
