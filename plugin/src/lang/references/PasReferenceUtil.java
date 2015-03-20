@@ -326,11 +326,13 @@ public class PasReferenceUtil {
      *    if the entity represents a namespace - retrieve and make current
      *  for namespace of target entry add all its entities
      */
-    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypes, boolean includeLibrary) {
+    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary) {
         // First entry in FQN
         PasEntityScope scope = getNearestAffectingScope(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
         Collection<PasField> result = new HashSet<PasField>();
+
+        Set<PasField.FieldType> fieldTypes = new HashSet<PasField.FieldType>(fieldTypesOrig);
 
         try {
             // Retrieve all namespaces affecting first FQN level
@@ -361,6 +363,7 @@ public class PasReferenceUtil {
                     addParentNamespaces(namespaces, newNS, false);
                 }
                 fqn.next();
+                fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first
             }
 
             if (fqn.isTarget() && (namespaces != null)) {

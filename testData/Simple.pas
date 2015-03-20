@@ -49,6 +49,7 @@ var
     Obj: TObject;
     a: TLiteInterfacedObject;
 begin
+    myclass.objpas;
     Obj.Create();
     Value.Create();
     v2.Create();
