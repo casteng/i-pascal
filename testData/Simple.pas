@@ -5,7 +5,7 @@ interface
 uses
     SysUtils, StrUtils,
     //aaa
-    myclass;
+    objpas, myclass;
 
 type
     TRecord = record

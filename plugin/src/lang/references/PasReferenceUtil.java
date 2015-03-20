@@ -80,8 +80,9 @@ public class PasReferenceUtil {
      */
     @Nullable
     public static PasEntityScope findUnit(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
-        final Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project));
+        final List<VirtualFile> virtualFiles = new SmartList<VirtualFile>();
+        virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
+                GlobalSearchScope.allScope(project)));
 
         if (module != null) {
             virtualFiles.addAll(ModuleUtil.getAllCompiledModuleFilesByName(module, moduleName));
@@ -283,6 +284,9 @@ public class PasReferenceUtil {
 
     @Nullable
     private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, boolean includeLibrary) {
+        if (field.isTypeResolved()) {
+            //return field.getTypeField();
+        }
         PasTypeID typeId = null;
         PasTypeDecl typeDecl;
         if (((field.element instanceof PasMethodImplDecl) || (field.element instanceof PasExportedRoutine))
