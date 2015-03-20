@@ -51,7 +51,7 @@ public class PasField {
     @NotNull
     public final Visibility visibility;
     public int offset;
-    // Reference target
+    // Reference target if different from element
     @Nullable
     public final PsiElement target;
 
@@ -107,7 +107,8 @@ public class PasField {
     }
 
     public boolean isTypeResolved() {
-        return valueType != NOT_INITIALIZED;
+        return (valueType != NOT_INITIALIZED) &&
+               ((null == valueType.field) || (null == valueType.field.element) || (valueType.field.element.isValid()));
     }
 
     public boolean isInteger() {

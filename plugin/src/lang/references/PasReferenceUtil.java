@@ -32,7 +32,6 @@ import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
-import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -80,29 +79,52 @@ public class PasReferenceUtil {
      */
     @Nullable
     public static PasEntityScope findUnit(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
-        final List<VirtualFile> virtualFiles = new SmartList<VirtualFile>();
-        virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project)));
-
-        if (module != null) {
-            virtualFiles.addAll(ModuleUtil.getAllCompiledModuleFilesByName(module, moduleName));
-        }
-
-        for (VirtualFile virtualFile : virtualFiles) {
-            if (isUnitWithName(virtualFile, moduleName)) {
-                PsiFile pascalFile = PsiManager.getInstance(project).findFile(virtualFile);
-                PasModule pasModule = PsiTreeUtil.findChildOfType(pascalFile, PasModule.class);
-                if (pasModule != null) {
-                    return pasModule;
-                }
+        VirtualFile file = findUnitFile(project, module, moduleName);
+        if (file != null) {
+            PsiFile pascalFile = PsiManager.getInstance(project).findFile(file);
+            PasModule pasModule = PsiTreeUtil.findChildOfType(pascalFile, PasModule.class);
+            if (pasModule != null) {
+                return pasModule;
             }
         }
         return null;
     }
 
-    private static boolean isUnitWithName(VirtualFile virtualFile, @NotNull String name) {
-        return isUnitExtension(virtualFile) && isFileUnitName(virtualFile.getNameWithoutExtension(), name);
+    /**
+     * Finds and returns file of a module with the given name
+     * @param module - IDEA module to include its compiled dependencies
+     * @return list of PsiFiles
+     */
+    @Nullable
+    public static VirtualFile findUnitFile(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
+        for (VirtualFile virtualFile : findUnitFiles(project, module)) {
+            if (isFileOfModuleWithName(virtualFile, moduleName)) {
+                return virtualFile;
+            }
+        }
+        return null;
+    }
 
+    /**
+     * Finds and returns module files in search path
+     * @param module - IDEA module to include its compiled dependencies
+     * @return list of PsiFiles
+     */
+    @NotNull
+    public static List<VirtualFile> findUnitFiles(@NotNull Project project, @Nullable final Module module) {
+        final List<VirtualFile> virtualFiles = new SmartList<VirtualFile>();
+        virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
+                GlobalSearchScope.allScope(project)));
+        if (module != null) {
+            virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PPUFileType.INSTANCE,
+                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
+        }
+        return virtualFiles;
+    }
+
+    // Returns True if the file is the file of a module with the given name
+    public static boolean isFileOfModuleWithName(VirtualFile virtualFile, @NotNull String name) {
+        return isUnitExtension(virtualFile) && isFileUnitName(virtualFile.getNameWithoutExtension(), name);
     }
 
     private static boolean isFileUnitName(@NotNull String fileNameWoExt, @NotNull String name) {

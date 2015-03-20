@@ -8,6 +8,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.patterns.StandardPatterns;
 import com.intellij.psi.PsiElement;
@@ -53,6 +54,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PasUnitInitialization;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasUsesFileClause;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
@@ -62,6 +64,7 @@ import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasMethodImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -149,6 +152,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                     appendTokenSet(result, PascalLexer.TYPE_DECLARATIONS);
                 }
                 handleDirectives(result, parameters, originalPos, pos);
+                handleUses(result, pos);
 
                 Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
                 Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
@@ -171,6 +175,27 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         });
 
+    }
+
+    private void handleUses(CompletionResultSet result, @NotNull PsiElement pos) {
+        PasModule module = PsiUtil.getElementPasModule(pos);
+        Set<String> excludedUnits = new HashSet<String>();
+        if (module instanceof PascalModuleImpl) {
+            for (PasEntityScope scope : ((PascalModuleImpl) module).getPublicUnits()) {
+                excludedUnits.add(scope.getName().toUpperCase());
+            }
+            for (PasEntityScope scope : ((PascalModuleImpl) module).getPrivateUnits()) {
+                excludedUnits.add(scope.getName().toUpperCase());
+            }
+        }
+        if ((pos instanceof PasUsesClause) || (pos.getParent() instanceof PasUsesClause)) {
+            for (VirtualFile file : PasReferenceUtil.findUnitFiles(pos.getProject(), com.intellij.openapi.module.ModuleUtil.findModuleForPsiElement(pos))) {
+                if (!excludedUnits.contains(file.getNameWithoutExtension().toUpperCase())) {
+                    LookupElementBuilder lookupElement = LookupElementBuilder.create(file.getNameWithoutExtension());
+                    result.caseInsensitive().addElement(lookupElement.withTypeText(file.getExtension() != null ? file.getExtension() : "", false));
+                }
+            }
+        }
     }
 
     private LookupElement getLookupElement(@NotNull PasField field) {
