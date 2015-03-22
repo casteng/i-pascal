@@ -177,7 +177,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     }
 
-    private void handleUses(CompletionResultSet result, @NotNull PsiElement pos) {
+    private static void handleUses(CompletionResultSet result, @NotNull PsiElement pos) {
         PasModule module = PsiUtil.getElementPasModule(pos);
         Set<String> excludedUnits = new HashSet<String>();
         if (module instanceof PascalModuleImpl) {
@@ -188,7 +188,8 @@ public class PascalCompletionContributor extends CompletionContributor {
                 excludedUnits.add(scope.getName().toUpperCase());
             }
         }
-        if ((pos instanceof PasUsesClause) || (pos.getParent() instanceof PasUsesClause)) {
+        if ((pos instanceof PasUsesClause) || (pos.getParent() instanceof PasUsesClause) ||
+            (pos instanceof PasUsesFileClause) || (pos.getParent() instanceof PasUsesFileClause)) {
             for (VirtualFile file : PasReferenceUtil.findUnitFiles(pos.getProject(), com.intellij.openapi.module.ModuleUtil.findModuleForPsiElement(pos))) {
                 if (!excludedUnits.contains(file.getNameWithoutExtension().toUpperCase())) {
                     LookupElementBuilder lookupElement = LookupElementBuilder.create(file.getNameWithoutExtension());

@@ -291,7 +291,7 @@ ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
 private progParamsRest      ::= "," progParam {pin=1}
 private progParam           ::= identifier {}
 
-UsesFileClause	            ::=	USES namespaceFileNameList {pin=1 name="uses clause"}
+UsesFileClause	            ::=	USES namespaceFileNameList {pin=1 recoverWhile=rec_section}
 private namespaceFileNameList ::= namespaceFileName namespaceFileNamesRest* ";"
 private namespaceFileNamesRest ::= COMMA namespaceFileName {pin=1}
 private namespaceFileName	::=	NamespaceIdent [IN quotedString] {}
