@@ -13,6 +13,7 @@
         <ul>
           <li>unit name completion</li>
           <li>module rename refactoring</li>
+          <li>module file templates</li>
         </ul>
         <p>0.8</p>
         <ul>
@@ -67,7 +68,10 @@
     </project-components>
 
     <actions>
-        <!-- Add your actions here -->
+        <action id="Pascal.NewHPascalModule" class="com.siberika.idea.pascal.ide.actions.CreateModuleAction"
+                text="Pascal Module" description="Create new Pascal program/unit/library/package">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+        </action>
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -116,6 +120,11 @@
         <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>-->
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
+
+        <internalFileTemplate name="PascalUnit"/>
+        <internalFileTemplate name="PascalProgram"/>
+        <internalFileTemplate name="PascalLibrary"/>
+        <internalFileTemplate name="PascalPackage"/>
 
         <compileServer.plugin classpath="jps-plugin.jar"/>
     </extensions>
