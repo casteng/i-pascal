@@ -194,7 +194,7 @@ public class FPCSdkType extends BasePascalSdkType {
 
     @Override
     public boolean isRootTypeApplicable(OrderRootType type) {
-        return type.equals(OrderRootType.SOURCES);
+        return type.equals(OrderRootType.SOURCES) || type.equals(OrderRootType.CLASSES);
     }
 
     @Nullable
