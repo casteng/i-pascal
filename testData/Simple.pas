@@ -26,6 +26,7 @@ type
     private
         name2: string;
     public
+        constructor Create();
         procedure NonStat();
         class procedure Stat();
     end;

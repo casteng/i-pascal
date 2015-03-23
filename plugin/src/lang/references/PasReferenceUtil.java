@@ -397,6 +397,9 @@ public class PasReferenceUtil {
                             result.add(pasField);
                         }
                     }
+                    if (!result.isEmpty()) {
+                        break;
+                    }
                 }
                 if (!fqn.isEmpty() && (fqn.isFirst())) {
                     addBuiltins(result, fqn, fieldTypes);
