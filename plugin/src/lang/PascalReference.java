@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiPolyVariantReferenceBase;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
@@ -84,6 +85,24 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
             }
             return PsiElementResolveResult.createResults(new PsiElement[] {});
         }
+    }
+
+    @Override
+    public boolean isReferenceTo(PsiElement element) {
+        final ResolveResult[] results = multiResolve(false);
+        for (ResolveResult result : results) {
+            if (getElement().getManager().areElementsEquivalent(getNamedElement(result.getElement()), getNamedElement(element))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private PsiElement getNamedElement(PsiElement element) {
+        if (element instanceof PsiNameIdentifierOwner) {
+            return ((PsiNameIdentifierOwner) element).getNameIdentifier();
+        }
+        return element;
     }
 
     @Override

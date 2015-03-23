@@ -43,8 +43,7 @@ implementation
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
-    test: Simple.strutils;
-    Value: Simple.TC;
+    Value: TTest;
     V2: TC2;
     Obj: TObject;
     a: TLiteInterfacedObject;
@@ -54,7 +53,7 @@ begin
     Value.Create();
     v2.Create();
     Value := 2 <> (a=1);
-    Value.;
+    Value.MyProp;
     a._AddRef;
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
