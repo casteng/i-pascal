@@ -184,6 +184,9 @@ public class PascalBlock extends AbstractBlock implements Block {
 //        System.out.println("getSpacing: " + block2Str(child1) + ", " + block2Str(child2));
         if ((child1 instanceof PascalBlock) && (((PascalBlock) child1).getNode().getElementType() == PasTypes.SEMI)) {
             if (!TOKENS_NO_LF_AFTER_SEMI.contains(this.getNode().getElementType())) {
+                if (((PascalBlock) child2).getNode().getElementType() == PasTypes.COMMENT) {
+                    return null;
+                }
 //                System.out.println("getSpacing: " + block2Str(this) + " . " + block2Str(child1) + ", " + block2Str(child2));
                 return Spacing.createSpacing(0, 0, 1, true, 1);
             } else {
