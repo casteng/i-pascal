@@ -17,7 +17,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
-import com.siberika.idea.pascal.editor.PasActionCreateVar;
+import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighter;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -26,6 +26,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.generate.tostring.util.StringUtil;
 
 import java.util.Collection;
 
@@ -40,7 +41,16 @@ public class PascalAnnotator implements Annotator {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             Collection<PasField> refs = PasReferenceUtil.resolve(NamespaceRec.fromElement(element), PasField.TYPES_ALL, true);
             if (refs.isEmpty()) {
-                holder.createErrorAnnotation(element, "Undeclared identifier").registerFix(new PasActionCreateVar(namedElement));
+                Annotation ann = holder.createErrorAnnotation(element, "Undeclared identifier");
+                String name = namedElement.getName();
+                if (!StringUtil.hasLowerCaseChar(name)) {
+                    ann.registerFix(new PascalActionDeclare(namedElement, PascalActionDeclare.CREATE_CONST));
+                } else {
+                    ann.registerFix(new PascalActionDeclare(namedElement, PascalActionDeclare.CREATE_VAR));
+                }
+                if (name.startsWith("T")) {
+                    ann.registerFix(new PascalActionDeclare(namedElement, PascalActionDeclare.CREATE_TYPE));
+                }
             }
         }
     }
