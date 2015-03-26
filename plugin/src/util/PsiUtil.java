@@ -534,4 +534,8 @@ public class PsiUtil {
     public static boolean isFromLibrary(@NotNull PsiElement element) {
         return !element.isPhysical();
     }
+
+    public static PasEntityScope getNearestAffectingScope(PsiElement element) {
+        return PsiTreeUtil.getParentOfType(element, PasEntityScope.class);
+    }
 }

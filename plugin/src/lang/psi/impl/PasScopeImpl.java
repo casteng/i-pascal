@@ -16,6 +16,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     protected long buildStamp = 0;
     protected List<PasEntityScope> parentScopes;
+    protected PasEntityScope nearestAffectingScope;
 
     public PasScopeImpl(ASTNode node) {
         super(node);
@@ -34,8 +35,15 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     @Nullable
     @Override
-    public PasEntityScope getOwnerScope() throws PasInvalidScopeException {
-        return PsiUtil.getElementPasModule(this);
+    synchronized public PasEntityScope getNearestAffectingScope() throws PasInvalidScopeException {
+        if (null == nearestAffectingScope) {
+            calcNearestAffectingScope();
+        }
+        return nearestAffectingScope;
+    }
+
+    private void calcNearestAffectingScope() {
+        nearestAffectingScope = PsiUtil.getNearestAffectingScope(this);
     }
 
 }

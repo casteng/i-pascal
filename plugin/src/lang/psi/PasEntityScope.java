@@ -25,7 +25,7 @@ public interface PasEntityScope extends PascalNamedElement {
 
     // containing unit/routine/struct for routines and structs
     @Nullable
-    PasEntityScope getOwnerScope() throws PasInvalidScopeException;
+    PasEntityScope getNearestAffectingScope() throws PasInvalidScopeException;
 
     void invalidateCache();
 }

@@ -355,7 +355,7 @@ public class PasReferenceUtil {
      */
     public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary) {
         // First entry in FQN
-        PasEntityScope scope = getNearestAffectingScope(fqn.getParentIdent());
+        PasEntityScope scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
         Collection<PasField> result = new HashSet<PasField>();
 
@@ -365,7 +365,7 @@ public class PasReferenceUtil {
             // Retrieve all namespaces affecting first FQN level
             while (scope != null) {
                 addFirstNamespaces(namespaces, scope, includeLibrary);
-                scope = fqn.isFirst() ? getNearestAffectingScope(scope) : null;
+                scope = fqn.isFirst() ? PsiUtil.getNearestAffectingScope(scope) : null;
             }
 
             while (!fqn.isTarget() && (namespaces != null)) {
@@ -433,10 +433,6 @@ public class PasReferenceUtil {
     private static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
         return (!fqn.isTarget() || fieldTypes.contains(field.fieldType)) &&
                 ("".equals(fqn.getCurrentName()) || field.name.equalsIgnoreCase(fqn.getCurrentName()));
-    }
-
-    private static PasEntityScope getNearestAffectingScope(PsiElement element) {
-        return PsiTreeUtil.getParentOfType(element, PasEntityScope.class);
     }
 
     /*

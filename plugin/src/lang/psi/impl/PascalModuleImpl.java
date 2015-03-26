@@ -203,7 +203,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
 
     @Nullable
     @Override
-    public PasEntityScope getOwnerScope() throws PasInvalidScopeException {
+    public PasEntityScope getNearestAffectingScope() throws PasInvalidScopeException {
         return null;
     }
 
