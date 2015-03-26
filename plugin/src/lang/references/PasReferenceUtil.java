@@ -300,6 +300,11 @@ public class PasReferenceUtil {
 //-------------------------------------------------------------------
 
     @Nullable
+    private static PasEntityScope resolveFieldTypeScope(@NotNull PasField field, boolean includeLibrary) {
+        return null;
+    }
+
+    @Nullable
     private static PasEntityScope retrieveFieldUnitScope(PasField field, boolean includeLibrary) {
         return (field.element != null) && (includeLibrary || !PsiUtil.isFromLibrary(field.element)) ? (PasEntityScope) field.element : null;
     }
@@ -307,7 +312,7 @@ public class PasReferenceUtil {
     @Nullable
     private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, boolean includeLibrary) {
         if (field.isTypeResolved()) {
-            //return field.getTypeField();
+            return field.getTypeField() instanceof PasEntityScope ? (PasEntityScope) field.getTypeField() : null;
         }
         PasTypeID typeId = null;
         PasTypeDecl typeDecl;

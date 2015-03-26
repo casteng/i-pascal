@@ -31,23 +31,16 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 06/09/2013
  */
-public abstract class PascalRoutineImpl extends PascalNamedElementImpl implements PasEntityScope {
+public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntityScope {
     public static final String BUILTIN_RESULT = "Result";
     private Map<String, PasField> members;
     private Set<PascalNamedElement> redeclaredMembers = null;
-    private long buildStamp = 0;
-    //private List<PasFormalParameter> formalParameters;
-    private List<PasEntityScope> parentScopes;
 
     @Nullable
     public abstract PasFormalParameterSection getFormalParameterSection();
 
     public PascalRoutineImpl(ASTNode node) {
         super(node);
-    }
-
-    public boolean isInterface() {
-        return (getClass() == PasExportedRoutineImpl.class) || (getClass() == PasClassMethodImpl.class);
     }
 
     @Nullable
@@ -115,13 +108,6 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         return members.values();
     }
 
-    private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {
-        if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
-        }
-        return (cache != null) && (getContainingFile() != null) && (getContainingFile().getModificationStamp() == stamp);
-    }
-
     public PasFullyQualifiedIdent getFunctionTypeIdent() {
         PasTypeDecl type = PsiTreeUtil.getChildOfType(this, PasTypeDecl.class);
         return PsiTreeUtil.findChildOfType(type, PasFullyQualifiedIdent.class);
@@ -148,12 +134,6 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         } else {
             parentScopes = Collections.emptyList();
         }
-    }
-
-    @Nullable
-    @Override
-    public PasEntityScope getOwnerScope() throws PasInvalidScopeException {
-        return PsiUtil.getElementPasModule(this);
     }
 
     @Override

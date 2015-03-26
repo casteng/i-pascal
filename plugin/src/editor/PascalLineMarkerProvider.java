@@ -20,10 +20,10 @@ import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasImplDeclSectionImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasMethodImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -142,7 +142,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         if (module != null) {
             PasField typeMember = module.getField(routineDecl.getNamespace());
             if ((typeMember != null) && (typeMember.element != null) && (typeMember.fieldType == PasField.FieldType.TYPE)) {
-                PasEntityScope struct = PasEntityScopeImpl.getStructByNameElement(typeMember.element);
+                PasEntityScope struct = PasStructTypeImpl.getStructByNameElement(typeMember.element);
                 if (struct != null) {
                     PasField field = struct.getField(routineDecl.getNamePart());
                     if ((field != null) && (field.fieldType == PasField.FieldType.ROUTINE)) {

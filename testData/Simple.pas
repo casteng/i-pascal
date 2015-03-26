@@ -53,7 +53,7 @@ begin
     Obj.Create();
     Value.Create();
     v2.Create();
-    Value := 2 <> (a=1);
+    Value := eThree <> (a=1);
     Value.MyProp;
     a._AddRef;
     if ((Value mod 2)=1) then

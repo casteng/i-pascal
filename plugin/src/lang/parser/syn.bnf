@@ -209,7 +209,7 @@
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   extends(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
-  extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl";
+  extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl";
 }
 
 //external pascal             ::= parsePascal Module
@@ -283,15 +283,15 @@ private declSection	        ::=	MethodImplDecl | RoutineImplDecl | commonDecl | 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
 ImplDeclSection             ::= declSection* {}
 private unitBlock           ::= [UnitInitialization] [UnitFinalization] END | CompoundStatement | END {}
-UnitInitialization          ::= INITIALIZATION StatementList {pin=1 name="initialization section"}
-UnitFinalization            ::= FINALIZATION StatementList  {pin=1 name="finalization section"}
+UnitInitialization          ::= INITIALIZATION statementList {pin=1 name="initialization section"}
+UnitFinalization            ::= FINALIZATION statementList  {pin=1 name="finalization section"}
 
 ProgramModuleHead	        ::= PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1 }
 ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
 private progParamsRest      ::= "," progParam {pin=1}
 private progParam           ::= identifier {}
 
-UsesFileClause	            ::=	USES namespaceFileNameList {pin=1 name="uses clause"}
+UsesFileClause	            ::=	USES namespaceFileNameList {pin=1 recoverWhile=rec_section}
 private namespaceFileNameList ::= namespaceFileName namespaceFileNamesRest* ";"
 private namespaceFileNamesRest ::= COMMA namespaceFileName {pin=1}
 private namespaceFileName	::=	NamespaceIdent [IN quotedString] {}
@@ -384,9 +384,9 @@ private recordBody          ::= ClassField* structItem* {recoverWhile=rec_struct
 
 private variantRecord       ::= RECORD ClassField* recordVariantSection END {pin=3}
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
-RecordFields        ::= [field] (';' field)* [';']  //===***
-private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (recordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
-private recordVariant       ::= Expression ("," Expression)* ":" "(" RecordFields ")"   // rethink expression, separate simpler expressions?
+private recordFields        ::= [field] (';' field)* [';']  //===***
+private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
+RecordVariant               ::= Expression ("," Expression)* ":" "(" recordFields ")"   // rethink expression, separate simpler expressions?
 
 RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2}
 
@@ -437,19 +437,19 @@ private procHeading         ::= PROCEDURE [FormalParameterSection] [";" callConv
 SimpleType          ::= EnumType | SubRangeType
 SubRangeType        ::= RangeBound RANGE RangeBound
 RangeBound          ::= ConstExpressionOrd
-EnumType            ::= "(" EnumEl EnumRest* ")" {pin=1}
-EnumRest            ::= "," EnumEl {pin=1}
-EnumEl              ::= identifier ["=" Expression] {}
+EnumType            ::= "(" enumEl enumRest* ")" {pin=1}
+private enumRest    ::= "," enumEl {pin=1}
+private enumEl      ::= NamedIdent ["=" Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
                                   | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | Ident_kw | KEYWORDESCAPE | '^' | '.' | '[' | '('
     private rec__stmt_middle         ::= DO | ELSE | THEN
 
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}
-private statementBlock      ::= [StatementList] {recoverWhile=rec_block_local_end}
-StatementList               ::= [statement] statements*
-private statements          ::= ";" [statement]
-private statement           ::= [LabelId ":" ] statementPart //{recoverWhile=rec_statement}
+private statementBlock      ::= [statementList] {recoverWhile=rec_block_local_end}
+private statementList       ::= [Statement] statements*
+private statements          ::= ";" [Statement]
+Statement                   ::= [LabelId ":" ] statementPart //{recoverWhile=rec_statement}
 private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | IfStatement | TryStatement | simpleStatement | CompoundStatement | stmtEmpty
@@ -464,24 +464,24 @@ stmtEmpty           ::= //empty
 EntityID                    ::= FullyQualifiedIdent
 FieldId                     ::= identifier
 
-RepeatStatement     ::= REPEAT [StatementList] UNTIL Expression {pin=1}
-WhileStatement      ::= WHILE Expression DO statement {pin=1}
-ForStatement        ::= FOR Designator (ForCycle | IN) Expression DO statement {pin=1}
+RepeatStatement     ::= REPEAT [statementList] UNTIL Expression {pin=1}
+WhileStatement      ::= WHILE Expression DO Statement {pin=1}
+ForStatement        ::= FOR Designator (ForCycle | IN) Expression DO Statement {pin=1}
 ForCycle            ::= ":=" Expression (TO | DOWNTO)
 
-IfStatement                 ::= IF Expression THEN statement [ELSE statement] {pin=1}
+IfStatement                 ::= IF Expression THEN Statement [ELSE Statement] {pin=1}
 
-CaseStatement       ::= CASE Expression OF CaseItem* [ELSE StatementList [";"] ] END {pin=1}
-CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" statement [";"] {pin=3}
+CaseStatement       ::= CASE Expression OF CaseItem* [ELSE statementList [";"] ] END {pin=1}
+CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" Statement [";"] {pin=3}
 CaseLabel	        ::=	ConstExpressionOrd [RANGE ConstExpressionOrd] //{}
 
-TryStatement                ::= TRY StatementList (tryExcept | tryFinally) END {pin=1}
-private tryFinally          ::= FINALLY StatementList
+TryStatement                ::= TRY statementList (tryExcept | tryFinally) END {pin=1}
+private tryFinally          ::= FINALLY statementList
 private tryExcept           ::= EXCEPT HandlerList
-HandlerList                 ::= Handler+ [ELSE StatementList] | StatementList
-Handler                     ::= ON identifier ":" TypeID "do" statement ";" {pin=1}
+HandlerList                 ::= Handler+ [ELSE statementList] | statementList
+Handler                     ::= ON identifier ":" TypeID "do" Statement ";" {pin=1}
 
-WithStatement               ::= WITH Designator designatorsRest* DO statement {pin=1}
+WithStatement               ::= WITH Designator designatorsRest* DO Statement {pin=1}
 private designatorsRest     ::= "," Designator {}
 
 RaiseStatement              ::= RAISE [Designator] ["at" Designator] {pin=1}

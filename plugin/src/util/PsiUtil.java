@@ -46,11 +46,11 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PasEntityScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRefNamedIdentImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -454,7 +454,7 @@ public class PsiUtil {
 
     public static String getQualifiedMethodName(PsiNamedElement element) {
         if (PsiUtil.isStructureMember(element)) {
-            PasEntityScopeImpl owner = PasEntityScopeImpl.findOwnerStruct(element);
+            PasStructTypeImpl owner = PasStructTypeImpl.findOwnerStruct(element);
             if (null != owner) {
                 return getQualifiedMethodName(owner) + "." + element.getName();
             }
