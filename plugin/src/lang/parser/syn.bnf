@@ -240,7 +240,9 @@ private rec_block_local_end      ::= rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
-private rec_section         ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility | IMPLEMENTATION | BEGIN | END | (NAME "="))
+private rec_section         ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility |
+                                 (NAME "=") | "." | END ) & rec_interface
+private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
 private rec_type            ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility | IMPLEMENTATION | (NAME "="))
 private rec_routine         ::= rec_section & rec_interface
@@ -449,7 +451,8 @@ CompoundStatement           ::= BEGIN statementBlock END {pin=1}
 private statementBlock      ::= [statementList] {recoverWhile=rec_block_local_end}
 private statementList       ::= [Statement] statements*
 private statements          ::= ";" [Statement]
-Statement                   ::= [LabelId ":" ] statementPart //{recoverWhile=rec_statement}
+Statement                   ::= [LabelId ":" ] statementPart {recoverWhile=rec_statement}
+private rec_statement       ::= !(SEMI | END | ELSE | FINALLY | EXCEPT | UNTIL | FINALIZATION)
 private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | IfStatement | TryStatement | simpleStatement | CompoundStatement | stmtEmpty
@@ -471,7 +474,7 @@ ForCycle            ::= ":=" Expression (TO | DOWNTO)
 
 IfStatement                 ::= IF Expression THEN Statement [ELSE Statement] {pin=1}
 
-CaseStatement       ::= CASE Expression OF CaseItem* [ELSE statementList [";"] ] END {pin=1}
+CaseStatement       ::= CASE Expression OF CaseItem* [ELSE statementList ] END {pin=1}
 CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" Statement [";"] {pin=3}
 CaseLabel	        ::=	ConstExpressionOrd [RANGE ConstExpressionOrd] //{}
 
@@ -481,8 +484,9 @@ private tryExcept           ::= EXCEPT HandlerList
 HandlerList                 ::= Handler+ [ELSE statementList] | statementList
 Handler                     ::= ON identifier ":" TypeID "do" Statement ";" {pin=1}
 
-WithStatement               ::= WITH Designator designatorsRest* DO Statement {pin=1}
-private designatorsRest     ::= "," Designator {}
+WithStatement               ::= WITH withArgument DO Statement {pin=1}
+private withArgument        ::= Expression designatorsRest* {recoverWhile=rec_statement_mid}
+private designatorsRest     ::= "," Expression {}
 
 RaiseStatement              ::= RAISE [Designator] ["at" Designator] {pin=1}
 
