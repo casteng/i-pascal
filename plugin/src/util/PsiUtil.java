@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterList;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -524,7 +525,7 @@ public class PsiUtil {
             PasTypeDecl typeDecl = ((PasTypeDeclaration) parent).getTypeDecl();
             PasTypeID typeId = typeDecl != null ? typeDecl.getTypeID() : null;
             if (typeId != null) {
-                System.out.println("!!!! isTypeDeclPointingToSelf");
+                System.out.println("!!!! isTypeDeclPointingToSelf: " + typeIdent.getName());
                 return typeIdent.getName().equalsIgnoreCase(typeId.getFullyQualifiedIdent().getName());
             }
         }
@@ -538,4 +539,45 @@ public class PsiUtil {
     public static PasEntityScope getNearestAffectingScope(PsiElement element) {
         return PsiTreeUtil.getParentOfType(element, PasEntityScope.class);
     }
+
+    // returns name element of type with which is declared the specified field or routine
+    @Nullable
+    public static PasFullyQualifiedIdent getTypeNameIdent(PascalNamedElement element) {
+        PasTypeDecl typeDecl;
+        if (((element instanceof PasMethodImplDecl) || (element instanceof PasExportedRoutine))
+                && (element.getFirstChild() != null)) {                                                          // resolve function type
+            typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getFirstChild(), PasTypeDecl.class);
+        } else {
+            typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
+        }
+        PasTypeID typeId = typeDecl != null ? typeDecl.getTypeID() : null;
+        if (null == typeId) {                                                                                    // immediate complex non-structured type
+            typeId = PsiTreeUtil.getChildOfType(typeDecl != null ? typeDecl : element, PasTypeID.class);
+        }
+        return typeId != null ? typeId.getFullyQualifiedIdent() : null;
+    }
+
+    // returns type declaration for the specified field or routine element
+    @Nullable
+    public static PasTypeDecl getTypeDeclaration(PascalNamedElement element) {
+        PasTypeDecl typeDecl;
+        if (((element instanceof PasMethodImplDecl) || (element instanceof PasExportedRoutine))
+                && (element.getFirstChild() != null)) {                                                          // resolve function type
+            typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getFirstChild(), PasTypeDecl.class);
+        } else {
+            typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
+        }
+        return typeDecl;
+    }
+
+    // returns type name which referenced in type declaration or null if type is anonymous
+    @Nullable
+    public static PasTypeID getDeclaredTypeName(@Nullable PasTypeDecl typeDecl) {
+        PasTypeID typeId = typeDecl != null ? typeDecl.getTypeID() : null;
+        if (null == typeId) {                                                                                    // immediate complex non-structured type
+            typeId = PsiTreeUtil.getChildOfType(typeDecl, PasTypeID.class);
+        }
+        return typeId;
+    }
+
 }

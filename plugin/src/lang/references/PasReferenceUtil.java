@@ -19,10 +19,8 @@ import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
-import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -299,9 +297,26 @@ public class PasReferenceUtil {
 
 //-------------------------------------------------------------------
 
-    @Nullable
-    private static PasEntityScope resolveFieldTypeScope(@NotNull PasField field, boolean includeLibrary) {
-        return null;
+    private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary) {
+        PasTypeDecl decl = PsiUtil.getTypeDeclaration(field.element);
+        PsiElement child = decl != null ? decl.getFirstChild() : null;
+        PascalNamedElement element = (child instanceof PascalNamedElement) ? (PascalNamedElement) child : null;
+        PasTypeID typeId = PsiUtil.getDeclaredTypeName(decl);
+        PasField.Kind kind = null;
+        PasField.ValueType valueType = null;
+        if (typeId != null) {
+            if (PsiUtil.isTypeDeclPointingToSelf(typeId.getFullyQualifiedIdent())) {
+                return PasField.getValueType(field.name);
+            }
+            Collection<PasField> types = resolve(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), PasField.TYPES_TYPE, includeLibrary);
+            if (!types.isEmpty()) {
+                valueType = resolveFieldType(types.iterator().next(), includeLibrary);          // resolve next type in chain
+            }
+        } else {                                                // anonimous type
+            System.out.println("===*** anonymous type: " + field.name);
+            kind = PasField.Kind.BOOLEAN;
+        }
+        return new PasField.ValueType(typeId != null ? typeId.getFullyQualifiedIdent().getName() : null, field, kind, valueType, element);
     }
 
     @Nullable
@@ -310,29 +325,13 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, boolean includeLibrary) {
-        if (field.isTypeResolved()) {
-            return field.getTypeField() instanceof PasEntityScope ? (PasEntityScope) field.getTypeField() : null;
-        }
-        PasTypeID typeId = null;
-        PasTypeDecl typeDecl;
-        if (((field.element instanceof PasMethodImplDecl) || (field.element instanceof PasExportedRoutine))
-                && (field.element.getFirstChild() != null)) {                                                    // resolve function type
-            typeDecl = PsiTreeUtil.getNextSiblingOfType(field.element.getFirstChild(), PasTypeDecl.class);
-        } else {
-            typeDecl = PsiTreeUtil.getNextSiblingOfType(field.element, PasTypeDecl.class);
-        }
-        if (typeDecl != null) {
-            PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);    // immediate type
-            if (strucTypeDecl != null) {
-                return strucTypeDecl;
+    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, boolean includeLibrary) throws PasInvalidScopeException {
+        synchronized (field) {
+            if (!field.isTypeResolved()) {
+                field.setValueType(resolveFieldType(field, includeLibrary));
             }
-            typeId = typeDecl.getTypeID();
         }
-        if (null == typeId) {
-            typeId = PsiTreeUtil.getChildOfType(typeDecl != null ? typeDecl : field.element, PasTypeID.class);
-        }
-        return typeId != null ? PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), includeLibrary) : null;
+        return field.getTypeScope();
     }
 
     @Nullable

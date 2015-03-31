@@ -26,6 +26,7 @@ type
     private
         name2: string;
     public
+        constructor Create();
         procedure NonStat();
         class procedure Stat();
     end;
@@ -43,8 +44,7 @@ implementation
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
-    test: Simple.strutils;
-    Value: Simple.TC;
+    Value: TTest;
     V2: TC2;
     Obj: TObject;
     a: TLiteInterfacedObject;
@@ -53,8 +53,8 @@ begin
     Obj.Create();
     Value.Create();
     v2.Create();
-    Value := 2 <> (a=1);
-    Value.;
+    Value.r.Name2 := eThree <> (a=1);
+    Value.MyProp;
     a._AddRef;
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
@@ -69,11 +69,11 @@ var
     i: TRecord;
     c: CC2;
 begin
+    if ACount>i.Name2 then aStart := i+1;
+
     j := length(ASubText);
     c.Stat;
     cc.DefaultValue;
-    if ACount>i then
-        aStart := i+1;
     k := i+1-AStart;
     if ALength> k then
         ALength := k;
