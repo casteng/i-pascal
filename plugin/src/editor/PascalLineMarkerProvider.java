@@ -12,6 +12,7 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.util.ConstantFunction;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
@@ -86,21 +87,16 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
         System.out.println(String.format("Line markers: size: %d", elements.size()));
         long time = System.nanoTime();
-        int i = 0;
         if (elements.isEmpty()) {
             return;
         }
         try {
             PsiElement implSection = PsiUtil.getModuleImplementationSection(elements.get(0).getContainingFile());
-            if (null == implSection) {
+            if (implSection instanceof PsiFile) {
                 implSection = PsiUtil.getElementPasModule(elements.get(0));;
             }
             for (PsiElement psiElement : elements) {
                 collectNavigationMarkers(psiElement, result, implSection);
-                i++;
-                if ((i % 1000) == 0) {
-                    System.out.println("Elements processed: " + i);
-                }
             }
         } catch (PasInvalidScopeException e) {
             e.printStackTrace();
@@ -170,7 +166,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     private static <T extends PascalNamedElement> void findImplTargets(Collection<PsiElement> result, PsiElement implSection, String name, Class<T> clazz) {
         if ((implSection != null) && (implSection.getParent() != null)) {
             for (PsiElement child : implSection.getChildren()) {
-                if ((child.getClass() == PasImplDeclSectionImpl.class) || ((!(implSection instanceof PasUnitImplementation)) && (child instanceof PasBlockGlobal))) {
+                if ((child.getClass() == PasImplDeclSectionImpl.class) || (!(implSection instanceof PasUnitImplementation) && (child instanceof PasBlockGlobal))) {
                     for (PsiElement element : PsiUtil.findImmChildrenOfAnyType(child, clazz)) {
                         PascalNamedElement routine = (PascalNamedElement) element;
                         if ((routine.getName().equalsIgnoreCase(name))) {

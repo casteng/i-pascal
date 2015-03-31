@@ -3,28 +3,28 @@
     <type>string</type>
     <routine>assert</routine>
     <routine type="integer">SizeOf</routine>
-    <routine type="integer">ord</routine>
-    <routine type="string">str</routine>
-    <routine type="integer">val</routine>
-    <routine>write</routine>
-    <routine>writeln</routine>
-    <routine>read</routine>
-    <routine>readln</routine>
-    <routine type="integer">length</routine>
-    <routine>setLength</routine>
-    <routine type="string">copy</routine>
-    <routine type="string">concat</routine>
-    <routine>slice</routine>
-    <routine>inc</routine>
-    <routine>dec</routine>
-    <routine type="integer">high</routine>
-    <routine type="integer">low</routine>
-    <routine type="integer">succ</routine>
-    <routine type="integer">prev</routine>
-    <routine>include</routine>
-    <routine>exclude</routine>
+    <routine type="integer">Ord</routine>
+    <routine type="string">Str</routine>
+    <routine type="integer">Val</routine>
+    <routine>Write</routine>
+    <routine>WriteLn</routine>
+    <routine>Read</routine>
+    <routine>ReadLn</routine>
+    <routine type="integer">Length</routine>
+    <routine>SetLength</routine>
+    <routine type="string">Copy</routine>
+    <routine type="string">Concat</routine>
+    <routine>Slice</routine>
+    <routine>Inc</routine>
+    <routine>Dec</routine>
+    <routine type="integer">High</routine>
+    <routine type="integer">Low</routine>
+    <routine type="integer">Succ</routine>
+    <routine type="integer">Prev</routine>
+    <routine>Include</routine>
+    <routine>Exclude</routine>
     <routine type="boolean">Assigned</routine>
     <routine>SetString</routine>
-    <routine>new</routine>
-    <routine>dispose</routine>
+    <routine>New</routine>
+    <routine>Dispose</routine>
 </builtins>
