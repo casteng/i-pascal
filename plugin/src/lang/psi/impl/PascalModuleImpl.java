@@ -68,7 +68,9 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     @Override
     synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
         if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
+            PsiUtil.rebuildPsi(this.getContainingFile());
+            return Collections.emptyList();
+            //throw new PasInvalidScopeException(this);
         }
         if (!isCacheActual(publicMembers, buildPublicStamp)) {
             buildPublicMembers();
@@ -178,7 +180,9 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
 
     private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {
         if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
+            PsiUtil.rebuildPsi(this.getContainingFile());
+            return false;
+            //throw new PasInvalidScopeException(this);
         }
         if (null == getContainingFile()) {
             PascalPsiImplUtil.logNullContainingFile(this);

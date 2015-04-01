@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -106,7 +107,9 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     @Override
     synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
         if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
+            PsiUtil.rebuildPsi(this.getContainingFile());
+            return Collections.emptyList();
+            //throw new PasInvalidScopeException(this);
         }
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();

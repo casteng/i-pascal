@@ -56,7 +56,7 @@ begin
     Value.Create();
     v2.Create();
     v2.name2;
-    Value.r.Name2 := eThree <> (a=1);
+    Value.r.CurrentValue := eThree <> (a=1);
     Value.r.Create();
     a._AddRef;
     if ((Value mod 2)=1) then

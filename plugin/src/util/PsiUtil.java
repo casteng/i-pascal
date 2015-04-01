@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.util;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
@@ -8,8 +9,8 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.PsiImplUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.PsiElementProcessor;
-import com.intellij.psi.text.BlockSupport;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.FileContentUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
@@ -391,8 +392,17 @@ public class PsiUtil {
         return null;
     }
 
-    public static void rebuildPsi(@NotNull PsiElement block) {
-        BlockSupport.getInstance(block.getProject()).reparseRange(block.getContainingFile(), block.getTextRange().getStartOffset(), block.getTextRange().getEndOffset(), block.getText());
+    public static void rebuildPsi( PsiElement block) {
+        System.out.println("===*** requesting reparse: " + block);
+        //BlockSupport.getInstance(block.getProject()).reparseRange(block.getContainingFile(), block.getTextRange().getStartOffset(), block.getTextRange().getEndOffset(), block.getText());
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                FileContentUtil.reparseOpenedFiles();
+                                                            }
+                                                        }
+        );
+
     }
 
     public static boolean isFieldDecl(PascalNamedElement entityDecl) {

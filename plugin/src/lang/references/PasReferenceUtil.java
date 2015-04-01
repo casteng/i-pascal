@@ -430,11 +430,11 @@ public class PasReferenceUtil {
                 }
             }
         } catch (PasInvalidScopeException e) {
-            if (namespaces != null) {
+            /*if (namespaces != null) {
                 for (PasEntityScope namespace : namespaces) {
                     namespace.invalidateCache();
                 }
-            }
+            }*/
         }
         return result;
     }

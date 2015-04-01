@@ -28,7 +28,9 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     protected boolean isCacheActual(Object cache, long stamp) throws PasInvalidScopeException {
         if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
+            PsiUtil.rebuildPsi(this.getContainingFile());
+            return false;
+            //throw new PasInvalidScopeException(this);
         }
         return (getContainingFile() != null) && (cache != null) && (getContainingFile().getModificationStamp() == stamp);
     }
