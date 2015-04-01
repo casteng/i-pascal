@@ -16,6 +16,7 @@ import com.intellij.util.SmartList;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
@@ -49,6 +50,8 @@ import static com.google.common.collect.Iterables.getFirst;
  * Date: 25/04/2013
  */
 public class PasReferenceUtil {
+    private static final int MAX_RECURSION_COUNT = 1000;
+
     /**
      * Returns references of the given module. This can be module qualifier in identifiers and other modules.
      * @param moduleName - name element of module to find references for
@@ -298,7 +301,10 @@ public class PasReferenceUtil {
 
 //-------------------------------------------------------------------
 
-    private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary) {
+    private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
+        if (recursionCount > MAX_RECURSION_COUNT) {
+            throw new PascalRTException("Too much recursion during resolving type for: " + field.element);
+        }
         PasTypeID typeId;
         PascalNamedElement element = null;
         if (field.element instanceof PasClassProperty) {
@@ -315,9 +321,13 @@ public class PasReferenceUtil {
             if (PsiUtil.isTypeDeclPointingToSelf(typeId.getFullyQualifiedIdent())) {
                 return PasField.getValueType(field.name);
             }
-            Collection<PasField> types = resolve(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), PasField.TYPES_TYPE, includeLibrary);
+            Collection<PasField> types = resolve(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), PasField.TYPES_TYPE, includeLibrary, ++recursionCount);
             if (!types.isEmpty()) {
-                valueType = resolveFieldType(types.iterator().next(), includeLibrary);          // resolve next type in chain
+                PasField type = types.iterator().next();
+                if (type == field) {                                                               //
+                    return PasField.getValueType(field.name);
+                }
+                valueType = resolveFieldType(type, includeLibrary, ++recursionCount);          // resolve next type in chain
             }
         } else {                                                // anonimous type
             System.out.println("===*** anonymous type: " + field.name);
@@ -332,10 +342,10 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, boolean includeLibrary) throws PasInvalidScopeException {
+    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, int recursionCount) throws PasInvalidScopeException {
         synchronized (field) {
             if (!field.isTypeResolved()) {
-                field.setValueType(resolveFieldType(field, includeLibrary));
+                field.setValueType(resolveFieldType(field, true, recursionCount));
             }
         }
         return field.getTypeScope();
@@ -343,7 +353,7 @@ public class PasReferenceUtil {
 
     @Nullable
     public static PasEntityScope resolveTypeScope(NamespaceRec fqn, boolean includeLibrary) {
-        Collection<PasField> types = resolve(fqn, PasField.TYPES_TYPE, includeLibrary);
+        Collection<PasField> types = resolve(fqn, PasField.TYPES_TYPE, includeLibrary, 0);
         for (PasField field : types) {
             PasEntityScope struct = field.element != null ? PascalParserUtil.getStructTypeByIdent(field.element, 0) : null;
             if (struct != null) {
@@ -359,7 +369,10 @@ public class PasReferenceUtil {
      *    if the entity represents a namespace - retrieve and make current
      *  for namespace of target entry add all its entities
      */
-    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary) {
+    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {
+        if (recursionCount > MAX_RECURSION_COUNT) {
+            throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
+        }
         // First entry in FQN
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
@@ -389,7 +402,7 @@ public class PasReferenceUtil {
                     if (field.fieldType == PasField.FieldType.UNIT) {
                         newNS = fqn.isFirst() ? retrieveFieldUnitScope(field, includeLibrary) : null;                    // First qualifier can be unit name
                     } else {
-                        newNS = retrieveFieldTypeScope(field, includeLibrary);
+                        newNS = retrieveFieldTypeScope(field, recursionCount);
                     }
 
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;

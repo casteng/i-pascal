@@ -8,6 +8,7 @@ uses
     objpas, myclass;
 
 type
+    int = int;
     TRecord = record
         Name2, CurrentValue, DefaultValue: AnsiString;
         HashValue: LongWord;
@@ -54,6 +55,7 @@ begin
     Value.MyProp.Create();
     Value.Create();
     v2.Create();
+    v2.name2;
     Value.r.Name2 := eThree <> (a=1);
     Value.r.Create();
     a._AddRef;
@@ -71,7 +73,6 @@ var
     c: CC2;
 begin
     if ACount>i.Name2 then aStart := i+1;
-
     j := length(ASubText);
     c.Stat;
     cc.DefaultValue;

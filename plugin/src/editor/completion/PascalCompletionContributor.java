@@ -233,7 +233,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
         namespace.clearTarget();
-        result.addAll(PasReferenceUtil.resolve(namespace, fieldTypes, extendedCompletion));
+        result.addAll(PasReferenceUtil.resolve(namespace, fieldTypes, extendedCompletion, 0));
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
