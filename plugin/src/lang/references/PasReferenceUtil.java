@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
@@ -298,10 +299,16 @@ public class PasReferenceUtil {
 //-------------------------------------------------------------------
 
     private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary) {
-        PasTypeDecl decl = PsiUtil.getTypeDeclaration(field.element);
-        PsiElement child = decl != null ? decl.getFirstChild() : null;
-        PascalNamedElement element = (child instanceof PascalNamedElement) ? (PascalNamedElement) child : null;
-        PasTypeID typeId = PsiUtil.getDeclaredTypeName(decl);
+        PasTypeID typeId;
+        PascalNamedElement element = null;
+        if (field.element instanceof PasClassProperty) {
+            typeId = PsiTreeUtil.getChildOfType(field.element, PasTypeID.class);
+        } else {
+            PasTypeDecl decl = PsiUtil.getTypeDeclaration(field.element);
+            PsiElement child = decl != null ? decl.getFirstChild() : null;
+            element = (child instanceof PascalNamedElement) ? (PascalNamedElement) child : null;
+            typeId = PsiUtil.getDeclaredTypeName(decl);
+        }
         PasField.Kind kind = null;
         PasField.ValueType valueType = null;
         if (typeId != null) {

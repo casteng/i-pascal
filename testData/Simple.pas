@@ -12,7 +12,7 @@ type
         Name2, CurrentValue, DefaultValue: AnsiString;
         HashValue: LongWord;
         {class function a: int;}
-        constructor b(a, b: int);
+        constructor Create(a, b: int);
     end;
 
     TEnum = (eOne, eTwo, eThree);
@@ -51,10 +51,11 @@ var
 begin
     myclass.objpas;
     Obj.Create();
+    Value.MyProp.Create();
     Value.Create();
     v2.Create();
     Value.r.Name2 := eThree <> (a=1);
-    Value.MyProp;
+    Value.r.Create();
     a._AddRef;
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
