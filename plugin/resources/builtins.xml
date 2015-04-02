@@ -1,6 +1,10 @@
 <builtins>
     <type>___DUMMY__TYPE___</type>
     <type>string</type>
+    <type>_GenVector</type>
+    <type>_GenHashMap</type>
+    <type>_GenHashMapKeyIterator</type>
+    <type>_GenVector</type>
     <routine>assert</routine>
     <routine type="integer">SizeOf</routine>
     <routine type="integer">Ord</routine>
