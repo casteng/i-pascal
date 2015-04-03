@@ -67,10 +67,8 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     @NotNull
     @Override
     synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
-        if (!PsiUtil.isElementValid(this)) {
-            PsiUtil.rebuildPsi(this.getContainingFile());
+        if (!PsiUtil.checkeElement(this)) {
             return Collections.emptyList();
-            //throw new PasInvalidScopeException(this);
         }
         if (!isCacheActual(publicMembers, buildPublicStamp)) {
             buildPublicMembers();
@@ -90,9 +88,8 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         redeclaredPrivateMembers = new LinkedHashSet<PascalNamedElement>();
 
         PsiElement section = PsiUtil.getModuleImplementationSection(this);
-        if (null == section) {
-            section = this;
-        }
+        if (null == section) section = this;
+        if (!PsiUtil.checkeElement(section)) return;
 
         collectFields(section, privateMembers, redeclaredPrivateMembers);
 
@@ -135,9 +132,8 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         publicMembers.put(getName().toUpperCase(), new PasField(this, this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PUBLIC));
 
         PsiElement section = PsiUtil.getModuleInterfaceSection(this);
-        if (null == section) {
-            return;
-        }
+        if (null == section) return;
+        if (!PsiUtil.checkeElement(section)) return;
 
         collectFields(section, publicMembers, redeclaredPublicMembers);
 
@@ -179,10 +175,8 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     }
 
     private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {
-        if (!PsiUtil.isElementValid(this)) {
-            PsiUtil.rebuildPsi(this.getContainingFile());
+        if (!PsiUtil.checkeElement(this)) {
             return false;
-            //throw new PasInvalidScopeException(this);
         }
         if (null == getContainingFile()) {
             PascalPsiImplUtil.logNullContainingFile(this);

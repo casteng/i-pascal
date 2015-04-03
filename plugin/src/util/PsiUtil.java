@@ -395,12 +395,13 @@ public class PsiUtil {
     public static void rebuildPsi( PsiElement block) {
         System.out.println("===*** requesting reparse: " + block);
         //BlockSupport.getInstance(block.getProject()).reparseRange(block.getContainingFile(), block.getTextRange().getStartOffset(), block.getTextRange().getEndOffset(), block.getText());
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                FileContentUtil.reparseOpenedFiles();
-                                                            }
-                                                        }
+        ApplicationManager.getApplication().invokeLater(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        FileContentUtil.reparseOpenedFiles();
+                    }
+                }
         );
 
     }
@@ -590,4 +591,12 @@ public class PsiUtil {
         return typeId;
     }
 
+    public static boolean checkeElement(PsiElement element) {
+        if (!isElementValid(element)) {
+            rebuildPsi(element.getContainingFile());
+            return false;
+            //throw new PasInvalidScopeException(this);
+        }
+        return true;
+    }
 }

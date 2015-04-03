@@ -106,10 +106,8 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     @NotNull
     @Override
     synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
-        if (!PsiUtil.isElementValid(this)) {
-            PsiUtil.rebuildPsi(this.getContainingFile());
+        if (!PsiUtil.checkeElement(this)) {
             return Collections.emptyList();
-            //throw new PasInvalidScopeException(this);
         }
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
