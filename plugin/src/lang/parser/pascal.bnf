@@ -218,10 +218,10 @@ Module                      ::= moduleUnit | moduleProgram | moduleLibrary | mod
                              implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 
 private moduleProgram       ::= progWithHead | progWoHead
-private progWithHead        ::= ProgramModuleHead progWoHead
-private progWoHead          ::= [UsesFileClause] BlockGlobal "." {pin=3 recoverWhile=rec_section_global}
+private progWithHead        ::= ProgramModuleHead progWoHead {pin=1}
+private progWoHead          ::= [UsesFileClause] BlockGlobal "." {pin=2 recoverWhile=rec_section_global}
 
-private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "."
+private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
 UsesClause                  ::= USES namespaceNameList {pin=1 recoverWhile=rec_section}
 
@@ -240,8 +240,9 @@ private rec_block_local_end      ::= rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
-private rec_section         ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility |
+private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | PROPERTY | Visibility |
                                  (NAME "=") | "." | END ) & rec_interface
+private rec_section         ::= !(rec__routine_key) & rec_section_nested
 private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
 private rec_type            ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | rec__routine_key | PROPERTY | Visibility | IMPLEMENTATION | (NAME "="))
@@ -271,7 +272,7 @@ private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [N
 RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="procedure or function declaration"}
 RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {extends=RoutineImplDecl}
 
-MethodImplDecl              ::= routineDeclaration MethodBody     //TODO: remove
+MethodImplDecl              ::= routineDeclaration //MethodBody     //TODO: remove
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
 ClassMethod                 ::= routineDeclaration {name="method declaration"}  //TODO: remove
 
@@ -283,8 +284,8 @@ private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassM
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
 private structItem          ::= commonDecl | routineDecl | ClassField | Visibility
 private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute
-private declSectionNested   ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection
-private declSectionWONested ::= commonDecl | LabelDeclSection
+private declSectionNested   ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_section}
+private declSectionWONested ::= commonDecl | LabelDeclSection {recoverWhile=rec_section_nested}
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
 ImplDeclSection             ::= declSection* {}
@@ -292,7 +293,7 @@ private unitBlock           ::= [UnitInitialization] [UnitFinalization] END | Co
 UnitInitialization          ::= INITIALIZATION statementList {pin=1 name="initialization section"}
 UnitFinalization            ::= FINALIZATION statementList  {pin=1 name="finalization section"}
 
-ProgramModuleHead	        ::= PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1 }
+ProgramModuleHead	        ::= PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1}
 ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
 private progParamsRest      ::= "," progParam {pin=1}
 private progParam           ::= identifier {}
@@ -307,7 +308,7 @@ private namespaceNamesRest  ::= "," NamespaceIdent {pin=1 }
 
 BlockGlobal	                ::=	[';'] declSection* BlockBody {recoverWhile=rec_block_global_end}
 BlockLocal 	                ::=	[';'] declSectionNested* BlockBody
-BlockLocalWONested          ::=	[';'] declSectionWONested* BlockBody {extends=BlockLocal}
+BlockLocalWONested          ::=	[';'] declSectionWONested* BlockBody {pin=2}
 BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
 AssemblerStatement          ::= ASM asmBlock END
