@@ -269,7 +269,9 @@ private exportedProc        ::= methodKey procName [GenericDefinition] [FormalPa
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
 
 RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="procedure or function declaration"}
-MethodImplDecl              ::= routineDeclaration [MethodBody]     //TODO: remove
+RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {extends=RoutineImplDecl}
+
+MethodImplDecl              ::= routineDeclaration MethodBody     //TODO: remove
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
 ClassMethod                 ::= routineDeclaration {name="method declaration"}  //TODO: remove
 
@@ -280,7 +282,9 @@ private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeD
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
 private structItem          ::= commonDecl | routineDecl | ClassField | Visibility
-private declSection	        ::=	MethodImplDecl | RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute
+private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute
+private declSectionNested   ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection
+private declSectionWONested ::= commonDecl | LabelDeclSection
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
 ImplDeclSection             ::= declSection* {}
@@ -302,7 +306,8 @@ private namespaceNameList   ::= NamespaceIdent namespaceNamesRest* ";"
 private namespaceNamesRest  ::= "," NamespaceIdent {pin=1 }
 
 BlockGlobal	                ::=	[';'] declSection* BlockBody {recoverWhile=rec_block_global_end}
-BlockLocal 	                ::=	[';'] declSection* BlockBody
+BlockLocal 	                ::=	[';'] declSectionNested* BlockBody
+BlockLocalWONested          ::=	[';'] declSectionWONested* BlockBody {extends=BlockLocal}
 BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
 AssemblerStatement          ::= ASM asmBlock END
@@ -317,7 +322,7 @@ private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
 private externalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL ConstExpression externalSpecifier* ";"
 private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
-ProcBodyBlock               ::= ProcForwardDecl | procExternalDecl | BlockGlobal [";"]
+ProcBodyBlock               ::= ProcForwardDecl | procExternalDecl | BlockLocal [";"]
 private procExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* functionDirective* {pin=1}
 ProcForwardDecl             ::= FORWARD ";" functionDirective* {pin=1}
 

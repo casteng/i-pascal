@@ -60,7 +60,8 @@ public class GeneratedParserUtilBase {
 
     private static final Logger LOG = Logger.getInstance("org.intellij.grammar.parser.GeneratedParserUtilBase");
 
-    private static final int MAX_RECURSION_LEVEL = 1000;
+    static final int MAX_RECURSION_LEVEL = 1000;
+    public static final int MAX_RECURSION_METHOD = 25;
     private static final int MAX_VARIANTS_SIZE = 10000;
     private static final int MAX_VARIANTS_TO_DISPLAY = 50;
 

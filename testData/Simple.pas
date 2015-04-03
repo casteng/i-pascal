@@ -49,6 +49,15 @@ var
     V2: TC2;
     Obj: TObject;
     a: TLiteInterfacedObject;
+
+    procedure nested1(np1: int);
+        function nested2;
+        begin
+        end;
+    begin
+        np1;
+    end;
+
 begin
     myclass.objpas;
     Obj.Create();
