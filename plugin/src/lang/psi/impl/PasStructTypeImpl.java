@@ -145,7 +145,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         }
         assert members.size() == PasField.Visibility.values().length;
 
-        addField(this, "Self", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE);
+        addField(this, "SELF", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE);
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
         while (child != null) {
@@ -163,7 +163,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             child = child.getNextSibling();
         }
         buildStamp = getContainingFile().getModificationStamp();
-        System.out.println(getName() + ": buildMembers: " + members.size() + " members");
+        //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
     private void addFields(PsiElement element, @NotNull PasField.Visibility visibility) {

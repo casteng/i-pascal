@@ -85,8 +85,6 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     @Override
     public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
-        System.out.println(String.format("Line markers: size: %d", elements.size()));
-        long time = System.nanoTime();
         if (elements.isEmpty()) {
             return;
         }
@@ -101,7 +99,6 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         } catch (PasInvalidScopeException e) {
             e.printStackTrace();
         }
-        System.out.println(String.format("Line markers done in %.3f seconds", (System.nanoTime() - time) / 1000000000.0));
     }
 
     private GutterIconNavigationHandler<PsiElement> getHandler(@NotNull final Collection<PsiElement> targets) {

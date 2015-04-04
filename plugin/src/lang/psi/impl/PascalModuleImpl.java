@@ -99,7 +99,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         }
 
         buildPrivateStamp = getContainingFile().getModificationStamp();
-        System.out.println(String.format("Unit %s private: %d, used: %d", getName(), privateMembers.size(), privateUnits != null ? privateUnits.size() : 0));
+        //System.out.println(String.format("Unit %s private: %d, used: %d", getName(), privateMembers.size(), privateUnits != null ? privateUnits.size() : 0));
     }
 
     @SuppressWarnings("unchecked")
@@ -143,7 +143,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         }
 
         buildPublicStamp = getContainingFile().getModificationStamp();
-        System.out.println(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
+        //System.out.println(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
     }
 
     @SuppressWarnings("unchecked")
