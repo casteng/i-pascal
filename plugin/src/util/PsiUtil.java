@@ -70,6 +70,8 @@ import java.util.List;
 public class PsiUtil {
 
     private static final int MAX_NON_BREAKING_NAMESPACES = 2;
+    private static final long MIN_REPARSE_INTERVAL = 2000;
+    private static long lastReparseRequestTime = System.currentTimeMillis() - MIN_REPARSE_INTERVAL;
 
     @NotNull
     public static <T extends PsiElement> Collection<T> findChildrenOfAnyType(@Nullable final PsiElement element,
@@ -394,16 +396,18 @@ public class PsiUtil {
 
     public static void rebuildPsi( PsiElement block) {
         System.out.println("===*** requesting reparse: " + block);
-        //BlockSupport.getInstance(block.getProject()).reparseRange(block.getContainingFile(), block.getTextRange().getStartOffset(), block.getTextRange().getEndOffset(), block.getText());
-        ApplicationManager.getApplication().invokeLater(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        FileContentUtil.reparseOpenedFiles();
+        if (System.currentTimeMillis() - lastReparseRequestTime >= MIN_REPARSE_INTERVAL) {
+            lastReparseRequestTime = System.currentTimeMillis();
+            //BlockSupport.getInstance(block.getProject()).reparseRange(block.getContainingFile(), block.getTextRange().getStartOffset(), block.getTextRange().getEndOffset(), block.getText());
+            ApplicationManager.getApplication().invokeLater(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            FileContentUtil.reparseOpenedFiles();
+                        }
                     }
-                }
-        );
-
+            );
+        }
     }
 
     public static boolean isFieldDecl(PascalNamedElement entityDecl) {
@@ -593,7 +597,7 @@ public class PsiUtil {
 
     public static boolean checkeElement(PsiElement element) {
         if (!isElementValid(element)) {
-            rebuildPsi(element.getContainingFile());
+            rebuildPsi(element);
             return false;
             //throw new PasInvalidScopeException(this);
         }

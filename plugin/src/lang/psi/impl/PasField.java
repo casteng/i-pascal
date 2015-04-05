@@ -135,7 +135,7 @@ public class PasField {
         while (type.baseType != null) {
             type = type.baseType;
         }
-        if ((type.field != null) && (type.element instanceof PasEntityScope)) {
+        if ((type.element instanceof PasEntityScope)) {
             return (PasEntityScope) type.element;
         }
         return null;

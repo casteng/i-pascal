@@ -14,7 +14,8 @@ import java.util.List;
  */
 public abstract class PasScopeImpl extends PascalNamedElementImpl implements PasEntityScope {
 
-    protected long buildStamp = 0;
+    protected long buildStamp = -1;
+    protected long parentBuildStamp = -1;
     protected List<PasEntityScope> parentScopes;
     protected PasEntityScope nearestAffectingScope;
 

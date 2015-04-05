@@ -145,7 +145,8 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         }
         assert members.size() == PasField.Visibility.values().length;
 
-        addField(this, "SELF", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE);
+        addField(this, "SELF", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE).setValueType(
+                new PasField.ValueType(getName(), null, PasField.Kind.STRUCT, null, this));
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
         while (child != null) {
@@ -180,18 +181,19 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         addField(element, element.getName(), fieldType, visibility);
     }
 
-    private void addField(PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+    private PasField addField(PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         PasField field = new PasField(this, element, name, fieldType, visibility);
         if (members.get(visibility.ordinal()) == null) {
             members.set(visibility.ordinal(), new LinkedHashMap<String, PasField>());
         }
         members.get(visibility.ordinal()).put(name.toUpperCase(), field);
+        return field;
     }
 
     @NotNull
     @Override
-    synchronized public List<PasEntityScope> getParentScope() {
-        if (null == parentScopes) {
+    synchronized public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
+        if (!isCacheActual(parentScopes, parentBuildStamp)) {
             buildParentScopes();
         }
         return parentScopes;
@@ -203,6 +205,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         if (getClass() == PasClassTypeDeclImpl.class) {
             parent = ((PasClassTypeDeclImpl) this).getClassParent();
         }
+        parentBuildStamp = getContainingFile().getModificationStamp();
         parentScopes = new SmartList<PasEntityScope>();
         if (parent != null) {
             for (PasTypeID typeID : parent.getTypeIDList()) {

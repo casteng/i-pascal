@@ -115,14 +115,15 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     @NotNull
     @Override
-    synchronized public List<PasEntityScope> getParentScope() {
-        if (null == parentScopes) {
+    synchronized public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
+        if (!isCacheActual(parentScopes, parentBuildStamp)) {
             buildParentScopes();
         }
         return parentScopes;
     }
 
     private void buildParentScopes() {
+        parentBuildStamp = getContainingFile().getModificationStamp();
         PasClassQualifiedIdent ident = PsiTreeUtil.getChildOfType(this, PasClassQualifiedIdent.class);
         if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
             NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));

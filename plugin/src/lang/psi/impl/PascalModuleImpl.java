@@ -41,8 +41,8 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
     private Set<PascalNamedElement> redeclaredPublicMembers = null;
     private List<PasEntityScope> privateUnits = Collections.emptyList();
     private List<PasEntityScope> publicUnits = Collections.emptyList();
-    private long buildPrivateStamp = 0;
-    private long buildPublicStamp = 0;
+    private long buildPrivateStamp = -1;
+    private long buildPublicStamp = -1;
 
     public PascalModuleImpl(ASTNode node) {
         super(node);

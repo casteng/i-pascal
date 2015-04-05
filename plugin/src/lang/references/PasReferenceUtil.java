@@ -306,11 +306,12 @@ public class PasReferenceUtil {
             throw new PascalRTException("Too much recursion during resolving type for: " + field.element);
         }
         PasTypeID typeId;
+        PasTypeDecl decl = null;
         PascalNamedElement element = null;
         if (field.element instanceof PasClassProperty) {
             typeId = PsiTreeUtil.getChildOfType(field.element, PasTypeID.class);
         } else {
-            PasTypeDecl decl = PsiUtil.getTypeDeclaration(field.element);
+            decl = PsiUtil.getTypeDeclaration(field.element);
             PsiElement child = decl != null ? decl.getFirstChild() : null;
             element = (child instanceof PascalNamedElement) ? (PascalNamedElement) child : null;
             typeId = PsiUtil.getDeclaredTypeName(decl);
@@ -330,7 +331,10 @@ public class PasReferenceUtil {
                 valueType = resolveFieldType(type, includeLibrary, ++recursionCount);          // resolve next type in chain
             }
         } else {                                                // anonimous type
-            System.out.println("===*** anonymous type: " + field.name);
+            if (decl != null) {
+                element = PsiUtil.findImmChildOfAnyType(decl, PascalNamedElement.class);
+            }
+            System.out.println("===*** anonymous type: " + field.element);
             kind = PasField.Kind.BOOLEAN;
         }
         return new PasField.ValueType(typeId != null ? typeId.getFullyQualifiedIdent().getName() : null, field, kind, valueType, element);
@@ -414,6 +418,10 @@ public class PasReferenceUtil {
 
             if (fqn.isTarget() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
+                    if (!PsiUtil.isElementValid(namespace)) {
+                        PsiUtil.rebuildPsi(namespace);
+                        return result;
+                    }
                     for (PasField pasField : namespace.getAllFields()) {
                         if ((pasField.element != null) && isFieldMatches(pasField, fqn, fieldTypes) &&
                                 !result.contains(pasField) &&
