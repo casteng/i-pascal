@@ -429,7 +429,7 @@ public class PasReferenceUtil {
                             result.add(pasField);
                         }
                     }
-                    if (!result.isEmpty()) {
+                    if (!result.isEmpty() && !isCollectingAll(fqn)) {
                         break;
                     }
                 }
@@ -447,6 +447,10 @@ public class PasReferenceUtil {
         return result;
     }
 
+    private static boolean isCollectingAll(NamespaceRec fqn) {
+        return "".equals(fqn.getCurrentName());
+    }
+
     private static void addBuiltins(Collection<PasField> result, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
         PasModule module = null;
         for (PasField field : BuiltinsParser.getBuiltins()) {
@@ -459,7 +463,7 @@ public class PasReferenceUtil {
 
     private static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
         return (!fqn.isTarget() || fieldTypes.contains(field.fieldType)) &&
-                ("".equals(fqn.getCurrentName()) || field.name.equalsIgnoreCase(fqn.getCurrentName()));
+                (isCollectingAll(fqn) || field.name.equalsIgnoreCase(fqn.getCurrentName()));
     }
 
     /*

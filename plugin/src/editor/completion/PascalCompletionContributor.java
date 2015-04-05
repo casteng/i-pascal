@@ -105,15 +105,13 @@ public class PascalCompletionContributor extends CompletionContributor {
 
                 Collection<PasField> entities = new HashSet<PasField>();
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
-                    if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent())) {
+                    if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent()) || PsiUtil.isIdent(parameters.getPosition().getParent())) {
                         addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
                 } else {
-                    PsiElement parPos = parameters.getOriginalPosition();
                     if (originalPos instanceof PasStatement) {
                         pos = originalPos;
-                        //parPos = parameters.getOriginalPosition();
                     }
                     if (pos instanceof PasStatement) {                                                                          // identifier completion in left part of assignment
                         addEntities(entities, parameters.getPosition(), PasField.TYPES_LEFT_SIDE, parameters.isExtendedCompletion());                                                  // complete identifier variants
