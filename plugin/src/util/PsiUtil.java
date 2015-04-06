@@ -603,4 +603,8 @@ public class PsiUtil {
         }
         return true;
     }
+
+    public static long getFileStamp(PsiFile file) {
+        return file != null ? file.getModificationStamp() : -2;
+    }
 }

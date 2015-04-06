@@ -21,11 +21,11 @@ import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasImplDeclSectionImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PasMethodImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -54,7 +54,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
                 if (!targets.isEmpty()) {
                     result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, "Go to implementation", getHandler(targets)));
                 }
-            } else if (routineDecl instanceof PasMethodImplDeclImpl) {
+            } else if (routineDecl instanceof PasRoutineImplDecl) {
                 if (!StringUtil.isEmpty(routineDecl.getNamespace())) {
                     targets = getInterfaceMethodTargets(routineDecl);
                 } else {

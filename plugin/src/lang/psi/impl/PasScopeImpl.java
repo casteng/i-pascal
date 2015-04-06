@@ -31,7 +31,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         if (!PsiUtil.checkeElement(this)) {
             return false;
         }
-        return (getContainingFile() != null) && (cache != null) && (getContainingFile().getModificationStamp() == stamp);
+        return (getContainingFile() != null) && (cache != null) && (PsiUtil.getFileStamp(getContainingFile()) == stamp);
     }
 
     @Nullable

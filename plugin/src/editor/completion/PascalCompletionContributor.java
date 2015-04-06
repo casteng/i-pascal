@@ -63,7 +63,7 @@ import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.psi.impl.PasMethodImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -242,7 +242,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             PsiElement el = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class);
             if (!(pos instanceof PascalStructType) || (el instanceof PascalRoutineImpl) || (el instanceof PasHintingDirective)) {
                 appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
-                if (pos.getClass() == PasMethodImplDeclImpl.class) {
+                if (pos.getClass() == PasRoutineImplDeclImpl.class) {
                     result.addElement(getElement("begin"));
                 }
             } else {

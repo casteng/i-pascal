@@ -98,7 +98,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
             privateMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
         }
 
-        buildPrivateStamp = getContainingFile().getModificationStamp();
+        buildPrivateStamp = PsiUtil.getFileStamp(getContainingFile());
         //System.out.println(String.format("Unit %s private: %d, used: %d", getName(), privateMembers.size(), privateUnits != null ? privateUnits.size() : 0));
     }
 
@@ -142,7 +142,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
             publicMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
         }
 
-        buildPublicStamp = getContainingFile().getModificationStamp();
+        buildPublicStamp = PsiUtil.getFileStamp(getContainingFile());
         //System.out.println(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
     }
 
@@ -182,7 +182,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
             PascalPsiImplUtil.logNullContainingFile(this);
             return false;
         }
-        return (cache != null) && (getContainingFile().getModificationStamp() == stamp);
+        return (cache != null) && (PsiUtil.getFileStamp(getContainingFile()) == stamp);
     }
 
     public List<PasEntityScope> getPrivateUnits() {

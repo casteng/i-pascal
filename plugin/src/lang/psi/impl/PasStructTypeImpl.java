@@ -163,7 +163,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             }
             child = child.getNextSibling();
         }
-        buildStamp = getContainingFile().getModificationStamp();
+        buildStamp = PsiUtil.getFileStamp(getContainingFile());;
         //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
@@ -205,7 +205,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         if (getClass() == PasClassTypeDeclImpl.class) {
             parent = ((PasClassTypeDeclImpl) this).getClassParent();
         }
-        parentBuildStamp = getContainingFile().getModificationStamp();
+        parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());;
         parentScopes = new SmartList<PasEntityScope>();
         if (parent != null) {
             for (PasTypeID typeID : parent.getTypeIDList()) {

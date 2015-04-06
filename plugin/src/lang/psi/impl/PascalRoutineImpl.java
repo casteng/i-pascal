@@ -58,7 +58,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             return;
         }
         if (isCacheActual(members, buildStamp)) { return; }  // TODO: check correctness
-        buildStamp = getContainingFile().getModificationStamp();
+        buildStamp = PsiUtil.getFileStamp(getContainingFile());;
         members = new LinkedHashMap<String, PasField>();
 
         redeclaredMembers = new LinkedHashSet<PascalNamedElement>();
@@ -123,7 +123,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     }
 
     private void buildParentScopes() {
-        parentBuildStamp = getContainingFile().getModificationStamp();
+        parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());;
         PasClassQualifiedIdent ident = PsiTreeUtil.getChildOfType(this, PasClassQualifiedIdent.class);
         if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
             NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
