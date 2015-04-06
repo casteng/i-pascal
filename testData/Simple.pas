@@ -16,7 +16,13 @@ type
         constructor Create(a, b: int);
     end;
 
-    TEnum = (eOne, eTwo, eThree);
+    RPoint = Record
+    Case Boolean of
+        False : (X,Y,Z : Real);
+        True : (R,theta,phi : Real);
+    end;
+
+TEnum = (eOne, eTwo, eThree);
 
     TC = class(TObject)
     private
@@ -49,13 +55,15 @@ var
     V2: TC2;
     Obj: TObject;
     a: TLiteInterfacedObject;
+    rp: RPoint;
 
-    procedure nested1(np1: int);
-        function nested2;
+    function nested1(np1: int): RPoint;
+        {function nested2;
         begin
-        end;
+        end;}
     begin
         np1;
+        result.X := 1;
     end;
 
 begin

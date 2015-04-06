@@ -199,7 +199,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private LookupElement getLookupElement(@NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        LookupElementBuilder lookupElement = field.element != null ? LookupElementBuilder.create(field.element) : LookupElementBuilder.create(field.name);
+        LookupElementBuilder lookupElement = ((field.element != null) && StringUtils.isEmpty(field.name)) ? LookupElementBuilder.create(field.element) : LookupElementBuilder.create(field.name);
         return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(false).withTypeText(scope, false);
     }
