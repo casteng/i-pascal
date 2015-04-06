@@ -31,6 +31,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -310,6 +311,8 @@ public class PasReferenceUtil {
         PascalNamedElement element = null;
         if (field.element instanceof PasClassProperty) {
             typeId = PsiTreeUtil.getChildOfType(field.element, PasTypeID.class);
+        } else if (field.element instanceof PascalRoutineImpl) {                                     // routine declaration case
+            typeId = ((PascalRoutineImpl) field.element).getFunctionTypeIdent();
         } else {
             decl = PsiUtil.getTypeDeclaration(field.element);
             PsiElement child = decl != null ? decl.getFirstChild() : null;

@@ -309,7 +309,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             }
         }
         if (canBeUnit && (entityDecl instanceof PascalRoutineImpl)) {                                         // routine self-reference case
-            PasFullyQualifiedIdent typeName = ((PascalRoutineImpl) entityDecl).getFunctionTypeIdent();
+            PasFullyQualifiedIdent typeName = ((PascalRoutineImpl) entityDecl).getFunctionTypeIdent().getFullyQualifiedIdent();
             if (typeName != null) {
                 for (PascalNamedElement strucTypeIdent : findVariables(NamespaceRec.fromElement(typeName), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
                     return getStructTypeByIdent(strucTypeIdent, 0);
@@ -334,7 +334,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         } else if (entityDecl instanceof PasFullyQualifiedIdent) {
             return getStructTypeByTypeIdent((PasFullyQualifiedIdent) entityDecl, 0);
         } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
-            PasFullyQualifiedIdent typeIdent = ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
+            PasFullyQualifiedIdent typeIdent = ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent().getFullyQualifiedIdent();
             if (typeIdent != null) {
                 for (PascalNamedElement strucTypeIdent : findVariables(NamespaceRec.fromElement(typeIdent), PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
                     return getStructTypeByIdent(strucTypeIdent, 0);

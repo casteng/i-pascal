@@ -454,7 +454,7 @@ public class PsiUtil {
         } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {                                    // type declaration case
             return entityDecl;
         } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
-            return ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
+            return ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent().getFullyQualifiedIdent();
         }
         return null;
     }

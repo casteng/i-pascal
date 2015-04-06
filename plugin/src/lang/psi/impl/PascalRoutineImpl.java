@@ -6,12 +6,12 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.FieldCollector;
@@ -108,9 +108,9 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         return members.values();
     }
 
-    public PasFullyQualifiedIdent getFunctionTypeIdent() {
+    public PasTypeID getFunctionTypeIdent() {
         PasTypeDecl type = PsiTreeUtil.getChildOfType(this, PasTypeDecl.class);
-        return PsiTreeUtil.findChildOfType(type, PasFullyQualifiedIdent.class);
+        return PsiTreeUtil.findChildOfType(type, PasTypeID.class);
     }
 
     @NotNull
