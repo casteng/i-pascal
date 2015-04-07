@@ -3,6 +3,7 @@ package com.siberika.idea.pascal;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,6 +16,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
         return "testData/gotoSymbol";
     }
 
+    @Test
     public void testFindSymbol() {
         myFixture.configureByFiles("gotoSymbolTest.pas");
         Collection<PascalNamedElement> symbols = PascalParserUtil.findSymbols(myFixture.getProject(), "");
