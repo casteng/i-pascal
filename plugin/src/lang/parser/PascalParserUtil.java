@@ -87,6 +87,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return res;
     }
 
+    @NotNull
     public static Collection<PascalNamedElement> findSymbols(Project project, final String pattern) {
         final Set<PascalNamedElement> result = new HashSet<PascalNamedElement>();
         final Pattern p = Pattern.compile("\\w*" + pattern + "\\w*");
@@ -113,7 +114,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
                 return true;
             }
-        }, PasClassTypeDecl.class, PasObjectDecl.class, PasClassHelperDecl.class, PasRecordHelperDecl.class);
+        }, PascalStructType.class);
         return new ArrayList<PascalNamedElement>(result);
     }
 
