@@ -47,7 +47,7 @@ public class PascalFormatter implements FormattingModelBuilder {
         return new SpacingBuilder(settings, PascalLanguage.INSTANCE)
                 .between(PasTypes.COMMA, PasTypes.NAMED_IDENT).spacing(1, 1, 0, true, 1)
                 .between(PasTypes.COMMA, PasTypes.EXPRESSION).spacing(1, 1, 0, true, 1)
-                .between(PasTypes.ENTITY_ID, PasTypes.LPAREN).spacing(0, 0, 0, true, 1)
+                .between(PasTypes.REF_NAMED_IDENT, PasTypes.LPAREN).spacing(0, 0, 0, true, 1)
                 .after(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
                 .before(PasTypes.ASSIGN_PART).spacing(1, 1, 0, true, 1)
 

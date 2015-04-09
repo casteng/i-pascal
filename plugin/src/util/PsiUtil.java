@@ -20,7 +20,6 @@ import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
-import com.siberika.idea.pascal.lang.psi.PasEntityID;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
@@ -238,7 +237,7 @@ public class PsiUtil {
      * @return true if the element is a pointer type declaration. I.e. "TType = ^element".
      */
     public static boolean isPointerTypeDeclaration(@NotNull PascalNamedElement element) {
-        return PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class, PasTypeIDImpl.class, PasTypeDecl.class) instanceof PasPointerType;
+        return PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PasTypeIDImpl.class, PasTypeDecl.class) instanceof PasPointerType;
     }
 
     /**
@@ -246,7 +245,7 @@ public class PsiUtil {
      * @return true if the element is a class reference type declaration. I.e. "CClass = class of TSomeClass".
      */
     public static boolean isClassRefDeclaration(@NotNull PascalNamedElement element) {
-        return PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class, PasTypeIDImpl.class, PasTypeDecl.class) instanceof PasClassTypeTypeDecl;
+        return PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PasTypeIDImpl.class, PasTypeDecl.class) instanceof PasClassTypeTypeDecl;
     }
 
     public static boolean isFormalParameterName(@NotNull PascalNamedElement element) {

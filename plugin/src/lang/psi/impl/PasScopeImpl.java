@@ -23,10 +23,6 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         super(node);
     }
 
-    public boolean isInterfaceDeclaration() {  // TODO: include code for structs
-        return (getClass() == PasExportedRoutineImpl.class) || (getClass() == PasClassMethodImpl.class);
-    }
-
     protected boolean isCacheActual(Object cache, long stamp) throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
             return false;

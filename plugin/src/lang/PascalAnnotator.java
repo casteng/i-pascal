@@ -25,8 +25,8 @@ import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.generate.tostring.util.StringUtil;
 
 import java.util.Collection;
 
@@ -43,7 +43,7 @@ public class PascalAnnotator implements Annotator {
             if (refs.isEmpty()) {
                 Annotation ann = holder.createErrorAnnotation(element, "Undeclared identifier");
                 String name = namedElement.getName();
-                if (!StringUtil.hasLowerCaseChar(name)) {
+                if (!StrUtil.hasLowerCaseChar(name)) {
                     ann.registerFix(new PascalActionDeclare(namedElement, PascalActionDeclare.CREATE_CONST));
                 } else {
                     ann.registerFix(new PascalActionDeclare(namedElement, PascalActionDeclare.CREATE_VAR));
