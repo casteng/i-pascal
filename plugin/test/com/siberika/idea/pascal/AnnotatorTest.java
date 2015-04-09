@@ -3,7 +3,6 @@ package com.siberika.idea.pascal;
 import com.intellij.openapi.application.ex.ApplicationEx;
 import com.intellij.openapi.application.ex.ApplicationManagerEx;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
-import org.testng.annotations.Test;
 
 public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
     @Override
@@ -16,7 +15,6 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         return false;
     }
 
-    @Test
     public void testAnnotator() {
         myFixture.configureByFiles("annotatorTest.pas");
         ApplicationEx app = ApplicationManagerEx.getApplicationEx();
