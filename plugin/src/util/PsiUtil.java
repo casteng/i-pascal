@@ -27,7 +27,6 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterList;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PasMethodImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -558,8 +557,7 @@ public class PsiUtil {
     @Nullable
     public static PasFullyQualifiedIdent getTypeNameIdent(PascalNamedElement element) {
         PasTypeDecl typeDecl;
-        if (((element instanceof PasMethodImplDecl) || (element instanceof PasExportedRoutine))
-                && (element.getFirstChild() != null)) {                                                          // resolve function type
+        if ((element instanceof PasExportedRoutine) && (element.getFirstChild() != null)) {                      // resolve function type
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getFirstChild(), PasTypeDecl.class);
         } else {
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
@@ -575,8 +573,7 @@ public class PsiUtil {
     @Nullable
     public static PasTypeDecl getTypeDeclaration(PascalNamedElement element) {
         PasTypeDecl typeDecl;
-        if (((element instanceof PasMethodImplDecl) || (element instanceof PasExportedRoutine))
-                && (element.getFirstChild() != null)) {                                                          // resolve function type
+        if ((element instanceof PasExportedRoutine) && (element.getFirstChild() != null)) {                      // resolve function type
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getFirstChild(), PasTypeDecl.class);
         } else {
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);

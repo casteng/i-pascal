@@ -1,7 +1,6 @@
 {
   generateTokens=true
   generatePsi=true
-  generateStubParser=true
 
   parserClass="com.siberika.idea.pascal.lang.parser.PascalParser"
   stubParserClass="com.siberika.idea.pascal.lang.parser.PascalParserUtil"
@@ -217,11 +216,11 @@
 }
 
 //external pascal             ::= parsePascal Module
-Module                      ::= moduleUnit | ModuleProgram | moduleLibrary | modulePackage
+Module                      ::= moduleUnit | moduleProgram | moduleLibrary | modulePackage
                             {extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
                              implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 
-ModuleProgram               ::= progWithHead | progWoHead
+private moduleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead progWoHead {pin=1}
 private progWoHead          ::= [UsesFileClause] BlockGlobal "." {pin=2 recoverWhile=rec_section_global}
 
@@ -266,7 +265,7 @@ private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
 private procKey             ::= FUNCTION | PROCEDURE
 
-ExportedRoutine             ::= routineDeclaration
+ExportedRoutine             ::= routineDeclaration {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl) ";" functionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=2}
 private exportedProc        ::= methodKey procName [GenericDefinition] [FormalParameterSection] {pin=1}
@@ -275,15 +274,13 @@ private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [N
 RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="procedure or function declaration"}
 RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {extends=RoutineImplDecl}
 
-MethodImplDecl              ::= routineDeclaration //MethodBody     //TODO: remove
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
-ClassMethod                 ::= routineDeclaration {name="method declaration"}  //TODO: remove
 
 private complexType         ::= [PACKED] complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
 private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
-private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
+private routineDecl         ::= ExportedRoutine | ClassMethodResolution
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
 private structItem          ::= commonDecl | routineDecl | ClassField | Visibility
 private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute
@@ -330,7 +327,6 @@ ProcBodyBlock               ::= ProcForwardDecl | procExternalDecl | BlockLocal 
 private procExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* functionDirective* {pin=1}
 ProcForwardDecl             ::= FORWARD ";" functionDirective* {pin=1}
 
-MethodBody          ::= BlockLocal ";"
 private dispIDDirective     ::= DISPID Expression ";" {pin=1}
 private callConventionSemi  ::= callConvention ";"
 private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT
@@ -453,7 +449,7 @@ private enumRest    ::= "," enumEl {pin=1}
 private enumEl      ::= NamedIdent ["=" Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
-                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | Ident_kw | KEYWORDESCAPE | '^' | '.' | '[' | '('
+                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | ident_kw | KEYWORDESCAPE | '^' | '.' | '[' | '('
     private rec__stmt_middle         ::= DO | ELSE | THEN
 
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}
@@ -510,13 +506,13 @@ private namespaceItem       ::= SubIdent "."// {pin=2 }
 HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY// {}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
 
-Ident_kw                    ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
+private ident_kw            ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
                               | OVERRIDE | VIRTUAL | ABSTRACT | SEALED | FINAL | ASSEMBLER | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL
                               | EXPORT | STRICT | PRIVATE | PROTECTED | PUBLIC | PUBLISHED | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER
                               | DEFAULT | IMPLEMENTS | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
                               | PACKAGE | CONTAINS | REQUIRES | INCLUDE
-private identifier          ::= KEYWORDESCAPE ReservedWord | Ident_kw | NAME
-ReservedWord	            ::=	NAME //===***
+private identifier          ::= KEYWORDESCAPE reservedWord | ident_kw | NAME
+private reservedWord	    ::=	NAME //===***
 private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}
 private identListItem       ::= NamedIdent
@@ -589,7 +585,6 @@ setExpr ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
 private setTail             ::= ("," | ".." | ) Expr //{}
 private primaryGroup       ::= simpleRefExpr | literalExpr | parenExpr | setExpr
 private callGroup          ::= callExpr | indexExpr
-
 literalExpr ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
 FormalParameterSection      ::= "(" [ FormalParameterList ] ")"

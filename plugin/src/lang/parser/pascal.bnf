@@ -1,7 +1,6 @@
 {
   generateTokens=true
   generatePsi=true
-  generateStubParser=true
 
   parserClass="com.siberika.idea.pascal.lang.parser.PascalParser"
   stubParserClass="com.siberika.idea.pascal.lang.parser.PascalParserUtil"
@@ -205,12 +204,11 @@
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.PascalStructType,com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|ClassMethod|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
+  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
   extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
   extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
   extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl"
-  extends("ExportedRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
-  extends("RoutineImplDecl|MethodImplDecl|ClassMethod")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
+  extends("ExportedRoutine|RoutineImplDecl")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
   extends(".*Expr")=Expr
 }
 
@@ -273,15 +271,13 @@ private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [N
 RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="procedure or function declaration"}
 RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {extends=RoutineImplDecl}
 
-MethodImplDecl              ::= routineDeclaration //MethodBody     //TODO: remove
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
-ClassMethod                 ::= routineDeclaration {name="method declaration"}  //TODO: remove
 
 private complexType         ::= [PACKED] complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
 private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
-private routineDecl         ::= ExportedRoutine | ClassMethodResolution | ClassMethod
+private routineDecl         ::= ExportedRoutine | ClassMethodResolution
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
 private structItem          ::= commonDecl | routineDecl | ClassField | Visibility
 private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute
@@ -328,7 +324,6 @@ ProcBodyBlock               ::= ProcForwardDecl | procExternalDecl | BlockLocal 
 private procExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* functionDirective* {pin=1}
 ProcForwardDecl             ::= FORWARD ";" functionDirective* {pin=1}
 
-MethodBody          ::= BlockLocal ";"
 private dispIDDirective     ::= DISPID Expression ";" {pin=1}
 private callConventionSemi  ::= callConvention ";"
 private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT
@@ -451,7 +446,7 @@ private enumRest    ::= "," enumEl {pin=1}
 private enumEl      ::= NamedIdent ["=" Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
-                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | ident_kw | KEYWORDESCAPE | '^' | '.' | '[' | '('
+                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | KeywordIdent | KEYWORDESCAPE | '^' | '.' | '[' | '('
     private rec__stmt_middle         ::= DO | ELSE | THEN
 
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}
@@ -508,12 +503,12 @@ private namespaceItem       ::= SubIdent "."// {pin=2 }
 HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY// {}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
 
-private ident_kw            ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
+KeywordIdent                ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
                               | OVERRIDE | VIRTUAL | ABSTRACT | SEALED | FINAL | ASSEMBLER | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL
                               | EXPORT | STRICT | PRIVATE | PROTECTED | PUBLIC | PUBLISHED | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER
                               | DEFAULT | IMPLEMENTS | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
                               | PACKAGE | CONTAINS | REQUIRES
-private identifier          ::= KEYWORDESCAPE reservedWord | ident_kw | NAME
+private identifier          ::= KEYWORDESCAPE reservedWord | KeywordIdent | NAME
 private reservedWord	    ::=	NAME //===***
 private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}

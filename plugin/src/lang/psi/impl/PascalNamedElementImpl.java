@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.PascalReference;
@@ -72,7 +73,8 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         }
         PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
         if (null == result) {
-            result = findChildByType(PasTypes.NAME);
+            TokenSet NamedSet = TokenSet.create(PasTypes.NAME, PasTypes.KEYWORD_IDENT);
+            result = findChildByType(NamedSet);
         }
         if (null == result) {
             PascalNamedElement namedChild = PsiTreeUtil.findChildOfType(this, PascalNamedElement.class);
