@@ -72,9 +72,6 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         }
         PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
         if (null == result) {
-            result = findChildByType(PasTypes.IDENT_KW);
-        }
-        if (null == result) {
             result = findChildByType(PasTypes.NAME);
         }
         if (null == result) {

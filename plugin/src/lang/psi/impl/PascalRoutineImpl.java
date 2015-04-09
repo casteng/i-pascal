@@ -31,7 +31,7 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 06/09/2013
  */
-public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntityScope {
+public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntityScope, PasDeclSection {
     public static final String BUILTIN_RESULT = "Result";
     private Map<String, PasField> members;
     private Set<PascalNamedElement> redeclaredMembers = null;

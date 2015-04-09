@@ -204,11 +204,13 @@
   implements(".+Statement")="com.siberika.idea.pascal.lang.psi.PasStatement"
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl|ExportedRoutine")="com.siberika.idea.pascal.lang.psi.PascalStructType,com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  implements("ConstSection|TypeSection|VarSection|ClassMethodResolution|ClassMethod|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
+  implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.PascalStructType,com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|ClassMethod|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
   extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
-  extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration|ExportedRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
+  extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
   extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl"
+  extends("ExportedRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
+  extends("RoutineImplDecl|MethodImplDecl|ClassMethod")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
   extends(".*Expr")=Expr
 }
 
@@ -262,7 +264,7 @@ private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR | CLASS OPERATOR
 private procKey             ::= FUNCTION | PROCEDURE
 
-ExportedRoutine             ::= routineDeclaration
+ExportedRoutine             ::= routineDeclaration {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl) ";" functionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=2}
 private exportedProc        ::= methodKey procName [GenericDefinition] [FormalParameterSection] {pin=1}
