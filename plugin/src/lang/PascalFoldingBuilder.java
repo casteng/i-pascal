@@ -32,6 +32,7 @@ import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -125,6 +126,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         for (final PsiComment comment : comments) {
             if ((null == lastComment) || (commentRange.getEndOffset() < comment.getTextRange().getStartOffset())) {
                 lastComment = comment;
+                final String endSymbol = getEndSymbol(lastComment);
                 commentRange = comment.getTextRange();
                 // Merge sibling comments
                 PsiElement sibling = PsiUtil.getNextSibling(comment);
@@ -138,10 +140,27 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                     lfPos = lastComment.getTextRange().getEndOffset();
                 }
                 if (lfPos < commentRange.getEndOffset()) {
-                    descriptors.add(new FoldingDescriptor(lastComment.getNode(), getRange(lfPos, commentRange.getEndOffset()), null));
+                    descriptors.add(new FoldingDescriptor(lastComment.getNode(), getRange(lfPos, commentRange.getEndOffset()), null) {
+                        @Nullable
+                        @Override
+                        public String getPlaceholderText() {
+                            return "..." + endSymbol;
+                        }
+                    });
                 }
             }
         }
+    }
+
+    private String getEndSymbol(PsiComment comment) {
+        if (StringUtils.isNotEmpty(comment.getText())) {
+            if (comment.getText().startsWith("{")) {
+                return "}";
+            } else if (comment.getText().startsWith("(*")) {
+                return "*)";
+            }
+        }
+        return "";
     }
 
     @Nullable
