@@ -1,7 +1,5 @@
 package com.siberika.idea.pascal;
 
-import com.intellij.openapi.application.ex.ApplicationEx;
-import com.intellij.openapi.application.ex.ApplicationManagerEx;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 
 public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
@@ -17,19 +15,21 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testAnnotator() {
         myFixture.configureByFiles("annotatorTest.pas");
-        ApplicationEx app = ApplicationManagerEx.getApplicationEx();
-        app.runWriteAction(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Hello");
-            }
-        });
         myFixture.checkHighlighting(false, false, true);
     }
 
     public void testExpression() {
         myFixture.configureByFiles("expression.pas");
-        ApplicationEx app = ApplicationManagerEx.getApplicationEx();
+        myFixture.checkHighlighting(false, false, true);
+    }
+
+    public void testTypes() {
+        myFixture.configureByFiles("types.pas");
+        myFixture.checkHighlighting(false, false, true);
+    }
+
+    public void testStructTypes() {
+        myFixture.configureByFiles("structTypes.pas");
         myFixture.checkHighlighting(false, false, true);
     }
 
