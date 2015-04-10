@@ -565,33 +565,33 @@ private addOp               ::=	PLUS | MINUS | OR | XOR
 private mulOp               ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
 private unaryOp             ::= "+" | "-" | "@" | NOT
 
-ExpressionOrd ::= Expression
-Expression ::= ClosureExpression | Expr
+ExpressionOrd               ::= Expression
+Expression                  ::= ClosureExpression | Expr
 
 Expr                        ::= relationalExpr | sumExpr | productExpr | unaryExpr | dereferenceExpr | referenceExpr | callGroup | primaryGroup
-relationalExpr ::= Expr relOp Expr
-sumExpr ::= Expr addOp Expr
-productExpr ::= Expr mulOp Expr
-unaryExpr ::= unaryOp Expr
-dereferenceExpr ::= Expr '^'
-referenceExpr ::= Expr '.' FullyQualifiedIdent
-simpleRefExpr ::= 'inherited'? FullyQualifiedIdent {elementType=referenceExpr}  // let qualified and simple references have the same type
-callExpr ::= referenceExpr argumentList
-indexExpr ::= referenceExpr indexList
-argumentList ::= '(' [ !')' Expr  (',' Expr) * ] ')' {pin(".*")=1}
-indexList ::= '[' [ !']' Expr  (',' Expr) * ] ']' {pin(".*")=1}
-parenExpr ::= '(' Expr ')'
-setExpr ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
+relationalExpr              ::= Expr relOp Expr
+sumExpr                     ::= Expr addOp Expr
+productExpr                 ::= Expr mulOp Expr
+unaryExpr                   ::= unaryOp Expr
+dereferenceExpr             ::= Expr '^'
+referenceExpr               ::= Expr '.' FullyQualifiedIdent
+simpleRefExpr               ::= 'inherited'? FullyQualifiedIdent {elementType=referenceExpr}  // let qualified and simple references have the same type
+callExpr                    ::= referenceExpr argumentList
+indexExpr                   ::= referenceExpr indexList
+argumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
+ColonConstruct              ::= ':' Expr [':' Expr]
+indexList                   ::= '[' [ !']' Expr  (',' Expr) * ] ']' {pin(".*")=1}
+parenExpr                   ::= '(' Expr ')'
+setExpr                     ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
 private setTail             ::= ("," | ".." | ) Expr //{}
-private primaryGroup       ::= simpleRefExpr | literalExpr | parenExpr | setExpr
-private callGroup          ::= callExpr | indexExpr
-literalExpr ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
+private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExpr
+private callGroup           ::= callExpr | indexExpr
+literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
 FormalParameterSection      ::= "(" [ FormalParameterList ] ")"
 FormalParameterList         ::= FormalParameter (";" FormalParameter)*
 FormalParameter             ::= [ CustomAttribute ] [ ParamType ] identList [ ":" TypeDecl ] [ "=" Expression ]
-ParamType                    ::= CONST | VAR | OUT | CONSTREF//ParmType
-
+ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 
 ExpressionsList	            ::= Expression (COMMA Expression)*
 

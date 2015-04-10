@@ -24,7 +24,12 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
                 System.out.println("Hello");
             }
         });
-//        myFixture.checkHighlighting(true, true, true, false);
+        myFixture.checkHighlighting(false, false, true);
+    }
+
+    public void testExpression() {
+        myFixture.configureByFiles("expression.pas");
+        ApplicationEx app = ApplicationManagerEx.getApplicationEx();
         myFixture.checkHighlighting(false, false, true);
     }
 
