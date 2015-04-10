@@ -3,17 +3,17 @@ unit Simple;
 interface
 
 uses
-    SysUtils, StrUtils,
+    SysUtils, StrUtils, unitTest1,
     //aaa
     objpas, myclass;
 
 type
-    int = int;
+    int32 = int32;
     TRecord = record
         Name2, CurrentValue, DefaultValue: AnsiString;
         HashValue: LongWord;
         {class function a: int;}
-        constructor Create(a, b: int);
+        constructor Create(a, b: int32);
     end;
 
     RPoint = Record
@@ -57,7 +57,7 @@ var
     a: TLiteInterfacedObject;
     rp: RPoint;
 
-    function nested1(np1: int): RPoint;
+    function nested1(np1: int32): RPoint;
         {function nested2;
         begin
         end;}
@@ -67,6 +67,7 @@ var
     end;
 
 begin
+    out := 2;
     myclass.objpas;
     Obj.Create();
     Value.MyProp.Create();

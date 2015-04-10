@@ -39,6 +39,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -95,17 +97,25 @@ public class PasReferenceUtil {
 
     /**
      * Finds and returns file of a module with the given name
+     * If more than one file matches the one with longest name is returned
      * @param module - IDEA module to include its compiled dependencies
      * @return list of PsiFiles
      */
     @Nullable
     public static VirtualFile findUnitFile(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
+        List<VirtualFile> candidates = new ArrayList<VirtualFile>();
         for (VirtualFile virtualFile : findUnitFiles(project, module)) {
             if (isFileOfModuleWithName(virtualFile, moduleName)) {
-                return virtualFile;
+                candidates.add(virtualFile);
             }
         }
-        return null;
+        Collections.sort(candidates, new Comparator<VirtualFile>() {
+            @Override
+            public int compare(VirtualFile o1, VirtualFile o2) {
+                return o2.getName().length() - o1.getName().length();
+            }
+        });
+        return !candidates.isEmpty() ? candidates.get(0) : null;
     }
 
     /**
