@@ -1,7 +1,5 @@
 package com.siberika.idea.pascal.lang.references;
 
-import com.intellij.codeInsight.lookup.LookupElement;
-import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
@@ -21,7 +19,6 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -44,7 +41,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import static com.google.common.collect.Iterables.getFirst;
 
@@ -149,96 +145,6 @@ public class PasReferenceUtil {
             || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension());
     }
 
-    @Deprecated
-    public static Collection<LookupElement> getEntities(final PsiElement element, Set<PasField.FieldType> fieldTypes) {
-        Collection<PascalNamedElement> result = new TreeSet<PascalNamedElement>(); // TODO: add comparator
-        PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(element);
-        doGetEntities(result, section, element.getTextRange().getStartOffset(), fieldTypes, new HashSet<String>());
-
-        Collection<LookupElement> res = new ArrayList<LookupElement>(result.size());
-        for (PascalNamedElement namedElement : result) {
-            res.add(LookupElementBuilder.createWithIcon(namedElement));
-        }
-        return res;
-    }
-
-    /**
-     * Recursively goes up by entity declaration scopes and adds declared entities to result
-     */
-    @Deprecated
-    private static void doGetEntities(Collection<PascalNamedElement> result, PsiElement section, int startOffset, Set<PasField.FieldType> fieldTypes, Set<String> filter) {
-        if (null == section) { return; }
-        if (section instanceof PasEntityScope) {
-            try {
-                for (PasField field : ((PasEntityScope) section).getAllFields()) {
-                    if ((field.element != null) && (startOffset > field.element.getTextRange().getStartOffset()) &&  // TODO: pointer declaration exception
-                        fieldTypes.contains(field.fieldType) && !filter.contains(field.name.toUpperCase())) {
-                        result.add(field.element);
-                        filter.add(field.name.toUpperCase());
-                    }
-                }
-            } catch (PasInvalidScopeException e) {
-                e.printStackTrace();
-            }
-        }
-        doGetEntities(result, PsiUtil.getNearestAffectingDeclarationsRoot(section), startOffset, fieldTypes, filter);
-    }
-
-    /**
-     *  for each entry in FQN before target:
-     *    find entity corresponding to NS in current scope
-     *    if the entity represents a namespace - retrieve and make current
-     *  for namespace of target entry add all its entities
-     */
-    public static Collection<LookupElement> getEntities(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
-        // First entry in FQN
-        PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.getParentIdent());
-        List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
-        // Retrieve all namespaces affecting first FQN level
-        while (section != null) {
-            namespaces.add(PsiUtil.getDeclRootScope(section));
-            section = fqn.isFirst() ? PsiUtil.getNearestAffectingDeclarationsRoot(namespaces.get(namespaces.size()-1)) : null;
-        }
-
-        Collection<LookupElement> result = new ArrayList<LookupElement>();
-        try {
-            while (!fqn.isTarget() && (namespaces != null)) {
-                PasField field = null;
-                // Scan namespaces and get one matching field
-                for (PasEntityScope namespace : namespaces) {
-                    field = namespace.getField(fqn.getCurrentName());
-                    if (field != null) { break; }
-                }
-                namespaces = null;
-                if (field != null) {
-                    PasEntityScope newNS = retrieveNamespace(field, fqn.isFirst());
-                    namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
-                    while (newNS != null) {              // Scan namespace's parent namespaces (class parents etc)
-                        newNS = getFirst(newNS.getParentScope(), null);
-                        if (newNS != null) {
-                            namespaces.add(newNS);
-                        }
-                    }
-                }
-
-                fqn.next();
-            }
-
-            if (fqn.isTarget() && (namespaces != null)) {
-                for (PasEntityScope namespace : namespaces) {
-                    for (PasField pasField : namespace.getAllFields()) {
-                        if ((pasField.element != null) && (fieldTypes.contains(pasField.fieldType)) && isVisibleWithinUnit(pasField, fqn)) {
-                            result.add(LookupElementBuilder.createWithIcon(pasField.element));
-                        }
-                    }
-                }
-            }
-        } catch (PasInvalidScopeException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
     private static boolean isVisibleWithinUnit(@NotNull PasField field, @NotNull NamespaceRec fqn) {
         if ((field.element != null) && (field.element.getContainingFile() == fqn.getParentIdent().getContainingFile())) {
             // check if declaration comes earlier then usage or declaration allows forward mode
@@ -249,64 +155,6 @@ public class PasReferenceUtil {
         } else {
             // check if field visibility allows usage from another unit
             return PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE);
-        }
-    }
-
-    /**
-     * Recursively searches up over entity declaration scopes for an entity with the given name
-     */
-    private static PasField doGetEntity(PsiElement section, String name, Set<PasField.FieldType> fieldTypes) throws PasInvalidScopeException {
-        if (null == section) { return null; }
-        if (section instanceof PasEntityScope) {
-            PasField field = ((PasEntityScope) section).getField(name);
-            if ((field != null) && (fieldTypes.contains(field.fieldType))) {
-                return field;
-            }
-        }
-        return doGetEntity(PsiUtil.getNearestAffectingDeclarationsRoot(section), name, fieldTypes);
-    }
-
-    private static PasEntityScope retrieveNamespace(PasField field, boolean canBeUnit) throws PasInvalidScopeException {
-        /*if (canBeUnit && (entityDecl instanceof PasNamespaceIdent)) {
-            PasNamespaceIdent usedModuleName = getUsedModuleName(entityDecl);
-            if (usedModuleName != null) {
-                PascalNamedElement unit = PasReferenceUtil.findUnit(usedModuleName);
-                if (unit != null) {
-                    return unit;
-                }
-            }
-        }*/
-        if (null == field) { return null; }
-        return getStructTypeByIdent(field);
-    }
-
-    @Nullable
-    private static PasEntityScope getStructTypeByIdent(PasField ident) throws PasInvalidScopeException {
-        if (null == ident) { return null; }
-        PsiElement typeDecl = PsiTreeUtil.getNextSiblingOfType(ident.element, PasTypeDecl.class);
-        if (null == typeDecl) {
-            typeDecl = PsiTreeUtil.getChildOfType(ident.element, PasTypeID.class);
-        }
-        if (typeDecl != null) {
-            PasEntityScope strucTypeDecl = PsiTreeUtil.getChildOfType(typeDecl, PasEntityScope.class);
-            if (strucTypeDecl != null) {            // Inline structured type declaration
-                return strucTypeDecl;
-            } else {                                // regular type
-                PasFullyQualifiedIdent typeId = PsiTreeUtil.findChildOfType(typeDecl, PasFullyQualifiedIdent.class, true);
-                if (typeId != null) {
-                    PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(ident.element);
-                    return getStructTypeByIdent(doGetEntity(section, typeId.getName(), PasField.TYPES_TYPE));    // factor unit-qualified names
-                    /*Collection<PascalNamedElement> entities = new SmartList<PascalNamedElement>();
-                    doGetEntities(entities, section, section.getTextRange().getEndOffset(), PasField.TYPES_TYPE, new HashSet<String>());
-                    for (PascalNamedElement element : entities) if (typeId.getName().equalsIgnoreCase(element.getName())) {
-                        return getStructTypeByIdent(element);
-                    }*/
-                } else {
-                    return null;
-                }
-            }
-        } else {
-            return null;
         }
     }
 
