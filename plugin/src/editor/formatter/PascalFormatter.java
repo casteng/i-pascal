@@ -51,6 +51,13 @@ public class PascalFormatter implements FormattingModelBuilder {
                 .after(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
                 .before(PasTypes.ASSIGN_PART).spacing(1, 1, 0, true, 1)
 
+                .after(PasTypes.ADD_OP).spacing(1, 1, 0, true, 1)
+                .before(PasTypes.ADD_OP).spacing(1, 1, 0, true, 1)
+                .after(PasTypes.REL_OP).spacing(1, 1, 0, true, 1)
+                .before(PasTypes.REL_OP).spacing(1, 1, 0, true, 1)
+                .after(PasTypes.MUL_OP).spacing(1, 1, 0, true, 1)
+                .before(PasTypes.MUL_OP).spacing(1, 1, 0, true, 1)
+
                 .afterInside(PasTypes.BEGIN, PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
                 .afterInside(PasTypes.VAR, PasTypes.VAR_SECTION).lineBreakInCode()
                 .afterInside(PasTypes.CONST, PasTypes.CONST_SECTION).lineBreakInCode()

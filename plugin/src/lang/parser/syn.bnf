@@ -207,12 +207,17 @@
         WHITESPACE='regexp:[\ \n\r\t\f]'
   ]
 
+  implements(".+Statement")="com.siberika.idea.pascal.lang.psi.PasStatement"
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
-  implements(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  extends(".*ModuleHead|.*Ident|ClassProperty|FormalParameter")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
-  extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl";
-
+  implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.PascalStructType,com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
+  extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
+  extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
+  extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl"
+  extends("ExportedRoutine|RoutineImplDecl")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
   extends(".*Expr")=Expr
+  implements(".*Op")="com.siberika.idea.pascal.lang.psi.impl.PascalOperation"
 }
 
 //external pascal             ::= parsePascal Module
@@ -418,11 +423,11 @@ ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefN
 RefNamedIdent       ::= identifier
 ClassPropertyDispInterface ::= "readonly" ";" | "writeonly" ";" | dispIDDirective
 
-ArrayType           ::= ARRAY [ArrayIndexes] OF ArraySubType {pin=1}
-ArrayIndexes ::= "[" [ArrayIndex] ArrayIndexRest* "]" {pin=1}
-ArrayIndex          ::= SubRangeType | TypeID     //TODO: TypeID only?
-ArrayIndexRest      ::= "," [ArrayIndex] {pin=1}
-ArraySubType        ::= CONST | TypeDecl
+ArrayType               ::= ARRAY [arrayIndexes] OF ArraySubType {pin=1}
+private arrayIndexes    ::= "[" [ArrayIndex] arrayIndexRest* "]" {pin=1}
+ArrayIndex              ::= SubRangeType | TypeID     //TODO: TypeID only?
+private arrayIndexRest  ::= "," [ArrayIndex] {pin=1}
+ArraySubType            ::= CONST | TypeDecl
 
 SetType             ::= SET OF TypeDecl {pin=1}
 FileType            ::= FILE [OF TypeDecl] {pin=1}
@@ -449,7 +454,7 @@ private enumRest    ::= "," enumEl {pin=1}
 private enumEl      ::= NamedIdent ["=" Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
-                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | ident_kw | KEYWORDESCAPE | '^' | '.' | '[' | '('
+                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | KeywordIdent | KEYWORDESCAPE | '^' | '.' | '[' | '('
     private rec__stmt_middle         ::= DO | ELSE | THEN
 
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}
@@ -506,12 +511,12 @@ private namespaceItem       ::= SubIdent "."// {pin=2 }
 HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY// {}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
 
-private ident_kw            ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
+KeywordIdent                ::= OUT | EXIT | BREAK | CONTINUE | OPERATOR | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
                               | OVERRIDE | VIRTUAL | ABSTRACT | SEALED | FINAL | ASSEMBLER | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL
                               | EXPORT | STRICT | PRIVATE | PROTECTED | PUBLIC | PUBLISHED | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER
                               | DEFAULT | IMPLEMENTS | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
-                              | PACKAGE | CONTAINS | REQUIRES | INCLUDE
-private identifier          ::= KEYWORDESCAPE reservedWord | ident_kw | NAME
+                              | PACKAGE | CONTAINS | REQUIRES
+private identifier          ::= KEYWORDESCAPE reservedWord | KeywordIdent | NAME
 private reservedWord	    ::=	NAME //===***
 private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}
@@ -560,15 +565,15 @@ private expr_relOrd ::= expr_sumOrd (relOp expr_sumOrd)*
 private expr_sumOrd ::= expr_productOrd (addOp expr_productOrd)*
 private expr_productOrd ::= primaryOrd (mulOp primaryOrd)* */
 // **********************************************************************
-private relOp               ::= "<" | ">" | "<=" | ">=" | "<>" | "=" | IN | IS
-private addOp               ::=	PLUS | MINUS | OR | XOR
-private mulOp               ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
-private unaryOp             ::= "+" | "-" | "@" | NOT
+relOp                       ::= "<" | ">" | "<=" | ">=" | "<>" | "=" | IN | IS
+addOp                       ::=	PLUS | MINUS | OR | XOR
+mulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
+unaryOp                     ::= "+" | "-" | "@" | NOT
 
 ExpressionOrd               ::= Expression
 Expression                  ::= ClosureExpression | Expr
 
-Expr                        ::= relationalExpr | sumExpr | productExpr | unaryExpr | dereferenceExpr | referenceExpr | callGroup | primaryGroup
+Expr                        ::= relationalExpr | sumExpr | productExpr | unaryExpr | dereferenceExpr | referenceExpr | callGroup | primaryGroup {extends="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"}
 relationalExpr              ::= Expr relOp Expr
 sumExpr                     ::= Expr addOp Expr
 productExpr                 ::= Expr mulOp Expr
