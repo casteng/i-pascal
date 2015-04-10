@@ -195,7 +195,7 @@ public class PasReferenceUtil {
             if (decl != null) {
                 element = PsiUtil.findImmChildOfAnyType(decl, PascalNamedElement.class);
             }
-            System.out.println("===*** anonymous type: " + field.element);
+            //System.out.println("===*** anonymous type: " + field.element);
             kind = PasField.Kind.BOOLEAN;
         }
         return new PasField.ValueType(typeId != null ? typeId.getFullyQualifiedIdent().getName() : null, field, kind, valueType, element);
@@ -214,6 +214,11 @@ public class PasReferenceUtil {
             }
         }
         return field.getTypeScope();
+    }
+
+    @Nullable
+    public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field) throws PasInvalidScopeException {
+        return retrieveFieldTypeScope(field, 0);
     }
 
     @Nullable

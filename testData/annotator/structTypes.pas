@@ -30,6 +30,7 @@ type
     constructor Create(a, b: TA);
   end;
 
+  PVec = ^TVec;
   TVec = packed record
     x, Y: Single;
     z: TA;
@@ -48,9 +49,13 @@ type
   end;
 
   TVarRec2 = record
-    case a: Single of
-      0: (X, Y: Single)
-    end;
+  case a: Single of
+    0: (X, Y: Single)
+  end;
+
+  TArray = array[0..100] of TA;
+  TPArray = array of PVec;
+  PPArray = ^TPArray;
 
 implementation
 

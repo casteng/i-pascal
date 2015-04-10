@@ -197,12 +197,12 @@ public class PasField {
             this.kind = kind;
             this.baseType = baseType;
             this.element = element;
-            System.out.println("===*** " + toString());
+            //System.out.println("===*** " + toString());
         }
 
         @Override
         public String toString() {
-            return String.format("%s: %s (%s)%s", field != null ? field.name : "", name, kind != null ? kind.name() : "", baseType != null ? (" => " + baseType.toString()) : "");
+            return String.format("%s: %s (%s)%s", field != null ? field.name : "<anon>", name != null ? name : "<anon>", kind != null ? kind.name() : "-", baseType != null ? (" => " + baseType.toString()) : "-");
         }
 
     }
