@@ -281,7 +281,7 @@ RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {ext
 
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
 
-private complexType         ::= [PACKED] complexTypePart
+private complexType         ::= complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
 private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
@@ -373,12 +373,13 @@ TypeDeclsRest       ::= "," TypeDecl {pin=1}
 
 TypeID              ::=	FullyQualifiedIdent
 
-TypeDecl	                ::=	complexType | PointerType | ProcedureType | stringType | SimpleType | [TYPE] TypeID [GenericPostfix] | variantType
+TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID [GenericPostfix]
 
 private ClassForwardDecl    ::= CLASS [ClassParent] {name="forward class declaration"}
 
 ClassField                  ::= field ';' //TODO: remove ";"
-ClassTypeDecl               ::= CLASS ((classBody END) | [ClassParent]) {pin=1 name="class declaration"}
+ClassTypeDecl               ::= [PACKED] classDecl {name="class declaration"}
+private classDecl           ::= CLASS ((classBody END) | [ClassParent]) {pin=1}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
 ClassHelperDecl             ::= CLASS HELPER classHelperBody END {name="class helper declaration"}
@@ -387,14 +388,15 @@ private classHelperBody     ::= [ClassParent] FOR TypeID structItem* {pin=2 reco
 InterfaceTypeDecl           ::= interfaceKey interfaceBody END
                               | interfaceKey [ClassParent] {pin(".*")=interfaceKey name="interface declaration"}
 private interfaceBody       ::= [ClassParent] [interfaceGuid] structItem* {recoverWhile=rec_struct_outer}
-ObjectDecl                  ::= OBJECT objectBody END {pin=1 name="object declaration"}
+ObjectDecl                  ::= [PACKED] objectTypeDecl {name="object declaration"}
+private objectTypeDecl      ::= OBJECT objectBody END {pin=1}
 private objectBody          ::= [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
 RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
-private simpleRecord        ::= RECORD recordBody END {pin=1}
+private simpleRecord        ::= [PACKED] RECORD recordBody END {pin=2}
 private recordBody          ::= ClassField* structItem* {recoverWhile=rec_struct_outer}
 
-private variantRecord       ::= RECORD ClassField* recordVariantSection END {pin=3}
+private variantRecord       ::= [PACKED] RECORD ClassField* recordVariantSection END
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
 private recordFields        ::= [field] (';' field)* [';']  //===***
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
@@ -423,19 +425,18 @@ ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefN
 RefNamedIdent       ::= identifier
 ClassPropertyDispInterface ::= "readonly" ";" | "writeonly" ";" | dispIDDirective
 
-ArrayType               ::= ARRAY [arrayIndexes] OF ArraySubType {pin=1}
+ArrayType               ::= [PACKED] ARRAY [arrayIndexes] OF ArraySubType {pin=2}
 private arrayIndexes    ::= "[" [ArrayIndex] arrayIndexRest* "]" {pin=1}
 ArrayIndex              ::= SubRangeType | TypeID     //TODO: TypeID only?
 private arrayIndexRest  ::= "," [ArrayIndex] {pin=1}
 ArraySubType            ::= CONST | TypeDecl
 
-SetType             ::= SET OF TypeDecl {pin=1}
+SetType             ::= [PACKED] SET OF TypeDecl {pin=2}
 FileType            ::= FILE [OF TypeDecl] {pin=1}
 PointerType         ::= "^" TypeDecl {pin=1}
 
-private stringType          ::= "string" ["[" Expression "]"] | "AnsiString" [codePageNumber]
+StringType                  ::= "string" ["[" Expression "]"] | "AnsiString" [codePageNumber]
 private codePageNumber      ::= "(" ConstExpressionOrd ")" {pin=1}
-private variantType         ::= identifier
 
 ProcedureType               ::= SimpleProcedureType | ProcedureReference
 SimpleProcedureType         ::= procedureTypeHeading {recoverWhile=rec_semi}
@@ -446,7 +447,7 @@ private procedureTypeHeading ::= (funcHeading | procHeading) [OF OBJECT]
 private funcHeading         ::= FUNCTION [FormalParameterSection] ":" [CustomAttribute] TypeDecl [";" callConvention+] {pin=1}
 private procHeading         ::= PROCEDURE [FormalParameterSection] [";" callConvention+] {pin=1}
 
-SimpleType          ::= EnumType | SubRangeType
+private simpleType          ::= EnumType | SubRangeType
 SubRangeType        ::= RangeBound RANGE RangeBound
 RangeBound          ::= ConstExpressionOrd
 EnumType            ::= "(" enumEl enumRest* ")" {pin=1}
