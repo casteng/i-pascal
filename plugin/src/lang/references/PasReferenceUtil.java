@@ -26,7 +26,18 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeTypeDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasEnumTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PasFileTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasPointerTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasProcedureTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasSetTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasStringTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasSubRangeTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
@@ -161,44 +172,75 @@ public class PasReferenceUtil {
 //-------------------------------------------------------------------
 
     private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
-        if (recursionCount > MAX_RECURSION_COUNT) {
+        if (recursionCount > PascalParserUtil.MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
             throw new PascalRTException("Too much recursion during resolving type for: " + field.element);
         }
-        PasTypeID typeId;
-        PasTypeDecl decl = null;
-        PascalNamedElement element = null;
+        PasTypeID typeId = null;
+        PasField.ValueType res = null;
         if (field.element instanceof PasClassProperty) {
             typeId = PsiTreeUtil.getChildOfType(field.element, PasTypeID.class);
         } else if (field.element instanceof PascalRoutineImpl) {                                     // routine declaration case
             typeId = ((PascalRoutineImpl) field.element).getFunctionTypeIdent();
         } else {
-            decl = PsiUtil.getTypeDeclaration(field.element);
-            PsiElement child = decl != null ? decl.getFirstChild() : null;
-            element = (child instanceof PascalNamedElement) ? (PascalNamedElement) child : null;
-            typeId = PsiUtil.getDeclaredTypeName(decl);
+            if ((field.element != null) && PsiUtil.isTypeDeclPointingToSelf(field.element)) {
+                res = PasField.getValueType(field.element.getName());
+            } else {
+                res = retrieveAnonymousType(PsiUtil.getTypeDeclaration(field.element), includeLibrary, recursionCount);
+            }
         }
-        PasField.Kind kind = null;
-        PasField.ValueType valueType = null;
         if (typeId != null) {
-            if (PsiUtil.isTypeDeclPointingToSelf(typeId.getFullyQualifiedIdent())) {
-                return PasField.getValueType(field.name);
-            }
-            Collection<PasField> types = resolve(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), PasField.TYPES_TYPE, includeLibrary, ++recursionCount);
-            if (!types.isEmpty()) {
-                PasField type = types.iterator().next();
-                if (type == field) {                                                               //
-                    return PasField.getValueType(field.name);
-                }
-                valueType = resolveFieldType(type, includeLibrary, ++recursionCount);          // resolve next type in chain
-            }
-        } else {                                                // anonimous type
-            if (decl != null) {
-                element = PsiUtil.findImmChildOfAnyType(decl, PascalNamedElement.class);
-            }
-            //System.out.println("===*** anonymous type: " + field.element);
-            kind = PasField.Kind.BOOLEAN;
+            res = resolveTypeId(typeId, includeLibrary, recursionCount);
         }
-        return new PasField.ValueType(typeId != null ? typeId.getFullyQualifiedIdent().getName() : null, field, kind, valueType, element);
+        if (res != null) {
+            res.field = field;
+        }
+        return res;
+    }
+
+    private static PasField.ValueType resolveTypeId(@NotNull PasTypeID typeId, boolean includeLibrary, int recursionCount) {
+        Collection<PasField> types = resolve(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), PasField.TYPES_TYPE, includeLibrary, ++recursionCount);
+        if (!types.isEmpty()) {
+            return resolveFieldType(types.iterator().next(), includeLibrary, ++recursionCount);          // resolve next type in chain
+        }
+        return null;
+    }
+
+    private static PasField.ValueType retrieveAnonymousType(PasTypeDecl decl, boolean includeLibrary, int recursionCount) {
+        PasField.Kind kind = null;
+        PasField.ValueType baseType = null;
+        PascalNamedElement element = null;
+        if (decl != null) {
+            PsiElement type = decl.getFirstChild();
+            if (type.getClass() == PasTypeIDImpl.class) {
+                return resolveTypeId((PasTypeID) type, includeLibrary, recursionCount);
+            } else if (type.getClass() == PasClassTypeTypeDeclImpl.class) {
+                kind = PasField.Kind.CLASSREF;
+                baseType = resolveTypeId(((PasClassTypeTypeDeclImpl) type).getTypeID(), includeLibrary, recursionCount);
+            } else if (type instanceof PasStructTypeImpl) {
+                kind = PasField.Kind.STRUCT;
+                element = (PascalNamedElement) type;
+            } else if (type.getClass() == PasArrayTypeImpl.class) {
+                kind = PasField.Kind.ARRAY;
+                baseType = retrieveAnonymousType(((PasArrayTypeImpl) type).getTypeDecl(), includeLibrary, ++recursionCount);
+            } else if (type.getClass() == PasSetTypeImpl.class) {
+                kind = PasField.Kind.SET;
+                baseType = retrieveAnonymousType(((PasSetTypeImpl) type).getTypeDecl(), includeLibrary, ++recursionCount);
+            } else if (type.getClass() == PasFileTypeImpl.class) {
+                kind = PasField.Kind.FILE;
+            } else if (type.getClass() == PasPointerTypeImpl.class) {
+                kind = PasField.Kind.POINTER;
+                baseType = retrieveAnonymousType(((PasPointerTypeImpl) type).getTypeDecl(), includeLibrary, ++recursionCount);
+            } else if (type.getClass() == PasProcedureTypeImpl.class) {
+                kind = PasField.Kind.PROCEDURE;
+            } else if (type.getClass() == PasStringTypeImpl.class) {
+                kind = PasField.Kind.STRING;
+            } else if (type.getClass() == PasEnumTypeImpl.class) {
+                kind = PasField.Kind.ENUM;
+            } else if (type.getClass() == PasSubRangeTypeImpl.class) {
+                kind = PasField.Kind.SUBRANGE;
+            }
+        }
+        return new PasField.ValueType(null, kind, baseType);
     }
 
     @Nullable

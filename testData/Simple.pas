@@ -34,14 +34,14 @@ TEnum = (eOne, eTwo, eThree);
         name2: string;
     public
         constructor Create();
-        procedure NonStat();
+        procedure NonStat(a, b: int);
         class procedure Stat();
     end;
     CC2 = class of TTest;
 
     TStringSearchOption = (soDown, soMatchCase, soWholeWord);
-    TStringSearchOptions = set of TStringSearchOption;TStringSeachOption = TStringSearchOption;
-
+    TStringSearchOptions = set of TStringSearchOption;
+    TStringSeachOption = TStringSearchOption;
 
     Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; inline;
     Function RightStr(const AText: AnsiString; const ACount: Integer): AnsiString; register;
@@ -51,7 +51,7 @@ implementation
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
-    Value: TTest;
+    Value: array[0..1] of TTest;
     V2: TC2;
     Obj: TObject;
     a: TLiteInterfacedObject;
@@ -67,10 +67,10 @@ var
     end;
 
 begin
-    out := 2;
+    out := 2+2*3+5-5/2;
     myclass.objpas;
-    Obj.Create();
-    Value.MyProp.Create();
+    Obj.Create(1, 2);
+    Value[0].MyProp.Create();
     Value.Create();
     v2.Create();
     v2.name2;

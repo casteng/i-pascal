@@ -62,7 +62,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     private static final Logger LOG = Logger.getInstance(PascalParserUtil.class);
 
     public static final Collection<String> EXPLICIT_UNITS = Arrays.asList("system");
-    private static final int MAX_STRUCT_TYPE_RESOLVE_RECURSION = 16;
+    public static final int MAX_STRUCT_TYPE_RESOLVE_RECURSION = 1000;
 
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {
         PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
@@ -170,7 +170,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return section != null ? section.getTextRange().getEndOffset() : -1;
     }
 
-@Nullable
+    @Nullable
     public static PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent, int recursionCount) {
         if (recursionCount > MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
             return PsiUtil.getElementPasModule(typeIdent);
@@ -192,7 +192,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     @Nullable
-    public static PasEntityScope getStructTypeByTypeIdent(@Nullable PascalQualifiedIdent typeId, int recursionCount) {
+    private static PasEntityScope getStructTypeByTypeIdent(@Nullable PascalQualifiedIdent typeId, int recursionCount) {
         if (typeId != null) {
             PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(typeId);
             Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, typeId.getName(),

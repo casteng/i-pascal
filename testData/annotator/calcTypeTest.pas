@@ -5,11 +5,14 @@ interface
 uses types, structTypes;
 
 var
-  arr: TArray;;
-  arrP: TPArray;
-  arrPP: PPArray;
+  int: Integer;
+  arr: TArray;
+  arrP: TArrayP;
+  arrPP: PArrayP;
   vec: TVec;
-  arrArr: array of TPArray;
+  arrArr: array of TArray;
+  clazz: CA;
+  arrInt: array of Integer;
 
 implementation
 

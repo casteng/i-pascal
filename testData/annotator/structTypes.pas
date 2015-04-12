@@ -3,6 +3,7 @@ unit structTypes;
 interface
 
 type
+  Integer = Integer;
   Single = Single;
 
   IUnknown = interface
@@ -23,6 +24,8 @@ type
   published
         property A: TA read FPrivate write FPrivate;
   end;
+
+  CA = class of TA;
 
   TAHelper = class helper for TA
     Name: string;
@@ -54,8 +57,8 @@ type
   end;
 
   TArray = array[0..100] of TA;
-  TPArray = array of PVec;
-  PPArray = ^TPArray;
+  TArrayP = array of PVec;
+  PArrayP = ^TArrayP;
 
 implementation
 

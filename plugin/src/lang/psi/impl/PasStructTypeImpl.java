@@ -145,8 +145,8 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         }
         assert members.size() == PasField.Visibility.values().length;
 
-        addField(this, "SELF", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE).setValueType(
-                new PasField.ValueType(getName(), null, PasField.Kind.STRUCT, null, this));
+        PasField field = addField(this, "SELF", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE);
+        field.setValueType(new PasField.ValueType(field, PasField.Kind.STRUCT, null));
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
         while (child != null) {

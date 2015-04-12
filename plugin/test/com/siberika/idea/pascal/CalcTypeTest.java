@@ -23,5 +23,6 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
     private void printIdent(PasField field) throws PasInvalidScopeException {
         PasReferenceUtil.retrieveFieldTypeScope(field);
         System.out.println(String.format("%s: %s", field.name, field.getValueType()));
+        System.out.println("Scope: " + field.getTypeScope());
     }
 }

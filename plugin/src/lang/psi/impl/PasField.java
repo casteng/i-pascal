@@ -21,7 +21,7 @@ public class PasField {
 
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY}
 
-    public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, ARRAY}
+    public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY}
 
     public static final Set<FieldType> TYPES_ALL = new HashSet<FieldType>(Arrays.asList(FieldType.values()));
     public static final Set<FieldType> TYPES_LEFT_SIDE = new HashSet<FieldType>(Arrays.asList(FieldType.UNIT, FieldType.VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE));
@@ -30,13 +30,13 @@ public class PasField {
 
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
-    public static final ValueType INTEGER = new ValueType("Integer", null, Kind.INTEGER, null, null);
-    public static final ValueType FLOAT = new ValueType("Float", null, Kind.FLOAT, null, null);
-    public static final ValueType STRING = new ValueType("String", null, Kind.STRING, null, null);
-    public static final ValueType BOOLEAN = new ValueType("Boolean", null, Kind.BOOLEAN, null, null);
-    public static final ValueType POINTER = new ValueType("Pointer", null, Kind.POINTER, null, null);
+    public static final ValueType INTEGER = new ValueType(null, Kind.INTEGER, null);
+    public static final ValueType FLOAT = new ValueType(null, Kind.FLOAT, null);
+    public static final ValueType STRING = new ValueType(null, Kind.STRING, null);
+    public static final ValueType BOOLEAN = new ValueType(null, Kind.BOOLEAN, null);
+    public static final ValueType POINTER = new ValueType(null, Kind.POINTER, null);
 
-    private static final ValueType NOT_INITIALIZED = new ValueType("<none>", null, null, null, null);
+    private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null);
 
     public static boolean isAllowed(Visibility check, Visibility minAllowed) {
         return check.compareTo(minAllowed) >= 0;
@@ -112,11 +112,11 @@ public class PasField {
     }
 
     public boolean isInteger() {
-        return (valueType != null) && (valueType.kind == Kind.INTEGER);
+        return (getValueType() != null) && (valueType.kind == Kind.INTEGER);
     }
 
     public boolean isFloat() {
-        return (valueType != null) && (valueType.kind == Kind.FLOAT);
+        return (getValueType() != null) && (valueType.kind == Kind.FLOAT);
     }
 
     public boolean isNumeric() {
@@ -125,18 +125,21 @@ public class PasField {
 
     @Nullable
     public PasField getTypeField() {
-        return valueType != null ? valueType.field : null;
+        return getValueType() != null ? getValueType().field : null;
     }
 
     // Searches all type chain for structured type
     @Nullable
     public PasEntityScope getTypeScope() {  //TODO: resolve unresolved types
-        ValueType type = valueType;
+        ValueType type = getValueType();
+        if (null == type) {
+            return null;
+        }
         while (type.baseType != null) {
             type = type.baseType;
         }
-        if ((type.element instanceof PasEntityScope)) {
-            return (PasEntityScope) type.element;
+        if ((type.field != null) && (type.field.element instanceof PasEntityScope)) {
+            return (PasEntityScope) type.field.element;
         }
         return null;
     }
@@ -180,29 +183,24 @@ public class PasField {
     }
 
     public static class ValueType {
-        // type name
-        private final String name;
         // referenced type field (TRefType in type TValueType = TRefType)
-        private final PasField field;
+        public PasField field;
         // additional information about type
-        private final Kind kind;
-        // referenced type (TDeepType in TRefType = TDeepType)
-        private final ValueType baseType;
-        // type element TODO: merge with field.element
-        private final PascalNamedElement element;
+        public Kind kind;
+        // base type (TBaseType in TRefType = array of TBaseType)
+        public ValueType baseType;
 
-        public ValueType(String name, PasField field, Kind kind, ValueType baseType, PascalNamedElement element) {
-            this.name = name;
+        public ValueType(PasField field, Kind kind, ValueType baseType) {
             this.field = field;
             this.kind = kind;
             this.baseType = baseType;
-            this.element = element;
-            //System.out.println("===*** " + toString());
         }
 
         @Override
         public String toString() {
-            return String.format("%s: %s (%s)%s", field != null ? field.name : "<anon>", name != null ? name : "<anon>", kind != null ? kind.name() : "-", baseType != null ? (" => " + baseType.toString()) : "-");
+            return String.format("%s: %s (%s)", field != null ? field.name : "<anon>",
+                    kind != null ? kind.name() : "-",
+                    baseType != null ? (" of " + baseType.toString()) : "-");
         }
 
     }
