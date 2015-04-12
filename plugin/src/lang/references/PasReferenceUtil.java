@@ -208,7 +208,6 @@ public class PasReferenceUtil {
     private static PasField.ValueType retrieveAnonymousType(PasTypeDecl decl, boolean includeLibrary, int recursionCount) {
         PasField.Kind kind = null;
         PasField.ValueType baseType = null;
-        PascalNamedElement element = null;
         if (decl != null) {
             PsiElement type = decl.getFirstChild();
             if (type.getClass() == PasTypeIDImpl.class) {
@@ -218,7 +217,6 @@ public class PasReferenceUtil {
                 baseType = resolveTypeId(((PasClassTypeTypeDeclImpl) type).getTypeID(), includeLibrary, recursionCount);
             } else if (type instanceof PasStructTypeImpl) {
                 kind = PasField.Kind.STRUCT;
-                element = (PascalNamedElement) type;
             } else if (type.getClass() == PasArrayTypeImpl.class) {
                 kind = PasField.Kind.ARRAY;
                 baseType = retrieveAnonymousType(((PasArrayTypeImpl) type).getTypeDecl(), includeLibrary, ++recursionCount);
@@ -240,7 +238,7 @@ public class PasReferenceUtil {
                 kind = PasField.Kind.SUBRANGE;
             }
         }
-        return new PasField.ValueType(null, kind, baseType);
+        return new PasField.ValueType(null, kind, baseType, decl);
     }
 
     @Nullable

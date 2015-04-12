@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,13 +31,13 @@ public class PasField {
 
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
-    public static final ValueType INTEGER = new ValueType(null, Kind.INTEGER, null);
-    public static final ValueType FLOAT = new ValueType(null, Kind.FLOAT, null);
-    public static final ValueType STRING = new ValueType(null, Kind.STRING, null);
-    public static final ValueType BOOLEAN = new ValueType(null, Kind.BOOLEAN, null);
-    public static final ValueType POINTER = new ValueType(null, Kind.POINTER, null);
+    public static final ValueType INTEGER = new ValueType(null, Kind.INTEGER, null, null);
+    public static final ValueType FLOAT = new ValueType(null, Kind.FLOAT, null, null);
+    public static final ValueType STRING = new ValueType(null, Kind.STRING, null, null);
+    public static final ValueType BOOLEAN = new ValueType(null, Kind.BOOLEAN, null, null);
+    public static final ValueType POINTER = new ValueType(null, Kind.POINTER, null, null);
 
-    private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null);
+    private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null, null);
 
     public static boolean isAllowed(Visibility check, Visibility minAllowed) {
         return check.compareTo(minAllowed) >= 0;
@@ -138,8 +139,8 @@ public class PasField {
         while (type.baseType != null) {
             type = type.baseType;
         }
-        if ((type.field != null) && (type.field.element instanceof PasEntityScope)) {
-            return (PasEntityScope) type.field.element;
+        if ((type.declaration != null) && (type.declaration.getFirstChild() instanceof PasEntityScope)) {
+            return (PasEntityScope) type.declaration.getFirstChild();
         }
         return null;
     }
@@ -189,11 +190,14 @@ public class PasField {
         public Kind kind;
         // base type (TBaseType in TRefType = array of TBaseType)
         public ValueType baseType;
+        // type declaration element
+        public PasTypeDecl declaration;
 
-        public ValueType(PasField field, Kind kind, ValueType baseType) {
+        public ValueType(PasField field, Kind kind, ValueType baseType, PasTypeDecl declaration) {
             this.field = field;
             this.kind = kind;
             this.baseType = baseType;
+            this.declaration = declaration;
         }
 
         @Override
