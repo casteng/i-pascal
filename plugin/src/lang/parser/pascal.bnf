@@ -579,7 +579,7 @@ callExpr                    ::= Expr argumentList
 indexExpr                   ::= Expr indexList
 argumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
 ColonConstruct              ::= ':' Expr [':' Expr]
-indexList                   ::= '[' [ !']' Expr  (',' Expr) * ] ']' {pin(".*")=1}
+indexList                   ::= '[' Expr (',' Expr) * ']' {pin=1}
 parenExpr                   ::= '(' Expr ')'
 setExpr                     ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
 private setTail             ::= ("," | ".." | ) Expr //{}
