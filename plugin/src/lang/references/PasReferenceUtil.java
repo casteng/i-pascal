@@ -38,6 +38,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasStringTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubRangeTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
@@ -253,7 +254,7 @@ public class PasReferenceUtil {
                 field.setValueType(resolveFieldType(field, true, recursionCount));
             }
         }
-        return field.getTypeScope();
+        return field.getValueType() != null ? field.getValueType().getTypeScope() : null;
     }
 
     @Nullable
@@ -273,18 +274,39 @@ public class PasReferenceUtil {
         return null;
     }
 
+    public static Collection<PasField> resolveExpr(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {
+        PsiElement expr = fqn.getParentIdent().getParent();
+        expr = expr != null ? expr.getFirstChild() : null;
+        List<PasField.ValueType> types = Collections.emptyList();
+        if (expr instanceof PascalExpression) {
+            try {
+                types = PascalExpression.getType((PascalExpression) expr);
+            } catch (PasInvalidScopeException e) {
+            }
+        }
+        if (!types.isEmpty()) {
+            return resolve(types.get(types.size() - 1).getTypeScope(), fqn, fieldTypesOrig, includeLibrary, recursionCount);
+        } else {
+            return resolve(fqn, fieldTypesOrig, includeLibrary, recursionCount);
+        }
+
+    }
+
+    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {
+        return resolve(PsiUtil.getNearestAffectingScope(fqn.getParentIdent()), fqn, fieldTypesOrig, includeLibrary, recursionCount);
+    }
+
     /**
      *  for each entry in FQN before target:
      *    find entity corresponding to NS in current scope
      *    if the entity represents a namespace - retrieve and make current
      *  for namespace of target entry add all its entities
      */
-    public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {
+    private static Collection<PasField> resolve(PasEntityScope scope, final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {
         if (recursionCount > MAX_RECURSION_COUNT) {
             throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
         }
         // First entry in FQN
-        PasEntityScope scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
         Collection<PasField> result = new HashSet<PasField>();
 

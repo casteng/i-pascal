@@ -108,8 +108,8 @@ public class PasField {
     }
 
     public boolean isTypeResolved() {
-        return (valueType != NOT_INITIALIZED) &&
-               ((null == valueType.field) || (null == valueType.field.element) || (valueType.field.element.isValid()));
+        return (valueType != NOT_INITIALIZED);
+        //&& ((null == valueType.field) || (null == valueType.field.element) || (valueType.field.element.isValid()));
     }
 
     public boolean isInteger() {
@@ -122,27 +122,6 @@ public class PasField {
 
     public boolean isNumeric() {
         return isInteger() || isFloat();
-    }
-
-    @Nullable
-    public PasField getTypeField() {
-        return getValueType() != null ? getValueType().field : null;
-    }
-
-    // Searches all type chain for structured type
-    @Nullable
-    public PasEntityScope getTypeScope() {  //TODO: resolve unresolved types
-        ValueType type = getValueType();
-        if (null == type) {
-            return null;
-        }
-        while (type.baseType != null) {
-            type = type.baseType;
-        }
-        if ((type.declaration != null) && (type.declaration.getFirstChild() instanceof PasEntityScope)) {
-            return (PasEntityScope) type.declaration.getFirstChild();
-        }
-        return null;
     }
 
     public ValueType getValueType() {
@@ -205,6 +184,19 @@ public class PasField {
             return String.format("%s: %s (%s)", field != null ? field.name : "<anon>",
                     kind != null ? kind.name() : "-",
                     baseType != null ? (" of " + baseType.toString()) : "-");
+        }
+
+        // Searches all type chain for structured type
+        @Nullable
+        public PasEntityScope getTypeScope() {  //TODO: resolve unresolved types
+            ValueType type = this;
+            while (type.baseType != null) {
+                type = type.baseType;
+            }
+            if ((type.declaration != null) && (type.declaration.getFirstChild() instanceof PasEntityScope)) {
+                return (PasEntityScope) type.declaration.getFirstChild();
+            }
+            return null;
         }
 
     }
