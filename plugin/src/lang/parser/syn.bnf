@@ -425,11 +425,11 @@ ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefN
 RefNamedIdent       ::= identifier
 ClassPropertyDispInterface ::= "readonly" ";" | "writeonly" ";" | dispIDDirective
 
-ArrayType               ::= [PACKED] ARRAY [arrayIndexes] OF ArraySubType {pin=2}
+ArrayType               ::= [PACKED] ARRAY [arrayIndexes] OF arraySubType {pin=2}
 private arrayIndexes    ::= "[" [ArrayIndex] arrayIndexRest* "]" {pin=1}
 ArrayIndex              ::= SubRangeType | TypeID     //TODO: TypeID only?
 private arrayIndexRest  ::= "," [ArrayIndex] {pin=1}
-ArraySubType            ::= CONST | TypeDecl
+private arraySubType    ::= CONST | TypeDecl
 
 SetType             ::= [PACKED] SET OF TypeDecl {pin=2}
 FileType            ::= FILE [OF TypeDecl] {pin=1}
@@ -574,7 +574,7 @@ unaryOp                     ::= "+" | "-" | "@" | NOT
 ExpressionOrd               ::= Expression
 Expression                  ::= ClosureExpression | Expr
 
-Expr                        ::= relationalExpr | sumExpr | productExpr | unaryExpr | dereferenceExpr | referenceExpr | callGroup | primaryGroup {extends="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"}
+Expr                        ::= relationalExpr | sumExpr | productExpr | unaryExpr | referenceExpr | callGroup | primaryGroup {extends="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"}
 relationalExpr              ::= Expr relOp Expr
 sumExpr                     ::= Expr addOp Expr
 productExpr                 ::= Expr mulOp Expr
@@ -582,8 +582,8 @@ unaryExpr                   ::= unaryOp Expr
 dereferenceExpr             ::= Expr '^'
 referenceExpr               ::= Expr '.' FullyQualifiedIdent
 simpleRefExpr               ::= 'inherited'? FullyQualifiedIdent {elementType=referenceExpr}  // let qualified and simple references have the same type
-callExpr                    ::= referenceExpr argumentList
-indexExpr                   ::= referenceExpr indexList
+callExpr                    ::= Expr argumentList
+indexExpr                   ::= Expr indexList
 argumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
 ColonConstruct              ::= ':' Expr [':' Expr]
 indexList                   ::= '[' [ !']' Expr  (',' Expr) * ] ']' {pin(".*")=1}
@@ -591,7 +591,7 @@ parenExpr                   ::= '(' Expr ')'
 setExpr                     ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
 private setTail             ::= ("," | ".." | ) Expr //{}
 private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExpr
-private callGroup           ::= callExpr | indexExpr
+private callGroup           ::= callExpr | indexExpr | dereferenceExpr
 literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
 FormalParameterSection      ::= "(" [ FormalParameterList ] ")"

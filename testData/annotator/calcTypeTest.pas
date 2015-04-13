@@ -16,4 +16,7 @@ var
 
 implementation
 
+begin
+  arr[0][0]^[0].create();
+    //arr[0]^[0];
 end.
