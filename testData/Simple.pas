@@ -49,6 +49,11 @@ TEnum = (eOne, eTwo, eThree);
 
 implementation
 
+function GetRec: TRecord;
+begin
+
+end;
+
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
     Value: array[0..1] of TTest;
@@ -69,54 +74,18 @@ var
 begin
     out := 2+2*3+5-5/2;
     myclass.objpas;
-    Obj.Create(1, 2);
+    GetRec.Name2;
+    Obj^[0]^^[1].Create(1, 2);
     Value[0].MyProp.Create();
+    Value[0].r[0].Name2;
+    (Obj as TTest);
     Value.Create();
     v2.Create();
     v2.name2;
-    Value.r.CurrentValue := eThree <> (a=1);
-    Value.r.Create();
     a._AddRef;
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
     FMyInt := Value;
-end;
-
-Function RightStr (const AText: AnsiString; const ACount: Integer): AnsiString;
-const
-    cc: TCHelper = ();
-var
-    j: Integer;
-    i: TRecord;
-    c: CC2;
-begin
-    if ACount>i.Name2 then aStart := i+1;
-    j := length(ASubText);
-    c.Stat;
-    cc.DefaultValue;
-    k := i+1-AStart;
-    if ALength> k then
-        ALength := k;
-    SetLength(Result, i+j-ALength);
-    move(AText[1], result[1], AStart-1);
-    move(ASubText[1], result[AStart], j);
-    move(AText[AStart+ALength], Result[AStart+j], i+1-AStart-ALength);
-end;
-
-Function MidStr(const AText: AnsiString; const AStart, ACount: Integer): AnsiString;
-begin
-    with ResourceStringTable do begin
-        for i:=0 to Count-1 do begin
-            ResStr := Tables[I].TableStart;
-            // Skip first entry (name of the Unit) }
-            inc(ResStr);
-            while ResStr<Tables[I].TableEnd do
-            begin
-                ResStr^.CurrentValue := '';
-                inc(ResStr);
-            end;
-        end;
-    end;
 end;
 
 begin

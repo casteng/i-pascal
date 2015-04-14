@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
@@ -28,7 +29,8 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testExprType() throws Exception {
         myFixture.configureByFiles("structTypes.pas", "calcTypeTest.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(), myModule, "calcTypeTest");
-        PascalExpression expr = PsiTreeUtil.findChildOfType(mod, PascalExpression.class);
+        PasStatement stmt = PsiTreeUtil.findChildOfType(mod, PasStatement.class);
+        PascalExpression expr = PsiTreeUtil.findChildOfType(stmt, PascalExpression.class);
         PsiElement par = expr.getParent();
         par = par != null ? par.getFirstChild() : null;
         if (par instanceof PascalExpression) {

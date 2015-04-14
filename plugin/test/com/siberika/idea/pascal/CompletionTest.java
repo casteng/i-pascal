@@ -17,7 +17,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.complete(CompletionType.BASIC, 1);
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
-        assertEquals(Arrays.asList("a", "b", "c"), strings);
+        assertEquals(Arrays.asList("r1"), strings);
     }
 
 }
