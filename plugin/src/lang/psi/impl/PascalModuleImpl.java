@@ -152,7 +152,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                 new FieldCollector() {
                     @Override
                     public boolean fieldExists(PascalNamedElement element) {
-                        PasField existing = members.get(element.getName().toUpperCase());
+                        PasField existing = members.get(PsiUtil.getFieldName(element).toUpperCase());
                         if (existing != null) {
                             if (!PsiUtil.isForwardClassDecl(existing.element)) {         // Otherwise replace with full declaration
                                 redeclaredMembers.add(element);
@@ -165,7 +165,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
                     @Override
                     public void addField(String name, PasField field) {
                         PasField existing = members.get(field.name.toUpperCase());
-                        if (existing != null) {
+                        if (existing != null) {                                          // Additional check for
                             field.offset = existing.offset;
                         }
                         members.put(name.toUpperCase(), field);

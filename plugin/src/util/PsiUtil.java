@@ -24,7 +24,6 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameterList;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -220,7 +219,7 @@ public class PsiUtil {
     }
 
     public static boolean isRoutineName(@NotNull PascalNamedElement element) {
-        return (element.getParent() instanceof PasExportedRoutine) || (element.getParent() instanceof PascalRoutineImpl);
+        return element.getParent() instanceof PascalRoutineImpl;
     }
 
     public static boolean isUsedUnitName(@NotNull PascalNamedElement element) {
@@ -322,32 +321,6 @@ public class PsiUtil {
         return result;
     }
 
-    public static <T extends PascalNamedElement> void retrieveEntitiesFromSection(@NotNull PasEntityScope owner, PsiElement section, @NotNull PasField.Visibility visibility,
-                                                                                  FieldCollector fieldCollector, Class<? extends T>... classes) {
-        if (section != null) {
-            for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
-                if (isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
-                    if (!PsiUtil.isModuleName(namedElement) && !PsiUtil.isFormalParameterName(namedElement)) {
-                        String name = namedElement.getName();
-                        if (!fieldCollector.fieldExists(namedElement)) {
-                            PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
-                            if (PsiUtil.isTypeName(namedElement)) {
-                                fieldType = PasField.FieldType.TYPE;
-                            } else if (PsiUtil.isRoutineName(namedElement)) {
-                                fieldType = PasField.FieldType.ROUTINE;
-                            } else if (PsiUtil.isUsedUnitName(namedElement)) {
-                                fieldType = PasField.FieldType.UNIT;
-                            }
-                            fieldCollector.addField(name, new PasField(owner, namedElement, name, fieldType, visibility));
-                        }
-
-                    }
-                }
-            }
-            retrieveEntitiesFromSection(owner, PsiUtil.getNearestAffectingDeclarationsRoot(section), visibility, fieldCollector, classes);
-        }
-    }
-
     private static boolean isSameAffectingScope(PsiElement innerSection, PsiElement outerSection) {
         for (int i = 0; i < MAX_NON_BREAKING_NAMESPACES; i++) {
             if ((innerSection == outerSection) || sameModuleSections(innerSection, outerSection)) {
@@ -369,16 +342,13 @@ public class PsiUtil {
     @NotNull
     public static List<PasNamedIdent> getFormalParameters(PasFormalParameterSection paramsSection) {
         if (paramsSection != null) {
-            PasFormalParameterList paramList = paramsSection.getFormalParameterList();
-            if (paramList != null) {
-                List<PasNamedIdent> result = new SmartList<PasNamedIdent>();
-                for (PasFormalParameter parameter : paramList.getFormalParameterList()) {
-                    for (PasNamedIdent ident : parameter.getNamedIdentList()) {
-                        result.add(ident);
-                    }
+            List<PasNamedIdent> result = new SmartList<PasNamedIdent>();
+            for (PasFormalParameter parameter : paramsSection.getFormalParameterList()) {
+                for (PasNamedIdent ident : parameter.getNamedIdentList()) {
+                    result.add(ident);
                 }
-                return result;
             }
+            return result;
         }
         return Collections.emptyList();
     }
@@ -497,7 +467,7 @@ public class PsiUtil {
         for (PascalNamedElement namedElement : findChildrenOfAnyType(section, classes)) {
             if (isSameAffectingScope(getNearestAffectingDeclarationsRoot(namedElement), section)) {
                 if (!isFormalParameterName(namedElement) && !isUsedUnitName(namedElement)) {
-                    String name = namedElement.getName();
+                    String name = getFieldName(namedElement);
                     if (!fieldCollector.fieldExists(namedElement)) {
                         PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
                         if (isTypeName(namedElement)) {
@@ -507,7 +477,7 @@ public class PsiUtil {
                         } else if (isConstDecl(namedElement) || isEnumDecl(namedElement)) {
                             fieldType = PasField.FieldType.CONSTANT;
                         }
-                        fieldCollector.addField(name, new PasField(owner, namedElement, name, fieldType, visibility));
+                        fieldCollector.addField(name, new PasField(owner, namedElement, namedElement.getName(), fieldType, visibility));
                     }
                 }
             }
@@ -602,5 +572,15 @@ public class PsiUtil {
 
     public static long getFileStamp(PsiFile file) {
         return file != null ? file.getModificationStamp() : -2;
+    }
+
+    public static String getFieldName(PascalNamedElement element) {
+        String name = element.getName();
+        if (isRoutineName(element)) {
+            PascalRoutineImpl routine = (PascalRoutineImpl) element.getParent();
+            PasFormalParameterSection params = routine.getFormalParameterSection();
+            name = name + (params != null ? params.getText() : "()");
+        }
+        return name;
     }
 }

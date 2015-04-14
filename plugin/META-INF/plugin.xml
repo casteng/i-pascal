@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.83</version>
+    <version>0.85</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,11 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.85</p>
+        <ul>
+          <li>resolving of indentifiers within complex expressions</li>
+          <li>routine parameters info display</li>
+        </ul>
         <p>0.83</p>
         <ul>
           <li>expressions parser</li>

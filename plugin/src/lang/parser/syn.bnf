@@ -595,7 +595,7 @@ private callGroup           ::= callExpr | indexExpr | dereferenceExpr
 literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
 FormalParameterSection      ::= "(" [ FormalParameterList ] ")"
-FormalParameterList         ::= FormalParameter (";" FormalParameter)*
+private FormalParameterList ::= FormalParameter (";" FormalParameter)*
 FormalParameter             ::= [ CustomAttribute ] [ ParamType ] identList [ ":" TypeDecl ] [ "=" Expression ]
 ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 

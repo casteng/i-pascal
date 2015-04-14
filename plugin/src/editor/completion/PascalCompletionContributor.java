@@ -156,9 +156,10 @@ public class PascalCompletionContributor extends CompletionContributor {
                 Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
                 Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
                 for (PasField field : entities) {
-                    if (!nameSet.contains(field.name.toUpperCase())) {
+                    String name = getFieldName(field).toUpperCase();
+                    if (!nameSet.contains(name)) {
                         lookupElements.add(getLookupElement(field));
-                        nameSet.add(field.name.toUpperCase());
+                        nameSet.add(name);
                     }
                 }
                 result.caseInsensitive().addAllElements(lookupElements);
@@ -174,6 +175,14 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         });
 
+    }
+
+    private static String getFieldName(PasField field) {
+        if ((field.fieldType == PasField.FieldType.ROUTINE) && (field.element != null)) {
+            return PsiUtil.getFieldName(field.element);
+        } else {
+            return field.name;
+        }
     }
 
     private static void handleUses(CompletionResultSet result, @NotNull PsiElement pos) {
@@ -200,9 +209,13 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private LookupElement getLookupElement(@NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        LookupElementBuilder lookupElement = ((field.element != null) && StringUtils.isEmpty(field.name)) ? LookupElementBuilder.create(field.element) : LookupElementBuilder.create(field.name);
+        LookupElementBuilder lookupElement = ((field.element != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE))) ? createLookupElement(field.element) : LookupElementBuilder.create(field.name);
         return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(false).withTypeText(scope, false);
+    }
+
+    private LookupElementBuilder createLookupElement(PascalNamedElement element) {
+        return LookupElementBuilder.create(element).withPresentableText(PsiUtil.getFieldName(element));
     }
 
     private boolean isQualifiedIdent(PsiElement parent) {
