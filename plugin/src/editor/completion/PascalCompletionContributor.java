@@ -64,6 +64,7 @@ import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -231,7 +232,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
         namespace.clearTarget();
-        result.addAll(PasReferenceUtil.resolve(namespace, fieldTypes, extendedCompletion, 0));
+        result.addAll(PasReferenceUtil.resolveExpr(namespace, fieldTypes, extendedCompletion, 0));
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
@@ -255,7 +256,8 @@ public class PascalCompletionContributor extends CompletionContributor {
     private static PsiElement skipToExpressionParent(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
                 PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class,
-                PasStmtSimpleOrAssign.class, PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class);
+                PasStmtSimpleOrAssign.class, PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class,
+                PascalExpression.class);
     }
 
     private static boolean posIs(PsiElement originalPos, PsiElement pos, Class<? extends PsiElement>...classes) {

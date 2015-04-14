@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
@@ -36,11 +37,16 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return PsiUtil.findImmChildOfAnyType(this, PascalOperation.class);
     }
 
-    // arr[0][0]^[0].create();
     public static List<PasField.ValueType> getType(PascalExpression expr) throws PasInvalidScopeException {
         List<PasField.ValueType> res = new SmartList<PasField.ValueType>();
+
+        PsiElement chld = expr.getFirstChild();
+        if (chld instanceof PascalExpression) {
+            res = PascalExpression.getType((PascalExpression) chld);
+        }
+
         if (expr instanceof PasReferenceExpr) {
-            final Collection<PasField> references = PasReferenceUtil.resolve(
+            final Collection<PasField> references = PasReferenceUtil.resolve(retrieveScope(res),
                     NamespaceRec.fromElement(((PasReferenceExpr) expr).getFullyQualifiedIdent()), PasField.TYPES_ALL, true, 0);
             if (!references.isEmpty()) {
                 PasField field = references.iterator().next();
@@ -53,12 +59,18 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             res.add(new PasField.ValueType(null, PasField.Kind.ARRAY, null, null));
         }
 
-        PsiElement chld = expr.getFirstChild();
-        if (chld instanceof PascalExpression) {
-            res.addAll(PascalExpression.getType((PascalExpression) chld));
+        return res;
+    }
+
+    public static PasEntityScope retrieveScope(List<PasField.ValueType> types) {
+        PasField.ValueType newScope = null;
+        for (PasField.ValueType type : types) {
+            if (type.field != null) {
+                newScope = type;
+            }
         }
 
-        return res;
+        return newScope != null ? newScope.getTypeScope() : null;
     }
 
 }

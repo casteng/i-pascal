@@ -285,7 +285,7 @@ public class PasReferenceUtil {
             }
         }
         if (!types.isEmpty()) {
-            return resolve(types.get(types.size() - 1).getTypeScope(), fqn, fieldTypesOrig, includeLibrary, recursionCount);
+            return resolve(PascalExpression.retrieveScope(types), fqn, fieldTypesOrig, includeLibrary, recursionCount);
         } else {
             return resolve(fqn, fieldTypesOrig, includeLibrary, recursionCount);
         }
@@ -302,9 +302,12 @@ public class PasReferenceUtil {
      *    if the entity represents a namespace - retrieve and make current
      *  for namespace of target entry add all its entities
      */
-    private static Collection<PasField> resolve(PasEntityScope scope, final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {
+    public static Collection<PasField> resolve(PasEntityScope scope, final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {
         if (recursionCount > MAX_RECURSION_COUNT) {
             throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
+        }
+        if (null == scope) {
+            scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
         }
         // First entry in FQN
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();

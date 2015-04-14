@@ -39,7 +39,7 @@ public class PascalAnnotator implements Annotator {
     public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
         if (PsiUtil.isEntityName(element)) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
-            Collection<PasField> refs = PasReferenceUtil.resolve(NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
+            Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
             if (refs.isEmpty()) {
                 Annotation ann = holder.createErrorAnnotation(element, "Undeclared identifier");
                 String name = namedElement.getName();
