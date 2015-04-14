@@ -30,5 +30,6 @@ begin
   //arr[0][0]^[0].create();
     //arr[0]^[0];
   arr1^.arrInRec[0].innerField;
-  (TOuterRec).arrInRec;
+  //(TOuterRec).arrInRec;
+  (int as TOuterRec).arrInRec;
 end.

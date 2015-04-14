@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
@@ -10,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -40,12 +42,8 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     public static List<PasField.ValueType> getType(PascalExpression expr) throws PasInvalidScopeException {
         List<PasField.ValueType> res = new SmartList<PasField.ValueType>();
 
-        PsiElement chld = expr.getFirstChild();
-        if (chld instanceof PascalExpression) {
-            res = PascalExpression.getType((PascalExpression) chld);
-        }
-
         if (expr instanceof PasReferenceExpr) {
+            res = getChildType(getFirstChild(expr));
             final Collection<PasField> references = PasReferenceUtil.resolve(retrieveScope(res),
                     NamespaceRec.fromElement(((PasReferenceExpr) expr).getFullyQualifiedIdent()), PasField.TYPES_ALL, true, 0);
             if (!references.isEmpty()) {
@@ -54,11 +52,40 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                 res.add(field.getValueType());
             }
         } else if (expr instanceof PasDereferenceExpr) {
+            res = getChildType(getFirstChild(expr));
             res.add(new PasField.ValueType(null, PasField.Kind.POINTER, null, null));
         } else if (expr instanceof PasIndexExpr) {
+            res = getChildType(getFirstChild(expr));
             res.add(new PasField.ValueType(null, PasField.Kind.ARRAY, null, null));
+        } else if (expr instanceof PasProductExpr) {                                      // AS operator case
+            res = getChildType(getLastChild(expr));
+        } else {
+            res = getChildType(getFirstChild(expr));
         }
 
+        return res;
+    }
+
+    private static List<PasField.ValueType> getChildType(PsiElement child) throws PasInvalidScopeException {
+        if (child instanceof PascalExpression) {
+            return PascalExpression.getType((PascalExpression) child);
+        }
+        return new SmartList<PasField.ValueType>();
+    }
+
+    private static PsiElement getFirstChild(PascalExpression expr) {
+        PsiElement res = expr.getFirstChild();
+        while ((res != null) && (res.getClass() == LeafPsiElement.class)) {
+            res = res.getNextSibling();
+        }
+        return res;
+    }
+
+    private static PsiElement getLastChild(PascalExpression expr) {
+        PsiElement res = expr.getLastChild();
+        while ((res != null) && (res.getClass() == LeafPsiElement.class)) {
+            res = res.getPrevSibling();
+        }
         return res;
     }
 
