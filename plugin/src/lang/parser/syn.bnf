@@ -581,13 +581,14 @@ productExpr                 ::= Expr mulOp Expr
 unaryExpr                   ::= unaryOp Expr
 dereferenceExpr             ::= Expr '^'
 referenceExpr               ::= Expr '.' FullyQualifiedIdent
-simpleRefExpr               ::= 'inherited'? FullyQualifiedIdent {elementType=referenceExpr}  // let qualified and simple references have the same type
+simpleRefExpr               ::= (INHERITED? FullyQualifiedIdent) | INHERITED {elementType=referenceExpr}  // let qualified and simple references have the same type
 callExpr                    ::= Expr argumentList
 indexExpr                   ::= Expr indexList
 argumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
+private parenConstruct      ::= '(' [ !')' Expr (',' Expr) * ] ')' {pin(".*")=1}
 ColonConstruct              ::= ':' Expr [':' Expr]
 indexList                   ::= '[' Expr (',' Expr) * ']' {pin=1}
-parenExpr                   ::= '(' Expr ')'
+parenExpr                   ::= parenConstruct
 setExpr                     ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
 private setTail             ::= ("," | ".." | ) Expr //{}
 private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExpr
