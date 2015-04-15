@@ -31,4 +31,8 @@
     <routine>SetString</routine>
     <routine>New</routine>
     <routine>Dispose</routine>
+    <routine>AssignFile</routine>
+    <routine>CloseFile</routine>
+    <routine>Finalize</routine>
+    <routine>Initialize</routine>
 </builtins>
