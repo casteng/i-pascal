@@ -40,7 +40,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     public static List<PasField.ValueType> getType(PascalExpression expr) throws PasInvalidScopeException {
-        List<PasField.ValueType> res = new SmartList<PasField.ValueType>();
+        List<PasField.ValueType> res;
 
         if (expr instanceof PasReferenceExpr) {
             res = getChildType(getFirstChild(expr));
@@ -49,7 +49,10 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             if (!references.isEmpty()) {
                 PasField field = references.iterator().next();
                 PasReferenceUtil.retrieveFieldTypeScope(field);
-                res.add(field.getValueType());
+                PasField.ValueType fieldType = field.getValueType();
+                if (fieldType != null) {
+                    res.add(fieldType);
+                }
             }
         } else if (expr instanceof PasDereferenceExpr) {
             res = getChildType(getFirstChild(expr));

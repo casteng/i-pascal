@@ -6,15 +6,12 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import com.siberika.idea.pascal.util.FieldCollector;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,26 +65,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             addField(parameter, PasField.FieldType.VARIABLE);
         }
 
-        //noinspection unchecked
-        PsiUtil.processEntitiesInSection(this, this, PasField.Visibility.STRICT_PRIVATE,
-                new FieldCollector() {
-                    @Override
-                    public boolean fieldExists(PascalNamedElement element) {
-                        if (members.containsKey(element.getName().toUpperCase())) {
-                            redeclaredMembers.add(element);
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
+        collectFields(this, PasField.Visibility.STRICT_PRIVATE, members, redeclaredMembers);
 
-                    @Override
-                    public void addField(String name, PasField field) {
-                        members.put(name.toUpperCase(), field);
-                    }
-                },
-                PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class
-        );
         if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
             members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.VARIABLE, PasField.Visibility.STRICT_PRIVATE));
         }

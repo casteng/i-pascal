@@ -45,7 +45,6 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRefNamedIdentImpl;
@@ -321,7 +320,7 @@ public class PsiUtil {
         return result;
     }
 
-    private static boolean isSameAffectingScope(PsiElement innerSection, PsiElement outerSection) {
+    public static boolean isSameAffectingScope(PsiElement innerSection, PsiElement outerSection) {
         for (int i = 0; i < MAX_NON_BREAKING_NAMESPACES; i++) {
             if ((innerSection == outerSection) || sameModuleSections(innerSection, outerSection)) {
                 return true;
@@ -402,7 +401,7 @@ public class PsiUtil {
     }
 
     // Checks if the entityDecl is a declaration of an enumeration constant
-    private static boolean isEnumDecl(PascalNamedElement entityDecl) {
+    public static boolean isEnumDecl(PascalNamedElement entityDecl) {
         return (entityDecl.getParent() instanceof PasEnumType);
     }
 
@@ -456,33 +455,6 @@ public class PsiUtil {
     }
 
 //--------------------------------------------------------------------------------------------------------------
-
-    // Processes specified section's childs
-    public static <T extends PascalNamedElement> void processEntitiesInSection(@NotNull PasEntityScope owner, PsiElement section,
-                                                                               @NotNull PasField.Visibility visibility, FieldCollector fieldCollector,
-                                                                               Class<? extends T>... classes) {
-        if (null == section) {
-            return;
-        }
-        for (PascalNamedElement namedElement : findChildrenOfAnyType(section, classes)) {
-            if (isSameAffectingScope(getNearestAffectingDeclarationsRoot(namedElement), section)) {
-                if (!isFormalParameterName(namedElement) && !isUsedUnitName(namedElement)) {
-                    String name = getFieldName(namedElement);
-                    if (!fieldCollector.fieldExists(namedElement)) {
-                        PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
-                        if (isTypeName(namedElement)) {
-                            fieldType = PasField.FieldType.TYPE;
-                        } else if (isRoutineName(namedElement)) {
-                            fieldType = PasField.FieldType.ROUTINE;
-                        } else if (isConstDecl(namedElement) || isEnumDecl(namedElement)) {
-                            fieldType = PasField.FieldType.CONSTANT;
-                        }
-                        fieldCollector.addField(name, new PasField(owner, namedElement, namedElement.getName(), fieldType, visibility));
-                    }
-                }
-            }
-        }
-    }
 
     public static boolean isFromSystemUnit(PsiElement element) {
         return "$system.pas".equalsIgnoreCase(element.getContainingFile().getName());

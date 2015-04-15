@@ -6,13 +6,10 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import com.siberika.idea.pascal.util.FieldCollector;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +28,7 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 14/09/2013
  */
-public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntityScope {
+public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
 
     public static final Logger LOG = Logger.getInstance(PascalModuleImpl.class.getName());
 
@@ -91,7 +88,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         if (null == section) section = this;
         if (!PsiUtil.checkeElement(section)) return;
 
-        collectFields(section, privateMembers, redeclaredPrivateMembers);
+        collectFields(section, PasField.Visibility.PRIVATE, privateMembers, redeclaredPrivateMembers);
 
         privateUnits = retrieveUsedUnits(section);
         for (PasEntityScope unit : privateUnits) {
@@ -135,7 +132,7 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
         if (null == section) return;
         if (!PsiUtil.checkeElement(section)) return;
 
-        collectFields(section, publicMembers, redeclaredPublicMembers);
+        collectFields(section, PasField.Visibility.PRIVATE, publicMembers, redeclaredPublicMembers);
 
         publicUnits = retrieveUsedUnits(section);
         for (PasEntityScope unit : publicUnits) {
@@ -144,34 +141,6 @@ public class PascalModuleImpl extends PascalNamedElementImpl implements PasEntit
 
         buildPublicStamp = PsiUtil.getFileStamp(getContainingFile());
         //System.out.println(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
-    }
-
-    @SuppressWarnings("unchecked")
-    private void collectFields(PsiElement section, final Map<String, PasField> members, final Set<PascalNamedElement> redeclaredMembers) {
-        PsiUtil.processEntitiesInSection(this, section, PasField.Visibility.PRIVATE,
-                new FieldCollector() {
-                    @Override
-                    public boolean fieldExists(PascalNamedElement element) {
-                        PasField existing = members.get(PsiUtil.getFieldName(element).toUpperCase());
-                        if (existing != null) {
-                            if (!PsiUtil.isForwardClassDecl(existing.element)) {         // Otherwise replace with full declaration
-                                redeclaredMembers.add(element);
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-
-                    @Override
-                    public void addField(String name, PasField field) {
-                        PasField existing = members.get(field.name.toUpperCase());
-                        if (existing != null) {                                          // Additional check for
-                            field.offset = existing.offset;
-                        }
-                        members.put(name.toUpperCase(), field);
-                    }
-                },
-                PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class);
     }
 
     private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {

@@ -277,19 +277,16 @@ public class PasReferenceUtil {
     public static Collection<PasField> resolveExpr(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {
         PsiElement expr = fqn.getParentIdent().getParent();
         expr = expr != null ? expr.getFirstChild() : null;
-        List<PasField.ValueType> types = Collections.emptyList();
         if (expr instanceof PascalExpression) {
             try {
-                types = PascalExpression.getType((PascalExpression) expr);
+                List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) expr);
+                if (!types.isEmpty()) {
+                    return resolve(PascalExpression.retrieveScope(types), fqn, fieldTypesOrig, includeLibrary, recursionCount);
+                }
             } catch (PasInvalidScopeException e) {
             }
         }
-        if (!types.isEmpty()) {
-            return resolve(PascalExpression.retrieveScope(types), fqn, fieldTypesOrig, includeLibrary, recursionCount);
-        } else {
-            return resolve(fqn, fieldTypesOrig, includeLibrary, recursionCount);
-        }
-
+        return resolve(fqn, fieldTypesOrig, includeLibrary, recursionCount);
     }
 
     public static Collection<PasField> resolve(final NamespaceRec fqn, Set<PasField.FieldType> fieldTypesOrig, boolean includeLibrary, int recursionCount) {

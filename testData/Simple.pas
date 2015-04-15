@@ -3,7 +3,7 @@ unit Simple;
 interface
 
 uses
-    SysUtils, StrUtils, unitTest1,
+    SysUtils, unitTest1,
     //aaa
     objpas, myclass;
 
@@ -44,14 +44,15 @@ TEnum = (eOne, eTwo, eThree);
     TStringSeachOption = TStringSearchOption;
 
     Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; inline;
-    Function RightStr(const AText: AnsiString; const ACount: Integer): AnsiString; register;
-    Function MidStr(const AText: AnsiString; const AStart, ACount: Integer): AnsiString; inline;
+    //Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register;
+    Function LeftStr(const AText: AnsiString; const AStart, ACount: Integer): AnsiString; inline;
+    Function LeftStr: a;
 
 implementation
 
 function GetRec: TRecord;
 begin
-
+    leftstr
 end;
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
@@ -89,4 +90,5 @@ begin
 end;
 
 begin
+
 end.

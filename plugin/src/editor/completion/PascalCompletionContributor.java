@@ -209,9 +209,13 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private LookupElement getLookupElement(@NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        LookupElementBuilder lookupElement = ((field.element != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE))) ? createLookupElement(field.element) : LookupElementBuilder.create(field.name);
+        LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(field.element) : LookupElementBuilder.create(field.name);
         return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(false).withTypeText(scope, false);
+    }
+
+    private static boolean buildFromElement(@NotNull PasField field) {
+        return (field.element != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE));
     }
 
     private LookupElementBuilder createLookupElement(PascalNamedElement element) {

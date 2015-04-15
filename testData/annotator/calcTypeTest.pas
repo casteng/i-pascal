@@ -12,6 +12,20 @@ type
     arrInRec: array of TInnerRec;
   end;
   TArr = array[0..1] of TOuterRec;
+
+
+type
+TTypeKind = (V1, V2);
+  TTypeInfo = record
+    Kind: TTypeKind;
+  end;
+type
+  PTypeInfo = ^TTypeInfo;
+type
+  TPropInfo = record
+    PropType: PTypeInfo;
+  end;
+
 var
   int: Integer;
   arr: TArray;
@@ -26,10 +40,13 @@ var
 
 implementation
 
+var
+  PropInfo: TPropInfo;
 begin
   //arr[0][0]^[0].create();
     //arr[0]^[0];
   arr1^.arrInRec[0].innerField;
   //(TOuterRec).arrInRec;
   (int as TOuterRec).arrInRec;
+  PropInfo^.PropType^.Kind
 end.
