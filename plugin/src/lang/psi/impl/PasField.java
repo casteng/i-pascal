@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +22,7 @@ public class PasField {
 
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY}
 
-    public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, STRING}
+    public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY}
 
     public static final Set<FieldType> TYPES_ALL = new HashSet<FieldType>(Arrays.asList(FieldType.values()));
     public static final Set<FieldType> TYPES_LEFT_SIDE = new HashSet<FieldType>(Arrays.asList(FieldType.UNIT, FieldType.VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE));
@@ -30,13 +31,13 @@ public class PasField {
 
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
-    public static final ValueType INTEGER = new ValueType(null, Kind.INTEGER);
-    public static final ValueType FLOAT = new ValueType(null, Kind.FLOAT);
-    public static final ValueType STRING = new ValueType(null, Kind.STRING);
-    public static final ValueType BOOLEAN = new ValueType(null, Kind.BOOLEAN);
-    public static final ValueType POINTER = new ValueType(null, Kind.POINTER);
+    public static final ValueType INTEGER = new ValueType(null, Kind.INTEGER, null, null);
+    public static final ValueType FLOAT = new ValueType(null, Kind.FLOAT, null, null);
+    public static final ValueType STRING = new ValueType(null, Kind.STRING, null, null);
+    public static final ValueType BOOLEAN = new ValueType(null, Kind.BOOLEAN, null, null);
+    public static final ValueType POINTER = new ValueType(null, Kind.POINTER, null, null);
 
-    private static final ValueType NOT_INITIALIZED = new ValueType(null, null);
+    private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null, null);
 
     public static boolean isAllowed(Visibility check, Visibility minAllowed) {
         return check.compareTo(minAllowed) >= 0;
@@ -107,25 +108,20 @@ public class PasField {
     }
 
     public boolean isTypeResolved() {
-        return (valueType != NOT_INITIALIZED) &&
-               ((null == valueType.field) || (null == valueType.field.element) || (valueType.field.element.isValid()));
+        return (valueType != NOT_INITIALIZED);
+        //&& ((null == valueType.field) || (null == valueType.field.element) || (valueType.field.element.isValid()));
     }
 
     public boolean isInteger() {
-        return (valueType != null) && (valueType.kind == Kind.INTEGER);
+        return (getValueType() != null) && (valueType.kind == Kind.INTEGER);
     }
 
     public boolean isFloat() {
-        return (valueType != null) && (valueType.kind == Kind.FLOAT);
+        return (getValueType() != null) && (valueType.kind == Kind.FLOAT);
     }
 
     public boolean isNumeric() {
         return isInteger() || isFloat();
-    }
-
-    @Nullable
-    public PasField getTypeField() {
-        return valueType != null ? valueType.field : null;
     }
 
     public ValueType getValueType() {
@@ -136,14 +132,73 @@ public class PasField {
         this.valueType = valueType;
     }
 
-    public static class ValueType {
-        private final PasField field;
-        private final Kind kind;
+    public static ValueType getValueType(String name) {
+        Kind kind = getKindByName(name);
+        if (null == kind) {
+            return null;
+        }
+        switch (kind) {
+            case BOOLEAN:
+                return BOOLEAN;
+            case INTEGER:
+                return INTEGER;
+            case FLOAT:
+                return FLOAT;
+            case POINTER:
+                return POINTER;
+            case STRING:
+                return STRING;
+            default:
+                return null;
+        }
+    }
 
-        private ValueType(PasField field, Kind kind) {
+    private static Kind getKindByName(String value) {
+        for (Kind kind : Kind.values()) {
+            if (kind.name().equalsIgnoreCase(value)) {
+                return kind;
+            }
+        }
+        return null;
+    }
+
+    public static class ValueType {
+        // referenced type field (TRefType in type TValueType = TRefType)
+        public PasField field;
+        // additional information about type
+        public Kind kind;
+        // base type (TBaseType in TRefType = array of TBaseType)
+        public ValueType baseType;
+        // type declaration element
+        public PasTypeDecl declaration;
+
+        public ValueType(PasField field, Kind kind, ValueType baseType, PasTypeDecl declaration) {
             this.field = field;
             this.kind = kind;
+            this.baseType = baseType;
+            this.declaration = declaration;
         }
+
+        @Override
+        public String toString() {
+            return String.format("%s: %s (%s)", field != null ? field.name : "<anon>",
+                    kind != null ? kind.name() : "-",
+                    baseType != null ? (" of " + baseType.toString()) : "-");
+        }
+
+        // Searches all type chain for structured type
+        @Nullable
+        public PasEntityScope getTypeScope() {  //TODO: resolve unresolved types
+            ValueType type = this;
+            while (type.baseType != null) {
+                type = type.baseType;
+            }
+            if ((type.declaration != null) && (type.declaration.getFirstChild() instanceof PasEntityScope)) {
+                return (PasEntityScope) type.declaration.getFirstChild();
+            }
+            return null;
+        }
+
     }
 
 }

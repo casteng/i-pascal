@@ -40,17 +40,20 @@ public class PascalBlock extends AbstractBlock implements Block {
 
     private static final TokenSet TOKENS_PARENT_INDENTED = TokenSet.create(PasTypes.STATEMENT, PasTypes.VAR_DECLARATION, PasTypes.CONST_DECLARATION, PasTypes.TYPE_DECLARATION,
             PasTypes.CLASS_TYPE_DECL, PasTypes.RECORD_DECL, PasTypes.OBJECT_DECL, PasTypes.CLASS_HELPER_DECL, PasTypes.INTERFACE_TYPE_DECL, PasTypes.RECORD_HELPER_DECL,
-            PasTypes.CLASS_FIELD, PasTypes.EXPORTED_ROUTINE, PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD, PasTypes.CLASS_METHOD_RESOLUTION, PasTypes.USES_CLAUSE, PasTypes.RECORD_VARIANT,
-            PasTypes.ENUM_TYPE);
+            PasTypes.CLASS_FIELD, PasTypes.EXPORTED_ROUTINE, PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD_RESOLUTION, PasTypes.USES_CLAUSE, PasTypes.RECORD_VARIANT,
+            PasTypes.ENUM_TYPE, PasTypes.TYPE_DECL, PasTypes.FORMAL_PARAMETER_SECTION, PasTypes.FORMAL_PARAMETER,
+            PasTypes.ARRAY_TYPE, PasTypes.SUB_RANGE_TYPE,
+            PasTypes.ARGUMENT_LIST, PasTypes.ASSIGN_PART);
 
-    private static final TokenSet TOKENS_NO_LF_AFTER_SEMI = TokenSet.create(PasTypes.FORMAL_PARAMETER_LIST, PasTypes.EXPORTED_ROUTINE, PasTypes.METHOD_IMPL_DECL,
+    private static final TokenSet TOKENS_NO_LF_AFTER_SEMI = TokenSet.create(PasTypes.FORMAL_PARAMETER_SECTION, PasTypes.EXPORTED_ROUTINE,
             PasTypes.CLASS_PROPERTY_SPECIFIER, PasTypes.PROCEDURE_REFERENCE);
 
     private static final TokenSet TOKENS_COMMENT = TokenSet.create(PasTypes.COMMENT, PasTypes.CT_DEFINE, PasTypes.CT_ELSE, PasTypes.CT_ENDIF, PasTypes.CT_IF,
             PasTypes.CT_IFDEF, PasTypes.CT_IFNDEF, PasTypes.CT_IFOPT, PasTypes.CT_UNDEFINE);
 
     private static final TokenSet TOKENS_ENTER_INDENTED =
-            TokenSet.create(PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION, PasTypes.USES_CLAUSE, PasTypes.COMPOUND_STATEMENT);
+            TokenSet.create(PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION, PasTypes.USES_CLAUSE,
+                    PasTypes.COMPOUND_STATEMENT, PasTypes.SUM_EXPR, PasTypes.FULLY_QUALIFIED_IDENT, PasTypes.STATEMENT);
 
     private static final TokenSet TOKEN_COMMENT_NORMALINDENT = TokenSet.create(PasTypes.COMPOUND_STATEMENT, PasTypes.USES_CLAUSE);
 
@@ -160,11 +163,9 @@ public class PascalBlock extends AbstractBlock implements Block {
         ASTNode prev = childNode.getTreePrev();
         if (prev instanceof PsiWhiteSpace) {
             String text = prev.getText();
-            if (text != null) {
-                int pos = Math.min(text.length(), text.length() - text.lastIndexOf('\n') - 1);
-                System.out.println(String.format("WS text: \"%s\", ind: %d", text, pos));
-                return pos;
-            }
+            int pos = Math.min(text.length(), text.length() - text.lastIndexOf('\n') - 1);
+            System.out.println(String.format("WS text: \"%s\", ind: %d", text, pos));
+            return pos;
         }
         return 0;
     }

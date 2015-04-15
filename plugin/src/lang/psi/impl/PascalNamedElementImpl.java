@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.PascalReference;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
     private static final int MAX_SHORT_TEXT_LENGTH = 32;
     private volatile String myCachedName;
+    private static final TokenSet NAMED_SET = TokenSet.create(PasTypes.NAME, PasTypes.KEYWORD_IDENT);
 
     public PascalNamedElementImpl(ASTNode node) {
         super(node);
@@ -72,10 +74,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         }
         PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
         if (null == result) {
-            result = findChildByType(PasTypes.IDENT_KW);
-        }
-        if (null == result) {
-            result = findChildByType(PasTypes.NAME);
+            result = findChildByType(NAMED_SET);
         }
         if (null == result) {
             PascalNamedElement namedChild = PsiTreeUtil.findChildOfType(this, PascalNamedElement.class);

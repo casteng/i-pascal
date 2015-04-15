@@ -6,15 +6,12 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import com.siberika.idea.pascal.util.FieldCollector;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,23 +28,16 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 06/09/2013
  */
-public abstract class PascalRoutineImpl extends PascalNamedElementImpl implements PasEntityScope {
+public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntityScope, PasDeclSection {
     public static final String BUILTIN_RESULT = "Result";
     private Map<String, PasField> members;
     private Set<PascalNamedElement> redeclaredMembers = null;
-    private long buildStamp = 0;
-    //private List<PasFormalParameter> formalParameters;
-    private List<PasEntityScope> parentScopes;
 
     @Nullable
     public abstract PasFormalParameterSection getFormalParameterSection();
 
     public PascalRoutineImpl(ASTNode node) {
         super(node);
-    }
-
-    public boolean isInterface() {
-        return (getClass() == PasExportedRoutineImpl.class) || (getClass() == PasClassMethodImpl.class);
     }
 
     @Nullable
@@ -65,7 +55,7 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
             return;
         }
         if (isCacheActual(members, buildStamp)) { return; }  // TODO: check correctness
-        buildStamp = getContainingFile().getModificationStamp();
+        buildStamp = PsiUtil.getFileStamp(getContainingFile());;
         members = new LinkedHashMap<String, PasField>();
 
         redeclaredMembers = new LinkedHashSet<PascalNamedElement>();
@@ -75,28 +65,10 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
             addField(parameter, PasField.FieldType.VARIABLE);
         }
 
-        //noinspection unchecked
-        PsiUtil.processEntitiesInSection(this, this, PasField.Visibility.STRICT_PRIVATE,
-                new FieldCollector() {
-                    @Override
-                    public boolean fieldExists(PascalNamedElement element) {
-                        if (members.containsKey(element.getName().toUpperCase())) {
-                            redeclaredMembers.add(element);
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
+        collectFields(this, PasField.Visibility.STRICT_PRIVATE, members, redeclaredMembers);
 
-                    @Override
-                    public void addField(String name, PasField field) {
-                        members.put(name.toUpperCase(), field);
-                    }
-                },
-                PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class
-        );
         if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
-            members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE));
+            members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.VARIABLE, PasField.Visibility.STRICT_PRIVATE));
         }
         //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
@@ -115,28 +87,22 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         return members.values();
     }
 
-    private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {
-        if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
-        }
-        return (cache != null) && (getContainingFile() != null) && (getContainingFile().getModificationStamp() == stamp);
-    }
-
-    public PasFullyQualifiedIdent getFunctionTypeIdent() {
+    public PasTypeID getFunctionTypeIdent() {
         PasTypeDecl type = PsiTreeUtil.getChildOfType(this, PasTypeDecl.class);
-        return PsiTreeUtil.findChildOfType(type, PasFullyQualifiedIdent.class);
+        return PsiTreeUtil.findChildOfType(type, PasTypeID.class);
     }
 
     @NotNull
     @Override
-    synchronized public List<PasEntityScope> getParentScope() {
-        if (null == parentScopes) {
+    synchronized public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
+        if (!isCacheActual(parentScopes, parentBuildStamp)) {
             buildParentScopes();
         }
         return parentScopes;
     }
 
     private void buildParentScopes() {
+        parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());;
         PasClassQualifiedIdent ident = PsiTreeUtil.getChildOfType(this, PasClassQualifiedIdent.class);
         if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
             NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
@@ -148,12 +114,6 @@ public abstract class PascalRoutineImpl extends PascalNamedElementImpl implement
         } else {
             parentScopes = Collections.emptyList();
         }
-    }
-
-    @Nullable
-    @Override
-    public PasEntityScope getOwnerScope() throws PasInvalidScopeException {
-        return PsiUtil.getElementPasModule(this);
     }
 
     @Override

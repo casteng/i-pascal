@@ -28,7 +28,6 @@ import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasContainsClause;
-import com.siberika.idea.pascal.lang.psi.PasEntityID;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
@@ -41,6 +40,7 @@ import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasProcForwardDecl;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
@@ -63,7 +63,8 @@ import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.psi.impl.PasMethodImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -105,15 +106,13 @@ public class PascalCompletionContributor extends CompletionContributor {
 
                 Collection<PasField> entities = new HashSet<PasField>();
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
-                    if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent())) {
+                    if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent()) || PsiUtil.isIdent(parameters.getPosition().getParent())) {
                         addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
                     }
                     appendTokenSet(result, PascalLexer.VALUES);
                 } else {
-                    PsiElement parPos = parameters.getOriginalPosition();
                     if (originalPos instanceof PasStatement) {
                         pos = originalPos;
-                        //parPos = parameters.getOriginalPosition();
                     }
                     if (pos instanceof PasStatement) {                                                                          // identifier completion in left part of assignment
                         addEntities(entities, parameters.getPosition(), PasField.TYPES_LEFT_SIDE, parameters.isExtendedCompletion());                                                  // complete identifier variants
@@ -157,9 +156,10 @@ public class PascalCompletionContributor extends CompletionContributor {
                 Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
                 Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
                 for (PasField field : entities) {
-                    if (!nameSet.contains(field.name.toUpperCase())) {
+                    String name = getFieldName(field).toUpperCase();
+                    if (!nameSet.contains(name)) {
                         lookupElements.add(getLookupElement(field));
-                        nameSet.add(field.name.toUpperCase());
+                        nameSet.add(name);
                     }
                 }
                 result.caseInsensitive().addAllElements(lookupElements);
@@ -175,6 +175,14 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         });
 
+    }
+
+    private static String getFieldName(PasField field) {
+        if ((field.fieldType == PasField.FieldType.ROUTINE) && (field.element != null)) {
+            return PsiUtil.getFieldName(field.element);
+        } else {
+            return field.name;
+        }
     }
 
     private static void handleUses(CompletionResultSet result, @NotNull PsiElement pos) {
@@ -201,9 +209,17 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private LookupElement getLookupElement(@NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        LookupElementBuilder lookupElement = field.element != null ? LookupElementBuilder.create(field.element) : LookupElementBuilder.create(field.name);
+        LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(field.element) : LookupElementBuilder.create(field.name);
         return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(false).withTypeText(scope, false);
+    }
+
+    private static boolean buildFromElement(@NotNull PasField field) {
+        return (field.element != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE));
+    }
+
+    private LookupElementBuilder createLookupElement(PascalNamedElement element) {
+        return LookupElementBuilder.create(element).withPresentableText(PsiUtil.getFieldName(element));
     }
 
     private boolean isQualifiedIdent(PsiElement parent) {
@@ -233,7 +249,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
         namespace.clearTarget();
-        result.addAll(PasReferenceUtil.resolve(namespace, fieldTypes, extendedCompletion));
+        result.addAll(PasReferenceUtil.resolveExpr(namespace, fieldTypes, extendedCompletion, 0));
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
@@ -244,7 +260,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             PsiElement el = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class);
             if (!(pos instanceof PascalStructType) || (el instanceof PascalRoutineImpl) || (el instanceof PasHintingDirective)) {
                 appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
-                if (pos.getClass() == PasMethodImplDeclImpl.class) {
+                if (pos.getClass() == PasRoutineImplDeclImpl.class) {
                     result.addElement(getElement("begin"));
                 }
             } else {
@@ -256,8 +272,9 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private static PsiElement skipToExpressionParent(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
-                PasSubIdent.class, PasFullyQualifiedIdent.class, PasEntityID.class,
-                PasStmtSimpleOrAssign.class, PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class);
+                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class,
+                PasStmtSimpleOrAssign.class, PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class,
+                PascalExpression.class);
     }
 
     private static boolean posIs(PsiElement originalPos, PsiElement pos, Class<? extends PsiElement>...classes) {

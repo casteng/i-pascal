@@ -21,28 +21,24 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Author: George Bakhtadze
  * Date: 07/09/2013
  */
-public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implements PasEntityScope {
+public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntityScope {
 
-    public static final Logger LOG = Logger.getInstance(PasEntityScopeImpl.class.getName());
+    public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
 
     private List<Map<String, PasField>> members = null;
-    private Set<PascalNamedElement> redeclaredMembers = null;
-    private long buildStamp = 0;
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
-    private List<PasEntityScope> parentScopes;
 
     static {
         STR_TO_VIS = new HashMap<String, PasField.Visibility>(PasField.Visibility.values().length);
@@ -57,14 +53,14 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         assert STR_TO_VIS.size() == PasField.Visibility.values().length;
     }
 
-    public PasEntityScopeImpl(ASTNode node) {
+    public PasStructTypeImpl(ASTNode node) {
         super(node);
     }
 
     // Returns structured type owning the field
     @Nullable
     @SuppressWarnings("unchecked")
-    public static PasEntityScopeImpl findOwnerStruct(PsiElement element) {
+    public static PasStructTypeImpl findOwnerStruct(PsiElement element) {
         return PsiTreeUtil.getParentOfType(element,
                 PasClassHelperDeclImpl.class, PasClassTypeDeclImpl.class, PasInterfaceTypeDeclImpl.class, PasObjectDeclImpl.class, PasRecordHelperDeclImpl.class, PasRecordDeclImpl.class);
     }
@@ -110,8 +106,8 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
     @NotNull
     @Override
     synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
-        if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
+        if (!PsiUtil.checkeElement(this)) {
+            return Collections.emptyList();
         }
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
@@ -148,9 +144,10 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
             members.add(visibility.ordinal(), new LinkedHashMap<String, PasField>());
         }
         assert members.size() == PasField.Visibility.values().length;
-        redeclaredMembers = new LinkedHashSet<PascalNamedElement>();
 
-        addField(this, "Self", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE);
+        PasField field = addField(this, "SELF", PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE);
+        PasTypeDecl typeDecl = this.getParent() instanceof PasTypeDecl ? (PasTypeDecl) this.getParent() : null;
+        field.setValueType(new PasField.ValueType(field, PasField.Kind.STRUCT, null, typeDecl));
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
         while (child != null) {
@@ -167,8 +164,8 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
             }
             child = child.getNextSibling();
         }
-        buildStamp = getContainingFile().getModificationStamp();
-        System.out.println(getName() + ": buildMembers: " + members.size() + " members");
+        buildStamp = PsiUtil.getFileStamp(getContainingFile());;
+        //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
 
     private void addFields(PsiElement element, @NotNull PasField.Visibility visibility) {
@@ -185,25 +182,19 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         addField(element, element.getName(), fieldType, visibility);
     }
 
-    private void addField(PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+    private PasField addField(PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         PasField field = new PasField(this, element, name, fieldType, visibility);
         if (members.get(visibility.ordinal()) == null) {
             members.set(visibility.ordinal(), new LinkedHashMap<String, PasField>());
         }
         members.get(visibility.ordinal()).put(name.toUpperCase(), field);
-    }
-
-    private boolean isCacheActual(List<Map<String, PasField>> cache, long stamp) throws PasInvalidScopeException {
-        if (!PsiUtil.isElementValid(this)) {
-            throw new PasInvalidScopeException(this);
-        }
-        return (getContainingFile() != null) && (cache != null) && (getContainingFile().getModificationStamp() == stamp);
+        return field;
     }
 
     @NotNull
     @Override
-    synchronized public List<PasEntityScope> getParentScope() {
-        if (null == parentScopes) {
+    synchronized public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
+        if (!isCacheActual(parentScopes, parentBuildStamp)) {
             buildParentScopes();
         }
         return parentScopes;
@@ -215,6 +206,7 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
         if (getClass() == PasClassTypeDeclImpl.class) {
             parent = ((PasClassTypeDeclImpl) this).getClassParent();
         }
+        parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());;
         parentScopes = new SmartList<PasEntityScope>();
         if (parent != null) {
             for (PasTypeID typeID : parent.getTypeIDList()) {
@@ -229,12 +221,6 @@ public abstract class PasEntityScopeImpl extends PascalNamedElementImpl implemen
                 parentScopes.add(scope);
             }
         }
-    }
-
-    @Nullable
-    @Override
-    public PasEntityScope getOwnerScope() throws PasInvalidScopeException {
-        return PsiUtil.getElementPasModule(this);
     }
 
     @Override

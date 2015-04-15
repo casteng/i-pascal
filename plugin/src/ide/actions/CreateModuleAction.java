@@ -76,7 +76,7 @@ public class CreateModuleAction extends CreateTemplateInPackageAction<PsiFile> {
             return createClass(className, packageName, dir, templateName).getContainingFile();
         }
         catch (Throwable e) {
-            throw new IncorrectOperationException(e.getMessage(), e);
+            throw new IncorrectOperationException(e.getMessage());
         }
     }
 
