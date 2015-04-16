@@ -153,7 +153,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o) {                                        // TODO: remove
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -161,6 +161,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
         if (getParent() != that.getParent()) return false;
         if (!getName().equalsIgnoreCase(that.getName())) return false;
+        if ((this instanceof PascalRoutineImpl) && (this != that)) {
+            return false;
+        }
 
         return true;
     }

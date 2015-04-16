@@ -59,10 +59,13 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class)) {
             if (PsiUtil.isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
                 if (!PsiUtil.isFormalParameterName(namedElement) && !PsiUtil.isUsedUnitName(namedElement)) {
+                    if (PsiUtil.isRoutineName(namedElement)) {
+                        namedElement = (PascalNamedElement) namedElement.getParent();
+                    }
                     String name = namedElement.getName();
                     String memberName = PsiUtil.getFieldName(namedElement).toUpperCase();
                     PasField existing = members.get(memberName);
-                    if (shouldAddField(existing, namedElement)) {         // Otherwise replace with full declaration
+                    if (shouldAddField(existing)) {         // Otherwise replace with full declaration
                         PasField field = addField(this, name, namedElement, visibility);
                         if (existing != null) {
                             field.offset = existing.offset;               // replace field but keep offset to resolve fields declared later
@@ -80,7 +83,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     // Add forward declared field even if it exists as we need full declaration
     // Routines can have various signatures
-    private boolean shouldAddField(PasField existing, PascalNamedElement namedElement) {
+    private boolean shouldAddField(PasField existing) {
         return (null == existing) || (PsiUtil.isForwardClassDecl(existing.element) || (existing.fieldType == PasField.FieldType.ROUTINE));
     }
 
@@ -93,7 +96,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         PasField.FieldType type = PasField.FieldType.VARIABLE;
         if (PsiUtil.isTypeName(namedElement)) {
             type = PasField.FieldType.TYPE;
-        } else if (PsiUtil.isRoutineName(namedElement)) {
+        } else if (namedElement instanceof PascalRoutineImpl) {
             type = PasField.FieldType.ROUTINE;
         } else if (PsiUtil.isConstDecl(namedElement) || PsiUtil.isEnumDecl(namedElement)) {
             type = PasField.FieldType.CONSTANT;

@@ -457,7 +457,7 @@ public class PsiUtil {
 //--------------------------------------------------------------------------------------------------------------
 
     public static boolean isFromSystemUnit(PsiElement element) {
-        return "$system.pas".equalsIgnoreCase(element.getContainingFile().getName());
+        return (element.getContainingFile() != null) && "$system.pas".equalsIgnoreCase(element.getContainingFile().getName());
     }
 
     public static boolean isForwardClassDecl(PascalNamedElement element) {
@@ -548,8 +548,8 @@ public class PsiUtil {
 
     public static String getFieldName(PascalNamedElement element) {
         String name = element.getName();
-        if (isRoutineName(element)) {
-            PascalRoutineImpl routine = (PascalRoutineImpl) element.getParent();
+        if (element instanceof PascalRoutineImpl) {
+            PascalRoutineImpl routine = (PascalRoutineImpl) element;
             PasFormalParameterSection params = routine.getFormalParameterSection();
             name = name + (params != null ? params.getText() : "()");
         }
