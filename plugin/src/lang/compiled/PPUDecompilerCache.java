@@ -130,7 +130,7 @@ public class PPUDecompilerCache {
                 LOG.warn(e.getMessage(), e);
             }
         }
-        return null;
+        return new PPUDumpParser.Section(PascalBundle.message("decompile.unit.not.found", unitName));
     }
 
 }

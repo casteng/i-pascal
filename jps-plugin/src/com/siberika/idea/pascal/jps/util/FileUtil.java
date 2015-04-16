@@ -14,8 +14,8 @@ import java.io.FileFilter;
  */
 public class FileUtil {
     public static String getPath(@NotNull final String fileName) {
-        int lastSepPos = fileName.lastIndexOf(File.separator);
-        return lastSepPos >= 0 ? fileName.substring(0, lastSepPos) : "";
+        String res = new File(fileName).getParent();
+        return res != null ? res : "";
     }
 
     /**
@@ -24,7 +24,7 @@ public class FileUtil {
      * @return file name without full path
      */
     public static String getFilename(@NotNull final String fullPath) {
-        return fullPath.substring(fullPath.lastIndexOf(File.separator)+1);
+        return new File(fullPath).getName();
     }
 
     public static File[] listDirs(@NotNull File baseDir) {

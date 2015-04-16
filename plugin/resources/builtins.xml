@@ -24,7 +24,7 @@
     <routine type="integer">High</routine>
     <routine type="integer">Low</routine>
     <routine type="integer">Succ</routine>
-    <routine type="integer">Prev</routine>
+    <routine type="integer">Pred</routine>
     <routine>Include</routine>
     <routine>Exclude</routine>
     <routine type="boolean">Assigned</routine>
