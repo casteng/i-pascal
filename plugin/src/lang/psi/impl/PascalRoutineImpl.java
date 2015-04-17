@@ -68,7 +68,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         collectFields(this, PasField.Visibility.STRICT_PRIVATE, members, redeclaredMembers);
 
         if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
-            members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.VARIABLE, PasField.Visibility.STRICT_PRIVATE));
+            members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
         }
         //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
     }
