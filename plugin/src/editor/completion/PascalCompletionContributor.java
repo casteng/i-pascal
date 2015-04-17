@@ -55,7 +55,6 @@ import com.siberika.idea.pascal.lang.psi.PasUnitInitialization;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.PasUsesFileClause;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -196,8 +195,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 excludedUnits.add(scope.getName().toUpperCase());
             }
         }
-        if ((pos instanceof PasUsesClause) || (pos.getParent() instanceof PasUsesClause) ||
-            (pos instanceof PasUsesFileClause) || (pos.getParent() instanceof PasUsesFileClause)) {
+        if ((pos instanceof PasUsesClause) || (pos.getParent() instanceof PasUsesClause)) {
             for (VirtualFile file : PasReferenceUtil.findUnitFiles(pos.getProject(), com.intellij.openapi.module.ModuleUtil.findModuleForPsiElement(pos))) {
                 if (!excludedUnits.contains(file.getNameWithoutExtension().toUpperCase())) {
                     LookupElementBuilder lookupElement = LookupElementBuilder.create(file.getNameWithoutExtension());
@@ -310,7 +308,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         TOKEN_TO_PSI.put(PascalLexer.INITIALIZATION, PasUnitInitialization.class);
         TOKEN_TO_PSI.put(PascalLexer.FINALIZATION, PasUnitFinalization.class);
 
-        TOKEN_TO_PSI.put(PascalLexer.USES, PasUsesFileClause.class);
+        TOKEN_TO_PSI.put(PascalLexer.USES, PasUsesClause.class);
     }
 
     private void appendTokenSetUnique(CompletionResultSet result, TokenSet tokenSet, PsiElement position) {

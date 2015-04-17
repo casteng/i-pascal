@@ -39,7 +39,6 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.PasUsesFileClause;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
@@ -300,7 +299,7 @@ public class PsiUtil {
     @SuppressWarnings("unchecked")
     public static List<PasNamespaceIdent> getUsedUnits(PsiElement parent) {
         List<PasNamespaceIdent> result = new SmartList<PasNamespaceIdent>();
-        Collection<PascalPsiElement> usesClauses = findChildrenOfAnyType(parent, PasUsesClause.class, PasUsesFileClause.class);
+        Collection<PascalPsiElement> usesClauses = findChildrenOfAnyType(parent, PasUsesClause.class);
         for (PascalPsiElement usesClause : usesClauses) {
             for (PsiElement usedUnitName : usesClause.getChildren()) {
                 if (usedUnitName.getClass() == PasNamespaceIdentImpl.class) {

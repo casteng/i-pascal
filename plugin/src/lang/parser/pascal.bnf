@@ -220,19 +220,19 @@ Module                      ::= moduleUnit | moduleProgram | moduleLibrary | mod
 
 private moduleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead progWoHead {pin=1}
-private progWoHead          ::= [UsesFileClause] BlockGlobal "." {pin=2 recoverWhile=rec_section_global}
+private progWoHead          ::= [UsesClause] BlockGlobal "." {pin=2 recoverWhile=rec_section_global}
 
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
 UsesClause                  ::= USES namespaceNameList {pin=1 recoverWhile=rec_section}
 
-private moduleLibrary       ::= LibraryModuleHead [UsesFileClause] BlockGlobal "." {pin=1}
+private moduleLibrary       ::= LibraryModuleHead [UsesClause] BlockGlobal "." {pin=1}
 LibraryModuleHead           ::= LIBRARY NamespaceIdent HintingDirective* ";" {pin=1}
 
 private modulePackage       ::= PackageModuleHead RequiresClause [ContainsClause] END "." {pin=1}
 PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1}
 RequiresClause              ::= REQUIRES namespaceNameList {pin=1}
-ContainsClause              ::= CONTAINS namespaceFileNameList {pin=1}
+ContainsClause              ::= CONTAINS namespaceNameList {pin=1}
 
 UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
 
@@ -296,13 +296,9 @@ ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
 private progParamsRest      ::= "," progParam {pin=1}
 private progParam           ::= identifier {}
 
-UsesFileClause	            ::=	USES namespaceFileNameList {pin=1 recoverWhile=rec_section}
-private namespaceFileNameList ::= namespaceFileName namespaceFileNamesRest* ";"
-private namespaceFileNamesRest ::= COMMA namespaceFileName {pin=1}
+private namespaceNameList   ::= namespaceFileName namespaceNamesRest* ";"
+private namespaceNamesRest  ::= COMMA namespaceFileName {pin=1}
 private namespaceFileName	::=	NamespaceIdent [IN quotedString] {}
-
-private namespaceNameList   ::= NamespaceIdent namespaceNamesRest* ";"
-private namespaceNamesRest  ::= "," NamespaceIdent {pin=1 }
 
 BlockGlobal	                ::=	[';'] declSection* BlockBody {recoverWhile=rec_block_global_end}
 BlockLocal 	                ::=	[';'] declSectionNested* BlockBody
