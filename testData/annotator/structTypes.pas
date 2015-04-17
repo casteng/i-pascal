@@ -62,4 +62,13 @@ type
 
 implementation
 
+var
+  vec: TVec;
+a: tvarrec;
+begin
+  with a do begin
+    v[0] := 1;
+  end;
+  with vec do
+    Y := 1;
 end.

@@ -19,11 +19,13 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
@@ -311,6 +313,7 @@ public class PasReferenceUtil {
         Set<PasField.FieldType> fieldTypes = new HashSet<PasField.FieldType>(fieldTypesOrig);
 
         try {
+            handleWith(namespaces, scope, fqn.getParentIdent());
             // Retrieve all namespaces affecting first FQN level
             while (scope != null) {
                 addFirstNamespaces(namespaces, scope, includeLibrary);
@@ -340,6 +343,7 @@ public class PasReferenceUtil {
                 }
                 fqn.next();
                 fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first
+                fieldTypes.remove(PasField.FieldType.PSEUDO_VARIABLE);                                                   // Pseudo variables can be only first
             }
 
             if (fqn.isTarget() && (namespaces != null)) {
@@ -371,6 +375,28 @@ public class PasReferenceUtil {
             }*/
         }
         return result;
+    }
+
+    private static void handleWith(List<PasEntityScope> namespaces, PasEntityScope scope, PsiElement ident) throws PasInvalidScopeException {
+        if (null == scope) {
+            return;
+        }
+        Collection<PasWithStatement> statements = PsiTreeUtil.findChildrenOfType(scope, PasWithStatement.class);
+        for (PasWithStatement ws : statements) {
+            if (PsiUtil.isParentOf(ident, ws.getStatement()) && PsiUtil.isParentOf(ws, scope)) {
+                for (PasExpression expr : ws.getExpressionList()) {
+                    if ((expr != null) && (expr.getExpr() instanceof PascalExpression)) {
+                        List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) expr.getExpr());
+                        if (!types.isEmpty()) {
+                            PasEntityScope ns = PascalExpression.retrieveScope(types);
+                            if (ns != null) {
+                                namespaces.add(ns);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private static boolean isCollectingAll(NamespaceRec fqn) {

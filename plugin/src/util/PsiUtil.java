@@ -554,4 +554,11 @@ public class PsiUtil {
         }
         return name;
     }
+
+    public static boolean isParentOf(PsiElement element, PsiElement parent) {
+        while ((element != null) && (element != parent)) {
+            element = element.getParent();
+        }
+        return element != null;
+    }
 }
