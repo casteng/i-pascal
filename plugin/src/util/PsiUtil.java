@@ -299,8 +299,8 @@ public class PsiUtil {
     @SuppressWarnings("unchecked")
     public static List<PasNamespaceIdent> getUsedUnits(PsiElement parent) {
         List<PasNamespaceIdent> result = new SmartList<PasNamespaceIdent>();
-        Collection<PascalPsiElement> usesClauses = findChildrenOfAnyType(parent, PasUsesClause.class);
-        for (PascalPsiElement usesClause : usesClauses) {
+        Collection<PasUsesClause> usesClauses = findChildrenOfAnyType(parent, PasUsesClause.class);
+        for (PasUsesClause usesClause : usesClauses) {
             for (PsiElement usedUnitName : usesClause.getChildren()) {
                 if (usedUnitName.getClass() == PasNamespaceIdentImpl.class) {
                     result.add((PasNamespaceIdent) usedUnitName);

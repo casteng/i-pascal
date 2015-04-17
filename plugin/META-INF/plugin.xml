@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>0.86</p>
         <ul>
+          <li>WITH statement support while resolving</li>
           <li>multiple parents support while resolving</li>
         </ul>
         <p>0.85</p>
