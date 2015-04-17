@@ -54,8 +54,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.google.common.collect.Iterables.getFirst;
-
 /**
  * Author: George Bakhtadze
  * Date: 25/04/2013
@@ -427,12 +425,11 @@ public class PasReferenceUtil {
         if (null == section) {
             return;
         }
-        PasEntityScope newNS = getFirst(section.getParentScope(), null);
-        while (newNS != null) {              // Scan namespace's parent namespaces (class parents etc)
-            if (first || (newNS instanceof PascalStructType)) {
-                namespaces.add(newNS);
+        for (PasEntityScope scope : section.getParentScope()) {
+            if (first || (scope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
+                namespaces.add(scope);
+                addParentNamespaces(namespaces, scope, first);
             }
-            newNS = getFirst(newNS.getParentScope(), null);
         }
     }
 

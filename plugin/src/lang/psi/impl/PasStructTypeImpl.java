@@ -201,7 +201,6 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     }
 
     private void buildParentScopes() {
-        NamespaceRec fqn = null;
         PasClassParent parent = null;
         if (getClass() == PasClassTypeDeclImpl.class) {
             parent = ((PasClassTypeDeclImpl) this).getClassParent();
@@ -210,16 +209,21 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         parentScopes = new SmartList<PasEntityScope>();
         if (parent != null) {
             for (PasTypeID typeID : parent.getTypeIDList()) {
-                fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
+                NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
+                PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
+                addScope(scope);
             }
-        } else if (!PsiUtil.isFromSystemUnit(this)) {
-            fqn = NamespaceRec.fromFQN(this, "system.TObject");
+        } else {
+            final PasEntityScope tObject = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(this, "system.TObject"), true);
+            if (tObject != this) {
+                addScope(tObject);
+            }
         }
-        if (fqn != null) {
-            PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
-            if (scope != null) {
-                parentScopes.add(scope);
-            }
+    }
+
+    private void addScope(PasEntityScope scope) {
+        if (scope != null) {
+            parentScopes.add(scope);
         }
     }
 

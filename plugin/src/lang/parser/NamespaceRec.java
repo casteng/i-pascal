@@ -96,6 +96,7 @@ public class NamespaceRec {
         return parentIdent;
     }
 
+    @NotNull
     public static NamespaceRec fromElement(@NotNull PsiElement element) {
         if (element instanceof PasSubIdent) {
             return new NamespaceRec((PascalQualifiedIdent) element.getParent(), (PasSubIdent) element);
