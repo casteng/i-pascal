@@ -16,7 +16,7 @@
         </ul>
         <p>0.85</p>
         <ul>
-          <li>resolving of indentifiers within complex expressions</li>
+          <li>resolving of identifiers within complex expressions</li>
           <li>routine parameters info display</li>
           <li>fixed ppu decompilation issues under Windows</li>
         </ul>

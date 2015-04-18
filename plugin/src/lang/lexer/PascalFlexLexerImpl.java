@@ -254,7 +254,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         }
     }
 
-    private  List<String> includeExtensions = Arrays.asList(null, "pas", "pp");
+    private  List<String> includeExtensions = Arrays.asList(null, "pas", "pp", "Pas", "Pp", "PAS", "PP");
 
     private VirtualFile trySearchPath(Module module, String name) {
         Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
