@@ -154,11 +154,23 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return (cache != null) && (PsiUtil.getFileStamp(getContainingFile()) == stamp);
     }
 
-    public List<PasEntityScope> getPrivateUnits() {
+    public List<PasEntityScope> getPrivateUnits() throws PasInvalidScopeException {
+        if (!PsiUtil.checkeElement(this)) {
+            return Collections.emptyList();
+        }
+        if (!isCacheActual(privateMembers, buildPrivateStamp)) {
+            buildPrivateMembers();
+        }
         return privateUnits;
     }
 
-    public List<PasEntityScope> getPublicUnits() {
+    public List<PasEntityScope> getPublicUnits() throws PasInvalidScopeException {
+        if (!PsiUtil.checkeElement(this)) {
+            return Collections.emptyList();
+        }
+        if (!isCacheActual(publicMembers, buildPublicStamp)) {
+            buildPublicMembers();
+        }
         return publicUnits;
     }
 

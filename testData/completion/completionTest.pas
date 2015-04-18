@@ -1,3 +1,5 @@
+unit completionTest;
+interface
 type
   Integer = Integer;
   TRec2 = record
@@ -11,6 +13,7 @@ var
   a, b: Int;
   arr: TArr;
 const c = 1;
+implementation
 begin
   arr[0].rArr[0].<caret>;
 end.

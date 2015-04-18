@@ -188,6 +188,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         PasModule module = PsiUtil.getElementPasModule(pos);
         Set<String> excludedUnits = new HashSet<String>();
         if (module instanceof PascalModuleImpl) {
+            excludedUnits.add(module.getName().toUpperCase());
             for (PasEntityScope scope : ((PascalModuleImpl) module).getPublicUnits()) {
                 excludedUnits.add(scope.getName().toUpperCase());
             }
