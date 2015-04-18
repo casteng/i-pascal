@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -104,12 +105,13 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         List<PasEntityScope> result;
         List<PasNamespaceIdent> usedNames = PsiUtil.getUsedUnits(section);
         result = new ArrayList<PasEntityScope>(usedNames.size());
+        List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
         for (PasNamespaceIdent ident : usedNames) {
-            addUnit(result, PasReferenceUtil.findUnit(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), ident.getName()));
+            addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, ident.getName()));
         }
         for (String unitName : PascalParserUtil.EXPLICIT_UNITS) {
             if (!unitName.equalsIgnoreCase(getName())) {
-                addUnit(result, PasReferenceUtil.findUnit(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), unitName));
+                addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, unitName));
             }
         }
         return result;

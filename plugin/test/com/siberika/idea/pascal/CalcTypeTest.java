@@ -20,7 +20,8 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testFindSymbol() throws PasInvalidScopeException {
         myFixture.configureByFiles("structTypes.pas", "calcTypeTest.pas");
-        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(), myModule, "calcTypeTest");
+        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "calcTypeTest");
         for (PasField field : mod.getAllFields()) {
             printIdent(field);
         }
@@ -28,7 +29,8 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testExprType() throws Exception {
         myFixture.configureByFiles("structTypes.pas", "calcTypeTest.pas");
-        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(), myModule, "calcTypeTest");
+        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "calcTypeTest");
         PasStatement stmt = PsiTreeUtil.findChildOfType(mod, PasStatement.class);
         PascalExpression expr = PsiTreeUtil.findChildOfType(stmt, PascalExpression.class);
         PsiElement par = expr.getParent();

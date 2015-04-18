@@ -147,7 +147,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     private static void addUnitDeclarations(Collection<PascalNamedElement> result, Project project, Module module, String unitName, String name) {
-        PascalNamedElement usedUnit = PasReferenceUtil.findUnit(project, module, unitName);
+        PascalNamedElement usedUnit = PasReferenceUtil.findUnit(project, PasReferenceUtil.findUnitFiles(project, module), unitName);
         if (usedUnit != null) {
             addDeclarations(result, PsiUtil.getModuleInterfaceSection(usedUnit), name);
         }

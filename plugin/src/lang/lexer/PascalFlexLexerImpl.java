@@ -93,7 +93,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private <T> T getData(String s) {
-        DataContext res = DataManager.getInstance().getDataContextFromFocus().getResultSync(1);
+        DataContext res = DataManager.getInstance().getDataContextFromFocus().getResultSync(40);
         if (res != null) {
             return (T) res.getData(s);
         }
@@ -197,10 +197,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         Project project = getProject();
         VirtualFile virtualFile = getVirtualFile();
         if ((!StringUtils.isEmpty(name)) && (project != null) && (virtualFile != null)) {
+            Reader reader = null;
             try {
                 VirtualFile incFile = getIncludedFile(project, virtualFile, name);
                 if ((incFile != null) && (incFile.getCanonicalPath() != null)) {
-                    Reader reader = new FileReader(incFile.getCanonicalPath());
+                    reader = new FileReader(incFile.getCanonicalPath());
                     PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, incFile);
                     Document doc = FileDocumentManager.getInstance().getDocument(incFile);
                     if (doc != null) {
@@ -212,10 +213,18 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                         getDefines().addAll(lexer.getDefines());
                     }
                 } else {
-                    System.out.println("*** include " + name + " referenced from " + virtualFile.getName() + " not found");
+                    LOG.warn(String.format("Include %s referenced from %s not found", name, virtualFile.getName()));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
 

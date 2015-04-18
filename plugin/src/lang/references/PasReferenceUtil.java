@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.lang.references;
 
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -22,11 +21,9 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeTypeDeclImpl;
@@ -64,41 +61,23 @@ public class PasReferenceUtil {
     private static final int MAX_RECURSION_COUNT = 1000;
 
     /**
-     * Returns references of the given module. This can be module qualifier in identifiers and other modules.
-     * @param moduleName - name element of module to find references for
-     * @return array of references in nearest-first order
-     */
-    @SuppressWarnings({"unchecked", "ConstantConditions"})
-    public static List<PascalNamedElement> findUsedModuleReferences(@NotNull final PasNamespaceIdent moduleName) {
-        final List<PascalNamedElement> result = new ArrayList<PascalNamedElement>();
-        PascalNamedElement unit = findUnit(moduleName.getProject(), ModuleUtilCore.findModuleForPsiElement(moduleName), moduleName.getName());
-        if (unit != null) {
-            result.add(unit);
-        }
-
-        /*for (PascalQualifiedIdent element : PsiUtil.findChildrenOfAnyType(moduleName.getContainingFile(), PascalQualifiedIdent.class)) {
-            if (moduleName.getName().equalsIgnoreCase(element.getNamespace())) {
-                result.add(element);
-            }
-        }*/
-        return result;
-    }
-
-    /**
      * Finds and returns unit in path by name
-     * @param module - IDEA module
      * @param moduleName - unit name
      * @return unit element
      */
     @Nullable
-    public static PasEntityScope findUnit(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
-        VirtualFile file = findUnitFile(project, module, moduleName);
+    public static PasEntityScope findUnit(@NotNull Project project, @NotNull List<VirtualFile> unitFiles, @NotNull final String moduleName) {
+        VirtualFile file = findUnitFile(unitFiles, moduleName);
         if (file != null) {
             PsiFile pascalFile = PsiManager.getInstance(project).findFile(file);
             PasModule pasModule = PsiTreeUtil.findChildOfType(pascalFile, PasModule.class);
             if (pasModule != null) {
                 return pasModule;
+            } else {
+                System.out.println(String.format("No module found in file %s", file.getName()));
             }
+        } else {
+            System.out.println(String.format("No file found for unit %s", moduleName));
         }
         return null;
     }
@@ -106,13 +85,12 @@ public class PasReferenceUtil {
     /**
      * Finds and returns file of a module with the given name
      * If more than one file matches the one with longest name is returned
-     * @param module - IDEA module to include its compiled dependencies
      * @return list of PsiFiles
      */
     @Nullable
-    public static VirtualFile findUnitFile(@NotNull Project project, @Nullable final Module module, @NotNull final String moduleName) {
+    public static VirtualFile findUnitFile(@NotNull List<VirtualFile> unitFiles, @NotNull final String moduleName) {
         List<VirtualFile> candidates = new ArrayList<VirtualFile>();
-        for (VirtualFile virtualFile : findUnitFiles(project, module)) {
+        for (VirtualFile virtualFile : unitFiles) {
             if (isFileOfModuleWithName(virtualFile, moduleName)) {
                 candidates.add(virtualFile);
             }
@@ -278,12 +256,9 @@ public class PasReferenceUtil {
         PsiElement expr = fqn.getParentIdent().getParent();
         expr = expr != null ? expr.getFirstChild() : null;
         if (expr instanceof PascalExpression) {
-            try {
-                List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) expr);
-                if (!types.isEmpty()) {
-                    return resolve(PascalExpression.retrieveScope(types), fqn, fieldTypesOrig, includeLibrary, recursionCount);
-                }
-            } catch (PasInvalidScopeException e) {
+            List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) expr);
+            if (!types.isEmpty()) {
+                return resolve(PascalExpression.retrieveScope(types), fqn, fieldTypesOrig, includeLibrary, recursionCount);
             }
         }
         return resolve(fqn, fieldTypesOrig, includeLibrary, recursionCount);
