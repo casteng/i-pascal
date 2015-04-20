@@ -214,7 +214,7 @@
 }
 
 external pascal             ::= parsePascal Module
-Module                      ::= moduleUnit | moduleProgram | moduleLibrary | modulePackage
+Module                      ::= moduleUnit | moduleLibrary | modulePackage | moduleProgram
                             {extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
                              implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 
