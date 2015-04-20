@@ -59,6 +59,7 @@ import java.util.Set;
  */
 public class PasReferenceUtil {
     private static final int MAX_RECURSION_COUNT = 1000;
+    private static final int MAX_NAMESPACES = 300;
 
     /**
      * Finds and returns unit in path by name
@@ -422,7 +423,10 @@ public class PasReferenceUtil {
         }
     }
 
-    private static void addParentNamespaces(List<PasEntityScope> namespaces, @Nullable PasEntityScope section, boolean first) throws PasInvalidScopeException {
+    private static void addParentNamespaces(@NotNull List<PasEntityScope> namespaces, @Nullable PasEntityScope section, boolean first) throws PasInvalidScopeException {
+        if (namespaces.size() > MAX_NAMESPACES) {
+            return;
+        }
         if (null == section) {
             return;
         }

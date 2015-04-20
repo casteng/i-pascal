@@ -140,6 +140,11 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         if (isCacheActual(members, buildStamp)) {
             return;
         }  // TODO: check correctness
+        if (building) {
+            System.out.println("Reentered in buildXXX");
+            return;
+        }
+        building = true;
         members = new ArrayList<Map<String, PasField>>(PasField.Visibility.values().length);
         for (PasField.Visibility visibility : PasField.Visibility.values()) {
             members.add(visibility.ordinal(), new LinkedHashMap<String, PasField>());
@@ -167,6 +172,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         }
         buildStamp = PsiUtil.getFileStamp(getContainingFile());;
         //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
+        building = false;
     }
 
     private void addFields(PsiElement element, @NotNull PasField.Visibility visibility) {

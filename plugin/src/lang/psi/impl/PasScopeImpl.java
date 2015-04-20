@@ -21,6 +21,7 @@ import java.util.Set;
  */
 public abstract class PasScopeImpl extends PascalNamedElementImpl implements PasEntityScope {
 
+    protected boolean building = false;
     protected long buildStamp = -1;
     protected long parentBuildStamp = -1;
     protected List<PasEntityScope> parentScopes;

@@ -55,6 +55,11 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             return;
         }
         if (isCacheActual(members, buildStamp)) { return; }  // TODO: check correctness
+        if (building) {
+            System.out.println("Reentered in buildXXX");
+            return;
+        }
+        building = true;
         buildStamp = PsiUtil.getFileStamp(getContainingFile());;
         members = new LinkedHashMap<String, PasField>();
 
@@ -71,6 +76,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
         }
         //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
+        building = false;
     }
 
     private void addField(PascalNamedElement element, PasField.FieldType fieldType) {
