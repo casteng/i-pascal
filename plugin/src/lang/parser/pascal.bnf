@@ -248,7 +248,7 @@ private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
 private rec_routine         ::= rec_section & rec_interface
 private rec_semi            ::= !(";") & rec_section
-private rec_struct_field    ::= !(";" | ")" | END)
+private rec_struct_field    ::= !(";" | ")" | END | CASE)
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private rec_name            ::= !(NAME (":" | ",") ) & rec_section
@@ -280,7 +280,7 @@ private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeD
 
 private routineDecl         ::= ExportedRoutine | ClassMethodResolution
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
-private structItem          ::= commonDecl | routineDecl | ClassField | Visibility
+private structItem          ::= commonDecl | routineDecl | classFieldSemi | Visibility
 private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute
 private declSectionNested   ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_section}
 private declSectionWONested ::= commonDecl | LabelDeclSection {recoverWhile=rec_section_nested}
@@ -366,7 +366,8 @@ TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringT
 
 private ClassForwardDecl    ::= CLASS [ClassParent] {name="forward class declaration"}
 
-ClassField                  ::= field ';' //TODO: remove ";"
+ClassField                  ::= field
+private classFieldSemi      ::= ClassField ";"
 ClassTypeDecl               ::= [PACKED] classDecl {name="class declaration"}
 private classDecl           ::= CLASS ((classBody END) | [ClassParent]) {pin=1}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
@@ -382,14 +383,16 @@ private objectTypeDecl      ::= OBJECT objectBody END {pin=1}
 private objectBody          ::= [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
 RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
-private simpleRecord        ::= [PACKED] RECORD recordBody END {pin=2}
-private recordBody          ::= ClassField* structItem* {recoverWhile=rec_struct_outer}
+private simpleRecord        ::= [PACKED | "bitpacked"] RECORD recordBody END {pin=2}
+private recordBody          ::= structItem* [ClassField] {recoverWhile=rec_struct_outer}
 
-private variantRecord       ::= [PACKED] RECORD ClassField* recordVariantSection END
+private variantRecord       ::= [PACKED | "bitpacked"] RECORD varRecDecl END
+private varRecDecl          ::= structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
+private varRecDeclInner     ::= (field ";")* [field] [recordVariantSection] {recoverWhile=rec_struct_field}
 private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
-private recordFields        ::= [field] (';' field)* [';']  //===***
-private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF (RecordVariant | ";" )+ {pin=1 recoverWhile=rec_struct_field}
-RecordVariant               ::= Expression ("," Expression)* ":" "(" recordFields ")"   // rethink expression, separate simpler expressions?
+private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF recordVariants {pin=1}
+private recordVariants      ::= (RecordVariant ";")* [RecordVariant]
+RecordVariant               ::= Expression ("," Expression)* ":" "(" varRecDeclInner ")" {pin=4}  // rethink expression, separate simpler expressions?
 
 RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2}
 
@@ -414,7 +417,7 @@ ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefN
 RefNamedIdent       ::= identifier
 ClassPropertyDispInterface ::= "readonly" ";" | "writeonly" ";" | dispIDDirective
 
-ArrayType               ::= [PACKED] ARRAY [arrayIndexes] OF arraySubType {pin=2}
+ArrayType               ::= [PACKED | "bitpacked"] ARRAY [arrayIndexes] OF arraySubType {pin=2}
 private arrayIndexes    ::= "[" [ArrayIndex] arrayIndexRest* "]" {pin=1}
 ArrayIndex              ::= SubRangeType | TypeID     //TODO: TypeID only?
 private arrayIndexRest  ::= "," [ArrayIndex] {pin=1}

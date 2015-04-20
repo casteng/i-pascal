@@ -180,6 +180,8 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         while (child != null) {
             if (child.getClass() == PasNamedIdentImpl.class) {
                 addField((PascalNamedElement) child, PasField.FieldType.VARIABLE, visibility);
+            } else if (child.getClass() == PasRecordVariantImpl.class) {
+                addFields(child, visibility);
             }
             child = child.getNextSibling();
         }

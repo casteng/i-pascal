@@ -29,7 +29,7 @@ TEnum = (eOne, eTwo, eThree);
         name: string;
     end;
 
-    TC2 = class
+    TC2 = class()
     private
         name2: string;
     public
@@ -83,6 +83,7 @@ begin
     Value.Create();
     v2.Create();
     v2.name2;
+    v2.Stat();
     a._AddRef;
     if ((Value mod 2)=1) then
         raise Exception.Create('MyProp can only contain even value');
