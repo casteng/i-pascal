@@ -423,8 +423,8 @@ public class PasReferenceUtil {
         }
     }
 
-    private static void addParentNamespaces(@NotNull List<PasEntityScope> namespaces, @Nullable PasEntityScope section, boolean first) throws PasInvalidScopeException {
-        if (namespaces.size() > MAX_NAMESPACES) {
+    private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @Nullable PasEntityScope section, boolean first) throws PasInvalidScopeException {
+        if ((null == namespaces) || (namespaces.size() > MAX_NAMESPACES)) {
             return;
         }
         if (null == section) {

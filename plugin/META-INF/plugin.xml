@@ -9,6 +9,11 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.87</p>
+        <ul>
+          <li>fixed variant record handling</li>
+          <li>added support of some FPC-specific keywords</li>
+        </ul>
         <p>0.86</p>
         <ul>
           <li>WITH statement support while resolving</li>
