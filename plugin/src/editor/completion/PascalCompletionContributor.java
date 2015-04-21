@@ -46,6 +46,7 @@ import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasStmtSimpleOrAssign;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
@@ -137,7 +138,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev,
                         originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
-                if (!(prev instanceof PasTypeSection) && !(originalPos instanceof PasTypeSection)) {
+                if (!(prev instanceof PasTypeSection) && !(posIs(originalPos, PasTypeSection.class, PasRoutineImplDecl.class))) {
                     handleModuleHeader(result, parameters, pos);
                     handleModuleSection(result, parameters, pos);
                     handleUnitSection(result, parameters, pos, originalPos);
@@ -194,10 +195,15 @@ public class PascalCompletionContributor extends CompletionContributor {
         if (posIs(PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class), PasGenericTypeIdent.class, PasNamedIdent.class)) {
             return;                                                                                                       // Inside type declaration
         }
-        if (posIs(pos, PasUnitInterface.class, PasUnitImplementation.class, PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class)
+        if (posIs(pos, PasUnitInterface.class, PasUnitImplementation.class, PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class, PasRoutineImplDecl.class)
           || (posIs(originalPos, PasUnitInterface.class, PasUnitImplementation.class, PasModule.class) && (pos instanceof PasUsesClause))
           || ((originalPos instanceof PasUsesClause) && (originalPos.getParent() instanceof PasModule))) {
-            appendTokenSet(result, PascalLexer.DECLARATIONS);
+            PasEntityScope scope = pos instanceof PasEntityScope ? (PasEntityScope) pos : PsiUtil.getNearestAffectingScope(pos);
+            if (scope instanceof PasModule) {
+                appendTokenSet(result, PascalLexer.DECLARATIONS);
+            } else if (scope instanceof PascalRoutineImpl) {
+                appendTokenSet(result, DECLARATIONS_LOCAL);
+            }
         }
         /*if (posIs(originalPos, pos, PasVarSection.class, PasConstSection.class, PasTypeSection.class, PascalRoutineImpl.class) && parameters.getPosition() instanceof LeafPsiElement) {
             appendTokenSet(result, PascalLexer.DECLARATIONS);

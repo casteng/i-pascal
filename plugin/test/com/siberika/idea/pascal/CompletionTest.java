@@ -1,10 +1,10 @@
 package com.siberika.idea.pascal;
 
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -16,73 +16,71 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testCompletion() {
         myFixture.configureByFiles("completionTest.pas");
-        myFixture.complete(CompletionType.BASIC, 1);
-        List<String> strings = myFixture.getLookupElementStrings();
-        assertTrue(strings != null);
-        assertEquals(Arrays.asList("r1"), strings);
+        checkCompletion(myFixture, "r1");
     }
 
     public void testUnitCompletion() {
         myFixture.configureByFiles("usesCompletion.pas", "unit1.pas", "completionTest.pas");
-        myFixture.complete(CompletionType.BASIC, 1);
-        List<String> strings = myFixture.getLookupElementStrings();
-        assertTrue(strings != null);
-        assertEquals(Arrays.asList("unit1"), strings);
+        checkCompletion(myFixture, "unit1");
     }
 
     public void testModuleHeadCompletion() {
         myFixture.configureByFiles("empty.pas");
+        checkCompletion(myFixture, "unit", "program", "library", "package");
+        myFixture.type('p');
+        checkCompletion(myFixture, "program", "package");
+    }
+
+    private void checkCompletion(CodeInsightTestFixture myFixture, String...expected) {
         myFixture.complete(CompletionType.BASIC, 1);
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
-        assertEquals(new HashSet<String>(Arrays.asList("unit", "program", "library", "package")), new HashSet<String>(strings));
+        assertEquals(new HashSet<String>(Arrays.asList(expected)), new HashSet<String>(strings));
     }
 
     public void testNoModuleHeadCompletion() {
         myFixture.configureByFiles("unit1.pas");
-        myFixture.complete(CompletionType.BASIC, 1);
-        List<String> strings = myFixture.getLookupElementStrings();
-        assertTrue(strings != null);
-        assertEquals(Collections.emptySet(), new HashSet<String>(strings));
+        checkCompletion(myFixture);
     }
 
     public void testUnitSection() {
         myFixture.configureByFiles("unitSections.pas");
-        myFixture.complete(CompletionType.BASIC, 1);
-        List<String> strings = myFixture.getLookupElementStrings();
-        assertTrue(strings != null);
-        assertEquals(new HashSet<String>(Arrays.asList("interface", "implementation", "initialization", "finalization")), new HashSet<String>(strings));
+        checkCompletion(myFixture, "interface", "implementation", "initialization", "finalization");
+        myFixture.type('f');
+        checkCompletion(myFixture, "interface", "finalization");
     }
 
     public void testUnitDeclSection() {
         myFixture.configureByFiles("unitDeclSection.pas");
-        myFixture.complete(CompletionType.BASIC, 1);
-        List<String> strings = myFixture.getLookupElementStrings();
-        assertTrue(strings != null);
-        assertEquals(new HashSet<String>(Arrays.asList("const", "type", "var", "threadvar", "resourcestring",
+        checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
                 "procedure", "function", "constructor", "destructor",
-                "uses"
-        )), new HashSet<String>(strings));
+                "uses");
+        myFixture.type('v');
+        checkCompletion(myFixture, "var", "threadvar");
     }
 
     public void testModuleSection() {
         myFixture.configureByFiles("moduleSection.pas");
-        myFixture.complete(CompletionType.BASIC, 1);
-        List<String> strings = myFixture.getLookupElementStrings();
-        assertTrue(strings != null);
-        assertEquals(new HashSet<String>(Arrays.asList("const", "type", "var", "threadvar", "resourcestring",
+        checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
                 "procedure", "function", "constructor", "destructor",
-                "uses"
-        )), new HashSet<String>(strings));
+                "uses");
+        myFixture.type('d');
+        checkCompletion(myFixture, "destructor", "procedure", "threadvar");
     }
 
     public void testModuleSectionWithUses() {
         myFixture.configureByFiles("moduleSectionWithUses.pas");
-        myFixture.complete(CompletionType.BASIC, 1);
-        List<String> strings = myFixture.getLookupElementStrings();
-        assertTrue(strings != null);
-        assertEquals(new HashSet<String>(Arrays.asList("const", "type", "var", "threadvar", "resourcestring",
-                "procedure", "function", "constructor", "destructor"
-        )), new HashSet<String>(strings));
+        checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
+                "procedure", "function", "constructor", "destructor");
+        myFixture.type('i');
+        checkCompletion(myFixture, "function", "resourcestring");
     }
+
+    public void testLocalDeclSection() {
+        myFixture.configureByFiles("localDecl.pas");
+        checkCompletion(myFixture, "const", "type", "var", "procedure", "function");
+        myFixture.type('c');
+        checkCompletion(myFixture, "const", "procedure", "function");
+    }
+
 }

@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>0.87</p>
         <ul>
+          <li>major completion improvement</li>
           <li>fixed variant record handling</li>
           <li>added support of some FPC-specific keywords</li>
         </ul>
