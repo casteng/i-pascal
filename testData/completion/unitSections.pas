@@ -1,0 +1,3 @@
+unit usesCompletion;
+<caret>
+end.

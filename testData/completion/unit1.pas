@@ -1,3 +1,4 @@
+<caret>
 unit unit1;
 interface
 implementation

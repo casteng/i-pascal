@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -44,6 +45,22 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
+    }
+
+    public enum ModuleType {
+        UNIT, PROGRAM, LIBRARY, PACKAGE
+    }
+
+    public ModuleType getModuleType() {
+        PasModule pm = (PasModule) this;
+        if (pm.getUnitModuleHead() != null) {
+            return ModuleType.UNIT;
+        } else if (pm.getLibraryModuleHead() != null) {
+            return ModuleType.LIBRARY;
+        } else if (pm.getPackageModuleHead() != null) {
+            return ModuleType.PACKAGE;
+        }
+        return ModuleType.PROGRAM;
     }
 
     @Override

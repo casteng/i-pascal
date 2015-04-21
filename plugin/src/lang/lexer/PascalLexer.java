@@ -68,8 +68,7 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
 
     public static final TokenSet UNIT_SECTIONS = TokenSet.create(
             INTERFACE, IMPLEMENTATION,
-            INITIALIZATION, FINALIZATION,
-            END
+            INITIALIZATION, FINALIZATION
     );
 
     public static final TokenSet DECLARATIONS = TokenSet.create(
