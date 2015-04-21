@@ -132,8 +132,9 @@ public class PasReferenceUtil {
     }
 
     private static boolean isUnitExtension(VirtualFile virtualFile) {
-        return PascalFileType.UNIT_EXTENSION.equalsIgnoreCase(virtualFile.getExtension())
-            || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension());
+        String ext = virtualFile.getExtension();
+        return (ext != null) && PascalFileType.UNIT_EXTENSIONS.contains(ext.toLowerCase())
+                || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension());
     }
 
     private static boolean isVisibleWithinUnit(@NotNull PasField field, @NotNull NamespaceRec fqn) {

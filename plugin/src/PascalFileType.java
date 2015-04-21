@@ -4,6 +4,9 @@ import com.intellij.openapi.fileTypes.LanguageFileType;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * User: George Bakhtadze
@@ -12,7 +15,7 @@ import javax.swing.*;
 public class PascalFileType extends LanguageFileType {
     public static final PascalFileType INSTANCE = new PascalFileType();
 
-    public static final String UNIT_EXTENSION = "pas";
+    public static final Set<String> UNIT_EXTENSIONS = new HashSet<String>(Arrays.asList("pas", "pp"));
 
     protected PascalFileType() {
         super(PascalLanguage.INSTANCE);
