@@ -99,7 +99,7 @@ public class PasReferenceUtil {
         Collections.sort(candidates, new Comparator<VirtualFile>() {
             @Override
             public int compare(VirtualFile o1, VirtualFile o2) {
-                return o2.getName().length() - o1.getName().length();
+                return o2.getNameWithoutExtension().length() - o1.getNameWithoutExtension().length();
             }
         });
         return !candidates.isEmpty() ? candidates.get(0) : null;
