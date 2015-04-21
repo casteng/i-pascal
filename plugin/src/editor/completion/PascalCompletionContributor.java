@@ -51,6 +51,7 @@ import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasStmtSimpleOrAssign;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitFinalization;
@@ -92,6 +93,10 @@ public class PascalCompletionContributor extends CompletionContributor {
     private static final String PLACEHOLDER_CARET = "__CARET__";
     private static final TokenSet DECLARATIONS_LOCAL = TokenSet.create(
             PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.PROCEDURE, PasTypes.FUNCTION
+    );
+    public static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
+            PasTypes.TYPE, PasTypes.CLASS, PasTypes.DISPINTERFACE, PasTypes.INTERFACE, PasTypes.RECORD, PasTypes.OBJECT,
+            PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.HELPER, PasTypes.ARRAY
     );
 
     private static Map<String, String> getInsertMap() {
@@ -145,8 +150,10 @@ public class PascalCompletionContributor extends CompletionContributor {
                     handleUses(result, parameters, pos, originalPos);
                 }
                 handleDeclarations(result, parameters, pos, originalPos);
-
+                handleStructured(result, parameters, pos, originalPos);
                 Collection<PasField> entities = new HashSet<PasField>();
+                handleEntities(result, parameters, pos, originalPos, entities);
+
                 if ((originalPos instanceof PasAssignPart) || (pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
                     if (PsiUtil.isIdent(parameters.getOriginalPosition().getParent()) || PsiUtil.isIdent(parameters.getPosition().getParent())) {
                         addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
@@ -181,14 +188,20 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         });
 
-        /*extend(CompletionType.BASIC, psiElement().afterLeafSkipping(psiElement().whitespaceCommentEmptyOrError(),
-                StandardPatterns.or(psiElement().withText("interface"), psiElement().withText("implementation"))), new CompletionProvider<CompletionParameters>() {
-            @Override
-            protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
-                appendTokenSetUnique(result, TokenSet.create(PascalLexer.USES), PsiTreeUtil.getParentOfType(parameters.getOriginalPosition(), PasUnitInterface.class));
-            }
-        });*/
+    }
 
+    private void handleEntities(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
+        if (pos instanceof PasTypeID) {                                                                          // Type declaration
+            addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters.isExtendedCompletion());
+            appendTokenSet(result, TYPE_DECLARATIONS);
+        }
+    }
+
+    private void handleStructured(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
+        if (originalPos instanceof PascalStructType) {
+            appendTokenSet(result, PascalLexer.VISIBILITY);
+            appendTokenSet(result, PascalLexer.STRUCT_DECLARATIONS);
+        }
     }
 
     private void handleDeclarations(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
@@ -205,14 +218,6 @@ public class PascalCompletionContributor extends CompletionContributor {
                 appendTokenSet(result, DECLARATIONS_LOCAL);
             }
         }
-        /*if (posIs(originalPos, pos, PasVarSection.class, PasConstSection.class, PasTypeSection.class, PascalRoutineImpl.class) && parameters.getPosition() instanceof LeafPsiElement) {
-            appendTokenSet(result, PascalLexer.DECLARATIONS);
-        } else if (posIs(originalPos, pos, PasExportedRoutine.class, PasDeclSection.class) && parameters.getPosition().getParent() instanceof PsiErrorElement) {
-            appendTokenSet(result, DECLARATIONS_LOCAL);
-        } else if (pos instanceof PasTypeID) {                                                                          // Type declaration
-            addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters.isExtendedCompletion());
-            appendTokenSet(result, PascalLexer.TYPE_DECLARATIONS);
-        }*/
     }
 
     private void handleUnitSection(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
@@ -424,19 +429,18 @@ public class PascalCompletionContributor extends CompletionContributor {
         public void handleInsert(InsertionContext context, LookupElement item) {
             final Document document = context.getEditor().getDocument();
             String content = INSERT_MAP.get(item.getLookupString());
-            if (null == content) {
-                return;
-            }
-            content = content.replaceAll(PLACEHOLDER_FILENAME, FileUtilRt.getNameWithoutExtension(context.getFile().getName()));
-            Integer newCaretPos = null;
-            int caretPos = content.indexOf(PLACEHOLDER_CARET);
-            if (caretPos >= 0) {
-                newCaretPos = context.getEditor().getCaretModel().getOffset() + caretPos;
-            }
-            content = content.replaceAll(PLACEHOLDER_CARET, "");
-            document.insertString(context.getEditor().getCaretModel().getOffset(), content);
-            if (newCaretPos != null) {
-                context.getEditor().getCaretModel().moveToOffset(newCaretPos);
+            if (null != content) {
+                content = content.replaceAll(PLACEHOLDER_FILENAME, FileUtilRt.getNameWithoutExtension(context.getFile().getName()));
+                Integer newCaretPos = null;
+                int caretPos = content.indexOf(PLACEHOLDER_CARET);
+                if (caretPos >= 0) {
+                    newCaretPos = context.getEditor().getCaretModel().getOffset() + caretPos;
+                }
+                content = content.replaceAll(PLACEHOLDER_CARET, "");
+                document.insertString(context.getEditor().getCaretModel().getOffset(), content);
+                if (newCaretPos != null) {
+                    context.getEditor().getCaretModel().moveToOffset(newCaretPos);
+                }
             }
             context.commitDocument();
             PsiElement el = context.getFile().findElementAt(context.getEditor().getCaretModel().getOffset());

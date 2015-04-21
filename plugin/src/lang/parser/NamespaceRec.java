@@ -21,6 +21,7 @@ public class NamespaceRec {
     private int current;
 
     private static final String[] EMPTY_LEVELS = {};
+    private boolean nested = false;
 
     private NamespaceRec(@NotNull String[] levels, @NotNull PsiElement parentIdent, int target) {
         this.levels = levels;
@@ -84,7 +85,7 @@ public class NamespaceRec {
     }
 
     public boolean isFirst() {
-        return current == 0;
+        return !nested && (current == 0);
     }
 
     public boolean isTarget() {
@@ -130,5 +131,9 @@ public class NamespaceRec {
         if ((target >= 0) && (levels.length > target)) {
             levels[target] = "";
         }
+    }
+
+    public void setNested(boolean nested) {
+        this.nested = nested;
     }
 }

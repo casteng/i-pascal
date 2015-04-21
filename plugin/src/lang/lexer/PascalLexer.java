@@ -94,11 +94,6 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
             DEPRECATED, EXPERIMENTAL, PLATFORM, LIBRARY, DISPID
     );
 
-    public static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
-            TYPE, CLASS, DISPINTERFACE, INTERFACE,
-            ARRAY, PACKED, RECORD, SET, FILE, OBJECT
-    );
-
     public static final TokenSet VISIBILITY = TokenSet.create(STRICT, PRIVATE, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED);
 
     /*EXPORTS,

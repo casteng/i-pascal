@@ -259,6 +259,7 @@ public class PasReferenceUtil {
         if (expr instanceof PascalExpression) {
             List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) expr);
             if (!types.isEmpty()) {
+                fqn.setNested(true);
                 return resolve(PascalExpression.retrieveScope(types), fqn, fieldTypesOrig, includeLibrary, recursionCount);
             }
         }

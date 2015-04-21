@@ -2,7 +2,6 @@ unit completionTest;
 interface
 type
   Integer = Integer;
-  v
 
   TRec2  = record
     r1: Integer;

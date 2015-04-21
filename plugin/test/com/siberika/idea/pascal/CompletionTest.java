@@ -83,4 +83,13 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "const", "procedure", "function");
     }
 
+    public void testStructured() {
+        myFixture.configureByFiles("structured.pas");
+        checkCompletion(myFixture, "strict", "private", "protected", "public", "published", "automated",
+                "procedure", "function", "constructor", "destructor",
+                "class", "operator", "property", "end");
+        myFixture.type('a');
+        checkCompletion(myFixture, "automated", "private", "class", "operator");
+    }
+
 }
