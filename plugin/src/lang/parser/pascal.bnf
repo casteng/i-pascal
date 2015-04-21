@@ -349,7 +349,7 @@ TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"
 TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" type {recoverWhile=rec_section}
 private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl HintingDirective* ";" {pin=1}
-private typeForwardDecl     ::= ClassForwardDecl ";" {pin=1}
+private typeForwardDecl     ::= ClassForwardDecl ";"
 
 GenericTypeIdent    ::= identifier [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
