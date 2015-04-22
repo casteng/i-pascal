@@ -73,7 +73,7 @@ public class PascalFormatter implements FormattingModelBuilder {
                 .before(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
                 .after(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
                 .between(PasTypes.STATEMENT, PasTypes.END).lineBreakInCode()
-                .after(PasTypes.INTERFACE).blankLines(1)
+                .afterInside(PasTypes.INTERFACE, PasTypes.UNIT_MODULE_HEAD).blankLines(1)
                 .after(PasTypes.IMPLEMENTATION).blankLines(1)
                 .after(PasTypes.BLOCK_BODY).blankLines(1)
                 ;

@@ -5,8 +5,8 @@ import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
+import java.util.TreeSet;
 
 public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     @Override
@@ -35,7 +35,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.complete(CompletionType.BASIC, 1);
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
-        assertEquals(new HashSet<String>(Arrays.asList(expected)), new HashSet<String>(strings));
+        assertEquals(new TreeSet<String>(Arrays.asList(expected)), new TreeSet<String>(strings));
     }
 
     public void testNoModuleHeadCompletion() {
@@ -54,7 +54,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("unitDeclSection.pas");
         checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
                 "procedure", "function", "constructor", "destructor",
-                "uses");
+                "uses", "begin");
         myFixture.type('v');
         checkCompletion(myFixture, "var", "threadvar");
     }
@@ -90,6 +90,27 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
                 "class", "operator", "property", "end");
         myFixture.type('a');
         checkCompletion(myFixture, "automated", "private", "class", "operator");
+    }
+
+    public void testTypeId() {
+        myFixture.configureByFiles("typeId.pas");
+        checkCompletion(myFixture, "TTest", "TRec2", "typeId",
+                "type", "class", "dispinterface", "interface ", "record", "object", "packed", "set", "file", "helper", "array");
+        myFixture.type("te");
+        checkCompletion(myFixture, "TTest", "dispinterface", "interface ");
+    }
+
+    public void testAssign() {
+        myFixture.configureByFiles("assign.pas");
+        checkCompletion(myFixture, "TTest", "TRec2", "typeId",
+                "type", "class", "dispinterface", "interface", "record", "object", "packed", "set", "file", "helper", "array");
+        myFixture.type("te");
+        checkCompletion(myFixture, "TTest", "dispinterface", "interface");
+    }
+
+    public void testParent() {
+        myFixture.configureByFiles("parent.pas");
+        checkCompletion(myFixture, "ParentConstructor", "parentMethod", "ChildConstructor", "ChildMethod");
     }
 
 }
