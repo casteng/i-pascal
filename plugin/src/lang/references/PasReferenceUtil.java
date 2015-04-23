@@ -298,7 +298,9 @@ public class PasReferenceUtil {
                 scope = fqn.isFirst() ? PsiUtil.getNearestAffectingScope(scope) : null;
             }
 
-            while (!fqn.isTarget() && (namespaces != null)) {
+            namespaces = checkUnitScope(result, namespaces, fqn);
+
+            while (fqn.isBeforeTarget() && (namespaces != null)) {
                 PasField field = null;
                 // Scan namespaces and get one matching field
                 for (PasEntityScope namespace : namespaces) {
@@ -324,7 +326,7 @@ public class PasReferenceUtil {
                 fieldTypes.remove(PasField.FieldType.PSEUDO_VARIABLE);                                                   // Pseudo variables can be only first
             }
 
-            if (fqn.isTarget() && (namespaces != null)) {
+            if (!fqn.isComplete() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
                     if (!PsiUtil.isElementValid(namespace)) {
                         PsiUtil.rebuildPsi(namespace);
@@ -353,6 +355,21 @@ public class PasReferenceUtil {
             }*/
         }
         return result;
+    }
+
+    private static List<PasEntityScope> checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {
+        for (PasEntityScope namespace : namespaces) {
+            if (namespace instanceof PasModule) {
+                fqn.advance(namespace.getName());
+                if (!fqn.isFirst()) {
+                    if (fqn.isComplete()) {
+                        result.add(namespace.getField(namespace.getName()));
+                    }
+                    return new SmartList<PasEntityScope>(namespace);
+                }
+            }
+        }
+        return namespaces;
     }
 
     private static void handleWith(List<PasEntityScope> namespaces, PasEntityScope scope, PsiElement ident) throws PasInvalidScopeException {

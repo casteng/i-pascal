@@ -92,6 +92,14 @@ public class NamespaceRec {
         return current == target;
     }
 
+    public boolean isBeforeTarget() {
+        return current < target;
+    }
+
+    public boolean isComplete() {
+        return current > target;
+    }
+
     @NotNull
     public PsiElement getParentIdent() {
         return parentIdent;
@@ -136,4 +144,14 @@ public class NamespaceRec {
     public void setNested(boolean nested) {
         this.nested = nested;
     }
+
+    public void advance(String fqn) {
+        String[] lvls = fqn.split("\\.");
+        int i = current;
+        while (((current - i) < lvls.length) && (current < levels.length)
+                && (lvls[current - i].equalsIgnoreCase(levels[current]))) {
+            next();
+        }
+    }
+
 }

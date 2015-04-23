@@ -5,7 +5,7 @@ interface
 uses
     SysUtils, unitTest1,
     //aaa
-    objpas, myclass;
+    objpas, scoped.myclass;
 
 type
     int32 = int32;
@@ -29,7 +29,7 @@ TEnum = (eOne, eTwo, eThree);
         name: string;
     end;
 
-    TC2 = class()
+    TC2 = class(system.TObject)
     private
         name2: string;
     public
@@ -52,8 +52,10 @@ implementation
 
 function GetRec: TRecord;
 begin
-    leftstr
+    leftstr();
 end;
+
+//procedure fpc_AddRef(Data, TypeInfo: Pointer); external name 'FPC_ADDREF';
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var
@@ -69,12 +71,12 @@ var
         end;}
     begin
         np1;
-        result.X := 1;
+        result := 1;
     end;
 
 begin
     out := 2+2*3+5-5/2;
-    myclass.objpas;
+    scoped.myclass.objpas;
     GetRec.Name2;
     Obj^[0]^^[1].Create(1, 2);
     Value[0].MyProp.Create();
