@@ -48,14 +48,14 @@ TEnum = (eOne, eTwo, eThree);
     Function LeftStr(const AText: AnsiString; const AStart, ACount: Integer): AnsiString; inline;
     Function LeftStr: a;
 
+    procedure fpc_AddRef(Data, TypeInfo: Pointer); external name 'FPC_ADDREF';
+
 implementation
 
 function GetRec: TRecord;
 begin
     leftstr();
 end;
-
-//procedure fpc_AddRef(Data, TypeInfo: Pointer); external name 'FPC_ADDREF';
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
 var

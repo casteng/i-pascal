@@ -250,7 +250,7 @@ private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ".")
 private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | PROPERTY | Visibility |
-                                 (NAME "=") | "." | END ) & rec_interface
+                                 (NAME "=") | (NAME "<") | "." | END ) & rec_interface
 private rec_section         ::= !(rec__routine_key) & rec_section_nested
 private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
@@ -504,7 +504,7 @@ GotoStatement               ::= GOTO LabelId | EXIT [ "(" Expression ")" ] | BRE
 
 LabelId                     ::= identifier | NUMBER_INT
 
-ClassQualifiedIdent         ::= SubIdent "." SubIdent
+ClassQualifiedIdent         ::= SubIdent [GenericPostfix] "." SubIdent
 FullyQualifiedIdent	        ::=	namespacePart? SubIdent
 NamespaceIdent	            ::=	namespacePart? SubIdent
 SubIdent                    ::= identifier
@@ -582,8 +582,8 @@ sumExpr                     ::= Expr addOp Expr
 productExpr                 ::= Expr mulOp Expr
 unaryExpr                   ::= unaryOp Expr
 dereferenceExpr             ::= Expr '^'
-referenceExpr               ::= Expr '.' FullyQualifiedIdent
-simpleRefExpr               ::= (INHERITED? FullyQualifiedIdent) | INHERITED {elementType=referenceExpr}  // let qualified and simple references have the same type
+referenceExpr               ::= Expr '.' FullyQualifiedIdent [GenericPostfix]
+simpleRefExpr               ::= (INHERITED? FullyQualifiedIdent [GenericPostfix]) | INHERITED {elementType=referenceExpr}  // let qualified and simple references have the same type
 callExpr                    ::= Expr argumentList
 indexExpr                   ::= Expr indexList
 argumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
