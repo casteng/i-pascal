@@ -13,6 +13,7 @@
         <ul>
           <li>scoped unit names support</li>
           <li>basic generics support</li>
+          <li>built-ins source file</li>
         </ul>
         <p>0.87</p>
         <ul>

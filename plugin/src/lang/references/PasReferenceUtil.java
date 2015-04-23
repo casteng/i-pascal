@@ -119,6 +119,7 @@ public class PasReferenceUtil {
             virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PPUFileType.INSTANCE,
                     GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
         }
+        virtualFiles.add(BuiltinsParser.getBuiltinsSource());
         return virtualFiles;
     }
 
@@ -342,9 +343,6 @@ public class PasReferenceUtil {
                     if (!result.isEmpty() && !isCollectingAll(fqn)) {
                         break;
                     }
-                }
-                if (!fqn.isEmpty() && (fqn.isFirst())) {
-                    addBuiltins(result, fqn, fieldTypes);
                 }
             }
         } catch (PasInvalidScopeException e) {

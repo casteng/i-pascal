@@ -61,7 +61,7 @@ import java.util.regex.Pattern;
 public class PascalParserUtil extends GeneratedParserUtilBase {
     private static final Logger LOG = Logger.getInstance(PascalParserUtil.class);
 
-    public static final Collection<String> EXPLICIT_UNITS = Arrays.asList("system");
+    public static final Collection<String> EXPLICIT_UNITS = Arrays.asList("system", "$builtins");
     public static final int MAX_STRUCT_TYPE_RESOLVE_RECURSION = 1000;
 
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {

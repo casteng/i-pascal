@@ -1,6 +1,9 @@
 package com.siberika.idea.pascal.sdk;
 
+import com.intellij.testFramework.LightVirtualFile;
+import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import org.apache.xmlbeans.impl.common.IOUtil;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -8,6 +11,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -60,5 +64,22 @@ public class BuiltinsParser {
 
     public static Collection<PasField> getBuiltins() {
         return builtins;
+    }
+
+    private static LightVirtualFile BUILTINS = prepareBuiltins();
+
+    private static LightVirtualFile prepareBuiltins() {
+        LightVirtualFile res = new LightVirtualFile("$builtins.pas", PascalFileType.INSTANCE, "Error occured while preparing builtins");
+        InputStream data = BuiltinsParser.class.getResourceAsStream("/builtins.pas");
+        try {
+            IOUtil.copyCompletely(data, res.getOutputStream(null));
+        } catch (IOException e) {
+            System.out.println("Error preparing builtins");
+        }
+        return res;
+    }
+
+    public static LightVirtualFile getBuiltinsSource() {
+        return BUILTINS;
     }
 }
