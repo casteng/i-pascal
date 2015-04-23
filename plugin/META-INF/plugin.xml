@@ -9,6 +9,11 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.88</p>
+        <ul>
+          <li>scoped unit names support</li>
+          <li>basic generics support</li>
+        </ul>
         <p>0.87</p>
         <ul>
           <li>major completion improvement</li>

@@ -316,10 +316,9 @@ private functionDirective   ::= overloadDirective | externalDirective | oldCallC
 private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
-private externalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL ConstExpression externalSpecifier* ";"
-private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
-ProcBodyBlock               ::= ProcForwardDecl | procExternalDecl | BlockLocal [";"]
-private procExternalDecl    ::= EXTERNAL ("name" Expression | INDEX Expression)* functionDirective* {pin=1}
+private externalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier ";" | EXTERNAL StringFactor externalSpecifier ";"
+private externalSpecifier   ::= ENAME ConstExpression | INDEX ConstExpression
+ProcBodyBlock               ::= ProcForwardDecl | externalDirective | BlockLocal [";"]
 ProcForwardDecl             ::= FORWARD ";" functionDirective* {pin=1}
 
 private dispIDDirective     ::= DISPID Expression ";" {pin=1}
@@ -353,19 +352,19 @@ private typeForwardDecl     ::= ClassForwardDecl ";"
 
 GenericTypeIdent    ::= identifier [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
-SimpleGenericDefinition ::= "<" identifier IdentsRest* ">" {pin=1}                     //TODO use meta rule
-IdentsRest          ::= "," identifier {pin=1}
-ConstrainedGenericDefinition ::= "<" ConstrainedGeneric ConstrainedGenericsRest ">" {pin=1}
-ConstrainedGeneric  ::= identifier [ ":" GenericConstraint GenericConstraintsRest ]
-GenericConstraint   ::= identifier | RECORD | CLASS | CONSTRUCTOR
-GenericConstraintsRest ::= "," GenericConstraint {pin=1}
-ConstrainedGenericsRest ::= ";" ConstrainedGeneric {pin=1}
-GenericPostfix      ::=	"<" TypeDecl TypeDeclsRest* ">" {pin=1}
-TypeDeclsRest       ::= "," TypeDecl {pin=1}
+SimpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {pin=1}                     //TODO use meta rule
+private identsRest          ::= "," NamedIdent {pin=1}
+ConstrainedGenericDefinition ::= "<" constrainedGeneric constrainedGenericsRest ">" {pin=1}
+private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstraintsRest ]
+GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
+private genericConstraintsRest ::= "," GenericConstraint {pin=1}
+private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
+GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">" {pin=1}
+private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
-TypeID              ::=	FullyQualifiedIdent
+TypeID              ::=	FullyQualifiedIdent [GenericPostfix]
 
-TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID [GenericPostfix]
+TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
 private ClassForwardDecl    ::= CLASS [ClassParent] {name="forward class declaration"}
 
