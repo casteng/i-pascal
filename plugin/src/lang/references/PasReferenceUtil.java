@@ -360,8 +360,7 @@ public class PasReferenceUtil {
     private static List<PasEntityScope> checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {
         for (PasEntityScope namespace : namespaces) {
             if (namespace instanceof PasModule) {
-                fqn.advance(namespace.getName());
-                if (!fqn.isFirst()) {
+                if (fqn.advance(namespace.getName())) {
                     if (fqn.isComplete()) {
                         result.add(namespace.getField(namespace.getName()));
                     }

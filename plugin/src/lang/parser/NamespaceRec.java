@@ -145,13 +145,14 @@ public class NamespaceRec {
         this.nested = nested;
     }
 
-    public void advance(String fqn) {
+    public boolean advance(String fqn) {
         String[] lvls = fqn.split("\\.");
         int i = current;
         while (((current - i) < lvls.length) && (current < levels.length)
                 && (lvls[current - i].equalsIgnoreCase(levels[current]))) {
             next();
         }
+        return i != current;
     }
 
 }
