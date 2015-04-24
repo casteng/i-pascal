@@ -272,6 +272,7 @@ private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [N
 
 RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="procedure or function declaration"}
 RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {extends=RoutineImplDecl}
+RoutineImplDeclNested1      ::= routineDeclaration BlockLocalNested1 [";"] {extends=RoutineImplDecl}
 
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
 
@@ -283,7 +284,8 @@ private routineDecl         ::= ClassMethodResolution | ExportedRoutine
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
 private structItem          ::= commonDecl | routineDecl | classFieldSemi | Visibility
 private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
-private declSectionNested   ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_section}
+private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclSection {recoverWhile=rec_section}
+private declSectionNested1  ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_section}
 private declSectionWONested ::= commonDecl | LabelDeclSection {recoverWhile=rec_section_nested}
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
@@ -303,6 +305,7 @@ private namespaceFileName	::=	NamespaceIdent [IN quotedString] {}
 
 BlockGlobal	                ::=	[';'] declSection* BlockBody {recoverWhile=rec_block_global_end}
 BlockLocal 	                ::=	[';'] declSectionNested* BlockBody
+BlockLocalNested1          ::=	[';'] declSectionNested1* BlockBody {pin=2}
 BlockLocalWONested          ::=	[';'] declSectionWONested* BlockBody {pin=2}
 BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
