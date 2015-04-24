@@ -63,10 +63,6 @@ public class FPCSdkType extends BasePascalSdkType {
         if (definesStream != null) {
             DefinesParser.parse(definesStream);
         }
-        InputStream builtinsUrl = getClass().getClassLoader().getResourceAsStream("/builtins.xml");
-        if (builtinsUrl != null) {
-            BuiltinsParser.parse(builtinsUrl);
-        }
     }
 
     @NotNull

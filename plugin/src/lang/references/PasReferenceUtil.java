@@ -397,16 +397,6 @@ public class PasReferenceUtil {
         return "".equals(fqn.getCurrentName());
     }
 
-    private static void addBuiltins(Collection<PasField> result, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
-        PasModule module = null;
-        for (PasField field : BuiltinsParser.getBuiltins()) {
-            if (isFieldMatches(field, fqn, fieldTypes)) {
-                module = module != null ? module : PsiUtil.getElementPasModule(fqn.getParentIdent());
-                result.add(new PasField(field.owner, field.element, field.name, field.fieldType, field.visibility, module != null ? module : fqn.getParentIdent(), field.getValueType()));
-            }
-        }
-    }
-
     private static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
         return (!fqn.isTarget() || fieldTypes.contains(field.fieldType)) &&
                 (isCollectingAll(fqn) || field.name.equalsIgnoreCase(fqn.getCurrentName()));

@@ -57,7 +57,7 @@ begin
     leftstr();
 end;
 
-Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString; register; overload;
+Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString;
 var
     Value: array[0..1] of TTest;
     V2: TC2;
