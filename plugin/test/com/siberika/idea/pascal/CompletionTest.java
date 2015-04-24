@@ -38,6 +38,14 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals(new TreeSet<String>(Arrays.asList(expected)), new TreeSet<String>(strings));
     }
 
+    private void checkCompletionContains(CodeInsightTestFixture myFixture, String...expected) {
+        myFixture.complete(CompletionType.BASIC, 1);
+        List<String> strings = myFixture.getLookupElementStrings();
+        assertTrue(strings != null);
+        List<String> exp = Arrays.asList(expected);
+        assertTrue(String.format("\nExpected to present: %s\nActual: %s", exp, strings), strings.containsAll(exp));
+    }
+
     public void testNoModuleHeadCompletion() {
         myFixture.configureByFiles("unit1.pas");
         checkCompletion(myFixture);
@@ -94,18 +102,10 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testTypeId() {
         myFixture.configureByFiles("typeId.pas");
-        checkCompletion(myFixture, "TTest", "TRec2", "typeId",
+        checkCompletionContains(myFixture, "TTest", "TRec2", "typeId",
                 "type", "class", "dispinterface", "interface ", "record", "object", "packed", "set", "file", "helper", "array");
         myFixture.type("te");
-        checkCompletion(myFixture, "TTest", "dispinterface", "interface ");
-    }
-
-    public void testAssign() {
-        myFixture.configureByFiles("assign.pas");
-        checkCompletion(myFixture, "TTest", "TRec2", "typeId",
-                "type", "class", "dispinterface", "interface", "record", "object", "packed", "set", "file", "helper", "array");
-        myFixture.type("te");
-        checkCompletion(myFixture, "TTest", "dispinterface", "interface");
+        checkCompletionContains(myFixture, "TTest", "dispinterface", "interface ");
     }
 
     public void testParent() {

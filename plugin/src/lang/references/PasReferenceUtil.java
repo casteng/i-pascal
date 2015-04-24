@@ -262,7 +262,9 @@ public class PasReferenceUtil {
             List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) expr);
             if (!types.isEmpty()) {
                 fqn.setNested(true);
-                return resolve(PascalExpression.retrieveScope(types), fqn, fieldTypesOrig, includeLibrary, recursionCount);
+                Set<PasField.FieldType> fieldTypes = new HashSet<PasField.FieldType>(fieldTypesOrig);
+                fieldTypes.remove(PasField.FieldType.PSEUDO_VARIABLE);
+                return resolve(PascalExpression.retrieveScope(types), fqn, fieldTypes, includeLibrary, recursionCount);
             }
         }
         return resolve(fqn, fieldTypesOrig, includeLibrary, recursionCount);

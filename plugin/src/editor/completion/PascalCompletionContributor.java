@@ -312,7 +312,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private LookupElement getLookupElement(@NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(field.element) : LookupElementBuilder.create(field.name);
+        LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(field) : LookupElementBuilder.create(field.name);
         return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(false).withTypeText(scope, false);
     }
@@ -321,8 +321,18 @@ public class PascalCompletionContributor extends CompletionContributor {
         return (field.element != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE));
     }
 
-    private LookupElementBuilder createLookupElement(PascalNamedElement element) {
-        return LookupElementBuilder.create(element).withPresentableText(PsiUtil.getFieldName(element));
+    private LookupElementBuilder createLookupElement(@NotNull PasField field) {
+        assert field.element != null;
+        LookupElementBuilder res = LookupElementBuilder.create(field.element).withPresentableText(PsiUtil.getFieldName(field.element));
+        if (field.fieldType == PasField.FieldType.ROUTINE) {
+            res = res.withInsertHandler(new InsertHandler<LookupElement>() {
+                @Override
+                public void handleInsert(InsertionContext context, LookupElement item) {
+                    adjustDocument(context, "()", 1);
+                }
+            });
+        }
+        return res;
     }
 
     private boolean isQualifiedIdent(PsiElement parent) {
@@ -450,20 +460,12 @@ public class PascalCompletionContributor extends CompletionContributor {
     private static final InsertHandler<LookupElement> INSERT_HANDLER = new InsertHandler<LookupElement>() {
         @Override
         public void handleInsert(InsertionContext context, LookupElement item) {
-            final Document document = context.getEditor().getDocument();
             String content = INSERT_MAP.get(item.getLookupString());
             if (null != content) {
                 content = content.replaceAll(PLACEHOLDER_FILENAME, FileUtilRt.getNameWithoutExtension(context.getFile().getName()));
-                Integer newCaretPos = null;
                 int caretPos = content.indexOf(PLACEHOLDER_CARET);
-                if (caretPos >= 0) {
-                    newCaretPos = context.getEditor().getCaretModel().getOffset() + caretPos;
-                }
                 content = content.replaceAll(PLACEHOLDER_CARET, "");
-                document.insertString(context.getEditor().getCaretModel().getOffset(), content);
-                if (newCaretPos != null) {
-                    context.getEditor().getCaretModel().moveToOffset(newCaretPos);
-                }
+                adjustDocument(context, content, caretPos >= 0 ? caretPos : null);
             }
             context.commitDocument();
             PsiElement el = context.getFile().findElementAt(context.getEditor().getCaretModel().getOffset());
@@ -473,5 +475,13 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
     };
+
+    private static void adjustDocument(InsertionContext context, String content, Integer caretOffset) {
+        final Document document = context.getEditor().getDocument();
+        document.insertString(context.getEditor().getCaretModel().getOffset(), content);
+        if (caretOffset != null) {
+            context.getEditor().getCaretModel().moveToOffset(context.getEditor().getCaretModel().getOffset() + caretOffset);
+        }
+    }
 
 }
