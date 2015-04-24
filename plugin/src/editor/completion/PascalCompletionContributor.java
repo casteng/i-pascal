@@ -32,16 +32,15 @@ import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasContainsClause;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
-import com.siberika.idea.pascal.lang.psi.PasHintingDirective;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasProcForwardDecl;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
@@ -63,7 +62,6 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -166,7 +164,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
                 handleStatement(result, parameters, pos, originalPos, entities);
 
-                //handleDirectives(result, parameters, originalPos, pos);
+                handleDirectives(result, parameters, originalPos, pos);
                 Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
                 Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
                 for (PasField field : entities) {
@@ -366,20 +364,8 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
-        if (PsiTreeUtil.instanceOf(originalPos, PasEntityScope.class, PascalRoutineImpl.class, PasProcForwardDecl.class)) {
-            pos = originalPos;
-        }
-        if (pos instanceof PasEntityScope) {
-            PsiElement el = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class);
-            if (!(pos instanceof PascalStructType) || (el instanceof PascalRoutineImpl) || (el instanceof PasHintingDirective)) {
-                appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
-                if (pos.getClass() == PasRoutineImplDeclImpl.class) {
-                    result.addElement(getElement("begin"));
-                }
-            } else {
-                appendTokenSet(result, PascalLexer.VISIBILITY);
-                appendTokenSet(result, PascalLexer.STRUCT_DECLARATIONS);
-            }
+        if (posIs(pos, PasExportedRoutine.class, PasRoutineImplDecl.class)) {
+            appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
         }
     }
 

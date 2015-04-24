@@ -86,9 +86,12 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testLocalDeclSection() {
         myFixture.configureByFiles("localDecl.pas");
-        checkCompletion(myFixture, "const", "type", "var", "procedure", "function");
+        checkCompletion(myFixture, "const", "type", "var", "procedure", "function",
+                "abstract", "assembler", "cdecl", "deprecated", "dispid", "dynamic", "experimental",
+                "export", "final", "inline", "library", "message", "overload", "override", "pascal", "platform",
+                "register", "reintroduce", "safecall", "static", "stdcall", "virtual");
         myFixture.type('c');
-        checkCompletion(myFixture, "const", "procedure", "function");
+        checkCompletionContains(myFixture, "const", "procedure", "function");
     }
 
     public void testStructured() {
