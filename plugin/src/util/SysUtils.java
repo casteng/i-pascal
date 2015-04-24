@@ -69,7 +69,7 @@ public class SysUtils {
             LOG.warn(String.format("Error running %s. Code: %d", exePath, exitCode));
             LOG.warn(String.format("Output: %s", stdout));
             LOG.warn(String.format("Error: %s", stderr));
-            throw new PascalException(PascalBundle.message("decompile.unknown.error", stderr));
+            throw new PascalException(PascalBundle.message("error.exit.code", exePath, exitCode, stderr));
         }
         if (stdout.isEmpty()) return null;
         return stdout;

@@ -18,7 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
-import com.siberika.idea.pascal.lang.psi.PasClosureExpression;
+import com.siberika.idea.pascal.lang.psi.PasClosureExpr;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
@@ -168,7 +168,7 @@ public class PsiUtil {
     private static PascalPsiElement getParentDeclRoot(PsiElement element) {   // TODO: remove blocks?
         return PsiTreeUtil.getParentOfType(element,
                 PascalRoutineImpl.class, PasFormalParameterSection.class,
-                PasClosureExpression.class,
+                PasClosureExpr.class,
                 PasUnitImplementation.class,
                 PasBlockGlobal.class,
                 PasModule.class,
@@ -325,7 +325,7 @@ public class PsiUtil {
                 return true;
             }
             //noinspection unchecked
-            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection, PasEntityScope.class, PasClosureExpression.class)) {
+            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection, PasEntityScope.class, PasClosureExpr.class)) {
                 return false;
             }
             innerSection = PsiUtil.getNearestAffectingDeclarationsRoot(innerSection);

@@ -173,7 +173,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return (cache != null) && (PsiUtil.getFileStamp(getContainingFile()) == stamp);
     }
 
-    public List<PasEntityScope> getPrivateUnits() throws PasInvalidScopeException {
+    synchronized public List<PasEntityScope> getPrivateUnits() throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
             return Collections.emptyList();
         }
@@ -183,7 +183,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return privateUnits;
     }
 
-    public List<PasEntityScope> getPublicUnits() throws PasInvalidScopeException {
+    synchronized public List<PasEntityScope> getPublicUnits() throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
             return Collections.emptyList();
         }

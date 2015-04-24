@@ -1,9 +1,11 @@
-uses
-sysutils;
-
+type
+  TClosure = reference to procedure(const param: Integer);
+var
+c: TClosure;
 begin
-  c := TAwaitable.Create(
+  c := _GenVector.Create(
   function : Integer begin
-  Result := 2;
-end);
+    Result := 2;
+  end
+  );
 end.

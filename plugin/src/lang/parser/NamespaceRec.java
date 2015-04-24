@@ -148,11 +148,15 @@ public class NamespaceRec {
     public boolean advance(String fqn) {
         String[] lvls = fqn.split("\\.");
         int i = current;
-        while (((current - i) < lvls.length) && (current < levels.length)
-                && (lvls[current - i].equalsIgnoreCase(levels[current]))) {
-            next();
+        while (((i - current) < lvls.length) && (current + i < levels.length)
+                && (lvls[i - current].equalsIgnoreCase(levels[i]))) {
+            i++;
         }
-        return i != current;
+        if ((i - current) >= lvls.length) {
+            current = i;
+            return true;
+        }
+        return false;
     }
 
 }

@@ -209,11 +209,11 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         return parentScopes;
     }
 
+    public abstract PasClassParent getClassParent();
+
     private void buildParentScopes() {
         PasClassParent parent = null;
-        if (getClass() == PasClassTypeDeclImpl.class) {
-            parent = ((PasClassTypeDeclImpl) this).getClassParent();
-        }
+        parent = getClassParent();
         parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());;
         parentScopes = new SmartList<PasEntityScope>();
         if (parent != null) {

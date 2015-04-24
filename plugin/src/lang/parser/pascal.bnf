@@ -204,11 +204,11 @@
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.PascalStructType,com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
+  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
   extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
   extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
   extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl"
-  extends("ExportedRoutine|RoutineImplDecl")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
+  extends("ExportedRoutine|RoutineImplDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
   extends(".*Expr")=Expr
   implements(".*Op")="com.siberika.idea.pascal.lang.psi.impl.PascalOperation"
 }
@@ -252,7 +252,7 @@ private rec_struct_field    ::= !(";" | ")" | END | CASE)
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private rec_name            ::= !(NAME (":" | ",") ) & rec_section
-private rec_typeId          ::= !("=")
+private rec_typeId          ::= !("=" | "." | ";")
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
@@ -279,7 +279,7 @@ private complexType         ::= complexTypePart
 private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
 private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
-private routineDecl         ::= ExportedRoutine | ClassMethodResolution
+private routineDecl         ::= ClassMethodResolution | ExportedRoutine
 private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
 private structItem          ::= commonDecl | routineDecl | classFieldSemi | Visibility
 private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
@@ -317,7 +317,7 @@ private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
 private externalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier ";" | EXTERNAL StringFactor externalSpecifier ";"
-private externalSpecifier   ::= ENAME ConstExpression | INDEX ConstExpression
+private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
 ProcBodyBlock               ::= ProcForwardDecl | externalDirective | BlockLocal [";"]
 ProcForwardDecl             ::= FORWARD ";" functionDirective* {pin=1}
 
@@ -359,7 +359,7 @@ private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstr
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
 private genericConstraintsRest ::= "," GenericConstraint {pin=1}
 private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
-GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">" {pin=1}
+GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
 TypeID              ::=	FullyQualifiedIdent [GenericPostfix]
@@ -384,7 +384,7 @@ ObjectDecl                  ::= [PACKED] objectTypeDecl {name="object declaratio
 private objectTypeDecl      ::= OBJECT objectBody END {pin=1}
 private objectBody          ::= [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
-RecordDecl                  ::= variantRecord | simpleRecord {name="record declaration"}
+RecordDecl                  ::= [ClassParent] (variantRecord | simpleRecord) {name="record declaration"}
 private simpleRecord        ::= [PACKED | "bitpacked"] RECORD recordBody END {pin=2}
 private recordBody          ::= structItem* [ClassField] {recoverWhile=rec_struct_outer}
 
@@ -432,9 +432,10 @@ PointerType         ::= "^" TypeDecl {pin=1}
 StringType                  ::= "string" ["[" Expression "]"] | "AnsiString" [codePageNumber]
 private codePageNumber      ::= "(" ConstExpressionOrd ")" {pin=1}
 
-ProcedureType               ::= SimpleProcedureType | ProcedureReference
+ProcedureType               ::= ProcedureReference | SimpleProcedureType
 SimpleProcedureType         ::= procedureTypeHeading {recoverWhile=rec_semi}
-ClosureExpression           ::= (funcHeading | procHeading) BlockGlobal
+ClosureExpr                 ::= ClosureRoutine
+ClosureRoutine              ::= (funcHeading | procHeading) BlockLocal
 
 ProcedureReference          ::= REFERENCE TO procedureTypeHeading {pin=1}
 private procedureTypeHeading ::= (funcHeading | procHeading) [OF OBJECT]
@@ -566,7 +567,7 @@ mulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
 unaryOp                     ::= "+" | "-" | "@" | NOT
 
 ExpressionOrd               ::= Expression
-Expression                  ::= ClosureExpression | Expr
+Expression                  ::= Expr
 
 Expr                        ::= relationalExpr | sumExpr | productExpr | unaryExpr | referenceExpr | callGroup | primaryGroup {extends="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"}
 relationalExpr              ::= Expr relOp Expr
@@ -585,7 +586,7 @@ indexList                   ::= '[' Expr (',' Expr) * ']' {pin=1}
 parenExpr                   ::= parenConstruct
 setExpr                     ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
 private setTail             ::= ("," | ".." | ) Expr //{}
-private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExpr
+private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExpr | ClosureExpr
 private callGroup           ::= callExpr | indexExpr | dereferenceExpr
 literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
