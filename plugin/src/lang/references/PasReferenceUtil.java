@@ -10,6 +10,7 @@ import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
+import com.intellij.util.StringLenComparator;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
@@ -358,14 +359,25 @@ public class PasReferenceUtil {
     }
 
     private static List<PasEntityScope> checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {
+        ArrayList<PasEntityScope> sorted = new ArrayList<PasEntityScope>(namespaces.size());
         for (PasEntityScope namespace : namespaces) {
             if (namespace instanceof PasModule) {
-                if (fqn.advance(namespace.getName())) {
-                    if (fqn.isComplete()) {
-                        result.add(namespace.getField(namespace.getName()));
-                    }
-                    return new SmartList<PasEntityScope>(namespace);
+                sorted.add(namespace);
+            }
+        }
+        // sort namespaces by name length in reverse order to check longer named namespaces first
+        Collections.sort(sorted, new Comparator<PasEntityScope>() {
+            @Override
+            public int compare(PasEntityScope o1, PasEntityScope o2) {
+                return StringLenComparator.getInstance().compare(o2.getName(), o1.getName());
+            }
+        });
+        for (PasEntityScope namespace : sorted) {
+            if (fqn.advance(namespace.getName())) {
+                if (fqn.isComplete()) {
+                    result.add(namespace.getField(namespace.getName()));
                 }
+                return new SmartList<PasEntityScope>(namespace);
             }
         }
         return namespaces;
