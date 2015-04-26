@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.references;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -59,6 +60,9 @@ import java.util.Set;
  * Date: 25/04/2013
  */
 public class PasReferenceUtil {
+
+    private static final Logger LOG = Logger.getInstance(PascalModuleImpl.class.getName());
+
     private static final int MAX_RECURSION_COUNT = 1000;
     private static final int MAX_NAMESPACES = 300;
 
@@ -76,10 +80,10 @@ public class PasReferenceUtil {
             if (pasModule != null) {
                 return pasModule;
             } else {
-                System.out.println(String.format("No module found in file %s", file.getName()));
+                LOG.warn(String.format("No module found in file %s", file.getName()));
             }
         } else {
-            System.out.println(String.format("No file found for unit %s", moduleName));
+            LOG.warn(String.format("No file found for unit %s", moduleName));
         }
         return null;
     }

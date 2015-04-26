@@ -26,8 +26,6 @@ public class PascalCompletionConfidence extends CompletionConfidence {
             }
             if (!isName(type)) {
                 return ThreeState.YES;
-            } else {
-                System.out.println("=== type: " + type);
             }
         }
         return super.shouldSkipAutopopup(contextElement, psiFile, offset);

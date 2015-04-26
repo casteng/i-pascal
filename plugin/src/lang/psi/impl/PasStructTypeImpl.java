@@ -141,7 +141,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             return;
         }  // TODO: check correctness
         if (building) {
-            System.out.println("Reentered in buildXXX");
+            LOG.warn("Reentered in buildXXX");
             return;
         }
         building = true;
@@ -238,7 +238,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     @Override
     synchronized public void invalidateCache() {
-        System.out.println("*** invalidating cache");
+        LOG.warn("*** invalidating cache");
         members = null;
     }
 }

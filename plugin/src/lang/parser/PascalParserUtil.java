@@ -71,11 +71,9 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             //System.out.println("Parse: " + file.getVirtualFile().getName());
             filename = file.getName();
         }
-        long time = System.nanoTime();
         //builder_.setDebugMode(true);
         ErrorState state = ErrorState.get(builder_);
         boolean res = parseAsTree(state, builder_, level, DUMMY_BLOCK, true, parser, TRUE_CONDITION);
-        System.out.println(String.format("Parsed %s in %d ms", filename, (System.nanoTime() - time) / 1000000));
         return res;
     }
 

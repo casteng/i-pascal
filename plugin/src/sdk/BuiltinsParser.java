@@ -21,7 +21,6 @@ public class BuiltinsParser {
         try {
             IOUtil.copyCompletely(data, res.getOutputStream(null));
         } catch (IOException e) {
-            System.out.println("Error preparing builtins");
         }
         return res;
     }

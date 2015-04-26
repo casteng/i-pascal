@@ -12,7 +12,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
-import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -136,7 +135,6 @@ public class PascalBlock extends AbstractBlock implements Block {
     private Indent getBlockIndent(@Nullable ASTNode childNode) {
         if (childNode != null) {
             if (TOKENS_COMMENT.contains(childNode.getElementType())) {
-                System.out.println("Comment ind: " + myNode + " . " + childNode);
                 // Not move at leftmost position, indent usually, not indent in already indented contexts such as statement
                 Indent commentIndent = Indent.getAbsoluteNoneIndent();
                 int curInd = getCurrentIndent(childNode);
@@ -164,7 +162,6 @@ public class PascalBlock extends AbstractBlock implements Block {
         if (prev instanceof PsiWhiteSpace) {
             String text = prev.getText();
             int pos = Math.min(text.length(), text.length() - text.lastIndexOf('\n') - 1);
-            System.out.println(String.format("WS text: \"%s\", ind: %d", text, pos));
             return pos;
         }
         return 0;
@@ -220,8 +217,8 @@ public class PascalBlock extends AbstractBlock implements Block {
 
     private static Indent getChildBlockIndent(ASTNode childNode) {
         if ((childNode != null) && (childNode.getTreeParent() != null)) {
-            System.out.println("!Enter ind: " + childNode.getTreeParent() + " . " + childNode +
-                    " | " + FormatterUtil.getPreviousNonWhitespaceSibling(childNode) + " | " + FormatterUtil.getPreviousNonWhitespaceLeaf(childNode));
+//            System.out.println("!Enter ind: " + childNode.getTreeParent() + " . " + childNode +
+//                    " | " + FormatterUtil.getPreviousNonWhitespaceSibling(childNode) + " | " + FormatterUtil.getPreviousNonWhitespaceLeaf(childNode));
             if ((TOKENS_ENTER_INDENTED.contains(childNode.getElementType())) || (childNode.getTreeParent().getElementType() == PasTypes.STATEMENT)) {
                 return Indent.getNormalIndent();
             }

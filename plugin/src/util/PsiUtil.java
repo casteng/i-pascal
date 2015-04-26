@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
@@ -63,6 +64,8 @@ import java.util.List;
  * Date: 24/03/2013
  */
 public class PsiUtil {
+
+    private static final Logger LOG = Logger.getInstance(PsiUtil.class.getName());
 
     private static final int MAX_NON_BREAKING_NAMESPACES = 2;
     private static final long MIN_REPARSE_INTERVAL = 2000;
@@ -361,7 +364,7 @@ public class PsiUtil {
     }
 
     public static void rebuildPsi( PsiElement block) {
-        System.out.println("===*** requesting reparse: " + block);
+        LOG.warn("===*** requesting reparse: " + block);
         if (System.currentTimeMillis() - lastReparseRequestTime >= MIN_REPARSE_INTERVAL) {
             lastReparseRequestTime = System.currentTimeMillis();
             //BlockSupport.getInstance(block.getProject()).reparseRange(block.getContainingFile(), block.getTextRange().getStartOffset(), block.getTextRange().getEndOffset(), block.getText());
@@ -479,7 +482,6 @@ public class PsiUtil {
             PasTypeDecl typeDecl = ((PasTypeDeclaration) parent).getTypeDecl();
             PasTypeID typeId = typeDecl != null ? typeDecl.getTypeID() : null;
             if (typeId != null) {
-                System.out.println("!!!! isTypeDeclPointingToSelf: " + typeIdent.getName());
                 return typeIdent.getName().equalsIgnoreCase(typeId.getFullyQualifiedIdent().getName());
             }
         }

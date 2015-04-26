@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -31,8 +30,6 @@ import java.util.Set;
  * Date: 14/09/2013
  */
 public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
-
-    public static final Logger LOG = Logger.getInstance(PascalModuleImpl.class.getName());
 
     private Map<String, PasField> privateMembers = null;
     private Map<String, PasField> publicMembers = null;
@@ -207,7 +204,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
 
     @Override
     synchronized public void invalidateCache() {
-        System.out.println("*** invalidating cache");
+        LOG.warn("*** invalidating cache");
         privateMembers = null;
         publicMembers = null;
     }

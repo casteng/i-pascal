@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -20,6 +21,8 @@ import java.util.Set;
  * Date: 07/09/2013
  */
 public abstract class PasScopeImpl extends PascalNamedElementImpl implements PasEntityScope {
+
+    protected static final Logger LOG = Logger.getInstance(PasScopeImpl.class.getName());
 
     protected boolean building = false;
     protected long buildStamp = -1;

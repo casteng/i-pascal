@@ -42,21 +42,18 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
     @Nullable
     @Override
     public Object[] getParametersForLookup(LookupElement item, ParameterInfoContext context) {
-        System.out.println("=== getParametersForLookup");
         return null;
     }
 
     @Nullable
     @Override
     public Object[] getParametersForDocumentation(PasFormalParameterSection p, ParameterInfoContext context) {
-        System.out.println("=== getParametersForDocumentation");
         return null;
     }
 
     @Nullable
     @Override
     public PasCallExpr findElementForParameterInfo(@NotNull CreateParameterInfoContext context) {
-        System.out.println("=== findElementForParameterInfo");
         PasCallExpr res = getCallExpr(context.getFile().findElementAt(context.getOffset()));
         context.setItemsToShow(getParameters(res));
         return res;
@@ -65,7 +62,6 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
     @Nullable
     @Override
     public PasCallExpr findElementForUpdatingParameterInfo(@NotNull UpdateParameterInfoContext context) {
-        System.out.println("=== findElementForUpdatingParameterInfo");
         PasCallExpr res = getCallExpr(context.getFile().findElementAt(context.getOffset()));
         if (res != null) {
             int index = ParameterInfoUtils.getCurrentParameterIndex(res.getArgumentList().getNode(), context.getOffset(), PasTypes.COMMA);
@@ -85,7 +81,6 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
         }
         Map<String, PasFormalParameterSection> res = new TreeMap<String, PasFormalParameterSection>();
         for (PasField field : routines) {
-            System.out.println("=== Routine: " + PsiUtil.getFieldName(field.element));
             if (field.element instanceof PascalRoutineImpl) {
                 PasFormalParameterSection parameters = ((PascalRoutineImpl) field.element).getFormalParameterSection();
                 if (parameters != null) {
@@ -108,7 +103,6 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
 
     @Override
     public void updateParameterInfo(@NotNull PasCallExpr element, @NotNull UpdateParameterInfoContext context) {
-        System.out.println("=== updateParameterInfo: " + element);
     }
 
     @Nullable
