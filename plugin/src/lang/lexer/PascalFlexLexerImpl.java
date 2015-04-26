@@ -11,6 +11,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SdkAdditionalData;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -21,6 +22,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.text.CharArrayCharSequence;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.sdk.DefinesParser;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
@@ -49,13 +51,16 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private int curLevel = -1;
     private int inactiveLevel = -1;
 
-    private Set<String> defines = null;
+    private Set<String> defines;
 
-    private final VirtualFile virtualFile;
+    private VirtualFile virtualFile;
+    private Project project;
 
-    PascalFlexLexerImpl(Reader in, VirtualFile virtualFile) {
+    PascalFlexLexerImpl(Reader in, Project project, VirtualFile virtualFile) {
         super(in);
         this.virtualFile = virtualFile;
+        this.project = project;
+//        initDefines(getProject(), getVirtualFile());
     }
 
     public Set<String> getDefines() {
@@ -63,6 +68,18 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             initDefines(getProject(), getVirtualFile());
         }
         return defines;
+    }
+
+    @Override
+    public void reset(CharSequence buffer, int initialState) {
+        super.reset(buffer, initialState);
+        defines = null;
+    }
+
+    @Override
+    public void reset(CharSequence buffer, int start, int end, int initialState) {
+        super.reset(buffer, start, end, initialState);
+        defines = null;
     }
 
     @Override
@@ -86,37 +103,63 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         defines = new HashSet<String>();
         if ((project != null)) {
             final Sdk sdk = getSdk(project, virtualFile);
+            SdkAdditionalData data = sdk.getSdkAdditionalData();
+            if (data instanceof PascalSdkData) {
+                String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
+                getDefinesFromCmdLine(options);
+            }
             if ((null != sdk) && (sdk.getSdkType() instanceof FPCSdkType)) {
                 defines.addAll(DefinesParser.getDefaultDefines(DefinesParser.COMPILER_FPC, sdk.getVersionString()));
             }
         }
     }
 
+    private void getDefinesFromCmdLine(String options) {
+        String[] compilerOptions = options.split("\\s+");
+        for (String opt : compilerOptions) {
+            if (opt.startsWith("-d")) {
+                defines.add(opt.substring(2));
+            }
+        }
+    }
+
+    private DataContext dataContext;
+
     private <T> T getData(String s) {
-        DataContext res = DataManager.getInstance().getDataContextFromFocus().getResultSync(40);
-        if (res != null) {
-            return (T) res.getData(s);
+        dataContext = getDataContext();
+        if (dataContext != null) {
+            return (T) dataContext.getData(s);
         }
         return null;
     }
 
-    private Project getProject() {
-        Project result = getData(PlatformDataKeys.PROJECT.getName());
-        if (!isValidProject(result)) {
-            LOG.warn("Couldn't determine active project");
+    private DataContext getDataContext() {
+        if (null == dataContext) {
+            dataContext = DataManager.getInstance().getDataContextFromFocus().getResultSync(40);
         }
-        return result;
+        return dataContext;
+    }
+
+    private Project getProject() {
+        if (isValidProject(project)) {
+            return project;
+        }
+        project = getData(PlatformDataKeys.PROJECT.getName());
+        if (!isValidProject(project)) {
+            project = null;
+        }
+        return project;
     }
 
     private VirtualFile getVirtualFile() {
         if (virtualFile != null) {
             return virtualFile;
         }
-        VirtualFile result = getData(PlatformDataKeys.VIRTUAL_FILE.getName());
-        if (!isValidFile(result)) {
-            LOG.warn("Couldn't determine active file");
+        virtualFile = getData(PlatformDataKeys.VIRTUAL_FILE.getName());
+        if (!isValidFile(virtualFile)) {
+            virtualFile = null;
         }
-        return result;
+        return virtualFile;
     }
 
     private boolean isValidFile(VirtualFile result) {
@@ -202,7 +245,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                 VirtualFile incFile = getIncludedFile(project, virtualFile, name);
                 if ((incFile != null) && (incFile.getCanonicalPath() != null)) {
                     reader = new FileReader(incFile.getCanonicalPath());
-                    PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, incFile);
+                    PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, incFile);
                     Document doc = FileDocumentManager.getInstance().getDocument(incFile);
                     if (doc != null) {
                         lexer.reset(doc.getCharsSequence(), 0);

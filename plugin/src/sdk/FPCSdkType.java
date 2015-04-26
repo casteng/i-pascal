@@ -19,6 +19,7 @@ import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.util.SysUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -160,6 +161,16 @@ public class FPCSdkType extends BasePascalSdkType {
     @Override
     public void setupSdkPaths(@NotNull final Sdk sdk) {
         configureSdkPaths(sdk);
+        configureOptions(sdk);
+    }
+
+    private void configureOptions(Sdk sdk) {
+        PascalSdkData data = getAdditionalData(sdk);
+        if (SystemUtils.IS_OS_WINDOWS) {
+            data.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, "-dMSWINDOWS");
+        } else {
+            data.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, "-dLINUX");
+        }
     }
 
     private static void configureSdkPaths(@NotNull final Sdk sdk) {

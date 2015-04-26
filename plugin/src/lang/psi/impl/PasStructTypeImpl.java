@@ -203,6 +203,9 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     @NotNull
     @Override
     synchronized public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
+        if (!PsiUtil.checkeElement(this)) {
+            return Collections.emptyList();
+        }
         if (!isCacheActual(parentScopes, parentBuildStamp)) {
             buildParentScopes();
         }
@@ -214,7 +217,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     private void buildParentScopes() {
         PasClassParent parent = null;
         parent = getClassParent();
-        parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());;
+        parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());
         parentScopes = new SmartList<PasEntityScope>();
         if (parent != null) {
             for (PasTypeID typeID : parent.getTypeIDList()) {
