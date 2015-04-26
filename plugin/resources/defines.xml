@@ -7,6 +7,7 @@
         <define>FPC_RELEASE</define>
         <define>FPC_PATCH</define>
         <define>FPC_FULLVERSION</define>
+        <define>PUREPASCAL</define>
     </compiler>
     <compiler name="FPC" version="2.2.0">
         <define>VER2_2</define>

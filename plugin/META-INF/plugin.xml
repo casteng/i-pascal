@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.88</version>
+    <version>0.9</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,11 +9,12 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>0.88</p>
+        <p>0.9</p>
         <ul>
+          <li>initial Delphi RTL support</li>
           <li>scoped unit names support</li>
           <li>basic generics support</li>
-          <li>built-ins source file</li>
+          <li>moved built-in identifiers source file</li>
         </ul>
         <p>0.87</p>
         <ul>
