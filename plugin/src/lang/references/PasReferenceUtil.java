@@ -306,7 +306,11 @@ public class PasReferenceUtil {
                 scope = fqn.isFirst() ? PsiUtil.getNearestAffectingScope(scope) : null;
             }
 
-            namespaces = checkUnitScope(result, namespaces, fqn);
+            List<PasEntityScope> newNs = checkUnitScope(result, namespaces, fqn);
+            if (newNs != null) {
+                namespaces = newNs;
+                fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first
+            }
 
             while (fqn.isBeforeTarget() && (namespaces != null)) {
                 PasField field = null;
@@ -384,7 +388,7 @@ public class PasReferenceUtil {
                 return new SmartList<PasEntityScope>(namespace);
             }
         }
-        return namespaces;
+        return null;
     }
 
     private static void handleWith(List<PasEntityScope> namespaces, PasEntityScope scope, PsiElement ident) throws PasInvalidScopeException {

@@ -3,7 +3,7 @@ unit Simple;
 interface
 
 uses
-    SysUtils, unitTest1,
+    classes, unitTest1,
     //aaa
     objpas, scoped.myclass;
 
@@ -53,8 +53,10 @@ TEnum = (eOne, eTwo, eThree);
 implementation
 
 function GetRec: TRecord;
+var cc: TComponent;
 begin
     leftstr();
+    cc.Free();
 end;
 
 Function LeftStr(const AText: AnsiString; const ACount: Integer): AnsiString;
@@ -76,7 +78,6 @@ var
 
 begin
     out := 2+2*3+5-5/2;
-    scoped.myclass.objpas;
     GetRec.Name2;
     Obj^[0]^^[1].Create(1, 2);
     Value[0].MyProp.Create();
