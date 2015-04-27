@@ -268,13 +268,13 @@ private exportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expressio
 
 private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | LE | GT | GE | "<>" | IN | "explicit"
 private procName            ::= ClassQualifiedIdent | NamedIdent
-private methodKey           ::= [CLASS] PROCEDURE | CONSTRUCTOR | DESTRUCTOR
+private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
 
 ExportedRoutine             ::= routineDeclaration {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" functionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=2}
-private exportedProc        ::= methodKey procName [GenericDefinition] [FormalParameterSection] {pin=1}
+private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=2}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
 private classOperatorDecl   ::= [CLASS] OPERATOR procName FormalParameterSection ":" TypeDecl {pin=2}
 
@@ -347,12 +347,12 @@ private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section"}
 private varKey	            ::=	VAR | THREADVAR
-VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=2 recoverWhile=rec_name}
+VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 recoverWhile=rec_name}
 VarValueSpec	            ::=	ABSOLUTE identifier | ABSOLUTE ConstExpressionOrd | EQ ConstExpression
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section"}
 private constKey            ::= CONST |	RESOURCESTRING
-ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=2 recoverWhile=rec_name}
+ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=4 recoverWhile=rec_name}
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
@@ -520,7 +520,7 @@ HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLA
 
 KeywordIdent                ::= OUT | EXIT | BREAK | CONTINUE | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
                               | OVERRIDE | VIRTUAL | ABSTRACT | SEALED | FINAL | ASSEMBLER | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL
-                              | EXPORT | STRICT | PRIVATE | PROTECTED | PUBLIC | PUBLISHED | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER
+                              | EXPORT | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER
                               | DEFAULT | IMPLEMENTS | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
                               | PACKAGE | CONTAINS | REQUIRES
 private identifier          ::= KEYWORDESCAPE reservedWord | KeywordIdent | NAME

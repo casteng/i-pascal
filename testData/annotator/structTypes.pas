@@ -25,6 +25,26 @@ type
         property A: TA read FPrivate write FPrivate;
     end;
 
+    TObserverMapping = class
+    public
+      const
+        EditLinkID = 1;
+        EditGridLinkID = 2;
+        PositionLinkID = 3;
+        MappedID = 100;
+    private
+      FMappings: TObserverMapping;
+      class var
+        FInstance: TObserverMapping;
+    protected
+      class function Instance: TObserverMapping;
+    public
+      constructor Create;
+      destructor Destroy; override;
+      class destructor Destroy;
+      class function GetObserverID(const Key: Single): Integer;
+    end;
+
     CA = class of TA;
 
     TAHelper = class helper for TA
