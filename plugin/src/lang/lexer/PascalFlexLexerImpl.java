@@ -103,12 +103,12 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         defines = new HashSet<String>();
         if ((project != null)) {
             final Sdk sdk = getSdk(project, virtualFile);
-            SdkAdditionalData data = sdk.getSdkAdditionalData();
-            if (data instanceof PascalSdkData) {
-                String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
-                getDefinesFromCmdLine(options);
-            }
             if ((null != sdk) && (sdk.getSdkType() instanceof FPCSdkType)) {
+                SdkAdditionalData data = sdk.getSdkAdditionalData();
+                if (data instanceof PascalSdkData) {
+                    String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
+                    getDefinesFromCmdLine(options);
+                }
                 defines.addAll(DefinesParser.getDefaultDefines(DefinesParser.COMPILER_FPC, sdk.getVersionString()));
             }
         }

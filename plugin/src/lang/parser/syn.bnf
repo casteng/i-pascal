@@ -348,7 +348,7 @@ private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section"}
 private varKey	            ::=	VAR | THREADVAR
 VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 recoverWhile=rec_name}
-VarValueSpec	            ::=	ABSOLUTE identifier | ABSOLUTE ConstExpressionOrd | EQ ConstExpression
+VarValueSpec	            ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section"}
 private constKey            ::= CONST |	RESOURCESTRING
@@ -469,7 +469,7 @@ private statementBlock      ::= [statementList] {recoverWhile=rec_block_local_en
 private statementList       ::= [Statement] statements*
 private statements          ::= ";" [Statement]
 Statement                   ::= [LabelId ":" ] statementPart {recoverWhile=rec_statement}
-private rec_statement       ::= !(SEMI | END | ELSE | FINALLY | EXCEPT | UNTIL | FINALIZATION)
+private rec_statement       ::= !(SEMI | END | ELSE | FINALLY | EXCEPT | UNTIL | FINALIZATION | BEGIN)
 private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | IfStatement | TryStatement | simpleStatement | CompoundStatement | stmtEmpty
@@ -529,14 +529,15 @@ private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}
 private identListItem       ::= NamedIdent
 
-ConstExpression	            ::=	RecordConstExpr | NewConstExpression | Expression {recoverWhile=rec_expr_colon name="constant expression"}
+ConstExpression	            ::=	constExpr| NewConstExpression | Expression {recoverWhile=rec_expr_colon name="constant expression"}
+private constExpr           ::= ArrayConstExpr | RecordConstExpr | Expression
+ArrayConstExpr              ::= "(" constExpr ("," constExpr)* ")"
 ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression"}
-NewConstExpression	        ::=	LPAREN ConstExpression (COMMA ConstExpression)* RPAREN | Expression
-private RecordConstExpr     ::= RecordConstValue | Expression;
-private RecordConstValue    ::= "(" recordConstInner ")"
+NewConstExpression	        ::=	LPAREN ConstExpression (COMMA ConstExpression)* RPAREN
+RecordConstExpr             ::= "(" recordConstInner ")"
 private recordConstInner    ::= recordValue recordValueRest* {recoverWhile=rec_record_colon}
 private recordValueRest     ::= ";" recordValue
-private recordValue         ::= identifier ":" RecordConstExpr
+private recordValue         ::= identifier ":" constExpr
 
 private rec_record_colon    ::= !(")" | END)
 private rec_expr_colon      ::= !(")" | ";") & rec_section
