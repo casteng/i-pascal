@@ -107,8 +107,7 @@ const
     procedure Halt(Code: Integer); overload;
     procedure Halt(); overload;
     function Hi(X: Integer): Byte;
-    procedure Halt(); overload;
-    procedure Halt(ExitCode: Integer); overload;
+    function High(const X): Integer;
     procedure Inc(var X); overload;
     procedure Inc(var X; N: longint); overload;
     procedure Include(var S: set of Byte; element: Byte);
