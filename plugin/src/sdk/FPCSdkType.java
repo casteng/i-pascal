@@ -20,6 +20,7 @@ import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.util.SysUtils;
 import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang.text.StrBuilder;
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -160,24 +161,36 @@ public class FPCSdkType extends BasePascalSdkType {
 
     @Override
     public void setupSdkPaths(@NotNull final Sdk sdk) {
-        configureSdkPaths(sdk);
-        configureOptions(sdk);
+        String target = getTargetString(sdk.getHomePath());
+        configureSdkPaths(sdk, target);
+        configureOptions(sdk, target);
     }
 
-    private void configureOptions(Sdk sdk) {
+    private void configureOptions(Sdk sdk, String target) {
+        StrBuilder sb = new StrBuilder();
         PascalSdkData data = getAdditionalData(sdk);
         if (SystemUtils.IS_OS_WINDOWS) {
-            data.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, "-dMSWINDOWS");
+            sb.append("-dMSWINDOWS ");
         } else {
-            data.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, "-dLINUX");
+            sb.append("-dPOSIX ");
+            if (SystemUtils.IS_OS_MAC_OSX) {
+                sb.append("-dMACOS ");
+            } else {
+                sb.append("-dLINUX ");
+            }
         }
+        if (target.contains("_64")) {
+            sb.append("-dCPUX64 ");
+        } else {
+            sb.append("-dCPUX86 ");
+        }
+        data.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, sb.toString());
     }
 
-    private static void configureSdkPaths(@NotNull final Sdk sdk) {
+    private static void configureSdkPaths(@NotNull final Sdk sdk, String target) {
         LOG.info("Setting up SDK paths for SDK at " + sdk.getHomePath());
         final SdkModificator[] sdkModificatorHolder = new SdkModificator[]{null};
         final SdkModificator sdkModificator = sdk.getSdkModificator();
-        String target = getTargetString(sdk.getHomePath());
         if (target != null) {
             target = target.replace(' ', '-');
             for (String dir : LIBRARY_DIRS) {
