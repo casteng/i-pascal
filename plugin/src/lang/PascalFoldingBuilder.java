@@ -15,7 +15,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
-import com.siberika.idea.pascal.lang.psi.PasHandlerList;
+import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
@@ -69,7 +69,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                 PasVarSection.class, PasTypeSection.class, PasConstSection.class,
                 PasClassTypeTypeDecl.class, PasClassHelperDecl.class, PasClassTypeDecl.class,
                 PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordHelperDecl.class, PasRecordDecl.class,
-                PasCompoundStatement.class, PasHandlerList.class, PasRepeatStatement.class);
+                PasCompoundStatement.class, PasHandler.class, PasRepeatStatement.class);
 
         for (final PsiElement block : blocks) {
             int foldStart = block.getFirstChild() != null ? block.getFirstChild().getTextRange().getEndOffset() : block.getTextRange().getStartOffset();

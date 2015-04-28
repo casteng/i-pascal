@@ -262,7 +262,8 @@ private rec_struct_field    ::= !(";" | ")" | END | CASE)
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private rec_name            ::= !(NAME (":" | ",") ) & rec_section
-private rec_typeId          ::= !("=" | "." | ";")
+private rec_typeId          ::= !("=" | "." | ";" | DO)
+private rec_formal_param    ::= !(")" | ";" | ":" | "]")
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
@@ -376,7 +377,7 @@ private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
 GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
-TypeID              ::=	FullyQualifiedIdent [GenericPostfix]
+TypeID                      ::=	FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
@@ -497,9 +498,9 @@ CaseLabel	        ::=	ConstExpressionOrd [RANGE ConstExpressionOrd] //{}
 
 TryStatement                ::= TRY statementList (tryExcept | tryFinally) END {pin=1}
 private tryFinally          ::= FINALLY statementList
-private tryExcept           ::= EXCEPT HandlerList
-HandlerList                 ::= Handler+ [ELSE statementList] | statementList
-Handler                     ::= ON identifier ":" TypeID "do" Statement ";" {pin=1}
+private tryExcept           ::= EXCEPT handlerList
+private handlerList         ::= Handler+ [ELSE statementList] | statementList
+Handler                     ::= ON NamedIdent ":" TypeID "do" Statement ";" {pin=1}
 
 WithStatement               ::= WITH withArgument DO Statement {pin=1}
 private withArgument        ::= Expression designatorsRest* {recoverWhile=rec_statement_mid}
@@ -605,14 +606,14 @@ private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExp
 private callGroup           ::= callExpr | indexExpr | dereferenceExpr
 literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
-FormalParameterSection      ::= "(" [ FormalParameterList ] ")"
+FormalParameterSection      ::= "(" [ FormalParameterList ] ")" {pin=1}
 private FormalParameterList ::= FormalParameter (";" FormalParameter)*
-FormalParameter             ::= [ CustomAttribute ] [ ParamType ] identList [ ":" TypeDecl ] [ "=" Expression ]
+FormalParameter             ::= [ CustomAttribute ] [ ParamType ] identList [ ":" TypeDecl ] [ "=" Expression ] {recoverWhile=rec_formal_param}
 ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 
 ExpressionsList	            ::= Expression (COMMA Expression)*
 
-CustomAttribute	            ::=	LBRACK CustomAttributeDecl RBRACK | assemblyAttribute
+CustomAttribute	            ::=	LBRACK CustomAttributeDecl RBRACK | assemblyAttribute {pin=1}
 CustomAttributeDecl         ::= FullyQualifiedIdent LPAREN ExpressionsList RPAREN
 StringFactor                ::= controlString (quotedString controlString)* [quotedString]
                               | quotedString (controlString quotedString)* [controlString]

@@ -12,6 +12,7 @@
         <p>0.91</p>
         <ul>
           <li>statements completion</li>
+          <li>exception variables in except clause resolving</li>
           <li>binary and octal numbers support</li>
         </ul>
         <p>0.9</p>

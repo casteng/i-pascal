@@ -26,6 +26,7 @@ import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
@@ -191,7 +192,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private void handleStatement(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
-        if ((pos instanceof PasAssignPart)) {                                 // identifier completion in right part of assignment
+        if (posIs(pos, PasAssignPart.class, PasArgumentList.class)) {                                 // identifier completion in right part of assignment
             addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
             PsiElement prev = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class);
             if ((null == prev) || (!prev.getText().equals("."))) {

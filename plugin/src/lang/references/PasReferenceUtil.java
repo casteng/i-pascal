@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -169,6 +170,8 @@ public class PasReferenceUtil {
             typeId = PsiTreeUtil.getChildOfType(field.element, PasTypeID.class);
         } else if (field.element instanceof PascalRoutineImpl) {                                     // routine declaration case
             typeId = ((PascalRoutineImpl) field.element).getFunctionTypeIdent();
+        } else if ((field.element != null) && (field.element.getParent() instanceof PasHandler)) {                                     // routine declaration case
+            typeId = ((PasHandler) field.element.getParent()).getTypeID();
         } else {
             if ((field.element != null) && PsiUtil.isTypeDeclPointingToSelf(field.element)) {
                 res = PasField.getValueType(field.element.getName());
@@ -185,6 +188,7 @@ public class PasReferenceUtil {
         return res;
     }
 
+    @Nullable
     private static PasField.ValueType resolveTypeId(@NotNull PasTypeID typeId, boolean includeLibrary, int recursionCount) {
         Collection<PasField> types = resolve(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), PasField.TYPES_TYPE, includeLibrary, ++recursionCount);
         if (!types.isEmpty()) {
