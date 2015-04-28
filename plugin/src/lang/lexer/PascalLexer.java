@@ -36,7 +36,7 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
     );
 
     public static final TokenSet NUMBERS = TokenSet.create(
-            NUMBER_INT, NUMBER_REAL, NUMBER_HEX, NUMBER_BIN
+            NUMBER_INT, NUMBER_REAL, NUMBER_HEX, NUMBER_BIN, NUMBER_OCT
     );
 
     public static final TokenSet SYMBOLS = TokenSet.create(

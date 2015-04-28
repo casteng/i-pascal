@@ -202,8 +202,10 @@
         RANGE='..'
         STRING_LITERAL="regexp:'[^']*'"
         NUMBER_INT='regexp:\d+'
-        NUMBER_REAL='regexp:\d+(\.\d+)?'
+        NUMBER_REAL='regexp:\d+(\.\d+)?([eE][+-]?\d+)?'
         NUMBER_HEX='regexp:\$[0-9abcdefABCDEF]+'
+        NUMBER_OCT='regexp:\&[0-7]+'
+        NUMBER_BIN='regexp:\%[01]+'
         WHITESPACE='regexp:[\ \n\r\t\f]'
   ]
 
@@ -211,11 +213,11 @@
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.PascalStructType,com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
+  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
   extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
   extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
   extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl"
-  extends("ExportedRoutine|RoutineImplDecl")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
+  extends("ExportedRoutine|RoutineImplDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
   extends(".*Expr")=Expr
   implements(".*Op")="com.siberika.idea.pascal.lang.psi.impl.PascalOperation"
 }
@@ -320,7 +322,7 @@ BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
 AssemblerStatement          ::= ASM asmBlock END {pin=1}
 private asmBlock            ::= assemblerItem* {recoverWhile=rec_struct_outer}
-private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | identifier | NUMBER_INT | NUMBER_HEX | NUMBER_BIN
+private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | identifier | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN
 
 private functionDirective   ::= overloadDirective | externalDirective | oldCallConventionDirectiveSemi
                               | inlineDirectiveSemi | callConventionSemi | HintingDirective ";"
@@ -462,7 +464,7 @@ private enumRest    ::= "," enumEl {pin=1}
 private enumEl      ::= NamedIdent ["=" Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
-                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | identifier | KeywordIdent | KEYWORDESCAPE | '^' | '.' | '[' | '('
+                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | NUMBER_OCT | NUMBER_BIN | identifier | KeywordIdent | KEYWORDESCAPE | '^' | '.' | '[' | '('
     private rec__stmt_middle         ::= DO | ELSE | THEN
 
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}
@@ -507,7 +509,7 @@ RaiseStatement              ::= RAISE [Expression] ["at" Expression] {pin=1}
 
 GotoStatement               ::= GOTO LabelId | EXIT [ "(" Expression ")" ] | BREAK | CONTINUE
 
-LabelId                     ::= identifier | NUMBER_INT
+LabelId                     ::= label
 
 ClassQualifiedIdent         ::= SubIdent [GenericPostfix] "." SubIdent
 FullyQualifiedIdent	        ::=	namespacePart? SubIdent
@@ -601,7 +603,7 @@ setExpr                     ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
 private setTail             ::= ("," | ".." | ) Expr //{}
 private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExpr | ClosureExpr
 private callGroup           ::= callExpr | indexExpr | dereferenceExpr
-literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
+literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
 FormalParameterSection      ::= "(" [ FormalParameterList ] ")"
 private FormalParameterList ::= FormalParameter (";" FormalParameter)*

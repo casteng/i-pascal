@@ -58,10 +58,13 @@ CT_IFEND        = "{$IFEND" !([^]* "}" [^]*) ("}")?
 
 N               = [0-9]+
 NUM_INT         = {N}
-EXP             = [Ee]["+""-"]?{N}
-NUM_REAL        = (({N}?[.]{N}){EXP}?|{N}[.][^.])
+EXP             = [Ee][+-]?{N}
+NUM_REAL        = {N}(\.{N})?{EXP}?
+//\d+(\.\d+)?([eE][+-]?\d+)?'
+//NUM_REAL        = (({N}?(\.{N})?{EXP}?)|{N}[.][^.])
 NUM_HEX         = \$[0-9a-fA-F]+
-NUM_BIN         = {N}[bB]
+NUM_BIN         = (\%[01]+) | ({N}[bB])
+NUM_OCT         = \&[0-7]+
 
 %state INACTIVE_BRANCH
 
@@ -270,6 +273,7 @@ NUM_BIN         = {N}[bB]
     {NUM_REAL}      { return getElement(NUMBER_REAL); }
     {NUM_HEX}       { return getElement(NUMBER_HEX); }
     {NUM_BIN}       { return getElement(NUMBER_BIN); }
+    {NUM_OCT}       { return getElement(NUMBER_OCT); }
 
     {COMMENT}       { return getElement(COMMENT); }
     {IDENTIFIER}    { return getElement(NAME); }
