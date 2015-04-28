@@ -16,7 +16,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testCompletion() {
         myFixture.configureByFiles("completionTest.pas");
-        checkCompletion(myFixture, "r1");
+        checkCompletion(myFixture, "r1",
+                "for", "while", "repeat", "if", "case", "with",
+                "goto", "exit", "try", "raise", "end");
     }
 
     public void testUnitCompletion() {
@@ -39,11 +41,25 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     private void checkCompletionContains(CodeInsightTestFixture myFixture, String...expected) {
-        myFixture.complete(CompletionType.BASIC, 1);
+        myFixture.completeBasicAllCarets();
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
         List<String> exp = Arrays.asList(expected);
         assertTrue(String.format("\nExpected to present: %s\nActual: %s", exp, strings), strings.containsAll(exp));
+    }
+
+    private void checkCompletionNotContains(CodeInsightTestFixture myFixture, String...unexpected) {
+        myFixture.completeBasicAllCarets();
+        List<String> strings = myFixture.getLookupElementStrings();
+        assertTrue(strings != null);
+        List<String> unexp = Arrays.asList(unexpected);
+        StringBuilder sb = new StringBuilder();
+        for (String string : strings) {
+            if (unexp.contains(string)) {
+                sb.append(String.format("\nUnexpected but present: %s", string));
+            }
+        }
+        assertTrue(sb.toString(), sb.length() == 0);
     }
 
     public void testNoModuleHeadCompletion() {
@@ -114,6 +130,28 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testParent() {
         myFixture.configureByFiles("parent.pas");
         checkCompletion(myFixture, "ParentConstructor", "parentMethod", "ChildConstructor", "ChildMethod");
+    }
+
+    public void testStatement() {
+        myFixture.configureByFiles("statement.pas");
+        checkCompletionContains(myFixture, "a", "b", "s1",
+                "for", "while", "repeat", "if", "case", "with",
+                "goto", "exit", "try", "raise", "end");
+
+    }
+
+    public void testStatementInStmt() {
+        myFixture.configureByFiles("statementInStmt.pas");
+        checkCompletionNotContains(myFixture,
+                "for", "while", "repeat", "if", "case", "with",
+                "goto", "exit", "try", "raise", "end");
+    }
+
+    public void testStatementInExpr() {
+        myFixture.configureByFiles("statementInExpr.pas");
+        checkCompletionNotContains(myFixture,
+                "for", "while", "repeat", "if", "case", "with",
+                "goto", "exit", "try", "raise", "end");
     }
 
 }

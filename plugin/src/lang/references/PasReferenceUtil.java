@@ -44,6 +44,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -370,7 +371,9 @@ public class PasReferenceUtil {
         ArrayList<PasEntityScope> sorted = new ArrayList<PasEntityScope>(namespaces.size());
         for (PasEntityScope namespace : namespaces) {
             if (namespace instanceof PasModule) {
-                sorted.add(namespace);
+                if (!StringUtils.isEmpty(namespace.getName())) {
+                    sorted.add(namespace);
+                }
             }
         }
         // sort namespaces by name length in reverse order to check longer named namespaces first

@@ -68,4 +68,14 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(false, false, true);
     }
 
+    public void testRecordConst() {
+        myFixture.configureByFiles("recordConst.pas");
+        myFixture.checkHighlighting(false, false, true);
+    }
+
+    public void testVariables() {
+        myFixture.configureByFiles("variables.pas");
+        myFixture.checkHighlighting(false, false, true);
+    }
+
 }

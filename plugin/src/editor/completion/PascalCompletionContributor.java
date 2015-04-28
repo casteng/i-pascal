@@ -34,6 +34,7 @@ import com.siberika.idea.pascal.lang.psi.PasContainsClause;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
@@ -43,6 +44,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
@@ -58,6 +60,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -128,6 +131,12 @@ public class PascalCompletionContributor extends CompletionContributor {
         res.put(PasTypes.DESTRUCTOR.toString(), String.format(" Destroy(%s);", PLACEHOLDER_CARET));
         res.put(PasTypes.FUNCTION.toString(), String.format(" %s(): ;", PLACEHOLDER_CARET));
         res.put(PasTypes.PROCEDURE.toString(), String.format(" %s();", PLACEHOLDER_CARET));
+
+        res.put(PasTypes.VAR.toString(), String.format(" %s: ;", PLACEHOLDER_CARET));
+        res.put(PasTypes.THREADVAR.toString(), String.format(" %s: ;", PLACEHOLDER_CARET));
+        res.put(PasTypes.CONST.toString(), String.format(" %s = ;", PLACEHOLDER_CARET));
+        res.put(PasTypes.RESOURCESTRING.toString(), String.format(" %s = '';", PLACEHOLDER_CARET));
+        res.put(PasTypes.TYPE.toString(), String.format(" T%s = ;", PLACEHOLDER_CARET));
         return res;
     }
 
@@ -193,14 +202,26 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
         if (pos instanceof PasStatement) {                                                                          // identifier completion in left part of assignment
             addEntities(entities, parameters.getPosition(), PasField.TYPES_LEFT_SIDE, parameters.isExtendedCompletion());        // complete identifier variants
-            /*if (!PsiUtil.isIdent(parameters.getOriginalPosition().getParent()) && (pos instanceof PasCompoundStatement)) {
-                appendTokenSet(result, PascalLexer.STATEMENTS);                                                     // statements variants
+            if ((originalPos instanceof PasCompoundStatement) && !expressionPart(parameters.getOriginalPosition()) && !isNonFirstFqnPart(parameters.getPosition())) {
+                appendTokenSet(result, PascalLexer.STATEMENTS);
             }
+            //noinspection unchecked
             if (PsiTreeUtil.getParentOfType(parameters.getOriginalPosition(), PasForStatement.class, PasWhileStatement.class, PasRepeatStatement.class) != null) {
                 appendTokenSet(result, PascalLexer.STATEMENTS_IN_CYCLE);
-            }*/
+            }
         }
+    }
 
+    private boolean isNonFirstFqnPart(PsiElement pos) {
+        if ((pos != null) && PsiUtil.isIdent(pos.getParent())) {
+            PsiElement prev = (PsiTreeUtil.skipSiblingsBackward(pos.getParent(), PsiWhiteSpace.class, PsiComment.class));
+            return prev != null;
+        }
+        return false;
+    }
+
+    private boolean expressionPart(PsiElement oPos) {
+        return (oPos != null) && (oPos.getParent() instanceof PascalExpression);
     }
 
     private void handleEntities(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
