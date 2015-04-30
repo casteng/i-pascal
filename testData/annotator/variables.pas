@@ -20,7 +20,7 @@ implementation
 var
     func: function(TotalFree: Integer): Integer; stdcall = nil;
     proc: procedure(TotalFree: Integer); stdcall = nil;
-    a: T<procedure, function: a>;
+    a: Single<procedure, function: a>;
 
 
 procedure TCls.Test(Rec: TRec);

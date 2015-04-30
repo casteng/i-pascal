@@ -10,7 +10,13 @@ import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.ide.DataManager;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.patterns.PlatformPatterns;
@@ -180,7 +186,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 for (PasField field : entities) {
                     String name = getFieldName(field).toUpperCase();
                     if (!nameSet.contains(name)) {
-                        lookupElements.add(getLookupElement(field));
+                        lookupElements.add(getLookupElement(parameters.getEditor(), field));
                         nameSet.add(name);
                     }
                 }
@@ -330,9 +336,9 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private LookupElement getLookupElement(@NotNull PasField field) {
+    private LookupElement getLookupElement(Editor editor, @NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
-        LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(field) : LookupElementBuilder.create(field.name);
+        LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(editor, field) : LookupElementBuilder.create(field.name);
         return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(false).withTypeText(scope, false);
     }
@@ -341,7 +347,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         return (field.element != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE));
     }
 
-    private LookupElementBuilder createLookupElement(@NotNull PasField field) {
+    private LookupElementBuilder createLookupElement(final Editor editor, @NotNull PasField field) {
         assert field.element != null;
         LookupElementBuilder res = LookupElementBuilder.create(field.element).withPresentableText(PsiUtil.getFieldName(field.element));
         if (field.fieldType == PasField.FieldType.ROUTINE) {
@@ -349,6 +355,9 @@ public class PascalCompletionContributor extends CompletionContributor {
                 @Override
                 public void handleInsert(InsertionContext context, LookupElement item) {
                     adjustDocument(context, "()", 1);
+                    AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
+                    DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
+                    act.actionPerformed(AnActionEvent.createFromAnAction(act, null, "", dataContext));
                 }
             });
         }

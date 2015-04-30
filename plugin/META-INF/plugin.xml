@@ -12,6 +12,7 @@
         <p>0.91</p>
         <ul>
           <li>statements completion</li>
+          <li>support of nested type variable and constant declarations</li>
           <li>exception variables in except clause resolving</li>
           <li>binary and octal numbers support (OBJFPC)</li>
         </ul>

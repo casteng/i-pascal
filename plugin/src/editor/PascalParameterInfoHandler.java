@@ -98,6 +98,12 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
 
     private PasCallExpr getCallExpr(PsiElement element) {
         PasCallExpr call = PsiTreeUtil.getParentOfType(element, PasCallExpr.class);
+        if (null == call) {
+            PsiElement prev = PsiTreeUtil.prevLeaf(element, true);
+            if ((prev != null) && (prev.getText().equals("("))) {
+                call = PsiTreeUtil.getParentOfType(prev, PasCallExpr.class);
+            }
+        }
         return call;
     }
 
