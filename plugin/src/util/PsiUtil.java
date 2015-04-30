@@ -17,7 +17,6 @@ import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
-import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpr;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
@@ -434,7 +433,7 @@ public class PsiUtil {
     }
 
     public static boolean isStructureMember(PsiElement element) {
-        return (element.getParent() != null) && (element.getParent() instanceof PasClassTypeDecl);
+        return (element.getParent() != null) && (element.getParent() instanceof PasStructTypeImpl);
     }
 
     public static String getQualifiedMethodName(PsiNamedElement element) {
