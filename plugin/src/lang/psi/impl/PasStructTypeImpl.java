@@ -2,7 +2,9 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
@@ -10,6 +12,7 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -158,7 +161,13 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         PsiElement child = getFirstChild();
         while (child != null) {
             if (child.getClass() == PasClassFieldImpl.class) {
-                addFields(child, visibility);
+                addFields(child, PasField.FieldType.VARIABLE, visibility);
+            } else if (child.getClass() == PasConstSectionImpl.class) {                                                // nested constants
+                addFields(child, PasField.FieldType.CONSTANT, visibility);
+            } else if (child.getClass() == PasTypeSectionImpl.class) {
+                addFields(child, PasField.FieldType.TYPE, visibility);
+            } else if (child.getClass() == PasVarSectionImpl.class) {
+                addFields(child, PasField.FieldType.VARIABLE, visibility);
             } else if (child.getClass() == PasExportedRoutineImpl.class) {
                 addField((PascalNamedElement) child, PasField.FieldType.ROUTINE, visibility);
             } else if (child.getClass() == PasClassPropertyImpl.class) {
@@ -166,28 +175,36 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             } else if (child.getClass() == PasVisibilityImpl.class) {
                 visibility = getVisibility(child);
             } else if (child.getClass() == PasRecordVariantImpl.class) {
-                addFields(child, visibility);
+                addFields(child, PasField.FieldType.VARIABLE, visibility);
             }
-            child = child.getNextSibling();
+            child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
         }
         buildStamp = PsiUtil.getFileStamp(getContainingFile());;
         //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
         building = false;
     }
 
-    private void addFields(PsiElement element, @NotNull PasField.Visibility visibility) {
+    private void addFields(PsiElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         PsiElement child = element.getFirstChild();
         while (child != null) {
             if (child.getClass() == PasNamedIdentImpl.class) {
-                addField((PascalNamedElement) child, PasField.FieldType.VARIABLE, visibility);
+                addField((PascalNamedElement) child, fieldType, visibility);
+            } else if (child.getClass() == PasConstDeclarationImpl.class) {
+                addField(((PasConstDeclarationImpl) child).getNamedIdent(), fieldType, visibility);
+            } else if (child.getClass() == PasVarDeclarationImpl.class) {
+                for (PasNamedIdent namedIdent : ((PasVarDeclarationImpl) child).getNamedIdentList()) {
+                    addField(namedIdent, fieldType, visibility);
+                }
+            } else if (child.getClass() == PasTypeDeclarationImpl.class) {
+                addField(((PasTypeDeclarationImpl) child).getGenericTypeIdent(), fieldType, visibility);
             } else if (child.getClass() == PasRecordVariantImpl.class) {
-                addFields(child, visibility);
+                addFields(child, fieldType, visibility);
             }
-            child = child.getNextSibling();
+            child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
         }
     }
 
-    private void addField(PascalNamedElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+    private void addField(@NotNull PascalNamedElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         addField(element, element.getName(), fieldType, visibility);
     }
 

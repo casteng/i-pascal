@@ -251,7 +251,7 @@ public class PsiUtil {
         return element.getParent() instanceof PasFormalParameter;
     }
 
-    public static <T extends PsiElement> boolean isInstanceOfAny(PsiElement object, Class<? extends T>... classes) {
+    public static <T extends PsiElement> boolean isInstanceOfAny(Object object, Class... classes) {
         int i = classes.length - 1;
         while ((i >= 0) && (!classes[i].isInstance(object))) {
             i--;

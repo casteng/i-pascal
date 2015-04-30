@@ -160,7 +160,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev,
                         originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
-                if (!(prev instanceof PasTypeSection) && !(posIs(originalPos, PasTypeSection.class, PasRoutineImplDecl.class))) {
+                if (!(prev instanceof PasTypeSection) && !(PsiUtil.isInstanceOfAny(originalPos, PasTypeSection.class, PasRoutineImplDecl.class))) {
                     handleModuleHeader(result, parameters, pos);
                     handleModuleSection(result, parameters, pos);
                     handleUnitSection(result, parameters, pos, originalPos);
@@ -192,7 +192,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private void handleStatement(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
-        if (posIs(pos, PasAssignPart.class, PasArgumentList.class)) {                                 // identifier completion in right part of assignment
+        if (PsiUtil.isInstanceOfAny(pos, PasAssignPart.class, PasArgumentList.class)) {                                 // identifier completion in right part of assignment
             addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
             PsiElement prev = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class);
             if ((null == prev) || (!prev.getText().equals("."))) {
@@ -228,7 +228,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     private void handleEntities(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
         if (pos instanceof PasTypeID) {                                                                          // Type declaration
             addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters.isExtendedCompletion());
-            if (!posIs(pos.getParent(), PasClassParent.class)) {
+            if (!PsiUtil.isInstanceOfAny(pos.getParent(), PasClassParent.class)) {
                 appendTokenSet(result, TYPE_DECLARATIONS);
                 result.addElement(getElement("interface "));
             }
@@ -243,11 +243,11 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private void handleDeclarations(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
-        if (posIs(PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class), PasGenericTypeIdent.class, PasNamedIdent.class)) {
+        if (PsiUtil.isInstanceOfAny(PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class), PasGenericTypeIdent.class, PasNamedIdent.class)) {
             return;                                                                                                       // Inside type declaration
         }
-        if (posIs(pos, PasUnitInterface.class, PasUnitImplementation.class, PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class, PasRoutineImplDecl.class)
-          || (posIs(originalPos, PasUnitInterface.class, PasUnitImplementation.class, PasModule.class) && (pos instanceof PasUsesClause))
+        if (PsiUtil.isInstanceOfAny(pos, PasUnitInterface.class, PasUnitImplementation.class, PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class, PasRoutineImplDecl.class)
+          || (PsiUtil.isInstanceOfAny(originalPos, PasUnitInterface.class, PasUnitImplementation.class, PasModule.class) && (pos instanceof PasUsesClause))
           || ((originalPos instanceof PasUsesClause) && (originalPos.getParent() instanceof PasModule))) {
             PasEntityScope scope = pos instanceof PasEntityScope ? (PasEntityScope) pos : PsiUtil.getNearestAffectingScope(pos);
             if (scope instanceof PasModule) {
@@ -260,7 +260,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private void handleUnitSection(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
-        if (((pos instanceof PasUnitInterface) && posIs(originalPos, PasUnitInterface.class, PasModule.class))
+        if (((pos instanceof PasUnitInterface) && PsiUtil.isInstanceOfAny(originalPos, PasUnitInterface.class, PasModule.class))
           || ((pos instanceof PasUnitImplementation) && (originalPos instanceof PasUnitImplementation))) {
             appendTokenSetUnique(result, PascalLexer.USES, pos);
             appendTokenSet(result, PascalLexer.DECLARATIONS);
@@ -386,7 +386,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
-        if (posIs(pos, PasExportedRoutine.class, PasRoutineImplDecl.class)) {
+        if (PsiUtil.isInstanceOfAny(pos, PasExportedRoutine.class, PasRoutineImplDecl.class)) {
             appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
         }
     }
@@ -397,15 +397,6 @@ public class PascalCompletionContributor extends CompletionContributor {
                 PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class,
                 PascalExpression.class,
                 PasUnitModuleHead.class);
-    }
-
-    private static boolean posIs(PsiElement element, Class...classes) {
-        for (Class clazz : classes) {
-            if (clazz.isInstance(element)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static void appendTokenSet(CompletionResultSet result, TokenSet tokenSet) {
