@@ -246,8 +246,8 @@ private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | P
 private rec_section         ::= !(rec__routine_key) & rec_section_nested
 private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
-private rec_routine         ::= rec_section & rec_interface
-private rec_semi_section    ::= !(";") & rec_section
+private rec_routine         ::= !(EXTERNAL | FORWARD) & rec_section & rec_interface
+private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";")
 private rec_struct_field    ::= !(";" | ")" | END | CASE)
 private rec_struct_outer    ::= !(END)
@@ -266,7 +266,7 @@ private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
 
-ExportedRoutine             ::= routineDeclaration {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
+ExportedRoutine             ::= routineDeclaration [externalDirective] {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 private routineDeclaration  ::= [CustomAttribute] (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" functionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" [CustomAttribute] TypeDecl {pin=2}
 private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=2}
@@ -316,16 +316,16 @@ AssemblerStatement          ::= ASM asmBlock END {pin=1}
 private asmBlock            ::= assemblerItem* {recoverWhile=rec_struct_outer}
 private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | identifier | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN
 
-private functionDirective   ::= overloadDirective | externalDirective | oldCallConventionDirectiveSemi
+private functionDirective   ::= overloadDirective | oldCallConventionDirectiveSemi
                               | inlineDirectiveSemi | callConventionSemi | HintingDirective ";"
                               | REINTRODUCE ';' | OVERLOAD ';' | bindingDirective | abstractDirectiveSemi | dispIDDirective {name="routine directive"}
 private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
-private externalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier ";" | EXTERNAL StringFactor externalSpecifier ";"
+private externalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier ";" | EXTERNAL ConstExpression externalSpecifier ";"
 private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
 ProcBodyBlock               ::= ProcForwardDecl | externalDirective | BlockLocal [";"]
-ProcForwardDecl             ::= FORWARD ";" functionDirective* {pin=1}
+ProcForwardDecl             ::= FORWARD ";" functionDirective*
 
 private dispIDDirective     ::= DISPID Expression ";" {pin=1}
 private callConventionSemi  ::= callConvention ";"
@@ -342,8 +342,8 @@ private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section"}
 private varKey	            ::=	VAR | THREADVAR
-VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [VarValueSpec] HintingDirective* ";" {pin=3 recoverWhile=rec_name}
-VarValueSpec	            ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
+VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [varValueSpec] HintingDirective* ";" {pin=3 recoverWhile=rec_name}
+private varValueSpec	    ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section"}
 private constKey            ::= CONST |	RESOURCESTRING
@@ -438,12 +438,12 @@ PointerType         ::= "^" TypeDecl {pin=1}
 StringType                  ::= "string" ["[" Expression "]"] | "AnsiString" [codePageNumber]
 private codePageNumber      ::= "(" ConstExpressionOrd ")" {pin=1}
 
-ProcedureType               ::= ProcedureReference | SimpleProcedureType
-SimpleProcedureType         ::= procedureTypeHeading {recoverWhile=rec_semi_section}
+ProcedureType               ::= procedureReference | simpleProcedureType
+private simpleProcedureType ::= procedureTypeHeading {recoverWhile=rec_semi_section}
 ClosureExpr                 ::= ClosureRoutine
 ClosureRoutine              ::= (funcHeading | procHeading) BlockLocal
 
-ProcedureReference          ::= REFERENCE TO procedureTypeHeading {pin=1}
+private procedureReference  ::= REFERENCE TO procedureTypeHeading {pin=1}
 private procedureTypeHeading ::= (funcHeading | procHeading) [OF OBJECT]
 private funcHeading         ::= FUNCTION [FormalParameterSection] ":" [CustomAttribute] TypeDecl [";" callConvention+] {pin=1}
 private procHeading         ::= PROCEDURE [FormalParameterSection] [";" callConvention+] {pin=1}
@@ -491,7 +491,7 @@ TryStatement                ::= TRY statementList (tryExcept | tryFinally) END {
 private tryFinally          ::= FINALLY statementList
 private tryExcept           ::= EXCEPT handlerList
 private handlerList         ::= Handler+ [ELSE statementList] | statementList
-Handler                     ::= ON NamedIdent ":" TypeID "do" Statement ";" {pin=1}
+Handler                     ::= ON [NamedIdent ":"] TypeID "do" Statement ";" {pin=1}
 
 WithStatement               ::= WITH withArgument DO Statement {pin=1}
 private withArgument        ::= Expression designatorsRest* {recoverWhile=rec_statement_mid}
@@ -503,7 +503,7 @@ GotoStatement               ::= GOTO LabelId | EXIT [ "(" Expression ")" ] | BRE
 
 LabelId                     ::= label
 
-ClassQualifiedIdent         ::= SubIdent [GenericPostfix] "." SubIdent
+ClassQualifiedIdent         ::= (SubIdent [GenericPostfix] ".")+ SubIdent
 FullyQualifiedIdent	        ::=	namespacePart? SubIdent
 NamespaceIdent	            ::=	namespacePart? SubIdent
 SubIdent                    ::= identifier
@@ -535,7 +535,7 @@ private recordValueRest     ::= ";" recordValue
 private recordValue         ::= identifier ":" constExpr
 
 private rec_record_colon    ::= !(")" | END)
-private rec_expr_colon      ::= !(")" | ";") & rec_section
+private rec_expr_colon      ::= !(")" | ";" | INDEX | "name") & rec_section
 
 /*private Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
                                 INHERITED [TypeID] exprParentheses? | EntityID DesignatorItemEx* | DesignatorItemEx+

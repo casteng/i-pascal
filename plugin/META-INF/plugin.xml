@@ -13,7 +13,7 @@
         <ul>
           <li>statements completion</li>
           <li>exception variables in except clause resolving</li>
-          <li>binary and octal numbers support</li>
+          <li>binary and octal numbers support (OBJFPC)</li>
         </ul>
         <p>0.9</p>
         <ul>

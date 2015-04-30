@@ -45,7 +45,7 @@ public class PascalBlock extends AbstractBlock implements Block {
             PasTypes.ARGUMENT_LIST, PasTypes.ASSIGN_PART);
 
     private static final TokenSet TOKENS_NO_LF_AFTER_SEMI = TokenSet.create(PasTypes.FORMAL_PARAMETER_SECTION, PasTypes.EXPORTED_ROUTINE,
-            PasTypes.CLASS_PROPERTY_SPECIFIER, PasTypes.PROCEDURE_REFERENCE);
+            PasTypes.CLASS_PROPERTY_SPECIFIER, PasTypes.PROCEDURE_TYPE);
 
     private static final TokenSet TOKENS_COMMENT = TokenSet.create(PasTypes.COMMENT, PasTypes.CT_DEFINE, PasTypes.CT_ELSE, PasTypes.CT_ENDIF, PasTypes.CT_IF,
             PasTypes.CT_IFDEF, PasTypes.CT_IFNDEF, PasTypes.CT_IFOPT, PasTypes.CT_UNDEFINE);

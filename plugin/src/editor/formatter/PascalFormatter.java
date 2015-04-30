@@ -76,6 +76,9 @@ public class PascalFormatter implements FormattingModelBuilder {
                 .afterInside(PasTypes.INTERFACE, PasTypes.UNIT_MODULE_HEAD).blankLines(1)
                 .after(PasTypes.IMPLEMENTATION).blankLines(1)
                 .after(PasTypes.BLOCK_BODY).blankLines(1)
+
+                .after(PasTypes.EQ).spacing(1, 1, 0, true, 1)
+                .before(PasTypes.EQ).spacing(1, 1, 0, true, 1)
                 ;
     }
 }

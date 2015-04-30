@@ -16,9 +16,12 @@ end;
 
 begin
     try
-    except on E: TException do
-    begin
-        print(E.field);
-    end;
+    except
+        on E: TException do
+        begin
+            print(E.field);
+        end;
+        on TException do
+            print(nil);
     end;
 end.

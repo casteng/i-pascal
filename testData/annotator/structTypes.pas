@@ -99,6 +99,15 @@ type
     TArrayP = bitpacked array of PVec;
     PArrayP = ^TArrayP;
 
+    TOSVersion = record
+    public type
+        TPlatform = (pfWindows, pfMacOS);
+    private
+        class var FPlatform: TPlatform;
+    public
+        class property Platform: TPlatform read FPlatform;
+    end;
+
 implementation
 
 var
