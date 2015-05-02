@@ -357,7 +357,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                     adjustDocument(context, "()", 1);
                     AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
                     DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
-                    act.actionPerformed(AnActionEvent.createFromAnAction(act, null, "", dataContext));
+                    act.actionPerformed(new AnActionEvent(null, dataContext,"",act.getTemplatePresentation(),ActionManager.getInstance(),0));
                 }
             });
         }

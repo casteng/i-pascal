@@ -2,7 +2,7 @@
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
     <version>0.91</version>
-    <vendor email="argb32@gmail.com" url="http://www.siberika.com">siberika.com</vendor>
+    <vendor email="argb32@gmail.com" url="http://www.siberika.com/pasidea.htm">siberika.com</vendor>
 
     <description><![CDATA[
       Pascal support for IDEA.<br>
@@ -12,7 +12,7 @@
         <p>0.91</p>
         <ul>
           <li>statements completion</li>
-          <li>support of nested type variable and constant declarations</li>
+          <li>support of nested type, variable and constant declarations</li>
           <li>exception variables in except clause resolving</li>
           <li>binary and octal numbers support (OBJFPC)</li>
         </ul>

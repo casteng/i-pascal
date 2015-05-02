@@ -1,6 +1,7 @@
 {
 Built-in identifiers unit.
 You may edit this file but any modifications will be discarded after IDE restart.
+Feel free to suggest additions to this file.
 }
 unit $builtins;
 
@@ -167,6 +168,13 @@ const
     function StrLong(val, width: Longint): ShortString;
     function Str0Long(val: Longint): ShortString;
 
+    // Added for D7 compatibility
+    function Sin(x: Extended): Extended;
+    function Cos(x: Extended): Extended;
+    function Exp(x: Extended): Extended;
+    function Int(x: Extended): Extended;
+    function Frac(x: Extended): Extended;
+
 // Include-based template stub classes
 type
     __Parent = class()
@@ -239,7 +247,6 @@ type
     
     _GenHashMap = class(__Parent)
         function GetLoadFactor(): Single;
-
     protected
         FValues: _HashMapKeys;
         strict protected
