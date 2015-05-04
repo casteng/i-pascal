@@ -2,7 +2,7 @@ package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.Processor;
-import com.siberika.idea.pascal.jps.PascalBundle;
+import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
@@ -157,8 +157,8 @@ public class FPCBackendCompiler {
         return result;
     }
 
-    private static String getMessage(String moduleName, @PropertyKey(resourceBundle = PascalBundle.BUNDLE)String msgId, String...args) {
-        return PascalBundle.message(msgId, args) + (moduleName != null ? " (" + PascalBundle.message("general.module", moduleName) + ")" : "");
+    private static String getMessage(String moduleName, @PropertyKey(resourceBundle = JpsPascalBundle.JPSBUNDLE)String msgId, String...args) {
+        return JpsPascalBundle.message(msgId, args) + (moduleName != null ? " (" + JpsPascalBundle.message("general.module", moduleName) + ")" : "");
     }
 
 }
