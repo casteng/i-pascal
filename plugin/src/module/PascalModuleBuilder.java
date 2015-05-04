@@ -48,7 +48,7 @@ public class PascalModuleBuilder extends ModuleBuilder {
 
         ContentEntry contentEntry = doAddContentEntry(rootModel);
         if (contentEntry != null) {
-            addSourceRoot(contentEntry, "src");//TODO add test source root
+            addSourceRoot(contentEntry, "");//TODO add test source root
         }
 
         if (myCompilerOutputPath != null) {

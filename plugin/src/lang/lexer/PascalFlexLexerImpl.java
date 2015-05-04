@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.sdk.DefinesParser;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileReader;
@@ -114,7 +115,10 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         }
     }
 
-    private void getDefinesFromCmdLine(String options) {
+    private void getDefinesFromCmdLine(@Nullable String options) {
+        if (null == options) {
+            return;
+        }
         String[] compilerOptions = options.split("\\s+");
         for (String opt : compilerOptions) {
             if (opt.startsWith("-d")) {
