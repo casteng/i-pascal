@@ -224,15 +224,15 @@ private progWoHead          ::= [UsesClause] BlockGlobal "." {pin=2 recoverWhile
 
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
-UsesClause                  ::= USES namespaceNameList {pin=1 recoverWhile=rec_section}
+UsesClause                  ::= USES namespaceNameList ";" {pin=1}
 
 private moduleLibrary       ::= LibraryModuleHead [UsesClause] BlockGlobal "." {pin=1}
 LibraryModuleHead           ::= LIBRARY NamespaceIdent HintingDirective* ";" {pin=1}
 
 private modulePackage       ::= PackageModuleHead RequiresClause [ContainsClause] END "." {pin=1}
 PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1}
-RequiresClause              ::= REQUIRES namespaceNameList {pin=1}
-ContainsClause              ::= CONTAINS namespaceNameList {pin=1}
+RequiresClause              ::= REQUIRES namespaceNameList ";" {pin=1}
+ContainsClause              ::= CONTAINS namespaceNameList ";" {pin=1}
 
 UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
 
@@ -302,9 +302,9 @@ ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
 private progParamsRest      ::= "," progParam {pin=1}
 private progParam           ::= identifier {}
 
-private namespaceNameList   ::= namespaceFileName namespaceNamesRest* ";"
+private namespaceNameList   ::= namespaceFileName namespaceNamesRest*
 private namespaceNamesRest  ::= COMMA namespaceFileName {pin=1}
-private namespaceFileName	::=	NamespaceIdent [IN quotedString] {}
+private namespaceFileName	::=	NamespaceIdent [IN quotedString] {recoverWhile=rec_semi_section}
 
 BlockGlobal	                ::=	[';'] declSection* BlockBody {recoverWhile=rec_block_global_end}
 BlockLocal 	                ::=	[';'] declSectionNested* BlockBody
@@ -505,7 +505,7 @@ LabelId                     ::= label
 
 ClassQualifiedIdent         ::= (SubIdent [GenericPostfix] ".")+ SubIdent
 FullyQualifiedIdent	        ::=	namespacePart? SubIdent
-NamespaceIdent	            ::=	namespacePart? SubIdent
+NamespaceIdent	            ::=	namespacePart? SubIdent {name="Identifier"}
 SubIdent                    ::= identifier
 private namespacePart       ::= namespaceItem+
 private namespaceItem       ::= SubIdent "."// {pin=2 }

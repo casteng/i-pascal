@@ -34,6 +34,7 @@ import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
+import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
@@ -252,7 +253,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         if (PsiUtil.isInstanceOfAny(PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class), PasGenericTypeIdent.class, PasNamedIdent.class)) {
             return;                                                                                                       // Inside type declaration
         }
-        if (PsiUtil.isInstanceOfAny(pos, PasUnitInterface.class, PasUnitImplementation.class, PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class, PasRoutineImplDecl.class)
+        if (PsiUtil.isInstanceOfAny(pos, PasUnitInterface.class, PasUnitImplementation.class, PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class, PasRoutineImplDecl.class, PasBlockGlobal.class)
           || (PsiUtil.isInstanceOfAny(originalPos, PasUnitInterface.class, PasUnitImplementation.class, PasModule.class) && (pos instanceof PasUsesClause))
           || ((originalPos instanceof PasUsesClause) && (originalPos.getParent() instanceof PasModule))) {
             PasEntityScope scope = pos instanceof PasEntityScope ? (PasEntityScope) pos : PsiUtil.getNearestAffectingScope(pos);
@@ -267,8 +268,12 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private void handleUnitSection(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
         if (((pos instanceof PasUnitInterface) && PsiUtil.isInstanceOfAny(originalPos, PasUnitInterface.class, PasModule.class))
-          || ((pos instanceof PasUnitImplementation) && (originalPos instanceof PasUnitImplementation))) {
+         || ((pos instanceof PasUnitImplementation) && (originalPos instanceof PasUnitImplementation))) {
             appendTokenSetUnique(result, PascalLexer.USES, pos);
+            appendTokenSet(result, PascalLexer.DECLARATIONS);
+        }
+        if (pos instanceof PasBlockGlobal) {
+            appendTokenSetUnique(result, PascalLexer.USES, pos.getParent());
             appendTokenSet(result, PascalLexer.DECLARATIONS);
         }
     }
@@ -312,10 +317,10 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static void handleUses(CompletionResultSet result, CompletionParameters parameters, @NotNull PsiElement pos, PsiElement originalPos) {
-        if ((pos instanceof PasUsesClause) && (originalPos instanceof PasUsesClause)) {
-            if ((parameters.getPosition().getParent() instanceof PsiErrorElement) || (parameters.getOriginalPosition().getParent() instanceof PsiErrorElement)) {
+        if ((pos instanceof PasUsesClause)) {
+            /*if ((parameters.getPosition().getParent() instanceof PsiErrorElement) || (parameters.getOriginalPosition().getParent() instanceof PsiErrorElement)) {
                 return;
-            }
+            }*/
             PasModule module = PsiUtil.getElementPasModule(pos);
             Set<String> excludedUnits = new HashSet<String>();
             if (module instanceof PascalModuleImpl) {
