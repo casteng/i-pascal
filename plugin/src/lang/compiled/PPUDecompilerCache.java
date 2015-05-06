@@ -85,10 +85,10 @@ public class PPUDecompilerCache {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.empty.ppudump.result"));
                 }
             } catch (IOException e) {
-                LOG.warn(e.getMessage(), e);
+                LOG.warn("I/O error: " + e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.io.error"));
             } catch (ParseException e) {
-                LOG.warn(e.getMessage(), e);
+                LOG.warn("Parse error: " + e.getMessage(), e);
                 String ver = getPPUDumpVersion(ppuDump);
                 if (ver.compareTo(PPUDUMP_VERSION_MIN) < 0) {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.version.error", ver, PPUDUMP_VERSION_MIN));
@@ -98,7 +98,7 @@ public class PPUDecompilerCache {
             } catch (PascalException e1) {
                 return new PPUDumpParser.Section(e1.getMessage());
             } catch (Exception e) {
-                LOG.warn(e.getMessage(), e);
+                LOG.warn("Unknown error: " + e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.unknown.error", xml));
             }
         }
@@ -125,7 +125,13 @@ public class PPUDecompilerCache {
         Collection<VirtualFile> unitFiles = ModuleUtil.getAllCompiledModuleFilesByName(module, unitName);
         if (!unitFiles.isEmpty()) {
             try {
-                return cache.get(FileUtil.getNameWithoutExtension(unitFiles.iterator().next().getName()));
+                String key = FileUtil.getNameWithoutExtension(unitFiles.iterator().next().getName());
+                PPUDumpParser.Section section = cache.get(key);
+                if (section.isError()) {
+                    LOG.warn("Invalidating ppu cache for key: " + key);
+                    cache.invalidate(key);
+                }
+                return section;
             } catch (Exception e) {
                 LOG.warn(e.getMessage(), e);
             }

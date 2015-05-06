@@ -651,6 +651,10 @@ public class PPUDumpParser {
             this.removeChars = removeChars;
         }
 
+        public boolean isError() {
+            return (null == type) && (null == textBegin) && (null == textAfterName) && (null == beforeSubsec) && (null == textEnd);
+        }
+
         void reset() {
             data = new TreeMap<String, Object>();
             sb = new StringBuilder();
