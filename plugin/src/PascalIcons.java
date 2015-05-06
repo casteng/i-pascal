@@ -35,4 +35,15 @@ public interface PascalIcons {
     final Icon PROGRAM = IconLoader.findIcon(PATH + "program_16x16.png");
     final Icon INCLUDE = IconLoader.findIcon(PATH + "include_16x16.png");
     final Icon COMPILED = IconLoader.findIcon(PATH + "include_16x16.png");
+
+    final Icon TYPE = GENERAL;
+    final Icon VARIABLE = GENERAL;
+    final Icon CONSTANT = GENERAL;
+    final Icon PROPERTY = GENERAL;
+    final Icon ROUTINE = GENERAL;
+    final Icon INTERFACE = GENERAL;
+    final Icon CLASS = GENERAL;
+    final Icon OBJECT = GENERAL;
+    final Icon RECORD = GENERAL;
+    final Icon HELPER = GENERAL;
 }

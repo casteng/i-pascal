@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.91</version>
+    <version>0.92</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/pasidea.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,11 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.92</p>
+        <ul>
+          <li>basic structure view</li>
+          <li>completion improve</li>
+        </ul>
         <p>0.91</p>
         <ul>
           <li>statements completion</li>
@@ -158,7 +163,7 @@
         <lang.formatter language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalFormatter"/>
         <lang.smartEnterProcessor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalSmartEnterProcessor"/>
 
-        <!--<lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PasStructureViewFactory"/>-->
+        <lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.structure.PasStructureViewFactory"/>
 
         <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>-->
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>

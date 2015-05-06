@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -88,7 +87,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         if (!isCacheActual(privateMembers, buildPrivateStamp)) {
             buildPrivateMembers();
         }
-        Collection<PasField> result = new HashSet<PasField>();
+        Collection<PasField> result = new LinkedHashSet<PasField>();
         result.addAll(publicMembers.values());
         result.addAll(privateMembers.values());
         return result;
