@@ -214,7 +214,7 @@
 }
 
 external pascal             ::= parsePascal Module
-Module                      ::= moduleUnit | moduleLibrary | modulePackage | moduleProgram
+Module                      ::= [prolog] (moduleUnit | moduleLibrary | modulePackage | moduleProgram)
                             {extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
                              implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 
@@ -223,6 +223,7 @@ private progWithHead        ::= ProgramModuleHead progWoHead {pin=1}
 private progWoHead          ::= [UsesClause] BlockGlobal "." {pin=2 recoverWhile=rec_section_global}
 
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
+private prolog              ::= {recoverWhile=rec_module_start}
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
 UsesClause                  ::= USES namespaceNameList ";" {pin=1}
 
@@ -238,6 +239,7 @@ UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 rec
 
 private rec_block_global_end ::= !(".")
 private rec_block_local_end      ::= rec_section
+private rec_module_start    ::= !(UNIT | LIBRARY | PROGRAM | PACKAGE | USES) & rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ASM | ".")
@@ -306,7 +308,7 @@ private namespaceNameList   ::= namespaceFileName namespaceNamesRest*
 private namespaceNamesRest  ::= COMMA namespaceFileName {pin=1}
 private namespaceFileName	::=	NamespaceIdent [IN quotedString] {recoverWhile=rec_semi_section}
 
-BlockGlobal	                ::=	[';'] declSection* BlockBody {recoverWhile=rec_block_global_end}
+BlockGlobal	                ::=	declSection* BlockBody {recoverWhile=rec_block_global_end}
 BlockLocal 	                ::=	[';'] declSectionNested* BlockBody
 BlockLocalNested1          ::=	[';'] declSectionNested1* BlockBody {pin=2}
 BlockLocalWONested          ::=	[';'] declSectionWONested* BlockBody {pin=2}
@@ -351,7 +353,7 @@ ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" 
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
-TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" type {recoverWhile=rec_section}
+TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" type {pin=3 recoverWhile=rec_section}
 private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl HintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= ClassForwardDecl ";"

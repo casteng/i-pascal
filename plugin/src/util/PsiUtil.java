@@ -495,6 +495,10 @@ public class PsiUtil {
         return PsiTreeUtil.getParentOfType(element, PasEntityScope.class);
     }
 
+    public static PsiElement getNearestSection(PsiElement element) {
+        return PsiTreeUtil.getParentOfType(element, PasEntityScope.class, PasUnitInterface.class, PasUnitImplementation.class, PasBlockGlobal.class);
+    }
+
     // returns name element of type with which is declared the specified field or routine
     @Nullable
     public static PasFullyQualifiedIdent getTypeNameIdent(PascalNamedElement element) {

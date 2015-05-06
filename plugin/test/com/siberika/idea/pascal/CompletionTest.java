@@ -41,7 +41,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     private void checkCompletionContains(CodeInsightTestFixture myFixture, String...expected) {
-        myFixture.completeBasicAllCarets();
+        myFixture.completeBasic();
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
         List<String> exp = Arrays.asList(expected);
@@ -79,6 +79,15 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
                 "procedure", "function", "constructor", "destructor",
                 "uses", "begin");
+        myFixture.type('v');
+        checkCompletion(myFixture, "var", "threadvar");
+    }
+
+    public void testUnitDeclSectionImpl() {
+        myFixture.configureByFiles("unitDeclSectionImpl.pas");
+        checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
+                "procedure", "function", "constructor", "destructor",
+                "uses", "begin", "initialization", "finalization");
         myFixture.type('v');
         checkCompletion(myFixture, "var", "threadvar");
     }

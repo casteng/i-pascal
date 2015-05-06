@@ -32,6 +32,7 @@ import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
@@ -45,6 +46,7 @@ import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -169,8 +171,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
                 if (!(prev instanceof PasTypeSection) && !(PsiUtil.isInstanceOfAny(originalPos, PasTypeSection.class, PasRoutineImplDecl.class))) {
                     handleModuleHeader(result, parameters, pos);
-                    handleModuleSection(result, parameters, pos);
-                    handleUnitSection(result, parameters, pos, originalPos);
+                    handleModuleSection(result, parameters, pos, originalPos);
                     handleUses(result, parameters, pos, originalPos);
                 }
                 handleDeclarations(result, parameters, pos, originalPos);
@@ -253,37 +254,31 @@ public class PascalCompletionContributor extends CompletionContributor {
         if (PsiUtil.isInstanceOfAny(PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class), PasGenericTypeIdent.class, PasNamedIdent.class)) {
             return;                                                                                                       // Inside type declaration
         }
-        if (PsiUtil.isInstanceOfAny(pos, PasUnitInterface.class, PasUnitImplementation.class, PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class, PasRoutineImplDecl.class, PasBlockGlobal.class)
-          || (PsiUtil.isInstanceOfAny(originalPos, PasUnitInterface.class, PasUnitImplementation.class, PasModule.class) && (pos instanceof PasUsesClause))
-          || ((originalPos instanceof PasUsesClause) && (originalPos.getParent() instanceof PasModule))) {
-            PasEntityScope scope = pos instanceof PasEntityScope ? (PasEntityScope) pos : PsiUtil.getNearestAffectingScope(pos);
-            if (scope instanceof PasModule) {
-                appendTokenSet(result, PascalLexer.DECLARATIONS);
-            } else if (scope instanceof PascalRoutineImpl) {
+        if (PsiUtil.isInstanceOfAny(pos, PasUnitInterface.class, PasUnitImplementation.class,
+                PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class,
+                PasRoutineImplDecl.class, PasBlockGlobal.class, PasImplDeclSection.class)) {
+            PsiElement scope = pos instanceof PasEntityScope ? (PasEntityScope) pos : PsiUtil.getNearestSection(pos);
+            if (scope instanceof PasUnitImplementation) {
+                appendTokenSetUnique(result, PascalLexer.UNIT_SECTIONS, scope.getParent());
+            }
+            if (scope instanceof PascalRoutineImpl) {
                 appendTokenSet(result, DECLARATIONS_LOCAL);
+            } else {
+                appendTokenSet(result, PascalLexer.DECLARATIONS);
+                appendTokenSetUnique(result, PascalLexer.USES, scope);
             }
             appendTokenSetUnique(result, PasTypes.BEGIN, scope);
         }
     }
 
-    private void handleUnitSection(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
-        if (((pos instanceof PasUnitInterface) && PsiUtil.isInstanceOfAny(originalPos, PasUnitInterface.class, PasModule.class))
-         || ((pos instanceof PasUnitImplementation) && (originalPos instanceof PasUnitImplementation))) {
-            appendTokenSetUnique(result, PascalLexer.USES, pos);
-            appendTokenSet(result, PascalLexer.DECLARATIONS);
-        }
-        if (pos instanceof PasBlockGlobal) {
-            appendTokenSetUnique(result, PascalLexer.USES, pos.getParent());
-            appendTokenSet(result, PascalLexer.DECLARATIONS);
-        }
-    }
-
-    private void handleModuleSection(CompletionResultSet result, CompletionParameters parameters, PsiElement pos) {
+    private void handleModuleSection(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
         if ((pos instanceof PascalModuleImpl)) {
             PascalModuleImpl module = (PascalModuleImpl) pos;
             switch (module.getModuleType()) {
                 case UNIT: {
-                    appendTokenSetUnique(result, PascalLexer.UNIT_SECTIONS, pos);
+                    if (!(originalPos instanceof PascalFile)) {
+                        appendTokenSetUnique(result, PascalLexer.UNIT_SECTIONS, pos);
+                    }
                     break;
                 }
                 case PACKAGE: {
