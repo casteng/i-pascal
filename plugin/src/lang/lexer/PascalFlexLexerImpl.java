@@ -171,7 +171,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private static boolean isValidProject(Project project) {
-        return (project != null) && (ProjectRootManager.getInstance(project) != null);
+        return (project != null) && !project.isDisposed() && (ProjectRootManager.getInstance(project) != null);
     }
 
     private Sdk getSdk(Project project, VirtualFile virtualFile) {

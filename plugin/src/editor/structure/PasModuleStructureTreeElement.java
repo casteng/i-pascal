@@ -4,15 +4,12 @@ import com.intellij.ide.structureView.StructureViewTreeElement;
 import com.intellij.ide.structureView.impl.common.PsiTreeElementBase;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * Author: George Bakhtadze
@@ -26,17 +23,7 @@ public class PasModuleStructureTreeElement extends PsiTreeElementBase<PasModule>
     @NotNull
     @Override
     public Collection<StructureViewTreeElement> getChildrenBase() {
-        if (null == getElement()) {
-            return Collections.emptyList();
-        }
-        Collection<PasField> fields = getElement().getAllFields();
-        Collection<StructureViewTreeElement> res = new ArrayList<StructureViewTreeElement>();
-        for (PasField field : fields) {
-            if (PasField.TYPES_STRUCTURE.contains(field.fieldType)) {
-                res.add(new PasStructureViewTreeElement(null, field));
-            }
-        }
-        return res;
+        return PasStructureViewTreeElement.collectChildren(getElement());
     }
 
     @Override

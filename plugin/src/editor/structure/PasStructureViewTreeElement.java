@@ -1,19 +1,19 @@
 package com.siberika.idea.pascal.editor.structure;
 
-import com.intellij.icons.AllIcons;
 import com.intellij.ide.structureView.StructureViewTreeElement;
 import com.intellij.ide.structureView.impl.common.PsiTreeElementBase;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.siberika.idea.pascal.PascalIcons;
-import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -34,6 +34,30 @@ public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> 
         return Collections.emptyList();
     }
 
+    @NotNull
+    public static Collection<StructureViewTreeElement> collectChildren(@Nullable PasEntityScope element) {
+        if (null == element) {
+            return Collections.emptyList();
+        }
+        Collection<PasField> fields = element.getAllFields();
+        Collection<StructureViewTreeElement> res = new ArrayList<StructureViewTreeElement>();
+        for (PasField field : fields) {
+            if (PasField.TYPES_STRUCTURE.contains(field.fieldType)) {
+                if (field.fieldType == PasField.FieldType.TYPE) {
+                    PascalStructType structType = PasStructStructureTreeElement.getStructElement(field);
+                    if (structType != null) {
+                        res.add(new PasStructStructureTreeElement(structType));
+                    } else {
+                        res.add(new PasStructureViewTreeElement(null, field));
+                    }
+                } else {
+                    res.add(new PasStructureViewTreeElement(null, field));
+                }
+            }
+        }
+        return res;
+    }
+
     public PasField getField() {
         return field;
     }
@@ -46,20 +70,6 @@ public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> 
             } else if (field.fieldType == PasField.FieldType.CONSTANT) {
                 return PascalIcons.CONSTANT;
             } else if (field.fieldType == PasField.FieldType.TYPE) {
-                PasTypeDecl typeDecl = PsiUtil.getTypeDeclaration(field.element);
-                if (typeDecl != null) {
-                    if (typeDecl.getInterfaceTypeDecl() != null) {
-                        return AllIcons.Nodes.Interface;//PascalIcons.INTERFACE;
-                    } if (typeDecl.getClassTypeDecl() != null) {
-                        return AllIcons.Nodes.Class;// PascalIcons.CLASS;
-                    } if (typeDecl.getObjectDecl() != null) {
-                        return PascalIcons.OBJECT;
-                    } if (typeDecl.getRecordDecl() != null) {
-                        return PascalIcons.RECORD;
-                    } if ((typeDecl.getClassHelperDecl() != null) || (typeDecl.getRecordHelperDecl() != null)) {
-                        return PascalIcons.HELPER;
-                    }
-                }
                 return PascalIcons.TYPE;
             } else if (field.fieldType == PasField.FieldType.PROPERTY) {
                 return PascalIcons.PROPERTY;
