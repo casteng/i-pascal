@@ -293,7 +293,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     /**
-     * Handle all elements of the specified classes in project with the given processor
+     * Handle all elements of the specified classes in project source (not in PPU) with the given processor
      */
     public static <T extends PascalPsiElement> void processProjectElements(Project project, PsiElementProcessor<T> processor, Class<? extends T>... clazz) {
         Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,

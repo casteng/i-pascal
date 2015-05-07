@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.compiled;
 
+import com.intellij.lang.Language;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
@@ -37,4 +38,11 @@ public class PPUViewProvider extends ClassFileViewProvider implements FileViewPr
 
         return null;
     }
+
+    @NotNull
+    @Override
+    public Language getBaseLanguage() {
+        return PascalLanguage.INSTANCE;
+    }
+
 }

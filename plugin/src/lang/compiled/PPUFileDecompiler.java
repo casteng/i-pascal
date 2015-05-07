@@ -1,8 +1,6 @@
 package com.siberika.idea.pascal.lang.compiled;
 
-import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.fileTypes.BinaryFileDecompiler;
-import com.intellij.openapi.fileTypes.ContentBasedFileSubstitutor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -26,17 +24,38 @@ public class PPUFileDecompiler implements BinaryFileDecompiler {
         if (projects.length == 0) return "";
         final Project project = projects[0];
 
-        final ContentBasedFileSubstitutor[] processors = Extensions.getExtensions(ContentBasedFileSubstitutor.EP_NAME);
-        for (ContentBasedFileSubstitutor processor : processors) {
-            if (processor.isApplicable(project, file)) {
-                return processor.obtainFileText(project, file);
-            }
-        }
-
         return PPUFileImpl.decompile(PsiManager.getInstance(project), file);
     }
 
     public static String decompileText(String filename, Module module) {
         return PPUDecompilerCache.decompile(module, filename);
     }
+
+    /*@Override
+    public boolean accepts(@NotNull VirtualFile file) {
+        return PPUFileType.INSTANCE.equals(file.getFileType());
+    }
+
+    @NotNull
+    @Override
+    public ClsStubBuilder getStubBuilder() {
+        return new ClsStubBuilder() {
+            @Override
+            public int getStubVersion() {
+                return 1;
+            }
+
+            @Nullable
+            @Override
+            public PsiFileStub<?> buildFileStub(@NotNull FileContent fileContent) throws ClsFormatException {
+                return null;
+            }
+        };
+    }
+
+    @NotNull
+    @Override
+    public FileViewProvider createFileViewProvider(@NotNull VirtualFile file, @NotNull PsiManager manager, boolean physical) {
+        return new PPUViewProvider(manager, file, physical);
+    }*/
 }
