@@ -9,6 +9,7 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,10 +49,10 @@ public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> 
                     if (structType != null) {
                         res.add(new PasStructStructureTreeElement(structType));
                     } else {
-                        res.add(new PasStructureViewTreeElement(null, field));
+                        res.add(new PasStructureViewTreeElement(field.element, field));
                     }
                 } else {
-                    res.add(new PasStructureViewTreeElement(null, field));
+                    res.add(new PasStructureViewTreeElement(field.element, field));
                 }
             }
         }
@@ -84,12 +85,13 @@ public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> 
     @Override
     public String getPresentableText() {
         PsiElement element = getElement();
-        if (element instanceof PascalNamedElement){
-            return ((PascalNamedElement) element).getName();
+        if (element instanceof PascalNamedElement) {
+            return PsiUtil.getFieldName((PascalNamedElement) element);
         } else if (element instanceof PsiFile) {
             return ((PsiFile) element).getName();
         } else {
             return "-";
         }
     }
+
 }

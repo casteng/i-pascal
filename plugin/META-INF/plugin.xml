@@ -167,6 +167,7 @@
         <lang.smartEnterProcessor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalSmartEnterProcessor"/>
 
         <lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.structure.PasStructureViewFactory"/>
+        <structureViewBuilder key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.structure.PascalStructureViewBuilder" />
 
         <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>-->
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
