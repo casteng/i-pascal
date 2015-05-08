@@ -62,7 +62,7 @@ public class PPUDecompilerCache {
 
     private class Loader extends CacheLoader<String, PPUDumpParser.Section> {
         @Override
-        public PPUDumpParser.Section load(String key) throws Exception {
+        public PPUDumpParser.Section load(@NotNull String key) throws Exception {
             Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
             if (null == sdk) { return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.sdk")); }
             if ((sdk.getHomePath() == null) || !(sdk.getSdkType() instanceof FPCSdkType)) {

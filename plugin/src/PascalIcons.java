@@ -31,19 +31,19 @@ public interface PascalIcons {
 
     final Icon GENERAL = IconLoader.findIcon(PATH + "pascal_16x16.png");
     final Icon MODULE  = IconLoader.findIcon(PATH + "module_16x16.png");
-    final Icon UNIT    = IconLoader.findIcon(PATH + "unit_16x16.png");
+    final Icon UNIT    = IconLoader.findIcon(PATH + "nunit.png");
     final Icon PROGRAM = IconLoader.findIcon(PATH + "program_16x16.png");
     final Icon INCLUDE = IconLoader.findIcon(PATH + "include_16x16.png");
     final Icon COMPILED = IconLoader.findIcon(PATH + "include_16x16.png");
 
-    final Icon TYPE = GENERAL;
-    final Icon VARIABLE = GENERAL;
-    final Icon CONSTANT = GENERAL;
-    final Icon PROPERTY = GENERAL;
-    final Icon ROUTINE = GENERAL;
-    final Icon INTERFACE = GENERAL;
-    final Icon CLASS = GENERAL;
-    final Icon OBJECT = GENERAL;
-    final Icon RECORD = GENERAL;
-    final Icon HELPER = GENERAL;
+    final Icon TYPE = IconLoader.findIcon(PATH + "ntype.png");
+    final Icon VARIABLE = IconLoader.findIcon(PATH + "nvar.png");
+    final Icon CONSTANT = IconLoader.findIcon(PATH + "nconst.png");
+    final Icon PROPERTY = IconLoader.findIcon(PATH + "nproperty.png");
+    final Icon ROUTINE = IconLoader.findIcon(PATH + "nroutine.png");
+    final Icon INTERFACE = IconLoader.findIcon(PATH + "ninterface.png");
+    final Icon CLASS = IconLoader.findIcon(PATH + "nclass.png");
+    final Icon OBJECT = IconLoader.findIcon(PATH + "nobject.png");
+    final Icon RECORD = IconLoader.findIcon(PATH + "nrecord.png");
+    final Icon HELPER = IconLoader.findIcon(PATH + "nhelper.png");
 }

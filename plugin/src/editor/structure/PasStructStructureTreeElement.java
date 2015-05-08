@@ -1,9 +1,14 @@
 package com.siberika.idea.pascal.editor.structure;
 
-import com.intellij.icons.AllIcons;
 import com.intellij.ide.structureView.StructureViewTreeElement;
 import com.intellij.ide.structureView.impl.common.PsiTreeElementBase;
 import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
+import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
+import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
+import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -32,19 +37,17 @@ public class PasStructStructureTreeElement extends PsiTreeElementBase<PascalStru
     @Override
     public Icon getIcon(boolean open) {
         if (getElement() != null) {
-            PasTypeDecl typeDecl = PsiUtil.getTypeDeclaration(getElement());
-            if (typeDecl != null) {
-                if (typeDecl.getInterfaceTypeDecl() != null) {
-                    return AllIcons.Nodes.Interface;//PascalIcons.INTERFACE;
-                } if (typeDecl.getClassTypeDecl() != null) {
-                    return AllIcons.Nodes.Class;// PascalIcons.CLASS;
-                } if (typeDecl.getObjectDecl() != null) {
-                    return PascalIcons.OBJECT;
-                } if (typeDecl.getRecordDecl() != null) {
-                    return PascalIcons.RECORD;
-                } if ((typeDecl.getClassHelperDecl() != null) || (typeDecl.getRecordHelperDecl() != null)) {
-                    return PascalIcons.HELPER;
-                }
+            PascalStructType el = getElement();
+            if (el instanceof PasInterfaceTypeDecl) {
+                return PascalIcons.INTERFACE;
+            } else if (el instanceof PasClassTypeDecl) {
+                return PascalIcons.CLASS;
+            } else if (el instanceof PasObjectDecl) {
+                return PascalIcons.OBJECT;
+            } else if (el instanceof PasRecordDecl) {
+                return PascalIcons.RECORD;
+            } else if ((el instanceof PasClassHelperDecl) || (el instanceof PasRecordHelperDecl)) {
+                return PascalIcons.HELPER;
             }
         }
         return null;
