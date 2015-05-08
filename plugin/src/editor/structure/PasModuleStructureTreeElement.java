@@ -5,6 +5,7 @@ import com.intellij.ide.structureView.impl.common.PsiTreeElementBase;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,6 +46,10 @@ public class PasModuleStructureTreeElement extends PsiTreeElementBase<PasModule>
     @Nullable
     @Override
     public String getPresentableText() {
-        return getElement() != null ? getElement().getName() : "-";
+        String name = getElement() != null ? getElement().getName() : "-";
+        if (StringUtils.isEmpty(name)) {
+            name = getElement().getContainingFile().getName();
+        }
+        return name;
     }
 }
