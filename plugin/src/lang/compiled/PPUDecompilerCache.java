@@ -12,7 +12,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
-import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import com.siberika.idea.pascal.util.ModuleUtil;
@@ -72,7 +71,7 @@ public class PPUDecompilerCache {
             if (files.isEmpty()) {
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.ppu.notfound", key));
             }
-            File ppuDump = PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath());
+            File ppuDump = BasePascalSdkType.getDecompilerCommand(sdk);
             String xml = "";
             try {
                 if (!ppuDump.isFile() || !ppuDump.canExecute()) {

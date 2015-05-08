@@ -60,7 +60,7 @@ public class FPCSdkType extends BasePascalSdkType {
     }
 
     public FPCSdkType() {
-        super(JpsPascalModelSerializerExtension.PASCAL_SDK_TYPE_ID);
+        super(JpsPascalModelSerializerExtension.FPC_SDK_TYPE_ID);
         InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
         if (definesStream != null) {
             DefinesParser.parse(definesStream);
@@ -163,12 +163,13 @@ public class FPCSdkType extends BasePascalSdkType {
     public void setupSdkPaths(@NotNull final Sdk sdk) {
         String target = getTargetString(sdk.getHomePath());
         configureSdkPaths(sdk, target);
-        configureOptions(sdk, target);
+        configureOptions(sdk, getAdditionalData(sdk), target);
     }
 
-    private void configureOptions(Sdk sdk, String target) {
+    @Override
+    protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {
+        super.configureOptions(sdk, data, target);
         StrBuilder sb = new StrBuilder();
-        PascalSdkData data = getAdditionalData(sdk);
         if (SystemUtils.IS_OS_WINDOWS) {
             sb.append("-dMSWINDOWS ");
         } else {
