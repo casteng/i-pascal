@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -116,7 +116,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
         }
-        Collection<PasField> result = new HashSet<PasField>();
+        Collection<PasField> result = new LinkedHashSet<PasField>();
         for (Map<String, PasField> fields : members) {
             result.addAll(fields.values());
         }
@@ -179,7 +179,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             }
             child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
         }
-        buildStamp = PsiUtil.getFileStamp(getContainingFile());;
+        buildStamp = PsiUtil.getFileStamp(getContainingFile());
         //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
         building = false;
     }
@@ -232,7 +232,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     public abstract PasClassParent getClassParent();
 
     private void buildParentScopes() {
-        PasClassParent parent = null;
+        PasClassParent parent;
         parent = getClassParent();
         parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());
         parentScopes = new SmartList<PasEntityScope>();

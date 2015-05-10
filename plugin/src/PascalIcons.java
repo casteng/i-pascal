@@ -30,11 +30,11 @@ public interface PascalIcons {
     final String PATH = "/icons/";
 
     final Icon GENERAL = IconLoader.findIcon(PATH + "pascal_16x16.png");
-    final Icon MODULE  = IconLoader.findIcon(PATH + "module_16x16.png");
+    final Icon MODULE  = GENERAL;
     final Icon UNIT    = IconLoader.findIcon(PATH + "nunit.png");
-    final Icon PROGRAM = IconLoader.findIcon(PATH + "program_16x16.png");
-    final Icon INCLUDE = IconLoader.findIcon(PATH + "include_16x16.png");
-    final Icon COMPILED = IconLoader.findIcon(PATH + "include_16x16.png");
+    final Icon PROGRAM = IconLoader.findIcon(PATH + "nprogram.png");
+    final Icon INCLUDE = IconLoader.findIcon(PATH + "ninclude.png");
+    final Icon COMPILED = IconLoader.findIcon(PATH + "compiled.png");
 
     final Icon TYPE = IconLoader.findIcon(PATH + "ntype.png");
     final Icon VARIABLE = IconLoader.findIcon(PATH + "nvar.png");

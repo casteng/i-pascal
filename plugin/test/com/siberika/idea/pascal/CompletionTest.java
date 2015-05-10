@@ -49,7 +49,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     private void checkCompletionNotContains(CodeInsightTestFixture myFixture, String...unexpected) {
-        myFixture.completeBasicAllCarets();
+        myFixture.completeBasic();
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
         List<String> unexp = Arrays.asList(unexpected);
