@@ -60,7 +60,7 @@ public class FPCSdkType extends BasePascalSdkType {
     }
 
     public FPCSdkType() {
-        super(JpsPascalModelSerializerExtension.FPC_SDK_TYPE_ID);
+        super(JpsPascalModelSerializerExtension.PASCAL_SDK_TYPE_ID);
         InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
         if (definesStream != null) {
             DefinesParser.parse(definesStream);
