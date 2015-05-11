@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class JpsPascalModelSerializerExtension extends JpsModelSerializerExtension {
-    public static final String PASCAL_SDK_TYPE_ID = "FPCSdkType";
+    public static final String FPC_SDK_TYPE_ID = "FPCSdkType";
 
     @NotNull
     @Override
@@ -37,7 +37,7 @@ public class JpsPascalModelSerializerExtension extends JpsModelSerializerExtensi
     @NotNull
     @Override
     public List<? extends JpsSdkPropertiesSerializer<?>> getSdkPropertiesSerializers() {
-        return Collections.singletonList(new JpsSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>(PASCAL_SDK_TYPE_ID, JpsPascalSdkType.INSTANCE) {
+        return Collections.singletonList(new JpsSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>(FPC_SDK_TYPE_ID, JpsPascalSdkType.INSTANCE) {
             @NotNull
             @Override
             public JpsSimpleElement<ParamMap> loadProperties(@Nullable Element propertiesElement) {

@@ -28,11 +28,11 @@ public class FPCConfigurationType implements ConfigurationType {
         };
     }
     public String getDisplayName() {
-        return "FPC executable";
+        return "Pascal executable";
     }
 
     public String getConfigurationTypeDescription() {
-        return "FPC run configuration";
+        return "Pascal run configuration";
     }
 
     public Icon getIcon() {

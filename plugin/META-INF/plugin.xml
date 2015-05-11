@@ -139,6 +139,7 @@
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
 
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
+        <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
         <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>
         <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />
         <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
