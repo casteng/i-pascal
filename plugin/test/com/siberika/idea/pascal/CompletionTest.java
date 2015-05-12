@@ -1,10 +1,15 @@
 package com.siberika.idea.pascal;
 
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.openapi.editor.Caret;
+import com.intellij.openapi.editor.CaretModel;
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -28,7 +33,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testModuleHeadCompletion() {
         myFixture.configureByFiles("empty.pas");
-        checkCompletion(myFixture, "unit", "program", "library", "package");
+        checkCompletion(myFixture, "unit", "program", "library", "package", "begin ");
         myFixture.type('p');
         checkCompletion(myFixture, "program", "package");
     }
@@ -49,7 +54,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     private void checkCompletionNotContains(CodeInsightTestFixture myFixture, String...unexpected) {
-        myFixture.completeBasic();
+        completeBasicAllCarets(myFixture);
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
         List<String> unexp = Arrays.asList(unexpected);
@@ -60,6 +65,31 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
             }
         }
         assertTrue(sb.toString(), sb.length() == 0);
+    }
+
+    public final List<LookupElement> completeBasicAllCarets(CodeInsightTestFixture myFixture) {
+        final CaretModel caretModel = myFixture.getEditor().getCaretModel();
+        final List<Caret> carets = caretModel.getAllCarets();
+
+        final List<Integer> originalOffsets = new ArrayList<Integer>(carets.size());
+
+        for (final Caret caret : carets) {
+            originalOffsets.add(caret.getOffset());
+        }
+        caretModel.removeSecondaryCarets();
+
+        // We do it in reverse order because completions would affect offsets
+        // i.e.: when you complete "spa" to "spam", next caret offset increased by 1
+        Collections.reverse(originalOffsets);
+        final List<LookupElement> result = new ArrayList<LookupElement>();
+        for (final int originalOffset : originalOffsets) {
+            caretModel.moveToOffset(originalOffset);
+            final LookupElement[] lookupElements = myFixture.completeBasic();
+            if (lookupElements != null) {
+                result.addAll(Arrays.asList(lookupElements));
+            }
+        }
+        return result;
     }
 
     public void testNoModuleHeadCompletion() {
@@ -96,7 +126,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("moduleSection.pas");
         checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
                 "procedure", "function", "constructor", "destructor",
-                "uses");
+                "uses", "begin  ");
         myFixture.type('d');
         checkCompletion(myFixture, "destructor", "procedure", "threadvar");
     }
@@ -114,7 +144,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "const", "type", "var", "procedure", "function",
                 "abstract", "assembler", "cdecl", "deprecated", "dispid", "dynamic", "experimental",
                 "export", "final", "inline", "library", "message", "overload", "override", "pascal", "platform",
-                "register", "reintroduce", "safecall", "static", "stdcall", "virtual", "begin");
+                "register", "reintroduce", "safecall", "static", "stdcall", "virtual");
         myFixture.type('c');
         checkCompletionContains(myFixture, "const", "procedure", "function");
     }
@@ -165,12 +195,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testRoutineHead() {
         myFixture.configureByFiles("routineHead.pas");
-        checkCompletion(myFixture, "const", "type", "var", "procedure", "function",
-                "abstract", "assembler", "cdecl", "deprecated", "dispid", "dynamic", "experimental",
-                "export", "final", "inline", "library", "message", "overload", "override", "pascal", "platform",
-                "register", "reintroduce", "safecall", "static", "stdcall", "virtual", "begin");
-        myFixture.type('c');
-        checkCompletionContains(myFixture, "const", "procedure", "function");
+        checkCompletion(myFixture, "unit", "program", "library", "package", "begin");
     }
 
 }

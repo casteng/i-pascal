@@ -114,6 +114,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         res.put(PasTypes.LIBRARY.toString(), String.format(" %s;\n\nexports %s\n\nbegin\n\nend.\n", PLACEHOLDER_FILENAME, PLACEHOLDER_CARET));
         res.put(PasTypes.PACKAGE.toString(), String.format(" %s;\n\nrequires\n\n contains %s\n\nend.\n", PLACEHOLDER_FILENAME, PLACEHOLDER_CARET));
         res.put(PasTypes.BEGIN.toString(), String.format("\n  %s\nend;\n", PLACEHOLDER_CARET));
+        res.put(PasTypes.BEGIN.toString() + " ", String.format("\n  %s\nend.\n", PLACEHOLDER_CARET));
         res.put(PasTypes.END.toString(), ";");
         res.put(PasTypes.INTERFACE.toString(), String.format("\n  %s\nimplementation\n", PLACEHOLDER_CARET));
         res.put(PasTypes.INITIALIZATION.toString(), String.format("\n  %s\nfinalization\n", PLACEHOLDER_CARET));
@@ -286,11 +287,11 @@ public class PascalCompletionContributor extends CompletionContributor {
                 }
                 case LIBRARY:
                     result.caseInsensitive().addElement(getElement(PasTypes.EXPORTS.toString()));
-                    appendTokenSetUnique(result, PasTypes.BEGIN, pos);
+                    result.addElement(getElement("begin  "));
                 case PROGRAM:
                     appendTokenSetUnique(result, TokenSet.create(PascalLexer.USES), parameters.getOriginalFile());
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
-                    appendTokenSetUnique(result, PasTypes.BEGIN, pos);
+                    result.addElement(getElement("begin  "));
             }
         }
     }
@@ -299,8 +300,12 @@ public class PascalCompletionContributor extends CompletionContributor {
         if (PsiTreeUtil.findChildOfType(parameters.getOriginalFile(), PasModule.class) == null) {                     // no module found
             appendTokenSetIfAbsent(result, PascalLexer.MODULE_HEADERS, parameters.getOriginalFile(),
                     PasProgramModuleHead.class, PasUnitModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);
+            if ((parameters.getOriginalPosition() != null) && (PsiTreeUtil.skipSiblingsForward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class) != null)) {
+                result.addElement(getElement("begin"));
+            } else {
+                result.addElement(getElement("begin "));
+            }
         }
-        //PsiTreeUtil.findChildOfType(parameters.getOriginalFile(), PasUnitModuleHead.class) != null)) {
     }
 
     private static String getFieldName(PasField field) {
