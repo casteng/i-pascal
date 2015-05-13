@@ -10,7 +10,6 @@ import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.SdkType;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderRootType;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalException;
@@ -40,6 +39,17 @@ public class FPCSdkType extends BasePascalSdkType {
 
     public static final Logger LOG = Logger.getInstance(FPCSdkType.class.getName());
     private static final String[] LIBRARY_DIRS = {"rtl", "rtl-objpas", "pthreads", "regexpr", "x11", "windows"};
+
+    @Override
+    protected List<String> getDefaultSdkLocationsWindows() {
+        return Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
+    }
+
+    @Override
+    protected List<String> getDefaultSdkLocationsUnix() {
+        return Arrays.asList("/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
+                             "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
+    }
 
     @NotNull
     public static FPCSdkType getInstance() {
@@ -79,30 +89,10 @@ public class FPCSdkType extends BasePascalSdkType {
         return getIcon();
     }
 
-    private static final List<String> DEFAULT_SDK_LOCATIONS_UNIX = Arrays.asList(
-            "/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
-            "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
-    private static final List<String> DEFAULT_SDK_LOCATIONS_WINDOWS = Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
-
-    @Nullable
-    @Override
-    public String suggestHomePath() {
-        List<String> paths = DEFAULT_SDK_LOCATIONS_UNIX;
-        if (SystemInfo.isWindows) {
-            paths = DEFAULT_SDK_LOCATIONS_WINDOWS;
-        }
-        for (String path : paths) {
-            if (new File(path).exists()) {
-                return path;
-            }
-        }
-        return null;
-    }
-
     @Override
     public boolean isValidSdkHome(@NotNull final String path) {
         LOG.info("Checking SDK path: " + path);
-        final File fpcExe = PascalSdkUtil.getCompilerExecutable(path);
+        final File fpcExe = PascalSdkUtil.getFPCExecutable(path);
         return fpcExe.isFile() && fpcExe.canExecute();
     }
 
@@ -117,7 +107,7 @@ public class FPCSdkType extends BasePascalSdkType {
     public String getVersionString(String sdkHome) {
         LOG.info("Getting version for SDK path: " + sdkHome);
         try {
-            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
+            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getFPCExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
         } catch (PascalException e) {
             LOG.warn(e.getMessage(), e);
         }
@@ -126,9 +116,9 @@ public class FPCSdkType extends BasePascalSdkType {
 
     @Nullable
     public static String getTargetString(String sdkHome) {
-        LOG.info("Getting version for SDK path: " + sdkHome);
+        LOG.info("Getting target for SDK path: " + sdkHome);
         try {
-            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_TARGET_GET);
+            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getFPCExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_TARGET_GET);
         } catch (PascalException e) {
             LOG.warn(e.getMessage(), e);
         }

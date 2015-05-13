@@ -8,7 +8,6 @@ import com.intellij.openapi.projectRoots.SdkModel;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.SdkType;
 import com.intellij.openapi.roots.OrderRootType;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalException;
@@ -28,6 +27,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -38,6 +39,18 @@ public class DelphiSdkType extends BasePascalSdkType {
     public static final Logger LOG = Logger.getInstance(DelphiSdkType.class.getName());
     private static final String[] LIBRARY_DIRS = {"rtl", "rtl-objpas", "pthreads", "regexpr", "x11", "windows"};
     private static final String DELPHI_SDK_TYPE_ID = "DelphiSdkType";
+    private static final Pattern DELPHI_VERSION_PATTERN = Pattern.compile("[\\w\\s]+[vV]ersion(\\d+\\.\\d+)");
+
+    @Override
+    protected List<String> getDefaultSdkLocationsWindows() {
+        return Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
+    }
+
+    @Override
+    protected List<String> getDefaultSdkLocationsUnix() {
+        return Arrays.asList("/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
+                             "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
+    }
 
     @NotNull
     public static DelphiSdkType getInstance() {
@@ -64,45 +77,32 @@ public class DelphiSdkType extends BasePascalSdkType {
         return getIcon();
     }
 
-    private static final List<String> DEFAULT_SDK_LOCATIONS_UNIX = Arrays.asList(
-            "/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
-            "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
-    private static final List<String> DEFAULT_SDK_LOCATIONS_WINDOWS = Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
-
-    @Nullable
-    @Override
-    public String suggestHomePath() {
-        List<String> paths = DEFAULT_SDK_LOCATIONS_UNIX;
-        if (SystemInfo.isWindows) {
-            paths = DEFAULT_SDK_LOCATIONS_WINDOWS;
-        }
-        for (String path : paths) {
-            if (new File(path).exists()) {
-                return path;
-            }
-        }
-        return null;
-    }
-
     @Override
     public boolean isValidSdkHome(@NotNull final String path) {
         LOG.info("Checking SDK path: " + path);
-        final File fpcExe = PascalSdkUtil.getCompilerExecutable(path);
-        return fpcExe.isFile() && fpcExe.canExecute();
+        final File dcc32Exe = PascalSdkUtil.getDelphiExecutable(path);
+        return dcc32Exe.isFile() && dcc32Exe.canExecute();
     }
 
     @NotNull
     public String suggestSdkName(@Nullable final String currentSdkName, @NotNull final String sdkHome) {
         String version = getVersionString(sdkHome);
-        if (version == null) return "Delphi v. ?? at " + sdkHome;
-        return "Delphi v. " + version + " | " + getTargetString(sdkHome);
+        if (version == null) return "Delphi ?? at " + sdkHome;
+        return "Delphi " + version + " | " + getTargetString(sdkHome);
     }
 
     @Nullable
     public String getVersionString(String sdkHome) {
         LOG.info("Getting version for SDK path: " + sdkHome);
         try {
-            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
+            String out = SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getDelphiExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.DELPHI_PARAMS_VERSION_GET);
+            String[] lines = out != null ? out.split("\n", 2) : null;
+            if (lines != null) {
+                Matcher m = DELPHI_VERSION_PATTERN.matcher(lines[0]);
+                if (m.matches()) {
+                    return m.group(1);
+                }
+            }
         } catch (PascalException e) {
             LOG.warn(e.getMessage(), e);
         }
@@ -111,13 +111,8 @@ public class DelphiSdkType extends BasePascalSdkType {
 
     @Nullable
     public static String getTargetString(String sdkHome) {
-        LOG.info("Getting version for SDK path: " + sdkHome);
-        try {
-            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getCompilerExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_TARGET_GET);
-        } catch (PascalException e) {
-            LOG.warn(e.getMessage(), e);
-        }
-        return null;
+        LOG.info("Getting target for SDK path: " + sdkHome);
+        return "Win32";
     }
 
     @Override

@@ -146,7 +146,7 @@ public class FPCBackendCompiler {
     private static File getCompilerExe(String sdkHomePath, String moduleName, CompilerMessager compilerMessager) {
         File result = null;
         if (sdkHomePath != null) {
-            result = PascalSdkUtil.getCompilerExecutable(sdkHomePath);
+            result = PascalSdkUtil.getFPCExecutable(sdkHomePath);
             if (!result.canExecute()) {
                 compilerMessager.error(getMessage(moduleName, "compile.noCompiler", result.getPath()), null, -1l, -1l);
                 result = null;

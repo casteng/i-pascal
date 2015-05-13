@@ -19,21 +19,28 @@ public class PascalSdkUtil {
 
     public static final String FPC_PARAMS_VERSION_GET = "-iV";
     public static final String FPC_PARAMS_TARGET_GET = "-iTPTO";
-    public static final Pattern VERSION_PATTERN = Pattern.compile("\\d+\\.\\d+\\.\\d+");
+    public static final String DELPHI_PARAMS_VERSION_GET = "--version";
+
+    public static final Pattern FPC_VERSION_PATTERN = Pattern.compile("\\d+\\.\\d+\\.\\d+");
     public static final String[] DEFAULT_BIN_UNIX = {"/usr/bin", "/usr/local/bin"};
 
     public static String target;
 
     @NotNull
-    public static File getCompilerExecutable(@NotNull final String sdkHome) {
+    public static File getFPCExecutable(@NotNull final String sdkHome) {
         LOG.info("Getting executable: " + sdkHome);
-        return getUtilExecutable(sdkHome, "bin", "fpc");
+        return getFPCUtilExecutable(sdkHome, "bin", "fpc");
     }
 
     @NotNull
     public static File getPPUDumpExecutable(@NotNull final String sdkHome) {
         LOG.info("Getting ppudump: " + sdkHome);
-        return getUtilExecutable(sdkHome, "bin", "ppudump");
+        return getFPCUtilExecutable(sdkHome, "bin", "ppudump");
+    }
+
+    public static File getDelphiExecutable(@NotNull final String sdkHome) {
+        File binDir = new File(sdkHome, "bin");
+        return getExecutable(binDir.getAbsolutePath(), "dcc32");
     }
 
     //TODO: take target directory from compiler target
@@ -45,13 +52,13 @@ public class PascalSdkUtil {
       => $bindir/[$target]/$exe
      */
     @NotNull
-    static File getUtilExecutable(@NotNull final String sdkHome, @NotNull final String dir, @NotNull final String exe) {
+    static File getFPCUtilExecutable(@NotNull final String sdkHome, @NotNull final String dir, @NotNull final String exe) {
         LOG.info("Getting util executable: " + sdkHome + ", dir: " + dir + ", file: " + exe);
         File binDir = new File(sdkHome, dir);
         File sdkHomeDir = new File(sdkHome);
         if (!binDir.exists() && sdkHomeDir.isDirectory()) {
             LOG.info(binDir.getAbsolutePath() + " not found, trying $SDKHome/$Version/bin/...");
-            String currentVersion = getVersionDir(sdkHomeDir);
+            String currentVersion = getFPCVersionDir(sdkHomeDir);
             if (currentVersion != null) {
                 binDir = new File(new File(sdkHome, currentVersion), dir);
                 if (!binDir.exists()) {
@@ -86,10 +93,10 @@ public class PascalSdkUtil {
     }
 
     @Nullable
-    private static String getVersionDir(File sdkHomeDir) {
+    private static String getFPCVersionDir(File sdkHomeDir) {
         String currentVersion = null;
         for (File versionDir : FileUtil.listDirs(sdkHomeDir)) {
-            if (isVersion(versionDir.getName()) &&
+            if (isFPCVersion(versionDir.getName()) &&
                     ((currentVersion == null) || isVersionLessOrEqual(currentVersion, versionDir.getName()))) {
                 currentVersion = versionDir.getName();
             }
@@ -97,8 +104,8 @@ public class PascalSdkUtil {
         return currentVersion;
     }
 
-    private static boolean isVersion(String name) {
-        return VERSION_PATTERN.matcher(name).matches();
+    private static boolean isFPCVersion(String name) {
+        return FPC_VERSION_PATTERN.matcher(name).matches();
     }
 
     private static boolean isVersionLessOrEqual(String version1, String version2) {
@@ -114,4 +121,5 @@ public class PascalSdkUtil {
     private static File getExecutable(@NotNull final String path, @NotNull final String command) {
         return new File(path, SystemInfo.isWindows ? command + ".exe" : command);
     }
+
 }

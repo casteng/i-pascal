@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>Pascal IDEA Plugin</name>
-    <version>0.92</version>
+    <version>0.93</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/pasidea.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.93</p>
+        <ul>
+          <li>Delphi SDK</li>
+        </ul>
         <p>0.92</p>
         <ul>
           <li>file structure view</li>
