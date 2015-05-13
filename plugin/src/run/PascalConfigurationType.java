@@ -16,10 +16,10 @@ import javax.swing.*;
  * Author: George Bakhtadze
  * Date: 12/5/12
  */
-public class FPCConfigurationType implements ConfigurationType {
+public class PascalConfigurationType implements ConfigurationType {
     private final ConfigurationFactory myFactory;
 
-    public FPCConfigurationType() {
+    public PascalConfigurationType() {
         myFactory = new ConfigurationFactory(this) {
             @Override
             public RunConfiguration createTemplateConfiguration(Project project) {
@@ -41,11 +41,11 @@ public class FPCConfigurationType implements ConfigurationType {
 
     @NotNull
     public String getId() {
-        return "#com.siberika.idea.pascal.run.FPCConfigurationType";
+        return "#com.siberika.idea.pascal.run.PascalConfigurationType";
     }
 
-    public static FPCConfigurationType getInstance() {
-        return ContainerUtil.findInstance(Extensions.getExtensions(CONFIGURATION_TYPE_EP), FPCConfigurationType.class);
+    public static PascalConfigurationType getInstance() {
+        return ContainerUtil.findInstance(Extensions.getExtensions(CONFIGURATION_TYPE_EP), PascalConfigurationType.class);
     }
 
     public ConfigurationFactory[] getConfigurationFactories() {

@@ -140,8 +140,8 @@
 
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
-        <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.FPCConfigurationType"/>
-        <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.FPCRunConfigurationProducer" />
+        <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.PascalConfigurationType"/>
+        <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.PascalRunConfigurationProducer" />
         <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
 
         <!--<psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>-->
