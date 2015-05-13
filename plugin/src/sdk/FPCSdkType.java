@@ -10,6 +10,7 @@ import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.SdkType;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderRootType;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalException;
@@ -40,20 +41,33 @@ public class FPCSdkType extends BasePascalSdkType {
     public static final Logger LOG = Logger.getInstance(FPCSdkType.class.getName());
     private static final String[] LIBRARY_DIRS = {"rtl", "rtl-objpas", "pthreads", "regexpr", "x11", "windows"};
 
-    @Override
-    protected List<String> getDefaultSdkLocationsWindows() {
-        return Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
-    }
-
-    @Override
-    protected List<String> getDefaultSdkLocationsUnix() {
-        return Arrays.asList("/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
-                             "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
-    }
-
     @NotNull
     public static FPCSdkType getInstance() {
         return SdkType.findInstance(FPCSdkType.class);
+    }
+
+    public FPCSdkType() {
+        super(JpsPascalModelSerializerExtension.PASCAL_SDK_TYPE_ID);
+        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
+        if (definesStream != null) {
+            DefinesParser.parse(definesStream);
+        }
+    }
+
+    @Nullable
+    @Override
+    public String suggestHomePath() {
+        List<String> paths = Arrays.asList("/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
+                                           "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
+        if (SystemInfo.isWindows) {
+            paths = Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
+        }
+        for (String path : paths) {
+            if (new File(path).isDirectory()) {
+                return path;
+            }
+        }
+        return null;
     }
 
     public static Sdk findSdk(Module module) {
@@ -67,14 +81,6 @@ public class FPCSdkType extends BasePascalSdkType {
         }
 
         return null;
-    }
-
-    public FPCSdkType() {
-        super(JpsPascalModelSerializerExtension.PASCAL_SDK_TYPE_ID);
-        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
-        if (definesStream != null) {
-            DefinesParser.parse(definesStream);
-        }
     }
 
     @NotNull

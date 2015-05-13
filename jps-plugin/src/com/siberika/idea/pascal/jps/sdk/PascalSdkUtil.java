@@ -38,7 +38,7 @@ public class PascalSdkUtil {
         return getFPCUtilExecutable(sdkHome, "bin", "ppudump");
     }
 
-    public static File getDelphiExecutable(@NotNull final String sdkHome) {
+    public static File getDCC32Executable(@NotNull final String sdkHome) {
         File binDir = new File(sdkHome, "bin");
         return getExecutable(binDir.getAbsolutePath(), "dcc32");
     }

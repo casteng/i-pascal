@@ -15,7 +15,6 @@ import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.util.SysUtils;
-import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang.text.StrBuilder;
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
@@ -37,20 +36,9 @@ import java.util.regex.Pattern;
 public class DelphiSdkType extends BasePascalSdkType {
 
     public static final Logger LOG = Logger.getInstance(DelphiSdkType.class.getName());
-    private static final String[] LIBRARY_DIRS = {"rtl", "rtl-objpas", "pthreads", "regexpr", "x11", "windows"};
+    private static final String[] LIBRARY_DIRS = {"debug"};
     private static final String DELPHI_SDK_TYPE_ID = "DelphiSdkType";
-    private static final Pattern DELPHI_VERSION_PATTERN = Pattern.compile("[\\w\\s]+[vV]ersion(\\d+\\.\\d+)");
-
-    @Override
-    protected List<String> getDefaultSdkLocationsWindows() {
-        return Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
-    }
-
-    @Override
-    protected List<String> getDefaultSdkLocationsUnix() {
-        return Arrays.asList("/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
-                             "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
-    }
+    private static final Pattern DELPHI_VERSION_PATTERN = Pattern.compile("[\\w\\s]+[vV]ersion\\s(\\d+\\.\\d+)");
 
     @NotNull
     public static DelphiSdkType getInstance() {
@@ -63,6 +51,33 @@ public class DelphiSdkType extends BasePascalSdkType {
         if (definesStream != null) {
             DefinesParser.parse(definesStream);
         }
+    }
+
+    @Nullable
+    @Override
+    public String suggestHomePath() {
+        List<String> dirs = Arrays.asList("", "program files");
+        for (File drive : File.listRoots()) {
+            if (drive.isDirectory()) {
+                for (String dir : dirs) {
+                    String s = checkDir(new File(drive, dir));
+                    if (s != null) return s;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String checkDir(@NotNull File file) {
+        List<String> ides = Arrays.asList("delphi", "rad studio");
+        for (String ide : ides) {
+            File f = new File(file, ide);
+            LOG.info("=== checking directory " + f.getAbsolutePath());
+            if (f.isDirectory()) {
+                return f.getAbsolutePath();
+            }
+        }
+        return null;
     }
 
     @NotNull
@@ -80,28 +95,31 @@ public class DelphiSdkType extends BasePascalSdkType {
     @Override
     public boolean isValidSdkHome(@NotNull final String path) {
         LOG.info("Checking SDK path: " + path);
-        final File dcc32Exe = PascalSdkUtil.getDelphiExecutable(path);
+        final File dcc32Exe = PascalSdkUtil.getDCC32Executable(path);
         return dcc32Exe.isFile() && dcc32Exe.canExecute();
     }
 
     @NotNull
     public String suggestSdkName(@Nullable final String currentSdkName, @NotNull final String sdkHome) {
         String version = getVersionString(sdkHome);
-        if (version == null) return "Delphi ?? at " + sdkHome;
-        return "Delphi " + version + " | " + getTargetString(sdkHome);
+        if (version == null) return "Delphi v. ?? at " + sdkHome;
+        return "Delphi v. " + version + " | " + getTargetString(sdkHome);
     }
 
     @Nullable
     public String getVersionString(String sdkHome) {
         LOG.info("Getting version for SDK path: " + sdkHome);
         try {
-            String out = SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getDelphiExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.DELPHI_PARAMS_VERSION_GET);
-            String[] lines = out != null ? out.split("\n", 2) : null;
-            if (lines != null) {
-                Matcher m = DELPHI_VERSION_PATTERN.matcher(lines[0]);
+            String out = SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getDCC32Executable(sdkHome).getAbsolutePath(), PascalSdkUtil.DELPHI_PARAMS_VERSION_GET);
+            String[] lines = out != null ? out.split("\n", 3) : null;
+            if ((lines != null) && (lines.length > 1)) {
+                LOG.info("=== lines: " + lines.length + ", " + lines[1]);
+                Matcher m = DELPHI_VERSION_PATTERN.matcher(lines[1]);
                 if (m.matches()) {
                     return m.group(1);
                 }
+            } else {
+                LOG.info("=== wrong lines: " + (lines != null ? lines.length : "null"));
             }
         } catch (PascalException e) {
             LOG.warn(e.getMessage(), e);
@@ -141,54 +159,38 @@ public class DelphiSdkType extends BasePascalSdkType {
 
     @Override
     public void setupSdkPaths(@NotNull final Sdk sdk) {
-        String target = getTargetString(sdk.getHomePath());
-        configureSdkPaths(sdk, target);
-        configureOptions(sdk, getAdditionalData(sdk), target);
+        configureSdkPaths(sdk);
+        configureOptions(sdk, getAdditionalData(sdk), "");
     }
 
     @Override
     protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {
         super.configureOptions(sdk, data, target);
         StrBuilder sb = new StrBuilder();
-        if (SystemUtils.IS_OS_WINDOWS) {
-            sb.append("-dMSWINDOWS ");
-        } else {
-            sb.append("-dPOSIX ");
-            if (SystemUtils.IS_OS_MAC_OSX) {
-                sb.append("-dMACOS ");
-            } else {
-                sb.append("-dLINUX ");
-            }
-        }
-        if (target.contains("_64")) {
-            sb.append("-dCPUX64 ");
-        } else {
-            sb.append("-dCPUX86 ");
-        }
+        sb.append("-dWINDOWS ");
+        sb.append("-dWIN32 ");
         data.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, sb.toString());
     }
 
-    private static void configureSdkPaths(@NotNull final Sdk sdk, String target) {
+    private static void configureSdkPaths(@NotNull final Sdk sdk) {
         LOG.info("Setting up SDK paths for SDK at " + sdk.getHomePath());
         final SdkModificator[] sdkModificatorHolder = new SdkModificator[]{null};
         final SdkModificator sdkModificator = sdk.getSdkModificator();
-        if (target != null) {
-            target = target.replace(' ', '-');
-            for (String dir : LIBRARY_DIRS) {
-                VirtualFile vdir = getLibrary(sdk, target, dir);
-                if (vdir != null) {
-                    sdkModificator.addRoot(vdir, OrderRootType.CLASSES);
-                }
+        for (String dir : LIBRARY_DIRS) {
+            VirtualFile vdir = getLibrary(sdk, dir);
+            if (vdir != null) {
+                sdkModificator.addRoot(vdir, OrderRootType.CLASSES);
             }
-            sdkModificatorHolder[0] = sdkModificator;
-            sdkModificatorHolder[0].commitChanges();
         }
+        sdkModificatorHolder[0] = sdkModificator;
+        sdkModificatorHolder[0].commitChanges();
     }
 
-    private static VirtualFile getLibrary(Sdk sdk, String target, String name) {
-        File rtlDir = new File(sdk.getHomePath() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + name);
+    private static VirtualFile getLibrary(Sdk sdk, String name) {
+        String target = "win32";
+        File rtlDir = new File(sdk.getHomePath() + File.separatorChar + "lib" + File.separatorChar + target + File.separatorChar + name);
         if (!rtlDir.exists()) {
-            rtlDir = new File(sdk.getHomePath() + File.separatorChar + sdk.getVersionString() + File.separatorChar + "units" + File.separatorChar + target + File.separatorChar + name);
+            rtlDir = new File(sdk.getHomePath() + File.separatorChar + "lib" + File.separatorChar + name);
         }
         return LocalFileSystem.getInstance().findFileByIoFile(rtlDir);
     }

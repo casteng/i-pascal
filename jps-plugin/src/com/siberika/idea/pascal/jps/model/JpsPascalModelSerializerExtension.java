@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class JpsPascalModelSerializerExtension extends JpsModelSerializerExtension {
-    public static final String PASCAL_SDK_TYPE_ID = "PascalSdkType";
+    public static final String PASCAL_SDK_TYPE_ID = "FPCSdkType";
 
     @NotNull
     @Override
