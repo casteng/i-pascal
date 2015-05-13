@@ -74,11 +74,11 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         }
         PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
         if (null == result) {
-            result = findChildByType(NAMED_SET);
-        }
-        if (null == result) {
             PascalNamedElement namedChild = PsiTreeUtil.getChildOfType(this, PascalNamedElement.class);
             result = namedChild != null ? namedChild.getNameIdentifier() : null;
+        }
+        if (null == result) {
+            result = findChildByType(NAMED_SET);
         }
         return result;
     }
