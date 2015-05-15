@@ -16,13 +16,13 @@ import org.jetbrains.jps.model.serialization.module.JpsModulePropertiesSerialize
 import java.util.Collections;
 import java.util.List;
 
-public class JpsPascalModelSerializerExtension extends JpsModelSerializerExtension {
-    public static final String PASCAL_SDK_TYPE_ID = "FPCSdkType";
+public class JpsFPCModelSerializerExtension extends JpsModelSerializerExtension {
+    public static final String FPC_SDK_TYPE_ID = "FPCSdkType";
 
     @NotNull
     @Override
     public List<? extends JpsModulePropertiesSerializer<?>> getModulePropertiesSerializers() {
-        return Collections.singletonList(new JpsModulePropertiesSerializer<JpsSimpleElement<ParamMap>>(JpsPascalModuleType.INSTANCE, "PASCAL_MODULE", null) {
+        return Collections.singletonList(new JpsModulePropertiesSerializer<JpsSimpleElement<ParamMap>>(JpsPascalModuleType.INSTANCE, "FPC_MODULE", null) {
             @Override
             public JpsSimpleElement<ParamMap> loadProperties(@Nullable Element componentElement) {
                 return JpsElementFactory.getInstance().createSimpleElement(new ParamMap());
@@ -37,7 +37,7 @@ public class JpsPascalModelSerializerExtension extends JpsModelSerializerExtensi
     @NotNull
     @Override
     public List<? extends JpsSdkPropertiesSerializer<?>> getSdkPropertiesSerializers() {
-        return Collections.singletonList(new JpsSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>(PASCAL_SDK_TYPE_ID, JpsPascalSdkType.INSTANCE) {
+        return Collections.singletonList(new JpsSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>(FPC_SDK_TYPE_ID, JpsPascalSdkType.INSTANCE) {
             @NotNull
             @Override
             public JpsSimpleElement<ParamMap> loadProperties(@Nullable Element propertiesElement) {

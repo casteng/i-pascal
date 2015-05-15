@@ -15,7 +15,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalIcons;
-import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
+import com.siberika.idea.pascal.jps.model.JpsFPCModelSerializerExtension;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.util.SysUtils;
@@ -47,7 +47,7 @@ public class FPCSdkType extends BasePascalSdkType {
     }
 
     public FPCSdkType() {
-        super(JpsPascalModelSerializerExtension.PASCAL_SDK_TYPE_ID);
+        super(JpsFPCModelSerializerExtension.FPC_SDK_TYPE_ID);
         InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
         if (definesStream != null) {
             DefinesParser.parse(definesStream);
@@ -58,7 +58,7 @@ public class FPCSdkType extends BasePascalSdkType {
     @Override
     public String suggestHomePath() {
         List<String> paths = Arrays.asList("/usr/lib/codetyphon/fpc/fpc32", "/usr/lib/codetyphon/fpc",
-                                           "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
+                "/usr/lib/fpc", "/usr/share/fpc", "/usr/local/lib/fpc");
         if (SystemInfo.isWindows) {
             paths = Arrays.asList("c:\\codetyphon\\fpc\\fpc32", "c:\\codetyphon\\fpc", "c:\\fpc");
         }

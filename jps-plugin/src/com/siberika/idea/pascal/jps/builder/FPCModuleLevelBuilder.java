@@ -40,13 +40,13 @@ import java.util.Map;
  * Author: George Bakhtadze
  * Date: 11/02/2014
  */
-public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
+public class FPCModuleLevelBuilder extends ModuleLevelBuilder {
 
     private static final List<String> COMPILABLE_EXTENSIONS = Arrays.asList("pas", "inc", "dpr", "pp", "lpr");
     public static final String NAME = "FPC";
     private static final String FILE_EXT_PPU = ".ppu";
 
-    public PascalModuleLevelBuilder() {
+    public FPCModuleLevelBuilder() {
         super(BuilderCategory.OVERWRITING_TRANSLATOR);
     }
 
@@ -123,7 +123,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
         }
         Process process = Runtime.getRuntime().exec(cmdLine);
         BaseOSProcessHandler handler = new BaseOSProcessHandler(process, "", Charset.defaultCharset());
-        ProcessAdapter adapter = new PascalCompilerProcessAdapter(messager);
+        ProcessAdapter adapter = new FPCCompilerProcessAdapter(messager);
         handler.addProcessListener(adapter);
         handler.startNotify();
         handler.waitFor();

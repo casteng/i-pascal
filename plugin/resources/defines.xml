@@ -12,4 +12,11 @@
     <compiler name="FPC" version="2.2.0">
         <define>VER2_2</define>
     </compiler>
+    <compiler name="Delphi" version="15.0">
+        <define>DELPHI</define>
+        <define>PUREPASCAL</define>
+    </compiler>
+    <compiler name="FPC" version="20.0">
+        <define>UNICODE</define>
+    </compiler>
 </compilers>

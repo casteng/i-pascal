@@ -10,10 +10,10 @@ import com.siberika.idea.pascal.jps.compiler.FPCOutputParser;
  * Author: George Bakhtadze
  * Date: 12/05/2014
  */
-public class PascalCompilerProcessAdapter extends ProcessAdapter {
+public class FPCCompilerProcessAdapter extends ProcessAdapter {
     private final CompilerMessager messager;
 
-    public PascalCompilerProcessAdapter(CompilerMessager messager) {
+    public FPCCompilerProcessAdapter(CompilerMessager messager) {
         this.messager = messager;
     }
 
