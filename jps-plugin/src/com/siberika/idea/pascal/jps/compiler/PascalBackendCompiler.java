@@ -24,4 +24,6 @@ public interface PascalBackendCompiler {
     String getId();
 
     ProcessAdapter getCompilerProcessAdapter(CompilerMessager messager);
+
+    String getCompiledUnitExt();
 }

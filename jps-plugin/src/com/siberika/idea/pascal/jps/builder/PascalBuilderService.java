@@ -6,6 +6,7 @@ import org.jetbrains.jps.incremental.BuilderService;
 import org.jetbrains.jps.incremental.ModuleLevelBuilder;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,6 +23,6 @@ public class PascalBuilderService extends BuilderService {
     @NotNull
     @Override
     public List<? extends ModuleLevelBuilder> createModuleLevelBuilders() {
-        return Arrays.asList(new PascalModuleLevelBuilder());
+        return Collections.singletonList(new PascalModuleLevelBuilder());
     }
 }

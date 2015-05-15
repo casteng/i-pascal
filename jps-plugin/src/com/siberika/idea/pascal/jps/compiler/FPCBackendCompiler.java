@@ -49,6 +49,11 @@ public class FPCBackendCompiler implements PascalBackendCompiler {
         return new FPCCompilerProcessAdapter(messager);
     }
 
+    @Override
+    public String getCompiledUnitExt() {
+        return ".ppu";
+    }
+
     @NotNull
     public String[] createStartupCommand(final String sdkHomePath, final String moduleName, final String outputDir,
                                                 final List<File> sdkLibFiles, final List<File> moduleLibFiles,

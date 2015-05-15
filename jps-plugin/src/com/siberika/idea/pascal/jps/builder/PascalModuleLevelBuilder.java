@@ -49,7 +49,6 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
 
     private static final List<String> COMPILABLE_EXTENSIONS = Arrays.asList("pas", "inc", "dpr", "pp", "lpr");
     private static final String NAME = "Pascal Builder";
-    private static final String FILE_EXT_PPU = ".ppu";
 
     public PascalModuleLevelBuilder() {
         super(BuilderCategory.OVERWRITING_TRANSLATOR);
@@ -105,7 +104,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
                     File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
 
                     for (File file : files.get(target)) {
-                        File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + FILE_EXT_PPU);
+                        File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + compiler.getCompiledUnitExt());
                         messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1l, -1l);
                         outputConsumer.registerOutputFile(chunk.representativeTarget(), compiled, Collections.singleton(file.getCanonicalPath()));
                     }
@@ -122,9 +121,11 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
                     }
                 } else {
                     messager.error("Can't determine compiler family", "", -1l, -1l);
+                    return ExitCode.ABORT;
                 }
             } else {
                 log(context, "Pascal SDK is not defined for module " + module.getName());
+                return ExitCode.ABORT;
             }
         }
 

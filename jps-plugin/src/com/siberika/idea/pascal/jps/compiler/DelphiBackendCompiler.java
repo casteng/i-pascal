@@ -48,6 +48,11 @@ public class DelphiBackendCompiler implements PascalBackendCompiler {
         return null;
     }
 
+    @Override
+    public String getCompiledUnitExt() {
+        return ".dcu";
+    }
+
     @NotNull
     public String[] createStartupCommand(final String sdkHomePath, final String moduleName, final String outputDir,
                                                 final List<File> sdkLibFiles, final List<File> moduleLibFiles,
