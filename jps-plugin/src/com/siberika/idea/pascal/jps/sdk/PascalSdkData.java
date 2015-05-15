@@ -11,6 +11,7 @@ import java.util.Map;
  */
 public class PascalSdkData implements SdkAdditionalData {
 
+    public static final String DATA_KEY_COMPILER_FAMILY = "compilerFamily";
     public static final String DATA_KEY_COMPILER_OPTIONS = "compilerOptions";
     public static final String DATA_KEY_DECOMPILER_CACHE = "decompilerCache";
     public static final String DATA_KEY_DECOMPILER_COMMAND = "decompilerCommand";

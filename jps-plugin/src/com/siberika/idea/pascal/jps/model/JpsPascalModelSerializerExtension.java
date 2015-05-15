@@ -13,16 +13,18 @@ import org.jetbrains.jps.model.serialization.JpsModelSerializerExtension;
 import org.jetbrains.jps.model.serialization.library.JpsSdkPropertiesSerializer;
 import org.jetbrains.jps.model.serialization.module.JpsModulePropertiesSerializer;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class JpsFPCModelSerializerExtension extends JpsModelSerializerExtension {
+public class JpsPascalModelSerializerExtension extends JpsModelSerializerExtension {
     public static final String FPC_SDK_TYPE_ID = "FPCSdkType";
+    public static final String DELPHI_SDK_TYPE_ID = "DelphiSdkType";
 
     @NotNull
     @Override
     public List<? extends JpsModulePropertiesSerializer<?>> getModulePropertiesSerializers() {
-        return Collections.singletonList(new JpsModulePropertiesSerializer<JpsSimpleElement<ParamMap>>(JpsPascalModuleType.INSTANCE, "FPC_MODULE", null) {
+        return Collections.singletonList(new JpsModulePropertiesSerializer<JpsSimpleElement<ParamMap>>(JpsPascalModuleType.INSTANCE, "PASCAL_MODULE", null) {
             @Override
             public JpsSimpleElement<ParamMap> loadProperties(@Nullable Element componentElement) {
                 return JpsElementFactory.getInstance().createSimpleElement(new ParamMap());
@@ -37,19 +39,10 @@ public class JpsFPCModelSerializerExtension extends JpsModelSerializerExtension 
     @NotNull
     @Override
     public List<? extends JpsSdkPropertiesSerializer<?>> getSdkPropertiesSerializers() {
-        return Collections.singletonList(new JpsSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>(FPC_SDK_TYPE_ID, JpsPascalSdkType.INSTANCE) {
-            @NotNull
-            @Override
-            public JpsSimpleElement<ParamMap> loadProperties(@Nullable Element propertiesElement) {
-                return JpsElementFactory.getInstance().createSimpleElement(new ParamMap()
-                            .addPair(PascalSdkData.DATA_KEY_COMPILER_OPTIONS,
-                                    propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS) : ""));
-            }
-
-            @Override
-            public void saveProperties(@NotNull JpsSimpleElement<ParamMap> properties, @NotNull Element element) {
-            }
-        });
+        List<JpsSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>> result = new ArrayList<JpsSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>>(2);
+        result.add(new JpsPascalSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>(FPC_SDK_TYPE_ID, JpsPascalSdkType.INSTANCE));
+        result.add(new JpsPascalSdkPropertiesSerializer<JpsSimpleElement<ParamMap>>(DELPHI_SDK_TYPE_ID, JpsPascalSdkType.INSTANCE));
+        return result;
     }
 
     @Override
@@ -57,6 +50,24 @@ public class JpsFPCModelSerializerExtension extends JpsModelSerializerExtension 
         super.loadModuleOptions(module, rootElement);
         for (Attribute attribute : rootElement.getAttributes()) {
             ParamMap.addJpsParam(module.getProperties(), attribute.getName(), attribute.getValue());
+        }
+    }
+
+    private static class JpsPascalSdkPropertiesSerializer<T> extends JpsSdkPropertiesSerializer<JpsSimpleElement<ParamMap>> {
+        public JpsPascalSdkPropertiesSerializer(String typeId, JpsPascalSdkType type) {
+            super(typeId, type);
+        }
+
+        @NotNull
+        @Override
+        public JpsSimpleElement<ParamMap> loadProperties(@Nullable Element propertiesElement) {
+            return JpsElementFactory.getInstance().createSimpleElement(new ParamMap()
+                    .addPair(PascalSdkData.DATA_KEY_COMPILER_OPTIONS,
+                            propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS) : ""));
+        }
+
+        @Override
+        public void saveProperties(@NotNull JpsSimpleElement<ParamMap> properties, @NotNull Element element) {
         }
     }
 }

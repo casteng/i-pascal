@@ -4,10 +4,15 @@ import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.io.FileUtil;
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
+import com.siberika.idea.pascal.jps.compiler.DelphiBackendCompiler;
 import com.siberika.idea.pascal.jps.compiler.FPCBackendCompiler;
+import com.siberika.idea.pascal.jps.compiler.PascalBackendCompiler;
 import com.siberika.idea.pascal.jps.model.JpsPascalSdkType;
+import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.ParamMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.ModuleChunk;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
 import org.jetbrains.jps.builders.FileProcessor;
@@ -40,23 +45,33 @@ import java.util.Map;
  * Author: George Bakhtadze
  * Date: 11/02/2014
  */
-public class FPCModuleLevelBuilder extends ModuleLevelBuilder {
+public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
 
     private static final List<String> COMPILABLE_EXTENSIONS = Arrays.asList("pas", "inc", "dpr", "pp", "lpr");
-    public static final String NAME = "FPC";
+    private static final String NAME = "Pascal Builder";
     private static final String FILE_EXT_PPU = ".ppu";
 
-    public FPCModuleLevelBuilder() {
+    public PascalModuleLevelBuilder() {
         super(BuilderCategory.OVERWRITING_TRANSLATOR);
+    }
+
+    @Override
+    public List<String> getCompilableFileExtensions() {
+        return COMPILABLE_EXTENSIONS;
+    }
+
+    @NotNull
+    @Override
+    public String getPresentableName() {
+        return NAME;
     }
 
     @Override
     public ExitCode build(final CompileContext context, ModuleChunk chunk,
                           DirtyFilesHolder<JavaSourceRootDescriptor, ModuleBuildTarget> dirtyFilesHolder,
                           OutputConsumer outputConsumer) throws ProjectBuildException, IOException {
-//        context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.ERROR, "Don't close messages"));
         final Map<ModuleBuildTarget, List<File>> files = collectChangedFiles(context, dirtyFilesHolder);
-        if (files.isEmpty()) {
+        if (files.isEmpty() && !JavaBuilderUtil.isForcedRecompilationAllJavaModules(context)) {
             context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.INFO, "No changes detected"));
             return ExitCode.NOTHING_DONE;
         }
@@ -78,52 +93,64 @@ public class FPCModuleLevelBuilder extends ModuleLevelBuilder {
             }
         };
 
-        FPCBackendCompiler compiler = new FPCBackendCompiler(messager);
         for (ModuleBuildTarget target : chunk.getTargets()) {
             JpsModule module = target.getModule();
             JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
             if (sdk != null) {
-                List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
-                sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
-                File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
+                PascalBackendCompiler compiler = getCompiler(sdk, messager);
+                if (compiler != null) {
+                    messager.info("Compiler family:" + compiler.getId(), "", -1l, -1);
+                    List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
+                    sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
+                    File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
 
-                for (File file : files.get(target)) {
-                    File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + FILE_EXT_PPU);
-                    messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1l, -1l);
-                    outputConsumer.registerOutputFile(chunk.representativeTarget(), compiled, Collections.singleton(file.getCanonicalPath()));
-                }
+                    for (File file : files.get(target)) {
+                        File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + FILE_EXT_PPU);
+                        messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1l, -1l);
+                        outputConsumer.registerOutputFile(chunk.representativeTarget(), compiled, Collections.singleton(file.getCanonicalPath()));
+                    }
 
-                String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
-                        sdkFiles, getFiles(module.getSourceRoots()),
-                        files.get(target), ParamMap.getJpsParams(module.getProperties()),
-                        JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
-                        ParamMap.getJpsParams(sdk.getSdkProperties()));
-                int exitCode = launchCompiler(messager, cmdLine);
-                if (exitCode != 0) {
-                    messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
-                    return ExitCode.ABORT;
+                    String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
+                            sdkFiles, getFiles(module.getSourceRoots()),
+                            files.get(target), ParamMap.getJpsParams(module.getProperties()),
+                            JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
+                            ParamMap.getJpsParams(sdk.getSdkProperties()));
+                    int exitCode = launchCompiler(compiler, messager, cmdLine);
+                    if (exitCode != 0) {
+                        messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
+                        return ExitCode.ABORT;
+                    }
+                } else {
+                    messager.error("Can't determine compiler family", "", -1l, -1l);
                 }
             } else {
                 log(context, "Pascal SDK is not defined for module " + module.getName());
             }
-            /*public String[] createStartupCommand(final String sdkHomePath, final String moduleName, final String outputDir,
-            final VirtualFile[] sdkSourceRoots, final VirtualFile[] moduleSourceRoots,
-            final VirtualFile[] files, final VirtualFile mainFile,
-            final boolean isRebuild,
-            final PascalSdkData pascalSdkData) throws IOException, IllegalArgumentException {*/
         }
 
         return ExitCode.OK;
     }
 
-    private int launchCompiler(CompilerMessager messager, String[] cmdLine) throws IOException {
+    @Nullable
+    private PascalBackendCompiler getCompiler(@NotNull JpsSdk<?> sdk, CompilerMessager messager) {
+        ParamMap params = ParamMap.getJpsParams(sdk.getSdkProperties());
+        String family = params != null ? params.get(PascalSdkData.DATA_KEY_COMPILER_FAMILY) : null;
+        if (PascalCompilerFamily.FPC.toString().equals(family)) {
+            return new FPCBackendCompiler(messager);
+        } else if (PascalCompilerFamily.DELPHI.toString().equals(family)) {
+            return new DelphiBackendCompiler(messager);
+        }
+        return null;
+    }
+
+    private int launchCompiler(PascalBackendCompiler compiler, CompilerMessager messager, String[] cmdLine) throws IOException {
         messager.info("Command line: ", null, -1l, -1l);
         for (String s : cmdLine) {
             messager.info(s, null, -1l, -1l);
         }
         Process process = Runtime.getRuntime().exec(cmdLine);
         BaseOSProcessHandler handler = new BaseOSProcessHandler(process, "", Charset.defaultCharset());
-        ProcessAdapter adapter = new FPCCompilerProcessAdapter(messager);
+        ProcessAdapter adapter = compiler.getCompilerProcessAdapter(messager);
         handler.addProcessListener(adapter);
         handler.startNotify();
         handler.waitFor();
@@ -156,11 +183,6 @@ public class FPCModuleLevelBuilder extends ModuleLevelBuilder {
         context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, text));
     }
 
-    @Override
-    public List<String> getCompilableFileExtensions() {
-        return COMPILABLE_EXTENSIONS;
-    }
-
     private static Map<ModuleBuildTarget, List<File>> collectChangedFiles(CompileContext context, DirtyFilesHolder<JavaSourceRootDescriptor,
             ModuleBuildTarget> dirtyFilesHolder) throws IOException {
         final Map<ModuleBuildTarget, List<File>> result = new HashMap<ModuleBuildTarget, List<File>>();
@@ -189,12 +211,5 @@ public class FPCModuleLevelBuilder extends ModuleLevelBuilder {
         }
         return false;
     }
-
-    @NotNull
-    @Override
-    public String getPresentableName() {
-        return NAME;
-    }
-
 
 }

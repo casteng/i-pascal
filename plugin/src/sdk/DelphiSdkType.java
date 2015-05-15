@@ -12,6 +12,8 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
+import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.util.SysUtils;
@@ -37,7 +39,6 @@ public class DelphiSdkType extends BasePascalSdkType {
 
     public static final Logger LOG = Logger.getInstance(DelphiSdkType.class.getName());
     private static final String[] LIBRARY_DIRS = {"debug"};
-    private static final String DELPHI_SDK_TYPE_ID = "DelphiSdkType";
     private static final Pattern DELPHI_VERSION_PATTERN = Pattern.compile("[\\w\\s]+[vV]ersion\\s(\\d+\\.\\d+)");
 
     @NotNull
@@ -46,7 +47,7 @@ public class DelphiSdkType extends BasePascalSdkType {
     }
 
     public DelphiSdkType() {
-        super(DELPHI_SDK_TYPE_ID);
+        super(JpsPascalModelSerializerExtension.DELPHI_SDK_TYPE_ID);
         InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
         if (definesStream != null) {
             DefinesParser.parse(definesStream);
@@ -138,6 +139,7 @@ public class DelphiSdkType extends BasePascalSdkType {
         if (additionalData instanceof PascalSdkData) {
             Object val = ((PascalSdkData) additionalData).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
             additional.setAttribute(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, val != null ? (String) val : "");
+            additional.setAttribute(PascalSdkData.DATA_KEY_COMPILER_FAMILY, PascalCompilerFamily.DELPHI.toString());
         }
     }
 
@@ -147,6 +149,7 @@ public class DelphiSdkType extends BasePascalSdkType {
         PascalSdkData result = new PascalSdkData();
         if (additional != null) {
             result.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, additional.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS));
+            result.setValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY, PascalCompilerFamily.DELPHI.toString());
         }
         return result;
     }

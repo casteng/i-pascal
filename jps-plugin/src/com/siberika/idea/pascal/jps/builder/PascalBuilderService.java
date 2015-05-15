@@ -12,7 +12,7 @@ import java.util.List;
  * Author: George Bakhtadze
  * Date: 08/02/2014
  */
-public class FPCBuilderService extends BuilderService {
+public class PascalBuilderService extends BuilderService {
     @NotNull
     @Override
     public List<? extends BuildTargetType<?>> getTargetTypes() {
@@ -22,6 +22,6 @@ public class FPCBuilderService extends BuilderService {
     @NotNull
     @Override
     public List<? extends ModuleLevelBuilder> createModuleLevelBuilders() {
-        return Arrays.asList(new FPCModuleLevelBuilder());
+        return Arrays.asList(new PascalModuleLevelBuilder());
     }
 }

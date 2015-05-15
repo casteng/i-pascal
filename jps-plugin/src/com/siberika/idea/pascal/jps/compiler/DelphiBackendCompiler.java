@@ -4,7 +4,6 @@ import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.Processor;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
-import com.siberika.idea.pascal.jps.builder.FPCCompilerProcessAdapter;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
@@ -25,7 +24,7 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 1/6/13
  */
-public class FPCBackendCompiler implements PascalBackendCompiler {
+public class DelphiBackendCompiler implements PascalBackendCompiler {
 
     public static final String COMPILER_SETTING_OPATH = "-FE";
     private static final String COMPILER_SETTING_COMMON = "-viewnb";
@@ -35,18 +34,18 @@ public class FPCBackendCompiler implements PascalBackendCompiler {
 
     private final CompilerMessager compilerMessager;
 
-    public FPCBackendCompiler(CompilerMessager compilerMessager) {
+    public DelphiBackendCompiler(CompilerMessager compilerMessager) {
         this.compilerMessager = compilerMessager;
     }
 
     @NotNull
     public String getId() {
-        return "FPC";
+        return "Delphi";
     }
 
     @Override
     public ProcessAdapter getCompilerProcessAdapter(CompilerMessager messager) {
-        return new FPCCompilerProcessAdapter(messager);
+        return null;
     }
 
     @NotNull
