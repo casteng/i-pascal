@@ -220,6 +220,10 @@ NUM_OCT         = \&[0-7]+
     "new"               { return getElement(NEW); }
 
     ":="            { return getElement(ASSIGN); }
+    "+="            { return getElement(PLUS_ASSIGN); }
+    "-="            { return getElement(MINUS_ASSIGN); }
+    "*="            { return getElement(MULT_ASSIGN); }
+    "/="            { return getElement(DIV_ASSIGN); }
     ".."            { return getElement(RANGE); }
 
     "*"             { return getElement(MULT); }

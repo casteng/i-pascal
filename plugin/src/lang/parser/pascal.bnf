@@ -181,6 +181,10 @@
         NE="<>"
         COLON=":"
         ASSIGN=":="
+        PLUS_ASSIGN="+="
+        MINUS_ASSIGN="-="
+        MULT_ASSIGN="*="
+        DIV_ASSIGN="/="
         DOT="."
         DEREF="^"
         AT="@"
@@ -471,9 +475,9 @@ private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | IfStatement | TryStatement | simpleStatement | CompoundStatement | stmtEmpty
 
-private simpleStatement     ::= GotoStatement | stmtSimpleOrAssign
-private stmtSimpleOrAssign  ::= Expression [AssignPart]
-AssignOp                    ::= ":=" | "+=" | "-=" | "*=" | "/="
+private simpleStatement     ::= GotoStatement | stmtSimpleOrAssign | Expression
+private stmtSimpleOrAssign  ::= Expression AssignPart
+AssignOp                    ::= ":=" | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN
 AssignPart                  ::= AssignOp (NewStatement | Expression) {pin=1 }
 NewStatement                ::= NEW "(" [ Expression ] ("," [ Expression ])* [ "," ConstExpression ] ")"// {pin=1 }
 stmtEmpty           ::= //empty
