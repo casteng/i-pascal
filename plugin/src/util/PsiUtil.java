@@ -363,7 +363,7 @@ public class PsiUtil {
     }
 
     public static void rebuildPsi( PsiElement block) {
-        LOG.warn("===*** requesting reparse: " + block);
+        LOG.info("WARNING: requesting reparse: " + block);
         if (System.currentTimeMillis() - lastReparseRequestTime >= MIN_REPARSE_INTERVAL) {
             lastReparseRequestTime = System.currentTimeMillis();
             //BlockSupport.getInstance(block.getProject()).reparseRange(block.getContainingFile(), block.getTextRange().getStartOffset(), block.getTextRange().getEndOffset(), block.getText());

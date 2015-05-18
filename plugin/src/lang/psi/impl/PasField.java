@@ -71,7 +71,6 @@ public class PasField {
         this.visibility = visibility;
         this.offset = element != null ? element.getTextOffset() : 0;
         this.target = target;
-        //System.out.println(this);
         this.cachedHash = name.hashCode() * 31 + (element != null ? element.hashCode() : 0);
         this.valueType = valueType;
     }

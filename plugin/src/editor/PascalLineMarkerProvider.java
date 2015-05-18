@@ -115,7 +115,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     private Collection<PsiElement> getInterfaceRoutinesTargets(PascalRoutineImpl routineDecl) {
         Collection<PsiElement> result = new SmartList<PsiElement>();
         if (null == routineDecl.getContainingFile()) {
-            LOG.warn(String.format("Containing file is null for class %s, name %s", routineDecl.getClass().getSimpleName(), routineDecl.getName()));
+            LOG.info(String.format("ERROR: Containing file is null for class %s, name %s", routineDecl.getClass().getSimpleName(), routineDecl.getName()));
             return result;
         }
         PsiElement section = PsiUtil.getModuleInterfaceSection(routineDecl.getContainingFile());

@@ -33,7 +33,7 @@ public class ParamMap extends HashMap<String, String> {
         if (data instanceof ParamMap) {
             ((ParamMap) data).addPair(name, value);
         } else {
-            LOG.warn("Data is not ParamMap: " + data);
+            LOG.info("ERROR: Data is not ParamMap: " + data);
         }
     }
 
@@ -45,7 +45,7 @@ public class ParamMap extends HashMap<String, String> {
         if (data instanceof ParamMap) {
             return ((ParamMap) data).get(name);
         } else {
-            LOG.warn("Data is not ParamMap: " + data);
+            LOG.info("ERROR: Data is not ParamMap: " + data);
             return null;
         }
     }
@@ -57,7 +57,7 @@ public class ParamMap extends HashMap<String, String> {
             if (data instanceof ParamMap) {
                 return (ParamMap) data;
             } else {
-                LOG.warn("Data is not ParamMap: " + data);
+                LOG.info("ERROR: Data is not ParamMap: " + data);
                 return null;
             }
         }

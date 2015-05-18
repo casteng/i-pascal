@@ -45,7 +45,7 @@ public class PascalPsiImplUtil {
     }
 
     public static void logNullContainingFile(PascalNamedElement element) {
-        LOG.warn(String.format("Containing file is null for class %s, name %s", element.getClass().getSimpleName(), element.getName()));
+        LOG.info(String.format("ERROR: Containing file is null for class %s, name %s", element.getClass().getSimpleName(), element.getName()));
     }
 
 }

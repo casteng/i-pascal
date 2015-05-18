@@ -497,7 +497,7 @@ public class PPUDumpParser {
 
                 }
             } else {
-                LOG.warn("retrieveReference: id is null");
+                LOG.info("ERROR: retrieveReference: id is null");
             }
             return res;
         }
@@ -558,7 +558,7 @@ public class PPUDumpParser {
                         sec.name = txt;
                     }
                     if (!path.endsWith(sec.type + "/name")) {
-                        LOG.warn("! name for section: " + sec.type + ", path: " + path);
+                        LOG.info("ERROR: ! name for section: " + sec.type + ", path: " + path);
                     }
                     if (sec.name.startsWith("$")) {
                         sec.ignore = true;

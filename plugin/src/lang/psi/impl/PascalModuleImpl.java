@@ -110,7 +110,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         }
 
         buildPrivateStamp = PsiUtil.getFileStamp(getContainingFile());
-        //System.out.println(String.format("Unit %s private: %d, used: %d", getName(), privateMembers.size(), privateUnits != null ? privateUnits.size() : 0));
+        LOG.info(String.format("Unit %s private: %d, used: %d", getName(), privateMembers.size(), privateUnits != null ? privateUnits.size() : 0));
     }
 
     @SuppressWarnings("unchecked")
@@ -155,7 +155,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         }
 
         buildPublicStamp = PsiUtil.getFileStamp(getContainingFile());
-        //System.out.println(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
+        LOG.info(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
     }
 
     private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {
@@ -203,7 +203,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
 
     @Override
     synchronized public void invalidateCache() {
-        LOG.warn("*** invalidating cache");
+        LOG.info("WARNING: invalidating cache");
         privateMembers = null;
         publicMembers = null;
     }

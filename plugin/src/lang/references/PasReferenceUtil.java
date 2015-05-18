@@ -82,10 +82,10 @@ public class PasReferenceUtil {
             if (pasModule != null) {
                 return pasModule;
             } else {
-                LOG.warn(String.format("No module found in file %s", file.getName()));
+                LOG.info(String.format("ERROR: No module found in file %s", file.getName()));
             }
         } else {
-            LOG.warn(String.format("No file found for unit %s", moduleName));
+            LOG.info(String.format("ERROR: No file found for unit %s", moduleName));
         }
         return null;
     }

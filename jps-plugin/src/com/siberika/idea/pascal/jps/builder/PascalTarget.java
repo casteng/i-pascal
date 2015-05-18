@@ -47,7 +47,7 @@ public class PascalTarget extends ModuleBasedTarget<PascalSourceRootDescriptor> 
         List<BuildTarget<?>> dependencies = new ArrayList<BuildTarget<?>>();
         Set<JpsModule> modules = JpsJavaExtensionService.dependencies(myModule).includedIn(JpsJavaClasspathKind.compile(isTests())).getModules();
         for (JpsModule module : modules) {
-            if (module.getModuleType().equals(JpsPascalModuleType.INSTANCE)) {
+            if (JpsPascalModuleType.INSTANCE.equals(module.getModuleType())) {
                 dependencies.add(new PascalTarget(module, getPascalTargetType()));
             }
         }
