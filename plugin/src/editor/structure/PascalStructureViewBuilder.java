@@ -69,7 +69,7 @@ public class PascalStructureViewBuilder extends TreeBasedStructureViewBuilder {
         if (null != res) {
             return res;
         } else {
-            log.warn("Didn't able to determine PsiFile. Using builtins.");
+            log.info("ERROR: Didn't able to determine PsiFile. Using builtins.");
             LightVirtualFile vf = BuiltinsParser.getBuiltinsSource();
             return PsiManager.getInstance(prj).findFile(vf);
         }

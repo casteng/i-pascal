@@ -56,6 +56,5 @@ public class PascalFileImpl extends PsiFileBase implements PascalFile, PsiNameId
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
-        //System.out.println(getModuleName() + " changed");
     }
 }

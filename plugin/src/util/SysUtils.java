@@ -66,9 +66,9 @@ public class SysUtils {
         final String stdout = processOutput.getStdout().trim();
         final String stderr = processOutput.getStderr().trim();
         if ((exitCode != 0) && (stdout.isEmpty())) {
-            LOG.warn(String.format("Error running %s. Code: %d", exePath, exitCode));
-            LOG.warn(String.format("Output: %s", stdout));
-            LOG.warn(String.format("Error: %s", stderr));
+            LOG.info(String.format("WARNING: Error running %s. Code: %d", exePath, exitCode));
+            LOG.info(String.format("Output: %s", stdout));
+            LOG.info(String.format("Error: %s", stderr));
             throw new PascalException(PascalBundle.message("error.exit.code", exePath, exitCode, stderr));
         }
         if (stdout.isEmpty()) return null;

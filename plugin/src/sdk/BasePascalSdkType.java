@@ -45,7 +45,7 @@ public abstract class BasePascalSdkType extends SdkType {
             res = new File(command);
         }
         if (!res.canExecute()) {
-            LOG.warn("Invalid decompiler command: " + command);
+            LOG.info("ERROR: Invalid decompiler command: " + command);
         }
         return res;
     }

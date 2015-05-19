@@ -56,7 +56,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         }
         if (isCacheActual(members, buildStamp)) { return; }  // TODO: check correctness
         if (building) {
-            LOG.warn("Reentered in buildXXX");
+            LOG.info("WARNING: Reentered in buildXXX");
             return;
         }
         building = true;
@@ -75,7 +75,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
             members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
         }
-        //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
+        LOG.info(getName() + ": buildMembers: " + members.size() + " members");
         building = false;
     }
 
@@ -124,7 +124,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     @Override
     synchronized public void invalidateCache() {
-        LOG.warn("*** invalidating cache");
+        LOG.info("WARNING: invalidating cache");
         members = null;
     }
 }

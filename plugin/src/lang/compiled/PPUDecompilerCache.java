@@ -127,7 +127,7 @@ public class PPUDecompilerCache {
                 String key = FileUtil.getNameWithoutExtension(unitFiles.iterator().next().getName());
                 PPUDumpParser.Section section = cache.get(key);
                 if (section.isError()) {
-                    LOG.warn("Invalidating ppu cache for key: " + key);
+                    LOG.info("ERROR: Invalidating ppu cache for key: " + key);
                     cache.invalidate(key);
                 }
                 return section;

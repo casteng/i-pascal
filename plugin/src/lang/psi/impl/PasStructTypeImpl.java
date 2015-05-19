@@ -144,7 +144,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             return;
         }  // TODO: check correctness
         if (building) {
-            LOG.warn("Reentered in buildXXX");
+            LOG.info("WARNING: Reentered in buildXXX");
             return;
         }
         building = true;
@@ -180,7 +180,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
         }
         buildStamp = PsiUtil.getFileStamp(getContainingFile());
-        //System.out.println(getName() + ": buildMembers: " + members.size() + " members");
+        LOG.info(getName() + ": buildMembers: " + members.size() + " members");
         building = false;
     }
 
@@ -258,7 +258,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     @Override
     synchronized public void invalidateCache() {
-        LOG.warn("*** invalidating cache");
+        LOG.info("WARNING: invalidating cache");
         members = null;
     }
 }

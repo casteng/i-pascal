@@ -260,7 +260,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                         getDefines().addAll(lexer.getDefines());
                     }
                 } else {
-                    LOG.warn(String.format("Include %s referenced from %s not found", name, virtualFile.getName()));
+                    LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

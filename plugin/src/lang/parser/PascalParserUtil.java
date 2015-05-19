@@ -230,7 +230,6 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     @NotNull
     private static <T extends PascalNamedElement> Collection<PascalNamedElement> retrieveEntitiesFromSection(PsiElement section, String key, int maxOffset, Class<? extends T>...classes) {
-        //System.out.println("get \"" + key + "\" in " + section);
         final Set<PascalNamedElement> result = new LinkedHashSet<PascalNamedElement>();
         if (section != null) {
             for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, classes)) {
@@ -238,8 +237,6 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                     if ((namedElement.getTextRange().getStartOffset() < maxOffset) && isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
                         result.remove(namedElement);
                         result.add(namedElement);
-                    } else {
-                        //System.out.println("not match in: " + PsiUtil.getNearestAffectingDeclarationsRoot(namedElement));
                     }
                 }
             }
