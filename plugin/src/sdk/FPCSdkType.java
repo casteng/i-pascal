@@ -1,14 +1,11 @@
 package com.siberika.idea.pascal.sdk;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.AdditionalDataConfigurable;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.projectRoots.SdkAdditionalData;
 import com.intellij.openapi.projectRoots.SdkModel;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.SdkType;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -16,13 +13,11 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
-import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.util.SysUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang.text.StrBuilder;
-import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,19 +63,6 @@ public class FPCSdkType extends BasePascalSdkType {
                 return path;
             }
         }
-        return null;
-    }
-
-    public static Sdk findSdk(Module module) {
-        if (module == null) {
-            return null;
-        }
-
-        Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
-        if (sdk != null && (sdk.getSdkType().equals(FPCSdkType.getInstance()))) {
-            return sdk;
-        }
-
         return null;
     }
 
@@ -130,26 +112,6 @@ public class FPCSdkType extends BasePascalSdkType {
             LOG.warn(e.getMessage(), e);
         }
         return null;
-    }
-
-    @Override
-    public void saveAdditionalData(@NotNull final SdkAdditionalData additionalData, @NotNull final Element additional) {
-        if (additionalData instanceof PascalSdkData) {
-            Object val = ((PascalSdkData) additionalData).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
-            additional.setAttribute(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, val != null ? (String) val : "");
-            additional.setAttribute(PascalSdkData.DATA_KEY_COMPILER_FAMILY, PascalCompilerFamily.FPC.toString());
-        }
-    }
-
-    @Nullable
-    @Override
-    public SdkAdditionalData loadAdditionalData(Element additional) {
-        PascalSdkData result = new PascalSdkData();
-        if (additional != null) {
-            result.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, additional.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS));
-            result.setValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY, PascalCompilerFamily.FPC.toString());
-        }
-        return result;
     }
 
     @NonNls

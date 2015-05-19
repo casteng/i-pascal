@@ -8,8 +8,10 @@ import com.intellij.openapi.projectRoots.SdkType;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import org.apache.commons.lang.StringUtils;
+import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
@@ -52,7 +54,33 @@ public abstract class BasePascalSdkType extends SdkType {
 
     protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {
         File file = PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath() != null ? sdk.getHomePath() : "");
-        data.setValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND, file != null ? file.getAbsolutePath() : "");
+        data.setValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND, file.getAbsolutePath());
+    }
+
+    protected void setParam(PascalSdkData additionalData, Element additional, String name) {
+        Object val = additionalData.getValue(name);
+        additional.setAttribute(name, val != null ? (String) val : "");
+    }
+
+    @Override
+    public void saveAdditionalData(@NotNull final SdkAdditionalData additionalData, @NotNull final Element additional) {
+        if (additionalData instanceof PascalSdkData) {
+            setParam((PascalSdkData) additionalData, additional, PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
+            setParam((PascalSdkData) additionalData, additional, PascalSdkData.DATA_KEY_DECOMPILER_COMMAND);
+            setParam((PascalSdkData) additionalData, additional, PascalSdkData.DATA_KEY_COMPILER_FAMILY);
+        }
+    }
+
+    @Nullable
+    @Override
+    public SdkAdditionalData loadAdditionalData(Element additional) {
+        PascalSdkData result = new PascalSdkData();
+        if (additional != null) {
+            result.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, additional.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS));
+            result.setValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND, additional.getAttributeValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND));
+            result.setValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY, additional.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY));
+        }
+        return result;
     }
 
 }
