@@ -7,24 +7,25 @@ import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
 import com.siberika.idea.pascal.jps.compiler.DelphiBackendCompiler;
 import com.siberika.idea.pascal.jps.compiler.FPCBackendCompiler;
 import com.siberika.idea.pascal.jps.compiler.PascalBackendCompiler;
+import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.model.JpsPascalSdkType;
 import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.ParamMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.jps.ModuleChunk;
+import org.jetbrains.jps.builders.BuildOutputConsumer;
+import org.jetbrains.jps.builders.BuildTargetType;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
 import org.jetbrains.jps.builders.FileProcessor;
 import org.jetbrains.jps.builders.java.JavaBuilderUtil;
-import org.jetbrains.jps.builders.java.JavaSourceRootDescriptor;
-import org.jetbrains.jps.incremental.BuilderCategory;
 import org.jetbrains.jps.incremental.CompileContext;
-import org.jetbrains.jps.incremental.ModuleBuildTarget;
-import org.jetbrains.jps.incremental.ModuleLevelBuilder;
 import org.jetbrains.jps.incremental.ProjectBuildException;
+import org.jetbrains.jps.incremental.TargetBuilder;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
+import org.jetbrains.jps.incremental.resources.ResourcesBuilder;
+import org.jetbrains.jps.incremental.resources.StandardResourceBuilderEnabler;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.library.JpsOrderRootType;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,19 +44,21 @@ import java.util.Map;
 
 /**
  * Author: George Bakhtadze
- * Date: 11/02/2014
+ * Date: 19/05/2015
  */
-public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
+public class FPCTargetBuilder extends TargetBuilder<PascalSourceRootDescriptor, PascalTarget> {
+    public static final String NAME = "FPC";
 
-    private static final String NAME = "Pascal Builder";
+    protected FPCTargetBuilder(Collection<? extends BuildTargetType<? extends PascalTarget>> buildTargetTypes) {
+        super(buildTargetTypes);
 
-    public PascalModuleLevelBuilder() {
-        super(BuilderCategory.OVERWRITING_TRANSLATOR);
-    }
-
-    @Override
-    public List<String> getCompilableFileExtensions() {
-        return PascalBuilderService.COMPILABLE_EXTENSIONS;
+        //disables java resource builder for pascal modules
+        ResourcesBuilder.registerEnabler(new StandardResourceBuilderEnabler() {
+            @Override
+            public boolean isResourceProcessingEnabled(@NotNull JpsModule module) {
+                return !(module.getModuleType() instanceof JpsPascalModuleType);
+            }
+        });
     }
 
     @NotNull
@@ -64,55 +68,48 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
     }
 
     @Override
-    public ExitCode build(final CompileContext context, ModuleChunk chunk,
-                          DirtyFilesHolder<JavaSourceRootDescriptor, ModuleBuildTarget> dirtyFilesHolder,
-                          OutputConsumer outputConsumer) throws ProjectBuildException, IOException {
-        final Map<ModuleBuildTarget, List<File>> files = collectChangedFiles(context, dirtyFilesHolder);
+    public void build(@NotNull PascalTarget target, @NotNull DirtyFilesHolder<PascalSourceRootDescriptor, PascalTarget> holder,
+                      @NotNull BuildOutputConsumer outputConsumer, @NotNull CompileContext context) throws ProjectBuildException, IOException {
+        if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) return;
+        final Map<PascalTarget, List<File>> files = collectChangedFiles(holder);
         if (files.isEmpty() && !JavaBuilderUtil.isForcedRecompilationAllJavaModules(context)) {
             context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.INFO, "No changes detected"));
-            return ExitCode.NOTHING_DONE;
+            return;
         }
 
         CompilerMessager messager = new CompilerUtil.PascalCompilerMessager(getPresentableName(), context);
 
-        for (ModuleBuildTarget target : chunk.getTargets()) {
-            JpsModule module = target.getModule();
-            JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
-            if (sdk != null) {
-                PascalBackendCompiler compiler = getCompiler(sdk, messager);
-                if (compiler != null) {
-                    messager.info("Compiler family:" + compiler.getId(), "", -1l, -1);
-                    List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
-                    sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
-                    File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
+        JpsModule module = target.getModule();
+        JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
+        if (sdk != null) {
+            PascalBackendCompiler compiler = getCompiler(sdk, messager);
+            if (compiler != null) {
+                messager.info("Compiler family:" + compiler.getId(), "", -1l, -1);
+                List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
+                sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
+                File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
 
-                    for (File file : files.get(target)) {
-                        File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + compiler.getCompiledUnitExt());
-                        messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1l, -1l);
-                        outputConsumer.registerOutputFile(chunk.representativeTarget(), compiled, Collections.singleton(file.getCanonicalPath()));
-                    }
+                for (File file : files.get(target)) {
+                    File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + compiler.getCompiledUnitExt());
+                    messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1l, -1l);
+                    outputConsumer.registerOutputFile(compiled, Collections.singleton(file.getCanonicalPath()));
+                }
 
-                    String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
-                            sdkFiles, getFiles(module.getSourceRoots()),
-                            files.get(target), ParamMap.getJpsParams(module.getProperties()),
-                            JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
-                            ParamMap.getJpsParams(sdk.getSdkProperties()));
-                    int exitCode = launchCompiler(compiler, messager, cmdLine);
-                    if (exitCode != 0) {
-                        messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
-                        return ExitCode.ABORT;
-                    }
-                } else {
-                    messager.error("Can't determine compiler family", "", -1l, -1l);
-                    return ExitCode.ABORT;
+                String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
+                        sdkFiles, getFiles(module.getSourceRoots()),
+                        files.get(target), ParamMap.getJpsParams(module.getProperties()),
+                        JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
+                        ParamMap.getJpsParams(sdk.getSdkProperties()));
+                int exitCode = launchCompiler(compiler, messager, cmdLine);
+                if (exitCode != 0) {
+                    messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
                 }
             } else {
-                log(context, "Pascal SDK is not defined for module " + module.getName());
-                return ExitCode.ABORT;
+                messager.error("Can't determine compiler family", "", -1l, -1l);
             }
+        } else {
+            log(context, "Pascal SDK is not defined for module " + module.getName());
         }
-
-        return ExitCode.OK;
     }
 
     @Nullable
@@ -141,6 +138,10 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
         return process.exitValue();
     }
 
+    private static void log(CompileContext context, String text) {
+        context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, text));
+    }
+
     private List<File> getFiles(List<JpsModuleSourceRoot> sourceRoots) {
         List<File> result = new ArrayList<File>();
         for (JpsModuleSourceRoot root : sourceRoots) {
@@ -163,15 +164,10 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
         return outputDirectory;
     }
 
-    private static void log(CompileContext context, String text) {
-        context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, text));
-    }
-
-    private static Map<ModuleBuildTarget, List<File>> collectChangedFiles(CompileContext context, DirtyFilesHolder<JavaSourceRootDescriptor,
-            ModuleBuildTarget> dirtyFilesHolder) throws IOException {
-        final Map<ModuleBuildTarget, List<File>> result = new HashMap<ModuleBuildTarget, List<File>>();
-        dirtyFilesHolder.processDirtyFiles(new FileProcessor<JavaSourceRootDescriptor, ModuleBuildTarget>() {
-            public boolean apply(ModuleBuildTarget target, File file, JavaSourceRootDescriptor sourceRoot) throws IOException {
+    private static Map<PascalTarget, List<File>> collectChangedFiles(DirtyFilesHolder<PascalSourceRootDescriptor, PascalTarget> dirtyFilesHolder) throws IOException {
+        final Map<PascalTarget, List<File>> result = new HashMap<PascalTarget, List<File>>();
+        dirtyFilesHolder.processDirtyFiles(new FileProcessor<PascalSourceRootDescriptor, PascalTarget>() {
+            public boolean apply(PascalTarget target, File file, PascalSourceRootDescriptor sourceRoot) throws IOException {
                 final String path = file.getPath();
                 if (isPascalFile(path)) { //todo file type check
                     List<File> toCompile = result.get(target);

@@ -5,6 +5,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.Processor;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import com.siberika.idea.pascal.jps.builder.FPCCompilerProcessAdapter;
+import com.siberika.idea.pascal.jps.builder.FPCTargetBuilder;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
@@ -41,7 +42,7 @@ public class FPCBackendCompiler implements PascalBackendCompiler {
 
     @NotNull
     public String getId() {
-        return "FPC";
+        return FPCTargetBuilder.NAME;
     }
 
     @Override

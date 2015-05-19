@@ -1,3 +1,3 @@
-unit usesCompletion;
+unit unitSections;
 <caret>
 end.
