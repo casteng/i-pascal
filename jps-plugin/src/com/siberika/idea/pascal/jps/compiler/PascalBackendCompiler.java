@@ -44,7 +44,6 @@ public abstract class PascalBackendCompiler {
                                          final List<File> files, @Nullable final ParamMap moduleData,
                                          final boolean isRebuild,
                                          @Nullable final ParamMap pascalSdkData) throws IOException, IllegalArgumentException {
-
         final ArrayList<String> commandLine = new ArrayList<String>();
         if (outputDir != null) {
             createStartupCommandImpl(sdkHomePath, moduleName, outputDir, sdkLibFiles, moduleLibFiles, isRebuild, pascalSdkData, commandLine);

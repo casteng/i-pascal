@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.execution.process.ProcessAdapter;
+import com.siberika.idea.pascal.jps.builder.DelphiCompilerProcessAdapter;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.jps.util.ParamMap;
@@ -39,7 +40,7 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
 
     @Override
     public ProcessAdapter getCompilerProcessAdapter(CompilerMessager messager) {
-        return null;
+        return new DelphiCompilerProcessAdapter(messager);
     }
 
     @Override
