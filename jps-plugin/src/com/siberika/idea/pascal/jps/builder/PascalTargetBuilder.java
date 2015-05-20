@@ -46,10 +46,10 @@ import java.util.Map;
  * Author: George Bakhtadze
  * Date: 19/05/2015
  */
-public class FPCTargetBuilder extends TargetBuilder<PascalSourceRootDescriptor, PascalTarget> {
-    public static final String NAME = "FPC";
+public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescriptor, PascalTarget> {
+    private static final String NAME = "Pascal builder";
 
-    protected FPCTargetBuilder(Collection<? extends BuildTargetType<? extends PascalTarget>> buildTargetTypes) {
+    protected PascalTargetBuilder(Collection<? extends BuildTargetType<? extends PascalTarget>> buildTargetTypes) {
         super(buildTargetTypes);
 
         //disables java resource builder for pascal modules
@@ -77,7 +77,7 @@ public class FPCTargetBuilder extends TargetBuilder<PascalSourceRootDescriptor, 
             return;
         }
 
-        CompilerMessager messager = new CompilerUtil.PascalCompilerMessager(getPresentableName(), context);
+        CompilerMessager messager = new PascalCompilerMessager(getPresentableName(), context);
 
         JpsModule module = target.getModule();
         JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);

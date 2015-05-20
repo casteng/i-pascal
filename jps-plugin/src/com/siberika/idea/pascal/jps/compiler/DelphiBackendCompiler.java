@@ -31,6 +31,7 @@ public class DelphiBackendCompiler implements PascalBackendCompiler {
     private static final String COMPILER_SETTING_SRCPATH = "-Fu";
     private static final String COMPILER_SETTING_INCPATH = "-Fi";
     private static final String COMPILER_SETTING_BUILDALL = "-B";
+    private static final String NAME = "Delphi";
 
     private final CompilerMessager compilerMessager;
 
@@ -40,7 +41,7 @@ public class DelphiBackendCompiler implements PascalBackendCompiler {
 
     @NotNull
     public String getId() {
-        return "Delphi";
+        return NAME;
     }
 
     @Override

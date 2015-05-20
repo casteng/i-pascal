@@ -44,6 +44,7 @@ import java.util.Map;
  * Author: George Bakhtadze
  * Date: 11/02/2014
  */
+@Deprecated // Target builder should be used instead
 public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
 
     private static final String NAME = "Pascal Builder";
@@ -73,7 +74,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
             return ExitCode.NOTHING_DONE;
         }
 
-        CompilerMessager messager = new CompilerUtil.PascalCompilerMessager(getPresentableName(), context);
+        CompilerMessager messager = new PascalCompilerMessager(getPresentableName(), context);
 
         for (ModuleBuildTarget target : chunk.getTargets()) {
             JpsModule module = target.getModule();

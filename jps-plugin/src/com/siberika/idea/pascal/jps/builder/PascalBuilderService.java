@@ -19,13 +19,13 @@ public class PascalBuilderService extends BuilderService {
     @NotNull
     @Override
     public List<? extends BuildTargetType<?>> getTargetTypes() {
-        return Arrays.asList(PascalTargetType.PRODUCTION, PascalTargetType.TESTS);
+        return Collections.singletonList(PascalTargetType.PRODUCTION);
     }
 
     @NotNull
     @Override
     public List<? extends TargetBuilder<?, ?>> createBuilders() {
-        return Collections.singletonList(new FPCTargetBuilder(Arrays.asList(PascalTargetType.PRODUCTION, PascalTargetType.TESTS)));
+        return Collections.singletonList(new PascalTargetBuilder(Collections.singletonList(PascalTargetType.PRODUCTION)));
     }
 
     /*@NotNull

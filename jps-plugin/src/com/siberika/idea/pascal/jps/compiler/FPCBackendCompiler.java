@@ -5,7 +5,6 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.Processor;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import com.siberika.idea.pascal.jps.builder.FPCCompilerProcessAdapter;
-import com.siberika.idea.pascal.jps.builder.FPCTargetBuilder;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
@@ -33,6 +32,7 @@ public class FPCBackendCompiler implements PascalBackendCompiler {
     private static final String COMPILER_SETTING_SRCPATH = "-Fu";
     private static final String COMPILER_SETTING_INCPATH = "-Fi";
     private static final String COMPILER_SETTING_BUILDALL = "-B";
+    private static final String NAME = "FPC";
 
     private final CompilerMessager compilerMessager;
 
@@ -42,7 +42,7 @@ public class FPCBackendCompiler implements PascalBackendCompiler {
 
     @NotNull
     public String getId() {
-        return FPCTargetBuilder.NAME;
+        return NAME;
     }
 
     @Override
