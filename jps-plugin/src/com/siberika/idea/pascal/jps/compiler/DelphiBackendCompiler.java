@@ -18,11 +18,14 @@ import java.util.List;
  */
 public class DelphiBackendCompiler extends PascalBackendCompiler {
 
-    public static final String COMPILER_SETTING_OPATH = "-FE";
-    private static final String COMPILER_SETTING_COMMON = "-viewnb";
-    private static final String COMPILER_SETTING_SRCPATH = "-Fu";
-    private static final String COMPILER_SETTING_INCPATH = "-Fi";
+    private static final String COMPILER_SETTING_OPATH = "-E";
+    private static final String COMPILER_SETTING_DCU_OPATH = "-N";
+    private static final String COMPILER_SETTING_DCU_OPATH_D2007 = "-N0";
+    private static final String COMPILER_SETTING_COMMON = "";
+    private static final String COMPILER_SETTING_SRCPATH = "-U";
+    private static final String COMPILER_SETTING_INCPATH = "-I";
     private static final String COMPILER_SETTING_BUILDALL = "-B";
+    private static final String COMPILER_SETTING_BUILDMODIFIED = "-M";
     private static final String NAME = "Delphi";
 
     public DelphiBackendCompiler(CompilerMessager compilerMessager) {
@@ -60,9 +63,13 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
 
         if (isRebuild) {
             commandLine.add(COMPILER_SETTING_BUILDALL);
+        } else {
+            commandLine.add(COMPILER_SETTING_BUILDMODIFIED);
         }
 
         commandLine.add(COMPILER_SETTING_OPATH + outputDir);
+        commandLine.add(COMPILER_SETTING_DCU_OPATH + outputDir);
+        commandLine.add(COMPILER_SETTING_DCU_OPATH_D2007 + outputDir);
 
         for (File sourceRoot : retrievePaths(moduleLibFiles)) {
             addLibPathToCmdLine(commandLine, sourceRoot, COMPILER_SETTING_SRCPATH, COMPILER_SETTING_INCPATH);

@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class FPCBackendCompiler extends PascalBackendCompiler {
 
-    public static final String COMPILER_SETTING_OPATH = "-FE";
+    private static final String COMPILER_SETTING_OPATH = "-FE";
     private static final String COMPILER_SETTING_COMMON = "-viewnb";
     private static final String COMPILER_SETTING_SRCPATH = "-Fu";
     private static final String COMPILER_SETTING_INCPATH = "-Fi";
