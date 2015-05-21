@@ -9,6 +9,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
@@ -50,7 +51,7 @@ public class PPUDecompilerCache {
         Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
         if (null == sdk) { return PascalBundle.message("decompile.wrong.sdk"); }
         PPUDecompilerCache decompilerCache = (PPUDecompilerCache) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE);
-        if (null == decompilerCache) {
+        if ((null == decompilerCache) || (decompilerCache.module != module)) {
             decompilerCache = new PPUDecompilerCache(module);
             BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE, decompilerCache);
         }
@@ -67,9 +68,9 @@ public class PPUDecompilerCache {
             if ((sdk.getHomePath() == null) || !(sdk.getSdkType() instanceof FPCSdkType)) {
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.sdktype"));
             }
-            Collection<VirtualFile> files = ModuleUtil.getAllCompiledModuleFilesByName(module, key);
+            Collection<VirtualFile> files = ModuleUtil.getAllCompiledModuleFilesByName(module, key, PPUFileType.INSTANCE);
             if (files.isEmpty()) {
-                return new PPUDumpParser.Section(PascalBundle.message("decompile.ppu.notfound", key));
+                return new PPUDumpParser.Section(PascalBundle.message("decompile.file.notfound", key));
             }
             File ppuDump = BasePascalSdkType.getDecompilerCommand(sdk);
             String xml = "";
@@ -81,7 +82,7 @@ public class PPUDecompilerCache {
                 if (xml != null) {
                     return PPUDumpParser.parse(xml, self);
                 } else {
-                    return new PPUDumpParser.Section(PascalBundle.message("decompile.empty.ppudump.result"));
+                    return new PPUDumpParser.Section(PascalBundle.message("decompile.empty.result"));
                 }
             } catch (IOException e) {
                 LOG.warn("I/O error: " + e.getMessage(), e);
@@ -121,7 +122,7 @@ public class PPUDecompilerCache {
     }
 
     PPUDumpParser.Section getContents(@NotNull String unitName) {
-        Collection<VirtualFile> unitFiles = ModuleUtil.getAllCompiledModuleFilesByName(module, unitName);
+        Collection<VirtualFile> unitFiles = ModuleUtil.getAllCompiledModuleFilesByName(module, unitName, PPUFileType.INSTANCE);
         if (!unitFiles.isEmpty()) {
             try {
                 String key = FileUtil.getNameWithoutExtension(unitFiles.iterator().next().getName());

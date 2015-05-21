@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.util;
 
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -34,11 +35,11 @@ public class ModuleUtil {
        3. Search for the filename all uppercased.
        Unit  names that are longer than 8 characters will first be looked for with  their  full length.
        If the unit is not found with this name, the name will be truncated to 8 characters */
-    public static Collection<VirtualFile> getAllCompiledModuleFilesByName(@NotNull Module module, @NotNull String name) {
+    public static Collection<VirtualFile> getAllCompiledModuleFilesByName(@NotNull Module module, @NotNull String name, FileType fileType) {
         Collection<VirtualFile> res = new ArrayList<VirtualFile>();
         String[] nameVariants = name.length() > 8 ? new String[] {name, name.toLowerCase(), name.toUpperCase(), name.substring(0, 8)} : new String[] {name, name.toLowerCase(), name.toUpperCase()};
         for (String unitName : nameVariants) {
-            res.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, unitName + ".ppu",
+            res.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, unitName + "." + fileType.getDefaultExtension(),
                     GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
         }
         return res;

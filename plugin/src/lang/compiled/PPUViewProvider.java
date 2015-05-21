@@ -11,6 +11,7 @@ import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiReference;
+import com.siberika.idea.pascal.DCUFileType;
 import com.siberika.idea.pascal.PascalLanguage;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,9 +34,12 @@ public class PPUViewProvider extends ClassFileViewProvider implements FileViewPr
     protected PsiFile createFile(@NotNull final Project project, @NotNull final VirtualFile vFile, @NotNull final FileType fileType) {
         final FileIndexFacade fileIndex = ServiceManager.getService(project, FileIndexFacade.class);
         if (fileIndex.isInLibraryClasses(vFile) || !fileIndex.isInSource(vFile)) {
-            return new PPUFileImpl(getManager(), this);
+            if (fileType instanceof DCUFileType) {
+                return new DCUFileImpl(getManager(), this);
+            } else {
+                return new PPUFileImpl(getManager(), this);
+            }
         }
-
         return null;
     }
 

@@ -9,9 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>0.93</p>
+        <p>0.95</p>
         <ul>
           <li>Delphi SDK</li>
+          <li>.dcu file decompilation support</li>
         </ul>
         <p>0.92</p>
         <ul>
@@ -136,6 +137,7 @@
         <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.PascalParserDefinition"/>
         <lang.syntaxHighlighterFactory key="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
         <syntaxHighlighter key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
+        <syntaxHighlighter key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
 
         <lang.foldingBuilder language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalFoldingBuilder"/>
@@ -174,10 +176,13 @@
 
         <lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.structure.PasStructureViewFactory"/>
         <structureViewBuilder key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.structure.PascalStructureViewBuilder" />
+        <structureViewBuilder key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.structure.PascalStructureViewBuilder" />
 
         <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>-->
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
+        <filetype.decompiler filetype="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.lang.compiled.DCUFileDecompiler"/>
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
+        <fileType.fileViewProviderFactory filetype="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
 
         <compiler.task implementation="com.siberika.idea.pascal.compiler.Task"/>
 

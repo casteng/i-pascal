@@ -5,8 +5,9 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiManager;
 import com.siberika.idea.pascal.PPUFileType;
+import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -24,10 +25,13 @@ public class PPUFileDecompiler implements BinaryFileDecompiler {
         if (projects.length == 0) return "";
         final Project project = projects[0];
 
-        return PPUFileImpl.decompile(PsiManager.getInstance(project), file);
+        return decompileText(file.getPath(), ModuleUtil.getModuleForFile(project, file));
     }
 
     public static String decompileText(String filename, Module module) {
+        if (null == module) {
+            return PascalBundle.message("decompile.no.module", filename);
+        }
         return PPUDecompilerCache.decompile(module, filename);
     }
 
