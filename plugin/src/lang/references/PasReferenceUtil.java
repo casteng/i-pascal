@@ -13,6 +13,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.StringLenComparator;
 import com.intellij.util.indexing.FileBasedIndex;
+import com.siberika.idea.pascal.DCUFileType;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalRTException;
@@ -125,6 +126,8 @@ public class PasReferenceUtil {
         if (module != null) {
             virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PPUFileType.INSTANCE,
                     GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
+            virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, DCUFileType.INSTANCE,
+                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
         }
         virtualFiles.add(BuiltinsParser.getBuiltinsSource());
         return virtualFiles;
@@ -142,7 +145,8 @@ public class PasReferenceUtil {
     private static boolean isUnitExtension(VirtualFile virtualFile) {
         String ext = virtualFile.getExtension();
         return (ext != null) && PascalFileType.UNIT_EXTENSIONS.contains(ext.toLowerCase())
-                || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension());
+                || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension())
+                || DCUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension());
     }
 
     private static boolean isVisibleWithinUnit(@NotNull PasField field, @NotNull NamespaceRec fqn) {

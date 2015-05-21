@@ -13,5 +13,6 @@ public class PascalFileTypeFactory extends FileTypeFactory {
   public void createFileTypes(@NotNull FileTypeConsumer fileTypeConsumer) {
       fileTypeConsumer.consume(PascalFileType.INSTANCE, "pas;pp;lpr;dpr;inc");
       fileTypeConsumer.consume(PPUFileType.INSTANCE, "ppu");
+      fileTypeConsumer.consume(DCUFileType.INSTANCE, "dcu");
   }
 }

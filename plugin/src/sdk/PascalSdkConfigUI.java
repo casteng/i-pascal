@@ -20,6 +20,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.FileContentUtil;
 import com.intellij.util.indexing.FileBasedIndex;
+import com.siberika.idea.pascal.DCUFileType;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
@@ -88,6 +89,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
                         protected void run(@NotNull Result result) throws Throwable {
                             for (Module module : modules) {
                                 Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PPUFileType.INSTANCE, GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module));
+                                files.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, DCUFileType.INSTANCE, GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
                                 for (VirtualFile virtualFile : files) {
                                     ((VirtualFileListener) documentManager).contentsChanged(new VirtualFileEvent(null, virtualFile, virtualFile.getName(), virtualFile.getParent()));
                                 }
