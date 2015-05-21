@@ -111,7 +111,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                     throw new ExecutionException(PascalBundle.message("execution.noExecutable"));
                 }
                 commandLine.addParameters(params);
-                commandLine.setWorkDirectory(workDirectory);
+                commandLine = commandLine.withWorkDirectory(workDirectory);
                 ProcessHandler handler = new CapturingProcessHandler(commandLine.createProcess(), commandLine.getCharset(), commandLine.getCommandLineString());
                 setConsoleBuilder(TextConsoleBuilderFactory.getInstance().createBuilder(getProject()));
                 return handler;
