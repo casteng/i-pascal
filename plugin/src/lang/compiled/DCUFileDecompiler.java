@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -28,6 +29,8 @@ import java.util.Collection;
  */
 public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Logger LOG = Logger.getInstance(DCUFileDecompiler.class);
+
+    private static final Pattern WARNING = Pattern.compile("$Warning:.+- all imported names will be shown with unit names");
 
     @NotNull
     @Override
@@ -85,7 +88,9 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         boolean unitDone = false;
         StringBuilder res = new StringBuilder();
         for (String line : lines) {
-            if (!unitDone) {                                // Comment out all lines before unit declarations
+            if (isWarning(line)) {                                // Comment out all decompiler warnings
+                res.append("// ");
+            } else if (!unitDone) {                               // Comment out all lines before unit declarations
                 if (line.startsWith("unit")) {
                     unitDone = true;
                 } else {
@@ -98,6 +103,10 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         }
         res.append("implementation\n  {compiled code}\nend.\n");
         return res.toString();
+    }
+
+    private static boolean isWarning(String line) {
+        return WARNING.matcher(line).matches();
     }
 
 }
