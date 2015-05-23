@@ -123,7 +123,7 @@ public class DelphiSdkType extends BasePascalSdkType {
                 LOG.info("=== wrong lines: " + (lines != null ? lines.length : "null"));
             }
         } catch (PascalException e) {
-            LOG.warn(e.getMessage(), e);
+            LOG.info("Error: " + e.getMessage(), e);
         }
         return null;
     }

@@ -85,10 +85,10 @@ public class PPUDecompilerCache {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.empty.result"));
                 }
             } catch (IOException e) {
-                LOG.warn("I/O error: " + e.getMessage(), e);
+                LOG.info("I/O error: " + e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.io.error"));
             } catch (ParseException e) {
-                LOG.warn("Parse error: " + e.getMessage(), e);
+                LOG.info("Parse error: " + e.getMessage(), e);
                 String ver = getPPUDumpVersion(ppuDump);
                 if (ver.compareTo(PPUDUMP_VERSION_MIN) < 0) {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.version.error", ver, PPUDUMP_VERSION_MIN));
@@ -98,7 +98,7 @@ public class PPUDecompilerCache {
             } catch (PascalException e1) {
                 return new PPUDumpParser.Section(e1.getMessage());
             } catch (Exception e) {
-                LOG.warn("Unknown error: " + e.getMessage(), e);
+                LOG.info("Unknown error: " + e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.unknown.error", xml));
             }
         }
@@ -116,7 +116,7 @@ public class PPUDecompilerCache {
                 }
             }
         } catch (Exception e) {
-            LOG.warn(e.getMessage(), e);
+            LOG.info("Error: " + e.getMessage(), e);
         }
         return res;
     }
@@ -133,7 +133,7 @@ public class PPUDecompilerCache {
                 }
                 return section;
             } catch (Exception e) {
-                LOG.warn(e.getMessage(), e);
+                LOG.info("Error: " + e.getMessage(), e);
             }
         }
         return new PPUDumpParser.Section(PascalBundle.message("decompile.unit.not.found", unitName));

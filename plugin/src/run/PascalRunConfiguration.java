@@ -34,7 +34,6 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.module.PascalModuleType;
-import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,7 +48,7 @@ import java.util.List;
  */
 public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigurationModule>
         implements PascalRunConfigurationParams, RunConfigurationWithSuppressedDefaultRunAction, RunConfigurationWithSuppressedDefaultDebugAction {
-    static Logger log = Logger.getLogger(PascalRunConfiguration.class);
+
     private String parameters;
     private String workingDirectory;
 
@@ -111,7 +110,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                     throw new ExecutionException(PascalBundle.message("execution.noExecutable"));
                 }
                 commandLine.addParameters(params);
-                commandLine = commandLine.withWorkDirectory(workDirectory);
+                commandLine.setWorkDirectory(workDirectory);
                 ProcessHandler handler = new CapturingProcessHandler(commandLine.createProcess(), commandLine.getCharset(), commandLine.getCommandLineString());
                 setConsoleBuilder(TextConsoleBuilderFactory.getInstance().createBuilder(getProject()));
                 return handler;

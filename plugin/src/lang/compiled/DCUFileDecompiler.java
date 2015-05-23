@@ -73,12 +73,12 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
                 return PascalBundle.message("decompile.empty.result");
             }
         } catch (IOException e) {
-            LOG.warn("I/O error: " + e.getMessage(), e);
+            LOG.info("I/O error: " + e.getMessage(), e);
             return PascalBundle.message("decompile.io.error");
         } catch (PascalException e1) {
             return e1.getMessage();
         } catch (Exception e) {
-            LOG.warn("Unknown error: " + e.getMessage(), e);
+            LOG.info("Unknown error: " + e.getMessage(), e);
             return PascalBundle.message("decompile.unknown.error", result);
         }
     }
