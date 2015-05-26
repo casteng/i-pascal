@@ -4,6 +4,7 @@ import com.intellij.execution.process.ProcessAdapter;
 import com.siberika.idea.pascal.jps.builder.DelphiCompilerProcessAdapter;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
+import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.jps.util.ParamMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -72,11 +73,11 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
         commandLine.add(COMPILER_SETTING_DCU_OPATH + outputDir);
         commandLine.add(COMPILER_SETTING_DCU_OPATH_D2007 + outputDir);
 
-        for (File sourceRoot : retrievePaths(moduleLibFiles)) {
+        for (File sourceRoot : FileUtil.retrievePaths(moduleLibFiles)) {
             addLibPathToCmdLine(commandLine, sourceRoot, COMPILER_SETTING_SRCPATH, COMPILER_SETTING_INCPATH);
         }
 
-        for (File sdkPath : retrievePaths(sdkFiles)) {
+        for (File sdkPath : FileUtil.retrievePaths(sdkFiles)) {
             addLibPathToCmdLine(commandLine, sdkPath, COMPILER_SETTING_SRCPATH, COMPILER_SETTING_INCPATH);
         }
     }

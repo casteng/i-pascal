@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.DCUFileType;
@@ -20,7 +21,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -68,7 +72,8 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
             if (!decompilerCommand.isFile() || !decompilerCommand.canExecute()) {
                 return PascalBundle.message("decompile.wrong.ppudump", decompilerCommand.getCanonicalPath());
             }
-            result = SysUtils.runAndGetStdOut(sdk.getHomePath(), decompilerCommand.getCanonicalPath(), files.iterator().next().getPath(), "-I", "-");
+            List<String> paths = collectUnitPaths(sdk, module);
+            result = SysUtils.runAndGetStdOut(sdk.getHomePath(), decompilerCommand.getCanonicalPath(), files.iterator().next().getPath(), "-U" + String.join(";", paths), "-I", "-");
             if (result != null) {
                 return handleText(result);
             } else {
@@ -83,6 +88,17 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
             LOG.info("Unknown error: " + e.getMessage(), e);
             return PascalBundle.message("decompile.unknown.error", result);
         }
+    }
+
+    private static List<String> collectUnitPaths(Sdk sdk, Module module) {
+        VirtualFile[] sdkFiles = sdk.getRootProvider().getFiles(OrderRootType.CLASSES);
+        Set<File> paths = com.siberika.idea.pascal.jps.util.FileUtil.retrievePaths(sdkFiles);
+        List<String> result = new ArrayList<String>(paths.size());
+        for (File path : paths) {
+            result.add(path.getAbsolutePath());
+            LOG.info("===*** path: " + path.getAbsolutePath());
+        }
+        return result;
     }
 
     private static String handleText(@NotNull String result) {

@@ -7,6 +7,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -53,5 +56,36 @@ public class FileUtil {
 
     public static VirtualFile getVirtualFile(String path) {
         return LocalFileSystem.getInstance().findFileByPath(path.replace(File.separatorChar, '/'));
+    }
+
+    public static Set<File> retrievePaths(List<File> files) {
+        Set<File> result = new HashSet<File>();
+        if (files != null) {
+            for (File file : files) {
+                collectFile(result, file);
+            }
+        }
+        return result;
+    }
+
+    public static Set<File> retrievePaths(VirtualFile[] files) {
+        Set<File> result = new HashSet<File>();
+        if (files != null) {
+            for (VirtualFile virtualFile : files) {
+                File file = virtualFile.getCanonicalPath() != null ? new File(virtualFile.getCanonicalPath()) : null;
+                collectFile(result, file);
+            }
+        }
+        return result;
+    }
+
+    private static void collectFile(Set<File> result, File file) {
+        if ((file != null) && file.exists()) {
+            if (file.isDirectory()) {
+                result.add(file);
+            } else {
+                result.add(file.getParentFile());
+            }
+        }
     }
 }

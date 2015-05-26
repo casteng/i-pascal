@@ -13,9 +13,7 @@ import org.jetbrains.annotations.PropertyKey;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -74,20 +72,6 @@ public abstract class PascalBackendCompiler {
     static File getMainFile(ParamMap moduleData) {
         String fileName = moduleData != null ? moduleData.get(JpsPascalModuleType.USERDATA_KEY_MAIN_FILE.toString()) : null;
         return fileName != null ? new File(fileName) : null;
-    }
-
-    protected static Set<File> retrievePaths(List<File> files) {
-        Set<File> result = new HashSet<File>();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    result.add(file);
-                } else {
-                    result.add(file.getParentFile());
-                }
-            }
-        }
-        return result;
     }
 
     protected static void addLibPathToCmdLine(final ArrayList<String> commandLine, File sourceRoot,
