@@ -30,7 +30,9 @@ import java.util.regex.Pattern;
 public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Logger LOG = Logger.getInstance(DCUFileDecompiler.class);
 
-    private static final Pattern WARNING = Pattern.compile("$Warning:.+- all imported names will be shown with unit names");
+    private static final Pattern WARNING = Pattern.compile("Warning:.+- all imported names will be shown with unit names");
+    private static final Pattern CONSTANT1 = Pattern.compile("\\s*\\d\\d:.+(\\||\\[)[A-F0-9 ]+\\|.*");
+    private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+\\]\\s*at \\$[0-9A-F]+");
 
     @NotNull
     @Override
@@ -86,9 +88,19 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static String handleText(@NotNull String result) {
         String[] lines = result.split("\n");
         boolean unitDone = false;
+        boolean inConst = false;
         StringBuilder res = new StringBuilder();
         for (String line : lines) {
-            if (isWarning(line)) {                                // Comment out all decompiler warnings
+            if (isConstant(line)) {                               // Comment out all non-compilable constant declarations
+                if (!inConst) {
+                    res.append("    default;\n");                      // insert const value
+                    inConst = true;
+                }
+                res.append("// ");
+            } else {
+                inConst = false;
+            }
+            if (isWarning(line)) {                         // Comment out all decompiler warnings
                 res.append("// ");
             } else if (!unitDone) {                               // Comment out all lines before unit declarations
                 if (line.startsWith("unit")) {
@@ -103,6 +115,10 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         }
         res.append("implementation\n  {compiled code}\nend.\n");
         return res.toString();
+    }
+
+    private static boolean isConstant(String line) {
+        return CONSTANT1.matcher(line).matches() || CONSTANT2.matcher(line).matches();
     }
 
     private static boolean isWarning(String line) {

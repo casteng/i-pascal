@@ -57,7 +57,7 @@ public abstract class BasePascalSdkType extends SdkType {
         data.setValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND, file.getAbsolutePath());
     }
 
-    protected void setParam(PascalSdkData additionalData, Element additional, String name) {
+    private void setParam(PascalSdkData additionalData, Element additional, String name) {
         Object val = additionalData.getValue(name);
         additional.setAttribute(name, val != null ? (String) val : "");
     }
