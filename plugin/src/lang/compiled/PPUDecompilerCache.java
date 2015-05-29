@@ -13,6 +13,7 @@ import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import com.siberika.idea.pascal.util.ModuleUtil;
@@ -72,7 +73,7 @@ public class PPUDecompilerCache {
             if (files.isEmpty()) {
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.file.notfound", key));
             }
-            File ppuDump = BasePascalSdkType.getDecompilerCommand(sdk);
+            File ppuDump = BasePascalSdkType.getDecompilerCommand(sdk, PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath() != null ? sdk.getHomePath() : ""));
             String xml = "";
             try {
                 if (!ppuDump.isFile() || !ppuDump.canExecute()) {

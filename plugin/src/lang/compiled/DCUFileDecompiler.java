@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.compiled;
 
+import com.google.common.base.Joiner;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileTypes.BinaryFileDecompiler;
 import com.intellij.openapi.module.Module;
@@ -37,6 +38,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Pattern WARNING = Pattern.compile("Warning:.+- all imported names will be shown with unit names");
     private static final Pattern CONSTANT1 = Pattern.compile("\\s*\\d\\d:.+(\\||\\[)[A-F0-9 ]+\\|.*");
     private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+\\]\\s*at \\$[0-9A-F]+");
+    private static final File NULL_FILE = new File("");
 
     @NotNull
     @Override
@@ -66,14 +68,15 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         if (files.isEmpty()) {
             return PascalBundle.message("decompile.file.notfound", filename);
         }
-        File decompilerCommand = BasePascalSdkType.getDecompilerCommand(sdk);
+        File decompilerCommand = BasePascalSdkType.getDecompilerCommand(sdk, NULL_FILE);
         String result = "";
         try {
             if (!decompilerCommand.isFile() || !decompilerCommand.canExecute()) {
-                return PascalBundle.message("decompile.wrong.ppudump", decompilerCommand.getCanonicalPath());
+                return PascalBundle.message("decompile.wrong.delphi", decompilerCommand.getCanonicalPath());
             }
             List<String> paths = collectUnitPaths(sdk, module);
-            result = SysUtils.runAndGetStdOut(sdk.getHomePath(), decompilerCommand.getCanonicalPath(), files.iterator().next().getPath(), "-U" + String.join(";", paths), "-I", "-");
+            result = SysUtils.runAndGetStdOut(sdk.getHomePath(), decompilerCommand.getCanonicalPath(), files.iterator().next().getPath(),
+                    "-U" + Joiner.on(';').join(paths), "-I", "-");
             if (result != null) {
                 return handleText(result);
             } else {

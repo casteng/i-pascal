@@ -38,11 +38,11 @@ public abstract class BasePascalSdkType extends SdkType {
         return (PascalSdkData) params;
     }
 
-    public static File getDecompilerCommand(@NotNull Sdk sdk) {
+    public static File getDecompilerCommand(@NotNull Sdk sdk, File defaultDecompilerCommand) {
         String command = (String) getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND);
         File res;
         if (StringUtils.isEmpty(command)) {
-            res = PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath() != null ? sdk.getHomePath() : "");
+            res = defaultDecompilerCommand;
         } else {
             res = new File(command);
         }
