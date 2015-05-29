@@ -338,7 +338,7 @@ private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
 ProcBodyBlock               ::= ProcForwardDecl | externalDirective | BlockLocal [";"]
 ProcForwardDecl             ::= FORWARD ";" functionDirective*
 
-private dispIDDirective     ::= DISPID Expression ";" {pin=1}
+private dispIDDirective     ::= DISPID Expression {pin=1}
 private callConventionSemi  ::= callConvention ";"
 private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT
 private inlineDirectiveSemi ::= inlineDirective ";"
@@ -482,7 +482,7 @@ private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
 
 private simpleStatement     ::= GotoStatement | stmtSimpleOrAssign | Expression
 private stmtSimpleOrAssign  ::= Expression AssignPart
-AssignOp                    ::= ":="// | "+=" | "-=" | "*=" | "/="
+AssignOp                    ::= ":=" | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN
 AssignPart                  ::= AssignOp (NewStatement | Expression) {pin=1 }
 NewStatement                ::= NEW "(" [ Expression ] ("," [ Expression ])* [ "," ConstExpression ] ")"// {pin=1 }
 stmtEmpty           ::= //empty
@@ -521,7 +521,7 @@ SubIdent                    ::= identifier
 private namespacePart       ::= namespaceItem+
 private namespaceItem       ::= SubIdent "."// {pin=2 }
 
-HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY// {}
+HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY | "READONLY" | dispIDDirective// {}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
 
 KeywordIdent                ::= OUT | EXIT | BREAK | CONTINUE | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
