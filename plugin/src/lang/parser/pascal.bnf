@@ -429,7 +429,7 @@ ClassPropertySpecifier ::= ClassPropertyReadWrite | ClassPropertyDispInterface |
                                  | DEFAULT Expression | ';' DEFAULT | "nodefault" | IMPLEMENTS TypeID
 ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefNamedIdent | "remove" RefNamedIdent
 RefNamedIdent       ::= identifier
-ClassPropertyDispInterface ::= "readonly" ";" | "writeonly" ";" | dispIDDirective
+ClassPropertyDispInterface ::= "readonly" | "writeonly" | dispIDDirective
 
 ArrayType               ::= [PACKED | "bitpacked"] ARRAY [arrayIndexes] OF arraySubType {pin=2}
 private arrayIndexes    ::= "[" [ArrayIndex] arrayIndexRest* "]" {pin=1}
@@ -516,7 +516,7 @@ SubIdent                    ::= identifier
 private namespacePart       ::= namespaceItem+
 private namespaceItem       ::= SubIdent "."// {pin=2 }
 
-HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY | "READONLY" | dispIDDirective// {}
+HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY // {}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
 
 KeywordIdent                ::= OUT | EXIT | BREAK | CONTINUE | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
