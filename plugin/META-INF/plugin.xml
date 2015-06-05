@@ -9,9 +9,13 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.96</p>
+        <ul>
+          <li>Navigation between interface and implementation action</li>
+        </ul>
         <p>0.95</p>
         <ul>
-          <li>Delphi SDK</li>
+          <li>Delphi support</li>
           <li>.dcu file decompilation support</li>
         </ul>
         <p>0.92</p>
@@ -125,6 +129,11 @@
         <action id="Pascal.NewHPascalModule" class="com.siberika.idea.pascal.ide.actions.CreateModuleAction"
                 text="Pascal Module" description="Create new Pascal program/unit/library/package">
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+        </action>
+        <action id="Pascal.GoToImplementation" class="com.siberika.idea.pascal.ide.actions.IntfImplNavAction"
+                text="Go to implementation" description="Navigate to routine or method implementation">
+            <keyboard-shortcut first-keystroke="shift control KP_DOWN" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="shift control KP_UP" keymap="$default"/>
         </action>
     </actions>
 

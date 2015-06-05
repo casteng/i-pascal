@@ -17,6 +17,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
+import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpr;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
@@ -153,7 +154,7 @@ public class PsiUtil {
             }
         }
         PascalPsiElement parent = getParentDeclRoot(element);
-        if ((element instanceof PasNamedIdent) &&
+        if (isNamedIdent(element) &&
                 // Make routine itself belong to parent root
                 ((parent instanceof PascalRoutineImpl) && (element.getParent() == parent))
                 // Make class parent belong to parent root
@@ -164,6 +165,10 @@ public class PsiUtil {
             return getParentDeclRoot(parent);
         }
         return parent;
+    }
+
+    private static boolean isNamedIdent(PsiElement element) {
+        return (element instanceof PasNamedIdent) || (element instanceof PasClassQualifiedIdent);
     }
 
     @SuppressWarnings("unchecked")

@@ -61,18 +61,28 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
 
     @Override
     @Nullable
-    synchronized public final PasField getField(final String name) throws PasInvalidScopeException {
+    public final PasField getField(final String name) throws PasInvalidScopeException {
+        PasField result = getPublicField(name);
+        if (null == result) {
+            result = getPrivateField(name);
+        }
+        return result;
+    }
+
+    @Nullable
+    synchronized public final PasField getPublicField(final String name) throws PasInvalidScopeException {
         if (!isCacheActual(publicMembers, buildPublicStamp)) {
             buildPublicMembers();
         }
-        PasField result = publicMembers.get(name.toUpperCase());
-        if (null == result) {
-            if (!isCacheActual(privateMembers, buildPrivateStamp)) {
-                buildPrivateMembers();
-            }
-            result = privateMembers.get(name.toUpperCase());
+        return publicMembers.get(name.toUpperCase());
+    }
+
+    @Nullable
+    synchronized public final PasField getPrivateField(final String name) throws PasInvalidScopeException {
+        if (!isCacheActual(privateMembers, buildPrivateStamp)) {
+            buildPrivateMembers();
         }
-        return result;
+        return privateMembers.get(name.toUpperCase());
     }
 
     @NotNull
@@ -197,7 +207,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
 
     @Nullable
     @Override
-    public PasEntityScope getNearestAffectingScope() throws PasInvalidScopeException {
+    public PasEntityScope getContainingScope() throws PasInvalidScopeException {
         return null;
     }
 
