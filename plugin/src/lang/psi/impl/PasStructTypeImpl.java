@@ -206,6 +206,9 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     private void addField(@NotNull PascalNamedElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         addField(element, element.getName(), fieldType, visibility);
+        if (fieldType == PasField.FieldType.ROUTINE) {
+            addField(element, PsiUtil.getFieldName(element), fieldType, visibility);                        // add with signature included in name
+        }
     }
 
     private PasField addField(PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {

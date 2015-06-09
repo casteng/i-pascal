@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.ScrollType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -17,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Author: George Bakhtadze
@@ -41,6 +43,7 @@ public class IntfImplNavAction extends AnAction {
         }
         if (target != null) {
             editor.getCaretModel().moveToOffset(target.getTextOffset());
+            editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
         }
     }
 
@@ -62,14 +65,14 @@ public class IntfImplNavAction extends AnAction {
         PasField field = null;
         PasEntityScope scope = container.routine.getContainingScope();
         if (scope != null) {
-            field = scope.getField((container.routine.getNamePart()));                              // TODO: use full signature
-            //field = scope.getField(PsiUtil.getFieldName(container.routine));
+            String ns = container.routine.getNamespace();
+            field = scope.getField(PsiUtil.getFieldName(container.routine).substring(StringUtils.isEmpty(ns) ? 0 : ns.length()+1));
         }
         return field != null ? field.element : null;
     }
 
     private Container getPrefix(Container current) {
-        while (!(current.scope instanceof PascalModuleImpl)) {
+        while ((current.scope != null) && !(current.scope instanceof PascalModuleImpl)) {
             current.scope = findOwner(current.scope);
             if (current.scope instanceof PascalStructType) {
                 current.prefix = current.scope.getName() + "." + current.prefix;
