@@ -12,6 +12,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
+import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
@@ -32,15 +33,41 @@ public class IntfImplNavAction extends AnAction {
         if ((null == file) || (null == editor)) {
             return;
         }
-        PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
-        PascalRoutineImpl routine = PsiTreeUtil.getParentOfType(el, PascalRoutineImpl.class);
         PsiElement target = null;
+        PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
+        target = getRoutineTarget(PsiTreeUtil.getParentOfType(el, PascalRoutineImpl.class));
+        if (null == target) {
+            target = getUsesTarget(PsiTreeUtil.getParentOfType(el, PasUsesClause.class));
+        }
+        navigateTo(editor, target);
+    }
+
+    private PsiElement getUsesTarget(PasUsesClause usesClause) {
+        if (usesClause != null) {
+            PsiElement impl = PsiUtil.getModuleImplementationSection(usesClause.getContainingFile());
+            PsiElement intf = PsiUtil.getModuleInterfaceSection(usesClause.getContainingFile());
+            if ((impl != null) && (intf != null)) {
+                if (PsiUtil.isParentOf(usesClause, impl)) {
+                    return PsiTreeUtil.findChildOfType(intf, PasUsesClause.class);
+                } else if (PsiUtil.isParentOf(usesClause, intf)) {
+                    return PsiTreeUtil.findChildOfType(impl, PasUsesClause.class);
+                }
+            }
+        }
+        return null;
+    }
+
+    private PsiElement getRoutineTarget(PascalRoutineImpl routine) {
         Container cont = getPrefix(new Container(routine));
         if (routine instanceof PasExportedRoutine) {
-            target = retrieveImplementations(cont);
+            return retrieveImplementations(cont);
         } else if (routine instanceof PasRoutineImplDecl) {
-            target = retrieveDeclarations(cont);
+            return retrieveDeclarations(cont);
         }
+        return null;
+    }
+
+    private void navigateTo(Editor editor, PsiElement target) {
         if (target != null) {
             editor.getCaretModel().moveToOffset(target.getTextOffset());
             editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
