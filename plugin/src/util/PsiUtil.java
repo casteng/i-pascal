@@ -44,6 +44,7 @@ import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
@@ -439,6 +440,11 @@ public class PsiUtil {
 
     public static boolean isStructureMember(PsiElement element) {
         return (element.getParent() != null) && (element.getParent() instanceof PasStructTypeImpl);
+    }
+
+    public static PascalStructType getStructTypeByName(PsiElement name) {
+        PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(name, PasTypeDecl.class);
+        return typeDecl != null ? PsiTreeUtil.findChildOfType(typeDecl, PascalStructType.class) : null;
     }
 
     public static String getQualifiedMethodName(PsiNamedElement element) {
