@@ -26,11 +26,11 @@ type
 
 implementation
 
-procedure TOuterClass.TInnerClass.innerProc;
+class destructor TOuterClass.Destroy();
 begin
 end;
 
-class destructor TOuterClass.Destroy();
+procedure TOuterClass.TInnerClass.innerProc;
 begin
 end;
 

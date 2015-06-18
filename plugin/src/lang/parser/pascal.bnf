@@ -421,15 +421,15 @@ ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="meta
 
 Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
-
-ClassProperty ::= [CustomAttribute] [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" HintingDirective* [";"] {pin=3}
+ClassProperty ::= [CustomAttribute] [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] HintingDirective* [";"] {pin=3 recoverWhile=rec_routine}
 ClassPropertyArray ::= "[" FormalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
-ClassPropertySpecifier ::= ClassPropertyReadWrite | ClassPropertyDispInterface | "stored" Expression
-                                 | DEFAULT Expression | ';' DEFAULT | "nodefault" | IMPLEMENTS TypeID
+ClassPropertySpecifier ::= ClassPropertyReadWrite | classPropertyDispInterface | "stored" Expression
+                         | DEFAULT Expression | "nodefault" | IMPLEMENTS TypeID {recoverWhile=rec_propspec}
+private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
 ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefNamedIdent | "remove" RefNamedIdent
 RefNamedIdent       ::= identifier
-ClassPropertyDispInterface ::= "readonly" | "writeonly" | dispIDDirective
+private classPropertyDispInterface ::= "readonly" | "writeonly" | dispIDDirective
 
 ArrayType               ::= [PACKED | "bitpacked"] ARRAY [arrayIndexes] OF arraySubType {pin=2}
 private arrayIndexes    ::= "[" [ArrayIndex] arrayIndexRest* "]" {pin=1}
