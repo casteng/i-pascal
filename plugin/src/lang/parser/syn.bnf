@@ -295,7 +295,7 @@ private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType |
 private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
 private routineDecl         ::= ClassMethodResolution | ExportedRoutine
-private commonDecl          ::= [CLASS] ClassProperty | ConstSection | TypeSection | [CLASS] VarSection
+private commonDecl          ::= [CLASS] VarSection | ClassProperty | ConstSection | TypeSection
 private structItem          ::= commonDecl | routineDecl | classFieldSemi | Visibility
 private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
 private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclSection {recoverWhile=rec_section}
@@ -351,17 +351,17 @@ LabelDeclSection	        ::=	LABEL label labelsRest* ";" {pin=1 name="label decl
 private labelsRest          ::= "," label {}
 private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 
-VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section"}
+VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section" recoverWhile=rec_section}
 private varKey	            ::=	VAR | THREADVAR
 VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [varValueSpec] HintingDirective* ";" {pin=3 recoverWhile=rec_name}
 private varValueSpec	    ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
-ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section"}
+ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_section}
 private constKey            ::= CONST |	RESOURCESTRING
 ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=4 recoverWhile=rec_name}
 NamedIdent                  ::= identifier
 
-TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"}
+TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section" recoverWhile=rec_section}
 TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" type {pin=3 recoverWhile=rec_section}
 private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl HintingDirective* ";" {pin=1}
