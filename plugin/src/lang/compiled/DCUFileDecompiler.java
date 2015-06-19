@@ -36,7 +36,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Logger LOG = Logger.getInstance(DCUFileDecompiler.class);
 
     private static final Pattern WARNING = Pattern.compile("Warning:.+- all imported names will be shown with unit names");
-    private static final Pattern CONSTANT1 = Pattern.compile("\\s*\\d\\d:.+(\\||\\[)[A-F0-9 ]+\\|.*");
+    private static final Pattern CONSTANT1 = Pattern.compile("\\s*\\d\\d:\\s*.+(\\||\\[)[A-F0-9 (]+\\|.*");
     private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+\\]\\s*at \\$[0-9A-F]+");
     private static final File NULL_FILE = new File("");
 
