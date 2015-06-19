@@ -246,13 +246,14 @@ private rec_block_local_end      ::= rec_section
 private rec_module_start    ::= !(UNIT | LIBRARY | PROGRAM | PACKAGE | USES) & rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
-private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ASM | ".")
+private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ASM)
+private rec_implementation_dot  ::= !(".") & rec_implementation
 private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | PROPERTY | Visibility |
-                                 (NAME "=") | (NAME "<") | "." | END ) & rec_interface
+                                 (NAME "=") | (NAME "<") | END) & rec_interface
 private rec_section         ::= !(rec__routine_key) & rec_section_nested
 private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
-private rec_routine         ::= !(EXTERNAL | FORWARD) & rec_section & rec_interface
+private rec_routine         ::= !(EXTERNAL | FORWARD) & rec_name & rec_interface
 private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";")
 private rec_struct_field    ::= !(";" | ")" | END | CASE)
@@ -261,6 +262,8 @@ private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR 
 private rec_name            ::= !(NAME (":" | ",") ) & rec_section
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | ":" | "]")
+private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
+
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
@@ -297,7 +300,7 @@ private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclS
 private declSectionNested1  ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_section}
 private declSectionWONested ::= commonDecl | LabelDeclSection {recoverWhile=rec_section_nested}
 
-UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation name="implementation section"}
+UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation_dot name="implementation section"}
 ImplDeclSection             ::= declSection* {}
 private unitBlock           ::= [UnitInitialization] [UnitFinalization] END | CompoundStatement | END {}
 UnitInitialization          ::= INITIALIZATION statementList {pin=1 name="initialization section"}
@@ -348,7 +351,7 @@ private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section" recoverWhile=rec_section}
 private varKey	            ::=	VAR | THREADVAR
-VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [varValueSpec] HintingDirective* ";" {pin=3 recoverWhile=rec_name}
+VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [varValueSpec] HintingDirective* ";" {pin=2 recoverWhile=rec_name}
 private varValueSpec	    ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_section}
@@ -426,7 +429,6 @@ ClassPropertyArray ::= "[" FormalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
 ClassPropertySpecifier ::= ClassPropertyReadWrite | classPropertyDispInterface | "stored" Expression
                          | DEFAULT Expression | "nodefault" | IMPLEMENTS TypeID {recoverWhile=rec_propspec}
-private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
 ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefNamedIdent | "remove" RefNamedIdent
 RefNamedIdent       ::= identifier
 private classPropertyDispInterface ::= "readonly" | "writeonly" | dispIDDirective
@@ -462,7 +464,7 @@ private enumRest    ::= "," enumEl {pin=1}
 private enumEl      ::= NamedIdent ["=" Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
-                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | NUMBER_OCT | NUMBER_BIN | identifier | KeywordIdent | KEYWORDESCAPE | '^' | '.' | '[' | '('
+                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | NUMBER_OCT | NUMBER_BIN | identifier | KeywordIdent | KEYWORDESCAPE | '^' | END "." | '[' | '('
     private rec__stmt_middle         ::= DO | ELSE | THEN
 
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}

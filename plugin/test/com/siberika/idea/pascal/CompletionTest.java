@@ -198,4 +198,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "unit", "program", "library", "package", "begin");
     }
 
+    public void testDcu() {
+        myFixture.configureByFiles("dcu.pas");
+        checkCompletionContains(myFixture, "spec", "v", "test", "proc");
+    }
+
 }

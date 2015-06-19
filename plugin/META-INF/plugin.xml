@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>0.96</version>
+    <version>0.97</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/pasidea.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.97</p>
+        <ul>
+          <li>.dcu decompiler fix</li>
+        </ul>
         <p>0.96</p>
         <ul>
           <li>Navigation between interface and implementation action</li>
