@@ -35,9 +35,11 @@ import java.util.regex.Pattern;
 public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Logger LOG = Logger.getInstance(DCUFileDecompiler.class);
 
-    private static final Pattern WARNING = Pattern.compile("Warning:.+- all imported names will be shown with unit names");
-    private static final Pattern CONSTANT1 = Pattern.compile("\\s*\\d\\d:\\s*.+(\\||\\[)[A-F0-9 (]+\\|.*");
+    private static final Pattern WARNING1 = Pattern.compile("Warning:.+- all imported names will be shown with unit names");
+    private static final Pattern WARNING2 = Pattern.compile("Warning at 0x\\[A-F0-9]+ in");
+    private static final Pattern CONSTANT1 = Pattern.compile("\\s*[A-F0-9]+:\\s*.+(\\||\\[)[A-F0-9 (]+\\|.*");
     private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+\\]\\s*at \\$[0-9A-F]+");
+    private static final Pattern VAR = Pattern.compile("\\s*spec var\\s+\\w+\\.\\$\\w+.*");
     private static final File NULL_FILE = new File("");
 
     @NotNull
@@ -119,7 +121,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
             } else {
                 inConst = false;
             }
-            if (isWarning(line)) {                         // Comment out all decompiler warnings
+            if (isWarning(line) || isVar(line)) {                         // Comment out all decompiler warnings
                 res.append("// ");
             } else if (!unitDone) {                               // Comment out all lines before unit declarations
                 if (line.startsWith("unit")) {
@@ -141,7 +143,11 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     }
 
     private static boolean isWarning(String line) {
-        return WARNING.matcher(line).matches();
+        return WARNING1.matcher(line).matches() || WARNING2.matcher(line).matches();
+    }
+
+    private static boolean isVar(String line) {
+        return VAR.matcher(line).matches();
     }
 
 }
