@@ -247,22 +247,22 @@ ContainsClause              ::= CONTAINS namespaceNameList ";" {pin=1}
 UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
 
 private rec_block_global_end ::= !(".")
-private rec_block_local_end      ::= rec_section
-private rec_module_start    ::= !(UNIT | LIBRARY | PROGRAM | PACKAGE | USES) & rec_section
+private rec_block_local_end  ::= !(END) & rec_section
+private rec_module_start    ::= !(UNIT | LIBRARY | PROGRAM | PACKAGE | USES | END) & rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ASM)
 private rec_implementation_dot  ::= !(".") & rec_implementation
 private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | PROPERTY | Visibility |
-                                 (NAME "<") | END) & rec_interface
-private rec_section         ::= !(rec__routine_key) & rec_section_nested
+                                 (NAME "<") | (END DOT)) & rec_interface
+private rec_section         ::= !rec__routine_key & rec_section_nested
 private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
-private rec_routine         ::= !(EXTERNAL | FORWARD) & rec_name & rec_interface
+private rec_routine         ::= !(EXTERNAL | FORWARD | END) & rec_name & rec_interface
 private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";")
 private rec_struct_field    ::= !(";" | ")" | END | CASE)
-private rec_struct_outer    ::= !(END)
+private rec_struct_outer    ::= !(END | SEMI)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private rec_name            ::= !(NAME ("=" | ":" | ",") ) & rec_section
 private rec_typeId          ::= !("=" | "." | ";" | DO)
@@ -270,7 +270,7 @@ private rec_formal_param    ::= !(")" | ";" | ":" | "]")
 private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
 
 
-private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
+private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
 ExportsSection              ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
 private exportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
@@ -293,16 +293,15 @@ RoutineImplDeclNested1      ::= routineDeclaration BlockLocalNested1 [";"] {exte
 
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
 
-private complexType         ::= complexTypePart
-private complexTypePart     ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
+private complexType         ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
 private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
 
 private routineDecl         ::= ClassMethodResolution | ExportedRoutine
 private commonDecl          ::= [CLASS] VarSection | ClassProperty | ConstSection | TypeSection
 private structItem          ::= commonDecl | routineDecl | classFieldSemi | Visibility
-private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute {recoverWhile=rec_section}
-private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclSection {recoverWhile=rec_section}
-private declSectionNested1  ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_section}
+private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
+private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclSection {recoverWhile=rec_block_local_end}
+private declSectionNested1  ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_block_local_end}
 private declSectionWONested ::= commonDecl | LabelDeclSection {recoverWhile=rec_section_nested}
 
 UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation_dot name="implementation section"}
@@ -359,7 +358,7 @@ private varKey	            ::=	VAR | THREADVAR
 VarDeclaration	            ::=	[CustomAttribute] identList ":" TypeDecl [varValueSpec] HintingDirective* ";" {pin=2 recoverWhile=rec_name}
 private varValueSpec	    ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
-ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_section}
+ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_block_local_end}
 private constKey            ::= CONST |	RESOURCESTRING
 ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=4 recoverWhile=rec_name}
 NamedIdent                  ::= identifier
