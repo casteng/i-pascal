@@ -229,7 +229,7 @@ private progWoHead          ::= [UsesClause] BlockGlobal "." {pin=2 recoverWhile
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 private prolog              ::= {recoverWhile=rec_module_start}
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
-UsesClause                  ::= USES namespaceNameList ";" {pin=1}
+UsesClause                  ::= USES namespaceNameList ";" {pin=1 recoverWhile=rec_block_local_end}
 
 private moduleLibrary       ::= LibraryModuleHead [UsesClause] BlockGlobal "." {pin=1}
 LibraryModuleHead           ::= LIBRARY NamespaceIdent HintingDirective* ";" {pin=1}
@@ -266,7 +266,7 @@ private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDis
 
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
-private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=2}
+private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=1}
 ExportsSection              ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
 private exportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
 
