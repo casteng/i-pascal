@@ -257,9 +257,9 @@ private rec_routine         ::= !(EXTERNAL | FORWARD | END) & rec_name & rec_int
 private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";")
 private rec_struct_field    ::= !(";" | ")" | END | CASE)
-private rec_struct_outer    ::= !(END | SEMI)
+private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
-private rec_name            ::= !(NAME ("=" | ":" | ",") ) & rec_section
+private rec_name            ::= !(NAME ) & rec_section
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | ":" | "]")
 private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
@@ -359,7 +359,7 @@ ConstDeclaration            ::= [CustomAttribute] NamedIdent [":" TypeDecl] "=" 
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section" recoverWhile=rec_section}
-TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" type {pin=3 recoverWhile=rec_name}
+TypeDeclaration             ::= [CustomAttribute] GenericTypeIdent "=" type {pin=2 recoverWhile=rec_name}
 private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl HintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= ClassForwardDecl ";"
@@ -405,7 +405,7 @@ private recordBody          ::= structItem* [ClassField] {recoverWhile=rec_struc
 private variantRecord       ::= [PACKED | "bitpacked"] RECORD varRecDecl END
 private varRecDecl          ::= structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
 private varRecDeclInner     ::= (field ";")* [field] [recordVariantSection] {recoverWhile=rec_struct_field}
-private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=3 recoverWhile=rec_struct_field}
+private field               ::= [CustomAttribute] identList ":" TypeDecl HintingDirective* {pin=2 recoverWhile=rec_struct_field}
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF recordVariants {pin=1}
 private recordVariants      ::= (RecordVariant ";")* [RecordVariant]
 RecordVariant               ::= Expression ("," Expression)* ":" "(" varRecDeclInner ")" {pin=4}  // rethink expression, separate simpler expressions?
