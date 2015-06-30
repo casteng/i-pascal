@@ -40,6 +40,8 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Pattern CONSTANT1 = Pattern.compile("\\s*[A-F0-9]+:\\s*.+(\\||\\[)[A-F0-9 (]+\\|.*");
     private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+\\]\\s*at \\$[0-9A-F]+");
     private static final Pattern VAR = Pattern.compile("\\s*spec var\\s+\\w+\\.\\$\\w+.*");
+    private static final Pattern TYPE = Pattern.compile("\\s*\\w+\\.\\w+\\s*=.*");
+    private static final Pattern COMMENTED_TYPE = Pattern.compile("\\s*\\{type}\\s*");
     private static final File NULL_FILE = new File("");
 
     @NotNull
@@ -77,8 +79,8 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
                 return PascalBundle.message("decompile.wrong.delphi", decompilerCommand.getCanonicalPath());
             }
             List<String> paths = collectUnitPaths(sdk, module);
-            result = SysUtils.runAndGetStdOut(sdk.getHomePath(), decompilerCommand.getCanonicalPath(), files.iterator().next().getPath(),
-                    "-U" + Joiner.on(';').join(paths), "-I", "-");
+            String[] args = getArgs(BasePascalSdkType.getDecompilerArgs(sdk), files.iterator().next().getPath(), "-U" + Joiner.on(';').join(paths), "-I", "-SI", "-");
+            result = SysUtils.runAndGetStdOut(sdk.getHomePath(), decompilerCommand.getCanonicalPath(), args);
             if (result != null) {
                 return handleText(result);
             } else {
@@ -95,13 +97,24 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         }
     }
 
+    private static String[] getArgs(String[] argsArray, String...args) {
+        String[] res = new String[args.length + argsArray.length];
+        int i = 0;
+        for (String arg : args) {
+            res[i++] = arg;
+        }
+        for (String arg : argsArray) {
+            res[i++] = arg;
+        }
+        return res;
+    }
+
     private static List<String> collectUnitPaths(Sdk sdk, Module module) {
         VirtualFile[] sdkFiles = sdk.getRootProvider().getFiles(OrderRootType.CLASSES);
         Set<File> paths = com.siberika.idea.pascal.jps.util.FileUtil.retrievePaths(sdkFiles);
         List<String> result = new ArrayList<String>(paths.size());
         for (File path : paths) {
             result.add(path.getAbsolutePath());
-            LOG.info("===*** path: " + path.getAbsolutePath());
         }
         return result;
     }
@@ -112,25 +125,29 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         boolean inConst = false;
         StringBuilder res = new StringBuilder();
         for (String line : lines) {
-            if (isConstant(line)) {                               // Comment out all non-compilable constant declarations
+            if (isConstant(line)) {                                // Comment out all non-compilable constant declarations
                 if (!inConst) {
-                    res.append("    default;\n");                      // insert const value
+                    res.append("    default;\n");                  // insert const value
                     inConst = true;
                 }
                 res.append("// ");
             } else {
                 inConst = false;
             }
-            if (isWarning(line) || isVar(line)) {                         // Comment out all decompiler warnings
+            if (isWarning(line) || isVar(line)) {                  // Comment out all decompiler warnings
                 res.append("// ");
-            } else if (!unitDone) {                               // Comment out all lines before unit declarations
+            } else if (!unitDone) {                                // Comment out all lines before unit declarations
                 if (line.startsWith("unit")) {
                     unitDone = true;
                 } else {
                     res.append("// ");
                 }
             }
-            if (!line.startsWith("procedure Finalization")) {
+            if (isType(line)) {
+                res.append("__").append(line.trim());
+            } else if (COMMENTED_TYPE.matcher(line).matches()) {
+                res.append("  type\n    ");
+            } else if (!line.startsWith("procedure Finalization")) {
                 res.append(line).append("\n");
             }
         }
@@ -144,6 +161,10 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
 
     private static boolean isWarning(String line) {
         return WARNING1.matcher(line).matches() || WARNING2.matcher(line).matches();
+    }
+
+    private static boolean isType(String line) {
+        return TYPE.matcher(line).matches();
     }
 
     private static boolean isVar(String line) {

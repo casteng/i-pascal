@@ -228,19 +228,19 @@ Module                      ::= [prolog] (moduleUnit | moduleLibrary | modulePac
                              implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
 
 private moduleProgram       ::= progWithHead | progWoHead
-private progWithHead        ::= ProgramModuleHead progWoHead {pin=1}
+private progWithHead        ::= ProgramModuleHead progWoHead {pin=1 recoverWhile=rec_module}
 private progWoHead          ::= [UsesClause] BlockGlobal "." {pin=2 recoverWhile=rec_section_global}
 
-private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
+private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1 recoverWhile=rec_section_global}
 private prolog              ::= {recoverWhile=rec_module_start}
 UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
-UsesClause                  ::= USES namespaceNameList ";" {pin=1}
+UsesClause                  ::= USES namespaceNameList ";" {pin=1 recoverWhile=rec_block_local_end}
 
-private moduleLibrary       ::= LibraryModuleHead [UsesClause] BlockGlobal "." {pin=1}
-LibraryModuleHead           ::= LIBRARY NamespaceIdent HintingDirective* ";" {pin=1}
+private moduleLibrary       ::= LibraryModuleHead [UsesClause] BlockGlobal "." {pin=1 recoverWhile=rec_module}
+LibraryModuleHead           ::= LIBRARY NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
 
 private modulePackage       ::= PackageModuleHead RequiresClause [ContainsClause] END "." {pin=1}
-PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1}
+PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1 recoverWhile=rec_module}
 RequiresClause              ::= REQUIRES namespaceNameList ";" {pin=1}
 ContainsClause              ::= CONTAINS namespaceNameList ";" {pin=1}
 
@@ -378,7 +378,7 @@ private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstr
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
 private genericConstraintsRest ::= "," GenericConstraint {pin=1}
 private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
-GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"
+GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"               // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
 TypeID                      ::=	FullyQualifiedIdent [GenericPostfix]

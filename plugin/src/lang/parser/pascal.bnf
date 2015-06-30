@@ -373,7 +373,7 @@ private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstr
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
 private genericConstraintsRest ::= "," GenericConstraint {pin=1}
 private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
-GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"
+GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"               // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
 TypeID                      ::=	FullyQualifiedIdent [GenericPostfix]
