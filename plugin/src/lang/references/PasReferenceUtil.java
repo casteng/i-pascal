@@ -9,6 +9,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.ProjectScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.StringLenComparator;
@@ -121,13 +122,17 @@ public class PasReferenceUtil {
     @NotNull
     public static List<VirtualFile> findUnitFiles(@NotNull Project project, @Nullable final Module module) {
         final List<VirtualFile> virtualFiles = new SmartList<VirtualFile>();
-        virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project)));
         if (module != null) {
+            virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
+                    GlobalSearchScope.allScope(project)));
             virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PPUFileType.INSTANCE,
                     GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
             virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, DCUFileType.INSTANCE,
                     GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
+        } else {
+            virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE, ProjectScope.getLibrariesScope(project)));
+            virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PPUFileType.INSTANCE, ProjectScope.getLibrariesScope(project)));
+            virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, DCUFileType.INSTANCE, ProjectScope.getLibrariesScope(project)));
         }
         virtualFiles.add(BuiltinsParser.getBuiltinsSource());
         return virtualFiles;

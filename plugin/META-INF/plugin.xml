@@ -11,7 +11,9 @@
     <change-notes><![CDATA[
         <p>0.97</p>
         <ul>
+          <li>resolving within compiled file regression fix</li>
           <li>.dcu decompiler fix</li>
+          <li>compiler family regression fix</li>
         </ul>
         <p>0.96</p>
         <ul>
