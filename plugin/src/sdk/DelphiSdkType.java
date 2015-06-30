@@ -12,6 +12,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
+import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.util.SysUtils;
@@ -44,7 +45,7 @@ public class DelphiSdkType extends BasePascalSdkType {
     }
 
     public DelphiSdkType() {
-        super(JpsPascalModelSerializerExtension.DELPHI_SDK_TYPE_ID);
+        super(JpsPascalModelSerializerExtension.DELPHI_SDK_TYPE_ID, PascalCompilerFamily.DELPHI);
         InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
         if (definesStream != null) {
             DefinesParser.parse(definesStream);

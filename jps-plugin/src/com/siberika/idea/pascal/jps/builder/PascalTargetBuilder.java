@@ -116,9 +116,9 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
     private PascalBackendCompiler getCompiler(@NotNull JpsSdk<?> sdk, CompilerMessager messager) {
         ParamMap params = ParamMap.getJpsParams(sdk.getSdkProperties());
         String family = params != null ? params.get(PascalSdkData.DATA_KEY_COMPILER_FAMILY) : null;
-        if (PascalCompilerFamily.FPC.toString().equals(family)) {
+        if (PascalCompilerFamily.FPC.name().equals(family)) {
             return new FPCBackendCompiler(messager);
-        } else if (PascalCompilerFamily.DELPHI.toString().equals(family)) {
+        } else if (PascalCompilerFamily.DELPHI.name().equals(family)) {
             return new DelphiBackendCompiler(messager);
         }
         return null;
