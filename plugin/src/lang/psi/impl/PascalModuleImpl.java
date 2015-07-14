@@ -216,6 +216,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         LOG.info("WARNING: invalidating cache");
         privateMembers = null;
         publicMembers = null;
+        containingScope = null;
     }
 
 }

@@ -29,7 +29,9 @@ import java.util.Set;
  * Date: 06/09/2013
  */
 public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntityScope, PasDeclSection {
-    public static final String BUILTIN_RESULT = "Result";
+    private static final String BUILTIN_RESULT = "Result";
+    private static final String BUILTIN_SELF = "Self";
+
     private Map<String, PasField> members;
     private Set<PascalNamedElement> redeclaredMembers = null;
 
@@ -72,11 +74,24 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
         collectFields(this, PasField.Visibility.STRICT_PRIVATE, members, redeclaredMembers);
 
+        addPseudoFields();
+
+        LOG.info(getName() + ": buildMembers: " + members.size() + " members");
+        building = false;
+    }
+
+    private void addPseudoFields() {
         if (!members.containsKey(BUILTIN_RESULT.toUpperCase())) {
             members.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
         }
-        LOG.info(getName() + ": buildMembers: " + members.size() + " members");
-        building = false;
+
+        PasEntityScope scope = getContainingScope();
+        if ((scope != null) && (scope.getParent() instanceof PasTypeDecl)) {
+            PasField field = new PasField(this, scope, BUILTIN_SELF, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE);
+            PasTypeDecl typeDecl =  (PasTypeDecl) scope.getParent();
+            field.setValueType(new PasField.ValueType(field, PasField.Kind.STRUCT, null, typeDecl));
+            members.put(BUILTIN_SELF.toUpperCase(), field);
+        }
     }
 
     private void addField(PascalNamedElement element, PasField.FieldType fieldType) {

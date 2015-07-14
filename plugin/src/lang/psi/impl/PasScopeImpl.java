@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,7 +79,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         if (null == field) {
             return;
         }
-        PasEntityScope scope = field.getValueType().getTypeScope();
+        PasEntityScope scope = PasReferenceUtil.retrieveFieldTypeScope(field);
         if (scope != null) {
             containingScope = scope;
         }

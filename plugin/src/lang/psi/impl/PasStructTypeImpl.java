@@ -38,7 +38,6 @@ import java.util.Map;
 public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntityScope {
 
     public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
-    public static final String BUILTIN_SELF = "SELF";
 
     private List<Map<String, PasField>> members = null;
 
@@ -154,9 +153,6 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         }
         assert members.size() == PasField.Visibility.values().length;
 
-        PasField field = addField(this, BUILTIN_SELF, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.PRIVATE);
-        PasTypeDecl typeDecl = this.getParent() instanceof PasTypeDecl ? (PasTypeDecl) this.getParent() : null;
-        field.setValueType(new PasField.ValueType(field, PasField.Kind.STRUCT, null, typeDecl));
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
         while (child != null) {
