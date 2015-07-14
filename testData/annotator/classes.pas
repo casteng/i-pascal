@@ -23,15 +23,24 @@ type
         procedure outerProc;
         class destructor Destroy();
     end;
+    TOtherClass = record
+        f1, f2: Integer;
+    end;
 
 implementation
 
 class destructor TOuterClass.Destroy();
 begin
+    self.myField;
 end;
 
 procedure TOuterClass.TInnerClass.innerProc;
+var other: TOtherClass;
 begin
+    with other do begin
+        f1 := 0;
+        self.myInnerField := 1;
+    end;
 end;
 
 function m2(const V: TOuterClass; var Operator2: TOuterClass.TInnerClass; out RequiredVarType: TOuterClass): Boolean; forward;
