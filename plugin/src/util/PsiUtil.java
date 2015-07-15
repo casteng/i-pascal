@@ -16,6 +16,7 @@ import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
+import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
@@ -27,6 +28,7 @@ import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasGenericPostfix;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -466,6 +468,10 @@ public class PsiUtil {
         //return (ModuleUtilCore.findModuleForPsiElement(element) != null);
     }
 
+    public static boolean isElementUsable(PsiElement element) {
+        return (element != null) && isElementValid(element);
+    }
+
 //--------------------------------------------------------------------------------------------------------------
 
     public static boolean isFromSystemUnit(PsiElement element) {
@@ -576,5 +582,11 @@ public class PsiUtil {
             element = element.getParent();
         }
         return element != null;
+    }
+
+    public static boolean isClassParent(PsiElement element) {
+        PasClassParent parent = PsiTreeUtil.getParentOfType(element, PasClassParent.class);
+        PasGenericPostfix gen = PsiTreeUtil.getParentOfType(element, PasGenericPostfix.class);
+        return (parent != null) && !isParentOf(gen, parent);
     }
 }

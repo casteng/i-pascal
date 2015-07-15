@@ -1,14 +1,19 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>0.97</version>
-    <vendor email="argb32@gmail.com" url="http://www.siberika.com/pasidea.htm">siberika.com</vendor>
+    <version>0.98</version>
+    <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
       Pascal support for IDEA.<br>
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.98</p>
+        <ul>
+          <li>implementations and super method search</li>
+          <li>fixed predefined conditionals for Delphi compilers</li>
+        </ul>
         <p>0.97</p>
         <ul>
           <li>resolving within compiled file regression fix</li>
@@ -146,6 +151,9 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
+
+        <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.GotoSuper"/>
+        <definitionsSearch implementation="com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch"/>
 
         <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
         <moduleType id="PASCAL_MODULE" implementationClass="com.siberika.idea.pascal.module.PascalModuleType"/>

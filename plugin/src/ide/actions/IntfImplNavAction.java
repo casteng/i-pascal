@@ -1,14 +1,21 @@
 package com.siberika.idea.pascal.ide.actions;
 
+import com.intellij.codeInsight.daemon.impl.PsiElementListNavigator;
+import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.ScrollType;
+import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -22,6 +29,8 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
@@ -31,6 +40,10 @@ import java.util.TreeSet;
  * Date: 28/05/2015
  */
 public class IntfImplNavAction extends AnAction {
+
+    public static final Logger LOG = Logger.getInstance(IntfImplNavAction.class.getName());
+    private static final int MAX_RECURSION = 10;
+
     @Override
     public void actionPerformed(AnActionEvent e) {
         PsiFile file = e.getData(LangDataKeys.PSI_FILE);
@@ -44,20 +57,49 @@ public class IntfImplNavAction extends AnAction {
         if (null == target) {
             target = getUsesTarget(PsiTreeUtil.getParentOfType(el, PasUsesClause.class));
         }
-        if (null == target) {
-            target = getStructTarget(el);
+        Collection<PsiElement> targets;
+        if (PsiUtil.isElementUsable(target)) {
+            targets = Collections.singletonList(target);
+        } else {
+            targets = new SmartList<PsiElement>();
+            getStructTarget(targets, el);
         }
-        navigateTo(editor, target);
+        if (!targets.isEmpty()) {
+            navigateTo(editor, targets);
+        }
     }
 
-    private PsiElement getStructTarget(PsiElement element) {
-        PascalStructType struct = PsiUtil.getStructTypeByName(PsiTreeUtil.getParentOfType(element, PascalNamedElement.class));
-        struct = struct != null ? struct : PsiTreeUtil.getParentOfType(element, PascalStructType.class);
+    private void getStructTarget(Collection<PsiElement> targets, PsiElement element) {
+        PascalStructType struct = getStructByElement(element);
         if (struct != null) {
             Container cont = calcPrefix(new Container(struct));
-            return retrieveFirstImplementations(cont);
+            findDescendingStructs(targets, struct, 0);
+            //return Collections.singletonList(retrieveFirstImplementations(cont));
         }
-        return null;
+    }
+
+    private PascalStructType getStructByElement(PsiElement element) {
+        PascalStructType struct = PsiUtil.getStructTypeByName(PsiTreeUtil.getParentOfType(element, PascalNamedElement.class));
+        return struct != null ? struct : PsiTreeUtil.getParentOfType(element, PascalStructType.class);
+    }
+
+    private void findDescendingStructs(Collection<PsiElement> targets, PascalStructType struct, int rCnt) {
+        if (rCnt > MAX_RECURSION) {
+            LOG.error("Max recursion reached");
+            return;
+        }
+        if (null == struct.getNameIdentifier()) {
+            return;
+        }
+        for (PsiReference psiReference : ReferencesSearch.search(struct.getNameIdentifier())) {
+            if (PsiUtil.isClassParent(psiReference.getElement())) {
+                struct = getStructByElement(psiReference.getElement());
+                if (PsiUtil.isElementUsable(struct)) {
+                    targets.add(struct);
+                    findDescendingStructs(targets, struct, rCnt + 1);
+                }
+            }
+        }
     }
 
     private PsiElement getUsesTarget(PasUsesClause usesClause) {
@@ -85,11 +127,9 @@ public class IntfImplNavAction extends AnAction {
         return null;
     }
 
-    private void navigateTo(Editor editor, PsiElement target) {
-        if (target != null) {
-            editor.getCaretModel().moveToOffset(target.getTextOffset());
-            editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
-        }
+    private void navigateTo(Editor editor, Collection<PsiElement> targets) {
+        PsiElementListNavigator.openTargets(editor, targets.toArray(new NavigatablePsiElement[targets.size()]),
+                PascalBundle.message("navigate.to.title"), null, new DefaultPsiElementCellRenderer());
     }
 
     private PsiElement retrieveImplementation(Container container) {
