@@ -14,4 +14,18 @@ public class StrUtil {
         return false;
     }
 
+    public static String getFieldName(String name) {
+        int ind = Math.min(getPos(name, '('), getPos(name, ':'));
+        ind = name.substring(0, ind).lastIndexOf('.');
+        if (ind > 0) {
+            return name.substring(ind + 1);
+        } else {
+            return name;
+        }
+    }
+
+    private static int getPos(String name, char c) {
+        int ind = name.indexOf(c);
+        return ind >= 0 ? ind : name.length();
+    }
 }

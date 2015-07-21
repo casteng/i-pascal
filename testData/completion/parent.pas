@@ -1,7 +1,7 @@
 type
     TParent = class
-    constructor ParentConstructor();
-    procedure parentMethod();
+        constructor ParentConstructor();
+        procedure parentMethod();
     end;
     TTest = class(TParent)
         constructor ChildConstructor();

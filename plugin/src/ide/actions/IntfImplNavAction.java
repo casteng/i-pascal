@@ -1,21 +1,17 @@
 package com.siberika.idea.pascal.ide.actions;
 
-import com.intellij.codeInsight.daemon.impl.PsiElementListNavigator;
-import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
-import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -26,6 +22,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 
@@ -65,7 +62,7 @@ public class IntfImplNavAction extends AnAction {
             getStructTarget(targets, el);
         }
         if (!targets.isEmpty()) {
-            navigateTo(editor, targets);
+            EditorUtil.navigateTo(editor, targets);
         }
     }
 
@@ -125,11 +122,6 @@ public class IntfImplNavAction extends AnAction {
             return retrieveDeclaration(cont);
         }
         return null;
-    }
-
-    private void navigateTo(Editor editor, Collection<PsiElement> targets) {
-        PsiElementListNavigator.openTargets(editor, targets.toArray(new NavigatablePsiElement[targets.size()]),
-                PascalBundle.message("navigate.to.title"), null, new DefaultPsiElementCellRenderer());
     }
 
     private PsiElement retrieveImplementation(Container container) {
