@@ -6,7 +6,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -17,6 +16,7 @@ import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -32,11 +32,25 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
     @Override
     public void invoke(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
         PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
-        Collection<PsiElement> targets = new SmartList<PsiElement>();
+        Collection<PsiElement> targets = new LinkedHashSet<PsiElement>();
         // cases el is: struct type, method decl, method impl
-        getRoutineTarget(targets, PsiTreeUtil.getParentOfType(el, PascalRoutineImpl.class));
+        PascalRoutineImpl routine = PsiTreeUtil.getParentOfType(el, PascalRoutineImpl.class);
+        if (routine != null) {
+            getRoutineTarget(targets, routine);
+        } else {
+            getStructTarget(targets, PsiUtil.getStructByElement(el));
+        }
         if (!targets.isEmpty()) {
             EditorUtil.navigateTo(editor, targets);
+        }
+    }
+
+    private void getStructTarget(Collection<PsiElement> targets, PasEntityScope struct) {
+        if (struct instanceof PascalStructType) {
+            for (PasEntityScope parent : struct.getParentScope()) {
+                addTarget(targets, parent);
+                getStructTarget(targets, parent);
+            }
         }
     }
 

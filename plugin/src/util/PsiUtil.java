@@ -589,4 +589,10 @@ public class PsiUtil {
         PasGenericPostfix gen = PsiTreeUtil.getParentOfType(element, PasGenericPostfix.class);
         return (parent != null) && !isParentOf(gen, parent);
     }
+
+    // Returns structured type declaration by any of its contained element or name element
+    public static PascalStructType getStructByElement(PsiElement element) {
+        PascalStructType struct = getStructTypeByName(PsiTreeUtil.getParentOfType(element, PascalNamedElement.class));
+        return struct != null ? struct : PsiTreeUtil.getParentOfType(element, PascalStructType.class);
+    }
 }

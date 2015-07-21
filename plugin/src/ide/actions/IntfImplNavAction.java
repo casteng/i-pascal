@@ -4,19 +4,15 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
@@ -37,9 +33,6 @@ import java.util.TreeSet;
  * Date: 28/05/2015
  */
 public class IntfImplNavAction extends AnAction {
-
-    public static final Logger LOG = Logger.getInstance(IntfImplNavAction.class.getName());
-    private static final int MAX_RECURSION = 10;
 
     @Override
     public void actionPerformed(AnActionEvent e) {
@@ -67,35 +60,11 @@ public class IntfImplNavAction extends AnAction {
     }
 
     private void getStructTarget(Collection<PsiElement> targets, PsiElement element) {
-        PascalStructType struct = getStructByElement(element);
+        PascalStructType struct = PsiUtil.getStructByElement(element);
         if (struct != null) {
             Container cont = calcPrefix(new Container(struct));
-            findDescendingStructs(targets, struct, 0);
-            //return Collections.singletonList(retrieveFirstImplementations(cont));
-        }
-    }
-
-    private PascalStructType getStructByElement(PsiElement element) {
-        PascalStructType struct = PsiUtil.getStructTypeByName(PsiTreeUtil.getParentOfType(element, PascalNamedElement.class));
-        return struct != null ? struct : PsiTreeUtil.getParentOfType(element, PascalStructType.class);
-    }
-
-    private void findDescendingStructs(Collection<PsiElement> targets, PascalStructType struct, int rCnt) {
-        if (rCnt > MAX_RECURSION) {
-            LOG.error("Max recursion reached");
-            return;
-        }
-        if (null == struct.getNameIdentifier()) {
-            return;
-        }
-        for (PsiReference psiReference : ReferencesSearch.search(struct.getNameIdentifier())) {
-            if (PsiUtil.isClassParent(psiReference.getElement())) {
-                struct = getStructByElement(psiReference.getElement());
-                if (PsiUtil.isElementUsable(struct)) {
-                    targets.add(struct);
-                    findDescendingStructs(targets, struct, rCnt + 1);
-                }
-            }
+            //findDescendingStructs(targets, struct, 0);
+            retrieveFirstImplementations(targets, cont);
         }
     }
 
@@ -135,9 +104,9 @@ public class IntfImplNavAction extends AnAction {
         return field != null ? field.element : null;
     }
 
-    private PsiElement retrieveFirstImplementations(Container container) {
+    private void retrieveFirstImplementations(Collection<PsiElement> targets, Container container) {
         if (null == container) {
-            return null;
+            return;
         }
         if (container.scope instanceof PasModuleImpl) {
             String prefix = (container.prefix + container.element.getName()).toUpperCase();
@@ -156,10 +125,9 @@ public class IntfImplNavAction extends AnAction {
                 }
             }
             if (!res.isEmpty()) {
-                return res.iterator().next().element;
+                targets.add(res.iterator().next().element);
             }
         }
-        return null;
     }
 
     private PsiElement retrieveDeclaration(Container container) {
