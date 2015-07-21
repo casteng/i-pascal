@@ -11,7 +11,8 @@
     <change-notes><![CDATA[
         <p>0.98</p>
         <ul>
-          <li>implementations and super method search</li>
+          <li>super method search</li>
+          <li>implementations/descendants search</li>
           <li>fixed predefined conditionals for Delphi compilers</li>
         </ul>
         <p>0.97</p>
