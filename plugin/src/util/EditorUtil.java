@@ -14,7 +14,7 @@ import java.util.Collection;
  * Date: 21/07/2015
  */
 public class EditorUtil {
-    public static void navigateTo(Editor editor, Collection<PsiElement> targets) {
+    public static <T extends PsiElement> void navigateTo(Editor editor, Collection<T> targets) {
         PsiElementListNavigator.openTargets(editor, targets.toArray(new NavigatablePsiElement[targets.size()]),
                 PascalBundle.message("navigate.to.title"), null, new DefaultPsiElementCellRenderer());
     }

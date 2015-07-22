@@ -592,7 +592,13 @@ public class PsiUtil {
 
     // Returns structured type declaration by any of its contained element or name element
     public static PascalStructType getStructByElement(PsiElement element) {
-        PascalStructType struct = getStructTypeByName(PsiTreeUtil.getParentOfType(element, PascalNamedElement.class));
+        PascalNamedElement named;
+        if (element instanceof PascalNamedElement) {
+            named = (PascalNamedElement) element;
+        } else {
+            named = PsiTreeUtil.getParentOfType(element, PascalNamedElement.class);
+        }
+        PascalStructType struct = getStructTypeByName(named);
         return struct != null ? struct : PsiTreeUtil.getParentOfType(element, PascalStructType.class);
     }
 }

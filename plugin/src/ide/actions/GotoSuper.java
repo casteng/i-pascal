@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 
 /**
  * Author: George Bakhtadze
@@ -32,7 +31,14 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
     @Override
     public void invoke(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
         PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
-        Collection<PsiElement> targets = new LinkedHashSet<PsiElement>();
+        Collection<PasEntityScope> targets = retrieveGotoSuperTargets(el);
+        if (!targets.isEmpty()) {
+            EditorUtil.navigateTo(editor, targets);
+        }
+    }
+
+    public static Collection<PasEntityScope> retrieveGotoSuperTargets(PsiElement el) {
+        LinkedHashSet<PasEntityScope> targets = new LinkedHashSet<PasEntityScope>();
         // cases el is: struct type, method decl, method impl
         PascalRoutineImpl routine = PsiTreeUtil.getParentOfType(el, PascalRoutineImpl.class);
         if (routine != null) {
@@ -40,12 +46,10 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         } else {
             getStructTarget(targets, PsiUtil.getStructByElement(el));
         }
-        if (!targets.isEmpty()) {
-            EditorUtil.navigateTo(editor, targets);
-        }
+        return targets;
     }
 
-    private void getStructTarget(Collection<PsiElement> targets, PasEntityScope struct) {
+    private static void getStructTarget(Collection<PasEntityScope> targets, PasEntityScope struct) {
         if (struct instanceof PascalStructType) {
             for (PasEntityScope parent : struct.getParentScope()) {
                 addTarget(targets, parent);
@@ -54,31 +58,38 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         }
     }
 
-    private void addTarget(Collection<PsiElement> targets, PsiElement target) {
+    private static void addTarget(Collection<PasEntityScope> targets, PasEntityScope target) {
         if (target != null) {
             targets.add(target);
         }
     }
 
-    private void getRoutineTarget(Collection<PsiElement> targets, PascalRoutineImpl routine) {
+    private static void getRoutineTarget(Collection<PasEntityScope> targets, PascalRoutineImpl routine) {
         if (null == routine) {
             return;
         }
         PasEntityScope scope = routine.getContainingScope();
         if (scope instanceof PascalStructType) {
-            checkParents(targets, scope, routine);
+            extractMethodsByName(targets, scope.getParentScope(), routine, true);
         }
     }
 
-    private void checkParents(Collection<PsiElement> targets, PasEntityScope scope, PascalRoutineImpl routine) {
-        List<PasEntityScope> parents = scope.getParentScope();
-        for (PasEntityScope parent : parents) {
-            if (parent instanceof PascalStructType) {
-                PasField field = parent.getField(StrUtil.getFieldName(PsiUtil.getFieldName(routine)));
+    /**
+     * Extracts methods with same name as routine from the given scopes and places them into targets collection
+     * @param targets    target collection
+     * @param scopes     scopes where to search methods
+     * @param routine    routine which name to search
+     */
+    static void extractMethodsByName(Collection<PasEntityScope> targets, Collection<PasEntityScope> scopes, PascalRoutineImpl routine, boolean handleParents) {
+        for (PasEntityScope scope : scopes) {
+            if (scope instanceof PascalStructType) {
+                PasField field = scope.getField(StrUtil.getFieldName(PsiUtil.getFieldName(routine)));
                 if ((field != null) && (field.fieldType == PasField.FieldType.ROUTINE)) {
-                    addTarget(targets, field.element);
+                    addTarget(targets, (PasEntityScope) field.element);
                 }
-                checkParents(targets, parent, routine);
+                if (handleParents) {
+                    extractMethodsByName(targets, scope.getParentScope(), routine, true);
+                }
             }
         }
     }
@@ -87,4 +98,5 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
     public boolean startInWriteAction() {
         return false;
     }
+
 }
