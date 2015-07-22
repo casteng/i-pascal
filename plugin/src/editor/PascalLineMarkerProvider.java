@@ -15,6 +15,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.ConstantFunction;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.ide.actions.GotoSuper;
+import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
@@ -24,6 +26,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasImplDeclSectionImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
@@ -46,33 +49,45 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     public static final Logger LOG = Logger.getInstance(PascalLineMarkerProvider.class.getName());
 
     private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result, PsiElement implSection) throws PasInvalidScopeException {
-        if (element instanceof PascalRoutineImpl) {
-            PascalRoutineImpl routineDecl = (PascalRoutineImpl) element;
-            Collection<PsiElement> targets;
-            if (routineDecl instanceof PasExportedRoutine) {
-                targets = getImplementationRoutinesTargets(routineDecl, implSection);
-                if (!targets.isEmpty()) {
-                    result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, "Go to implementation", getHandler(targets)));
-                }
-            } else if (routineDecl instanceof PasRoutineImplDecl) {
-                if (!StringUtil.isEmpty(routineDecl.getNamespace())) {
-                    targets = getInterfaceMethodTargets(routineDecl);
-                } else {
-                    targets = getInterfaceRoutinesTargets(routineDecl);
-                }
-                if (!targets.isEmpty()) {
-                    result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementingMethod, "Go to interface", getHandler(targets)));
+        if ((element instanceof PascalRoutineImpl) || (element instanceof PascalStructType)) {
+            PascalNamedElement namedElement = (PascalNamedElement) element;
+            if (element instanceof PascalRoutineImpl) {
+                PascalRoutineImpl routineDecl = (PascalRoutineImpl) element;
+                Collection<PsiElement> targets;
+                if (routineDecl instanceof PasExportedRoutine) {
+                    targets = getImplementationRoutinesTargets(routineDecl, implSection);
+                    if (!targets.isEmpty()) {
+                        result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, "Go to implementation", getHandler(targets)));
+                    }
+                } else if (routineDecl instanceof PasRoutineImplDecl) {
+                    if (!StringUtil.isEmpty(routineDecl.getNamespace())) {
+                        targets = getInterfaceMethodTargets(routineDecl);
+                    } else {
+                        targets = getInterfaceRoutinesTargets(routineDecl);
+                    }
+                    if (!targets.isEmpty()) {
+                        result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementingMethod, "Go to interface", getHandler(targets)));
+                    }
                 }
             }
-
+            // Got super
+            Collection<PasEntityScope> supers = GotoSuper.retrieveGotoSuperTargets(namedElement.getNameIdentifier());
+            if (!supers.isEmpty()) {
+                result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridingMethod, "Go to super", getHandler(supers)));
+            }
+            // Goto implementations
+            Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations(namedElement.getNameIdentifier(), 0);
+            if (!impls.isEmpty()) {
+                result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod, "Go to overridden", getHandler(impls)));
+            }
         }
     }
 
-    public LineMarkerInfo<PsiElement> createLineMarkerInfo(@NotNull PsiElement element, Icon icon, final String tooltip,
-                                                           @NotNull GutterIconNavigationHandler<PsiElement> handler) {
-        LineMarkerInfo<PsiElement> info = new LineMarkerInfo<PsiElement>(element, element.getTextRange(),
+    public <T extends PsiElement> LineMarkerInfo<T> createLineMarkerInfo(@NotNull T element, Icon icon, final String tooltip,
+                                                           @NotNull GutterIconNavigationHandler<T> handler) {
+        LineMarkerInfo<T> info = new LineMarkerInfo<T>(element, element.getTextRange(),
                 icon, Pass.UPDATE_OVERRIDEN_MARKERS,
-                new ConstantFunction<PsiElement, String>(tooltip), handler,
+                new ConstantFunction<T, String>(tooltip), handler,
                 GutterIconRenderer.Alignment.RIGHT);
         return info;
     }
@@ -91,7 +106,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         try {
             PsiElement implSection = PsiUtil.getModuleImplementationSection(elements.get(0).getContainingFile());
             if (implSection instanceof PsiFile) {
-                implSection = PsiUtil.getElementPasModule(elements.get(0));;
+                implSection = PsiUtil.getElementPasModule(elements.get(0));
             }
             for (PsiElement psiElement : elements) {
                 collectNavigationMarkers(psiElement, result, implSection);
@@ -101,8 +116,8 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         }
     }
 
-    private GutterIconNavigationHandler<PsiElement> getHandler(@NotNull final Collection<PsiElement> targets) {
-        return new GutterIconNavigationHandler<PsiElement>() {
+    private <T extends PsiElement> GutterIconNavigationHandler<T> getHandler(@NotNull final Collection<T> targets) {
+        return new GutterIconNavigationHandler<T>() {
             @Override
             public void navigate(MouseEvent e, PsiElement elt) {
                 PsiElementListNavigator.openTargets(e,

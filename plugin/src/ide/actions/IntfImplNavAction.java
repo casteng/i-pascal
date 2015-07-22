@@ -63,7 +63,6 @@ public class IntfImplNavAction extends AnAction {
         PascalStructType struct = PsiUtil.getStructByElement(element);
         if (struct != null) {
             Container cont = calcPrefix(new Container(struct));
-            //findDescendingStructs(targets, struct, 0);
             retrieveFirstImplementations(targets, cont);
         }
     }
