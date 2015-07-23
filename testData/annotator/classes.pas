@@ -3,10 +3,11 @@ unit classes;
 interface
 
 type
+    CustomAttribute = CustomAttribute;
     TOuterClass = class
     strict private
         const
-            x = 12;
+            [CustomAttribute('', '', False)] x = 12;
             y = TOuterClass.x + 23;
         class var
             staticField: Integer;
@@ -18,13 +19,13 @@ type
             public
                 myInnerField: Integer;
                 procedure innerProc;
-                constructor Create(a:a);
+                constructor Create([CustomAttribute('', '', False)] a:a);
             end;
         procedure outerProc;
         class destructor Destroy();
     end;
     TOtherClass = record
-        f1, f2: Integer;
+        [CustomAttribute('', '', False)] f1, f2: Integer;
     end;
 
 implementation
