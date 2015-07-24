@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -55,7 +56,7 @@ public class IntfImplNavAction extends AnAction {
             getStructTarget(targets, el);
         }
         if (!targets.isEmpty()) {
-            EditorUtil.navigateTo(editor, targets);
+            EditorUtil.navigateTo(editor, PascalBundle.message("navigate.title.toggle.section"), targets);
         }
     }
 

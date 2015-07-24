@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -33,7 +34,7 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
         Collection<PasEntityScope> targets = retrieveGotoSuperTargets(el);
         if (!targets.isEmpty()) {
-            EditorUtil.navigateTo(editor, targets);
+            EditorUtil.navigateTo(editor, PascalBundle.message("navigate.title.goto.super"), targets);
         }
     }
 
@@ -64,6 +65,13 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         }
     }
 
+    private static void addTarget(Collection<PasEntityScope> targets, PasField target) {
+        if ((target != null) && (target.element instanceof PasEntityScope)) {
+            targets.add((PasEntityScope) target.element);
+            //target.element.putUserData(KEY_ELEMENT_FIELD, target);
+        }
+    }
+
     private static void getRoutineTarget(Collection<PasEntityScope> targets, PascalRoutineImpl routine) {
         if (null == routine) {
             return;
@@ -85,7 +93,7 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
             if (scope instanceof PascalStructType) {
                 PasField field = scope.getField(StrUtil.getFieldName(PsiUtil.getFieldName(routine)));
                 if ((field != null) && (field.fieldType == PasField.FieldType.ROUTINE)) {
-                    addTarget(targets, (PasEntityScope) field.element);
+                    addTarget(targets, field);
                 }
                 if (handleParents) {
                     extractMethodsByName(targets, scope.getParentScope(), routine, true);

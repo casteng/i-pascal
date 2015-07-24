@@ -4,17 +4,15 @@ import com.intellij.codeHighlighting.Pass;
 import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
-import com.intellij.codeInsight.daemon.impl.PsiElementListNavigator;
 import com.intellij.icons.AllIcons;
-import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.ConstantFunction;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.ide.actions.GotoSuper;
 import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
@@ -31,6 +29,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasImplDeclSectionImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,7 +56,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
                 if (routineDecl instanceof PasExportedRoutine) {
                     targets = getImplementationRoutinesTargets(routineDecl, implSection);
                     if (!targets.isEmpty()) {
-                        result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, "Go to implementation", getHandler(targets)));
+                        result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementedMethod, msg("navigate.title.goto.implementation"), getHandler(msg("navigate.title.goto.implementation"), targets)));
                     }
                 } else if (routineDecl instanceof PasRoutineImplDecl) {
                     if (!StringUtil.isEmpty(routineDecl.getNamespace())) {
@@ -66,30 +65,34 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
                         targets = getInterfaceRoutinesTargets(routineDecl);
                     }
                     if (!targets.isEmpty()) {
-                        result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementingMethod, "Go to interface", getHandler(targets)));
+                        result.add(createLineMarkerInfo(element, AllIcons.Gutter.ImplementingMethod, msg("navigate.title.goto.interface"), getHandler(msg("navigate.title.goto.interface"), targets)));
                     }
                 }
             }
             // Got super
             Collection<PasEntityScope> supers = GotoSuper.retrieveGotoSuperTargets(namedElement.getNameIdentifier());
             if (!supers.isEmpty()) {
-                result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridingMethod, "Go to super", getHandler(supers)));
+                result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridingMethod, msg("navigate.title.goto.super"), getHandler(msg("navigate.title.goto.super"), supers)));
             }
             // Goto implementations
             Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations(namedElement.getNameIdentifier(), 0);
             if (!impls.isEmpty()) {
-                result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod, "Go to overridden", getHandler(impls)));
+                result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod, msg("navigate.title.goto.overridden"), getHandler(msg("navigate.title.goto.overridden"), impls)));
             }
         }
     }
 
+    private String msg(String key) {
+        return PascalBundle.message(key);
+    }
+
+
     public <T extends PsiElement> LineMarkerInfo<T> createLineMarkerInfo(@NotNull T element, Icon icon, final String tooltip,
                                                            @NotNull GutterIconNavigationHandler<T> handler) {
-        LineMarkerInfo<T> info = new LineMarkerInfo<T>(element, element.getTextRange(),
+        return new LineMarkerInfo<T>(element, element.getTextRange(),
                 icon, Pass.UPDATE_OVERRIDEN_MARKERS,
                 new ConstantFunction<T, String>(tooltip), handler,
                 GutterIconRenderer.Alignment.RIGHT);
-        return info;
     }
 
     @Nullable
@@ -116,13 +119,11 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         }
     }
 
-    private <T extends PsiElement> GutterIconNavigationHandler<T> getHandler(@NotNull final Collection<T> targets) {
+    private <T extends PsiElement> GutterIconNavigationHandler<T> getHandler(final String title, @NotNull final Collection<T> targets) {
         return new GutterIconNavigationHandler<T>() {
             @Override
             public void navigate(MouseEvent e, PsiElement elt) {
-                PsiElementListNavigator.openTargets(e,
-                        targets.toArray(new NavigatablePsiElement[targets.size()]),
-                        "Title", null, new DefaultPsiElementCellRenderer());
+                EditorUtil.navigateTo(e, title, targets);
             }
         };
     }
