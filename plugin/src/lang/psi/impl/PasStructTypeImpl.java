@@ -10,7 +10,9 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
+import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -242,10 +244,16 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
                 addScope(scope);
             }
         } else {
-            final PasEntityScope tObject = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(this, "system.TObject"), true);
-            if (tObject != this) {
-                addScope(tObject);
+            PasEntityScope defEntity = null;
+            if (this instanceof PasClassTypeDecl) {
+                defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(this, "system.TObject"), true);
+            } else if (this instanceof PasInterfaceTypeDecl) {
+                defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(this, "system.IInterface"), true);
             }
+            if ((defEntity != null) && (defEntity != this)) {
+                addScope(defEntity);
+            }
+
         }
     }
 
