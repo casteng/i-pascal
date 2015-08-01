@@ -8,12 +8,10 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ConstantFunction;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.ide.actions.GotoSuper;
-import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
@@ -43,35 +41,29 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     public static final Logger LOG = Logger.getInstance(PascalLineMarkerProvider.class.getName());
 
-    private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result, PsiElement implSection) throws PasInvalidScopeException {
-        if ((element instanceof PascalRoutineImpl) || (element instanceof PascalStructType) || (element instanceof PasUsesClause)) {
-            boolean impl = true;
-            PsiElement target = null;
-            if (element instanceof PasExportedRoutineImpl) {
-                target = SectionToggle.getRoutineTarget((PasExportedRoutineImpl) element);
-            } else if (element instanceof PasRoutineImplDeclImpl) {
-                target = SectionToggle.getRoutineTarget((PasRoutineImplDeclImpl) element);
-                impl = false;
-            } else if (element instanceof PasUsesClause) {
-                target = SectionToggle.getUsesTarget((PasUsesClause) element);
-                impl = PsiTreeUtil.getParentOfType(element, PasUnitInterface.class) != null;
-            }
-            if (PsiUtil.isElementUsable(target)) {
-                result.add(createLineMarkerInfo(element, impl ? AllIcons.Gutter.ImplementedMethod : AllIcons.Gutter.ImplementingMethod,
-                        msg("navigate.title.toggle.section"), getHandler(msg("navigate.title.toggle.section"), Collections.singletonList(target))));
-            }
-            // Got super
-            if (element instanceof PascalNamedElement) {
-                PascalNamedElement namedElement = (PascalNamedElement) element;
-                Collection<PasEntityScope> supers = GotoSuper.retrieveGotoSuperTargets(namedElement.getNameIdentifier());
-                if (!supers.isEmpty()) {
-                    result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridingMethod, msg("navigate.title.goto.super"), getHandler(msg("navigate.title.goto.super"), supers)));
-                }
-                // Goto implementations
-                Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations(namedElement.getNameIdentifier(), 0);
-                if (!impls.isEmpty()) {
-                    result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod, msg("navigate.title.goto.overridden"), getHandler(msg("navigate.title.goto.overridden"), impls)));
-                }
+    private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result) throws PasInvalidScopeException {
+        boolean impl = true;
+        PsiElement target = null;
+        if (element instanceof PasExportedRoutineImpl) {
+            target = SectionToggle.getRoutineTarget((PasExportedRoutineImpl) element);
+        } else if (element instanceof PasRoutineImplDeclImpl) {
+            target = SectionToggle.getRoutineTarget((PasRoutineImplDeclImpl) element);
+            impl = false;
+        } else if (element instanceof PasUsesClause) {
+            target = SectionToggle.getUsesTarget((PasUsesClause) element);
+            impl = PsiTreeUtil.getParentOfType(element, PasUnitInterface.class) != null;
+        }
+        if (PsiUtil.isElementUsable(target)) {
+            result.add(createLineMarkerInfo(element, impl ? AllIcons.Gutter.ImplementedMethod : AllIcons.Gutter.ImplementingMethod,
+                    msg("navigate.title.toggle.section"), getHandler(msg("navigate.title.toggle.section"), Collections.singletonList(target))));
+        }
+        // Got super
+        if (element instanceof PascalNamedElement) {
+            PascalNamedElement namedElement = (PascalNamedElement) element;
+            Collection<PasEntityScope> supers = GotoSuper.retrieveGotoSuperTargets(namedElement.getNameIdentifier());
+            if (!supers.isEmpty()) {
+                result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridingMethod, msg("navigate.title.goto.super"),
+                        getHandler(msg("navigate.title.goto.super"), supers)));
             }
         }
     }
@@ -81,7 +73,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     }
 
 
-    public <T extends PsiElement> LineMarkerInfo<T> createLineMarkerInfo(@NotNull T element, Icon icon, final String tooltip,
+    static  <T extends PsiElement> LineMarkerInfo<T> createLineMarkerInfo(@NotNull T element, Icon icon, final String tooltip,
                                                            @NotNull GutterIconNavigationHandler<T> handler) {
         return new LineMarkerInfo<T>(element, element.getTextRange(),
                 icon, Pass.UPDATE_OVERRIDEN_MARKERS,
@@ -97,23 +89,18 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     @Override
     public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
-        if (elements.isEmpty()) {
-            return;
-        }
         try {
-            PsiElement implSection = PsiUtil.getModuleImplementationSection(elements.get(0).getContainingFile());
-            if (implSection instanceof PsiFile) {
-                implSection = PsiUtil.getElementPasModule(elements.get(0));
-            }
-            for (PsiElement psiElement : elements) {
-                collectNavigationMarkers(psiElement, result, implSection);
+            for (PsiElement element : elements) {
+                if ((element instanceof PascalRoutineImpl) || (element instanceof PascalStructType) || (element instanceof PasUsesClause)) {
+                    collectNavigationMarkers(element, result);
+                }
             }
         } catch (PasInvalidScopeException e) {
             e.printStackTrace();
         }
     }
 
-    private <T extends PsiElement> GutterIconNavigationHandler<T> getHandler(final String title, @NotNull final Collection<T> targets) {
+    static  <T extends PsiElement> GutterIconNavigationHandler<T> getHandler(final String title, @NotNull final Collection<T> targets) {
         return new GutterIconNavigationHandler<T>() {
             @Override
             public void navigate(MouseEvent e, PsiElement elt) {

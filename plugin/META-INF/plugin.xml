@@ -190,6 +190,7 @@
         <!--<editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>-->
         <!--<editorHighlighterProvider filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>-->
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalHeavyLineMarkerProvider"/>
         <codeInsight.parameterInfo language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterInfoHandler"/>
 
         <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionContributor"/>
