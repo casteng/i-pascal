@@ -8,6 +8,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +20,6 @@ import java.util.TreeMap;
 */
 public class DefinesParser {
 
-    public static final String COMPILER_FPC = "FPC";
     private static Map<String, Set<String>> defaultDefines = new TreeMap<String, Set<String>>();
 
     static void parse(@NotNull InputStream stream) {
@@ -70,6 +70,9 @@ public class DefinesParser {
     }
 
     public static Set<String> getDefaultDefines(String compiler, String version) {
+        if (null == version) {
+            return Collections.emptySet();
+        }
         Set<String> result = new HashSet<String>();
         for (Map.Entry<String, Set<String>> entry : defaultDefines.entrySet()) {
             if (isVersionLessOrEqual(entry.getKey(), version)) {

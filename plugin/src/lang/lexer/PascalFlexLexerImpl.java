@@ -24,8 +24,8 @@ import com.intellij.util.text.CharArrayCharSequence;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.FileUtil;
+import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.DefinesParser;
-import com.siberika.idea.pascal.sdk.FPCSdkType;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -104,14 +104,19 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         defines = new HashSet<String>();
         if ((project != null)) {
             final Sdk sdk = getSdk(project, virtualFile);
-            if ((null != sdk) && (sdk.getSdkType() instanceof FPCSdkType)) {
+            if ((null != sdk) && (sdk.getSdkType() instanceof BasePascalSdkType)) {
                 SdkAdditionalData data = sdk.getSdkAdditionalData();
                 if (data instanceof PascalSdkData) {
                     String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
                     getDefinesFromCmdLine(options);
+                    String family = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY);
+                    defines.addAll(DefinesParser.getDefaultDefines(family, sdk.getVersionString()));
                 }
-                defines.addAll(DefinesParser.getDefaultDefines(DefinesParser.COMPILER_FPC, sdk.getVersionString()));
             }
+            for (String define : defines) {
+                LOG.info("===*** def: " + define);
+            }
+
         }
     }
 
