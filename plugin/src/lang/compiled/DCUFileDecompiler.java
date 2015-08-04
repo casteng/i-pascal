@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -36,12 +37,13 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Logger LOG = Logger.getInstance(DCUFileDecompiler.class);
 
     private static final Pattern WARNING1 = Pattern.compile("Warning:.+- all imported names will be shown with unit names");
-    private static final Pattern WARNING2 = Pattern.compile("Warning at 0x\\[A-F0-9]+ in");
+    private static final Pattern WARNING2 = Pattern.compile("Warning at 0x[A-F0-9]+.*");
     private static final Pattern CONSTANT1 = Pattern.compile("\\s*[A-F0-9]+:\\s*.+(\\||\\[)[A-F0-9 (]+\\|.*");
     private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+\\]\\s*at \\$[0-9A-F]+");
     private static final Pattern VAR = Pattern.compile("\\s*spec var\\s+\\w+\\.\\$\\w+.*");
     private static final Pattern TYPE = Pattern.compile("\\s*\\w+\\.\\w+\\s*=.*");
     private static final Pattern COMMENTED_TYPE = Pattern.compile("\\s*\\{type}\\s*");
+    private static final Pattern ROUTINE = Pattern.compile("(\\s*)(procedure|function|operator)(\\s+)(@)(\\w+)");
     private static final File NULL_FILE = new File("");
 
     @NotNull
@@ -123,7 +125,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         String[] lines = result.split("\n");
         boolean unitDone = false;
         boolean inConst = false;
-        StringBuilder res = new StringBuilder();
+        StringBuffer res = new StringBuffer();
         for (String line : lines) {
             if (isConstant(line)) {                                // Comment out all non-compilable constant declarations
                 if (!inConst) {
@@ -136,7 +138,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
             }
             if (isWarning(line) || isVar(line)) {                  // Comment out all decompiler warnings
                 res.append("// ");
-            } else if (!unitDone) {                                // Comment out all lines before unit declarations
+            } else if (!unitDone) {                                // Comment out all lines before unit declaration
                 if (line.startsWith("unit")) {
                     unitDone = true;
                 } else {
@@ -147,8 +149,14 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
                 res.append("__").append(line.trim());
             } else if (COMMENTED_TYPE.matcher(line).matches()) {
                 res.append("  type\n    ");
-            } else if (!line.startsWith("procedure Finalization")) {
-                res.append(line).append("\n");
+            } else {
+                Matcher m = ROUTINE.matcher(line);
+                if (m.find()) {
+                    m.appendReplacement(res, "$1$2$3$5");
+                    m.appendTail(res).append("\n");
+                } else if (!line.startsWith("procedure Finalization")) {
+                    res.append(line).append("\n");
+                }
             }
         }
         res.append("implementation\n  {compiled code}\nend.\n");
