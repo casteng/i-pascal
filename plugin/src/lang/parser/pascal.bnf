@@ -228,11 +228,11 @@ private progWoHead          ::= [UsesClause] BlockGlobal "." {pin=2 recoverWhile
 
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 private prolog              ::= {recoverWhile=rec_module_start}
-UnitModuleHead              ::= UNIT NamespaceIdent HintingDirective* ";" {pin=1 recoverWhile=rec_module}
+UnitModuleHead              ::= UNIT NamespaceIdent hintingDirective* ";" {pin=1 recoverWhile=rec_module}
 UsesClause                  ::= USES namespaceNameList ";" {pin=1 recoverWhile=rec_block_local_end}
 
 private moduleLibrary       ::= LibraryModuleHead [UsesClause] BlockGlobal "." {pin=1}
-LibraryModuleHead           ::= LIBRARY NamespaceIdent HintingDirective* ";" {pin=1}
+LibraryModuleHead           ::= LIBRARY NamespaceIdent hintingDirective* ";" {pin=1}
 
 private modulePackage       ::= PackageModuleHead RequiresClause [ContainsClause] END "." {pin=1}
 PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1}
@@ -275,8 +275,8 @@ private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
 
-ExportedRoutine             ::= routineDeclaration [externalDirective] {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
-private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" functionDirective* {pin=2 recoverWhile=rec_routine}
+ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
+private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=2}
 private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=2}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
@@ -324,16 +324,16 @@ AssemblerStatement          ::= ASM asmBlock END {pin=1}
 private asmBlock            ::= assemblerItem* {recoverWhile=rec_struct_outer}
 private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | identifier | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN
 
-private functionDirective   ::= overloadDirective | oldCallConventionDirectiveSemi
-                              | inlineDirectiveSemi | callConventionSemi | HintingDirective ";"
-                              | REINTRODUCE ';' | OVERLOAD ';' | bindingDirective | abstractDirectiveSemi | dispIDDirective {name="routine directive"}
+FunctionDirective           ::= overloadDirective | oldCallConventionDirectiveSemi
+                              | inlineDirectiveSemi | callConventionSemi | hintingDirective ";"
+                              | REINTRODUCE ';' | bindingDirective | abstractDirectiveSemi | dispIDDirective {name="routine directive"}
 private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
-private externalDirective   ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier ";" | EXTERNAL ConstExpression externalSpecifier ";"
+ExternalDirective           ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier ";" | EXTERNAL ConstExpression externalSpecifier ";"
 private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
-ProcBodyBlock               ::= ProcForwardDecl | externalDirective | BlockLocal [";"]
-ProcForwardDecl             ::= FORWARD ";" functionDirective*
+ProcBodyBlock               ::= ProcForwardDecl | ExternalDirective | BlockLocal [";"]
+ProcForwardDecl             ::= FORWARD ";" FunctionDirective*
 
 private dispIDDirective     ::= DISPID Expression {pin=1}
 private callConventionSemi  ::= callConvention ";"
@@ -350,18 +350,18 @@ private label               ::= identifier | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section" recoverWhile=rec_block_local_end}
 private varKey	            ::=	VAR | THREADVAR
-VarDeclaration	            ::=	customAttributes* identList ":" TypeDecl [varValueSpec] HintingDirective* ";" {pin=2 recoverWhile=rec_name}
+VarDeclaration	            ::=	customAttributes* identList ":" TypeDecl [varValueSpec] hintingDirective* ";" {pin=2 recoverWhile=rec_name}
 private varValueSpec	    ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_block_local_end}
 private constKey            ::= CONST |	RESOURCESTRING
-ConstDeclaration            ::= customAttributes* NamedIdent [":" TypeDecl] "=" ConstExpression HintingDirective* ";" {pin=4 recoverWhile=rec_name}
+ConstDeclaration            ::= customAttributes* NamedIdent [":" TypeDecl] "=" ConstExpression hintingDirective* ";" {pin=4 recoverWhile=rec_name}
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section" recoverWhile=rec_block_local_end}
 TypeDeclaration             ::= customAttributes* GenericTypeIdent "=" type {pin=2 recoverWhile=rec_name}
 private type                ::= typeForwardDecl | typeDecl
-private typeDecl            ::= TypeDecl HintingDirective* ";" {pin=1}
+private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= ClassForwardDecl ";"
 
 GenericTypeIdent    ::= identifier [GenericDefinition] {recoverWhile=rec_typeId}
@@ -405,7 +405,7 @@ private recordBody          ::= structItem* [ClassField] {recoverWhile=rec_struc
 private variantRecord       ::= [PACKED | "bitpacked"] RECORD varRecDecl END
 private varRecDecl          ::= structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
 private varRecDeclInner     ::= (field ";")* [field] [recordVariantSection] {recoverWhile=rec_struct_field}
-private field               ::= customAttributes* identList ":" TypeDecl HintingDirective* {pin=2 recoverWhile=rec_struct_field}
+private field               ::= customAttributes* identList ":" TypeDecl hintingDirective* {pin=2 recoverWhile=rec_struct_field}
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF recordVariants {pin=1}
 private recordVariants      ::= (RecordVariant ";")* [RecordVariant]
 RecordVariant               ::= Expression ("," Expression)* ":" "(" varRecDeclInner ")" {pin=4}  // rethink expression, separate simpler expressions?
@@ -423,7 +423,7 @@ ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="meta
 
 Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
-ClassProperty ::= customAttributes* [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] HintingDirective* [";"] {pin=3 recoverWhile=rec_routine}
+ClassProperty ::= customAttributes* [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] hintingDirective* [";"] {pin=3 recoverWhile=rec_routine}
 ClassPropertyArray ::= "[" FormalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
 ClassPropertySpecifier ::= ClassPropertyReadWrite | classPropertyDispInterface | "stored" Expression
@@ -517,7 +517,7 @@ SubIdent                    ::= identifier
 private namespacePart       ::= namespaceItem+
 private namespaceItem       ::= SubIdent "."// {pin=2 }
 
-HintingDirective            ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY // {}
+private hintingDirective    ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY // {}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
 
 KeywordIdent                ::= OUT | EXIT | BREAK | CONTINUE | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC

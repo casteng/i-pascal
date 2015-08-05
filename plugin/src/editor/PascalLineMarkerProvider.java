@@ -57,7 +57,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
             result.add(createLineMarkerInfo(element, impl ? AllIcons.Gutter.ImplementedMethod : AllIcons.Gutter.ImplementingMethod,
                     msg("navigate.title.toggle.section"), getHandler(msg("navigate.title.toggle.section"), Collections.singletonList(target))));
         }
-        // Got super
+        // Goto super
         if (element instanceof PascalNamedElement) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             Collection<PasEntityScope> supers = GotoSuper.retrieveGotoSuperTargets(namedElement.getNameIdentifier());
