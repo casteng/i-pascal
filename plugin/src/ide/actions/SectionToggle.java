@@ -103,7 +103,12 @@ public class SectionToggle {
         PasEntityScope scope = container.element.getContainingScope();
         if (scope != null) {
             String ns = container.element.getNamespace();
-            field = scope.getField(PsiUtil.getFieldName(container.element).substring(StringUtils.isEmpty(ns) ? 0 : ns.length()+1));
+            String name = PsiUtil.getFieldName(container.element).substring(StringUtils.isEmpty(ns) ? 0 : ns.length() + 1);
+            if (scope instanceof PasModuleImpl) {
+                field = ((PasModuleImpl) scope).getPublicField(name);
+            } else {
+                field = scope.getField(name);
+            }
         }
         return field != null ? field.element : null;
     }
