@@ -362,7 +362,7 @@ TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section"
 TypeDeclaration             ::= customAttributes* GenericTypeIdent "=" type {pin=2 recoverWhile=rec_name}
 private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
-private typeForwardDecl     ::= ClassForwardDecl ";"
+private typeForwardDecl     ::= classForwardDecl ";"
 
 GenericTypeIdent    ::= identifier [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
@@ -380,7 +380,7 @@ TypeID                      ::=	FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
-private ClassForwardDecl    ::= CLASS [ClassParent] {name="forward class declaration"}
+private classForwardDecl    ::= (CLASS | INTERFACE) [ClassParent] {name="forward class declaration"}
 
 ClassField                  ::= field
 private classFieldSemi      ::= ClassField ";"
