@@ -1,4 +1,4 @@
-unit classes;
+unit classesTest;
 
 interface
 
@@ -30,13 +30,9 @@ type
 
 implementation
 
-class destructor TOuterClass.Destroy();
-begin
-    self.myField;
-end;
-
 procedure TOuterClass.TInnerClass.innerProc;
-var other: TOtherClass;
+var
+    other: TOtherClass;
 begin
     with other do begin
         f1 := 0;
@@ -44,8 +40,12 @@ begin
     end;
 end;
 
-function m2(const V: TOuterClass; var Operator2: TOuterClass.TInnerClass; out RequiredVarType: TOuterClass): Boolean; forward;
+class destructor TOuterClass.Destroy();
+begin
+    self.myField;
+end;
 
+function m2(const V: TOuterClass; var Operator2: TOuterClass.TInnerClass; out RequiredVarType: TOuterClass): Boolean; forward;
 var
     x: TOuterClass;
     y: TOuterClass.TInnerClass;

@@ -127,6 +127,21 @@ public class PsiUtil {
     }
 
     /**
+     * Searches for a previous sibling element ignoring whitespace elements
+     *
+     * @param element - element from where to search
+     * @return previous sibling element or null if not found
+     */
+    @Nullable
+    public static PsiElement getPrevSibling(@NotNull PsiElement element) {
+        PsiElement result = element.getPrevSibling();
+        while (result instanceof PsiWhiteSpace) {
+            result = result.getPrevSibling();
+        }
+        return result;
+    }
+
+    /**
      * Searches for a next sibling element ignoring whitespace elements
      *
      * @param element - element from where to search
@@ -572,7 +587,8 @@ public class PsiUtil {
         if (element instanceof PascalRoutineImpl) {
             PascalRoutineImpl routine = (PascalRoutineImpl) element;
             PasFormalParameterSection params = routine.getFormalParameterSection();
-            name = name + (params != null ? params.getText() : "()");
+            name = name + (params != null ? params.getText() : "");
+            name = name.replaceAll("\\s+", " ");
         }
         return name;
     }

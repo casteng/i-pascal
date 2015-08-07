@@ -13,6 +13,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -113,6 +114,10 @@ public class SectionToggle {
         return field != null ? field.element : null;
     }
 
+    public static String getPrefix(PasEntityScope scope) {
+        return calcPrefix(new Container(scope)).prefix;
+    }
+
     private static Container calcPrefix(Container current) {
         while ((current.scope != null) && !(current.scope instanceof PascalModuleImpl)) {
             current.scope = findOwner(current.scope);
@@ -138,6 +143,34 @@ public class SectionToggle {
             this.element = element;
             this.scope = element;
         }
+    }
+
+    @Nullable
+    public static PsiElement findImplPos(PascalRoutineImpl routine) {
+        PsiElement res = null;
+        PasEntityScope scope = routine.getContainingScope();
+        if (scope != null) {
+            Collection<PasField> fields = scope.getAllFields();
+            boolean afterRoutine = false;
+            for (PasField field : fields) {
+                if ((field.fieldType == PasField.FieldType.ROUTINE)) {
+                    if (routine.isEquivalentTo(field.element)) {
+                        if (res != null) {
+                            break;
+                        }
+                        afterRoutine = true;
+                    }
+                    Container cont = calcPrefix(new Container((PasEntityScope) field.element));
+                    PsiElement tmp = retrieveImplementation(cont);
+                    res = tmp != null ? tmp : res;
+                    if ((res != null) && (afterRoutine)) {                         // found first method with implementation after sought-for
+                        res = PsiUtil.getPrevSibling(res);
+                        break;
+                    }
+                }
+            }
+        }
+        return res;
     }
 
 }

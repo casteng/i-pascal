@@ -26,4 +26,10 @@ type
 
 implementation
 
+procedure TA.IntfGetComponent();
+begin
+
+end;
+
+
 end.

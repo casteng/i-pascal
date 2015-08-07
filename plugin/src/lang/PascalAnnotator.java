@@ -5,6 +5,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.editor.PascalActionDeclare;
+import com.siberika.idea.pascal.editor.PascalRoutineActions;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
@@ -56,38 +57,44 @@ public class PascalAnnotator implements Annotator {
     }
 
     /**
-     * E: [routine in interface only]     +Fix: implement routine
-     * E: [method in declaration only]    +Fix: implement method
-     * E: [class if not all methods implemented] +Fix: implement all methods
+     * # unimplemented routine error
+     * # unimplemented method  error
+     * # filter external/abstract routines/methods
+     * implement routine fix
+     * implement method fix
+     * error on class if not all methods implemented
+     * implement all methods fix
      */
-    private void annotateRoutineInInterface(PasExportedRoutineImpl element, AnnotationHolder holder) {
-        if (element.getContainingScope() instanceof PasInterfaceTypeDecl) {
+    private void annotateRoutineInInterface(PasExportedRoutineImpl routine, AnnotationHolder holder) {
+        if (routine.getContainingScope() instanceof PasInterfaceTypeDecl) {
             return;
         }
-        if (null == SectionToggle.getRoutineTarget(element)) {
-            if (element.getExternalDirective() != null) {
+        if (null == SectionToggle.getRoutineTarget(routine)) {
+            if (routine.getExternalDirective() != null) {
                 return;
             }
-            List<PasFunctionDirective> dirs = element.getFunctionDirectiveList();
+            List<PasFunctionDirective> dirs = routine.getFunctionDirectiveList();
             for (PasFunctionDirective dir : dirs) {
                 if (dir.getText().toUpperCase().startsWith("ABSTRACT")) {
                     return;
                 }
             }
-            Annotation ann = holder.createErrorAnnotation(element, message("ann.error.missing.implemenation"));
+            Annotation ann = holder.createErrorAnnotation(routine, message("ann.error.missing.implemenation"));
+            ann.registerFix(new PascalActionDeclare(routine, PascalRoutineActions.IMPLEMENT));
         }
     }
 
     /**
-     * E: [method in implementation only] +Fix: add to class declaration
-     * F: [routines in implementation section only] - add to interface section
+     * error on method in implementation only
+     * add method to class declaration fix
+     * add to interface section fix for routines in implementation section only
      */
-    private void annotateRoutineInImplementation(PasRoutineImplDeclImpl element, AnnotationHolder holder) {
-        if (null == SectionToggle.getRoutineTarget(element)) {
-            if (element.getContainingScope() instanceof PasModule) {
-                Annotation ann = holder.createInfoAnnotation(element.getNamedIdent() != null ? element.getNamedIdent() : element, message("ann.error.missing.declaration"));
+    private void annotateRoutineInImplementation(PasRoutineImplDeclImpl routine, AnnotationHolder holder) {
+        if (null == SectionToggle.getRoutineTarget(routine)) {
+            if (routine.getContainingScope() instanceof PasModule) {
+                Annotation ann = holder.createWeakWarningAnnotation(routine.getNamedIdent() != null ? routine.getNamedIdent() : routine, message("ann.error.missing.declaration"));
             } else {
-                Annotation ann = holder.createErrorAnnotation(element.getNamedIdent() != null ? element.getNamedIdent() : element, message("ann.error.missing.declaration"));
+                Annotation ann = holder.createErrorAnnotation(routine.getNamedIdent() != null ? routine.getNamedIdent() : routine, message("ann.error.missing.declaration"));
             }
         }
     }
