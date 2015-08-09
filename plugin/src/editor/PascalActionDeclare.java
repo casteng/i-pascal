@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.PascalBundle;
@@ -73,7 +74,10 @@ public class PascalActionDeclare extends BaseIntentionAction {
                             document.insertString(fixActionData.offset, fixActionData.text);
                             editor.getCaretModel().moveToOffset(fixActionData.offset + fixActionData.text.length() - 1 - (fixActionData.text.endsWith("\n") ? 1 : 0));
                             PsiDocumentManager.getInstance(project).commitDocument(document);
-                            CodeStyleManager.getInstance(fixActionData.parent.getManager()).reformat(fixActionData.parent, true);
+                            PsiManager manager = fixActionData.parent.getManager();
+                            if (manager != null) {
+                                CodeStyleManager.getInstance(manager).reformat(fixActionData.parent, true);
+                            }
                         }
                     }
                 }.execute();

@@ -2,6 +2,8 @@ package com.siberika.idea.pascal.ide.actions;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
+import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -17,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -59,6 +62,7 @@ public class SectionToggle {
         return null;
     }
 
+    @Nullable
     private static PsiElement retrieveImplementation(Container container) {
         if (null == container) {
             return null;
@@ -96,6 +100,7 @@ public class SectionToggle {
         }
     }
 
+    @Nullable
     private static PsiElement retrieveDeclaration(Container container) {
         if (null == container) {
             return null;
@@ -145,29 +150,79 @@ public class SectionToggle {
         }
     }
 
-    @Nullable
-    public static PsiElement findImplPos(PascalRoutineImpl routine) {
-        PsiElement res = null;
+    public static int findImplPos(PascalRoutineImpl routine) {
+        // collect all routine/method declarations in module/structure
+        // remember index of the given routine declaration
+        int res = -1;
+        int ind = -1;
+        List<PascalRoutineImpl> decls = new SmartList<PascalRoutineImpl>();
+        Set<PascalRoutineImpl> declSet = new SmartHashSet<PascalRoutineImpl>();
         PasEntityScope scope = routine.getContainingScope();
         if (scope != null) {
-            Collection<PasField> fields = scope.getAllFields();
-            boolean afterRoutine = false;
+            Collection<PasField> fields;
+            if (scope instanceof PascalModuleImpl) {
+                fields = ((PascalModuleImpl) scope).getPubicFields();
+            } else {
+                fields = scope.getAllFields();
+            }
             for (PasField field : fields) {
-                if ((field.fieldType == PasField.FieldType.ROUTINE)) {
+                if ((field.fieldType == PasField.FieldType.ROUTINE) && !declSet.contains(field.element)) {
                     if (routine.isEquivalentTo(field.element)) {
-                        if (res != null) {
-                            break;
-                        }
-                        afterRoutine = true;
+                        ind = decls.size();
                     }
-                    Container cont = calcPrefix(new Container((PasEntityScope) field.element));
-                    PsiElement tmp = retrieveImplementation(cont);
-                    res = tmp != null ? tmp : res;
-                    if ((res != null) && (afterRoutine)) {                         // found first method with implementation after sought-for
-                        res = PsiUtil.getPrevSibling(res);
-                        break;
-                    }
+                    decls.add((PascalRoutineImpl) field.element);
+                    declSet.add((PascalRoutineImpl) field.element);
                 }
+            }
+            // starting from the index search for implementations
+            for (int i = ind - 1; (i >= 0) && (res < 0); i--) {
+                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i))));
+                res = impl != null ? impl.getTextRange().getEndOffset() : -1;
+            }
+            for (int i = ind + 1; (i < decls.size()) && (res < 0); i++) {
+                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i))));
+                if (impl != null) {
+                    res = impl.getTextRange().getStartOffset();
+                }
+            }
+        }
+        return res;
+    }
+
+    // Returns suggested position of declaration in interface/structure of the specified implementation of routine/method
+    public static int findIntfPos(PascalRoutineImpl routine) {
+        // collect all routine implementations in module with the same prefix
+        // remember index of the given routine implementation
+        int res = -1;
+        int ind = -1;
+        List<PascalRoutineImpl> impls = new SmartList<PascalRoutineImpl>();
+        Set<PascalRoutineImpl> implSet = new SmartHashSet<PascalRoutineImpl>();
+        Container cont = calcPrefix(new Container(routine));
+        Collection<PasField> fields;
+        if (cont.scope instanceof PascalModuleImpl) {
+            fields = ((PascalModuleImpl) cont.scope).getPrivateFields();
+        } else {
+            fields = cont.scope.getAllFields();
+        }
+        for (PasField field : fields) if (field.element instanceof PascalRoutineImpl) {
+            PascalRoutineImpl impl = (PascalRoutineImpl) field.element;
+            if ((field.fieldType == PasField.FieldType.ROUTINE) && (impl.getContainingScope() == routine.getContainingScope()) && !implSet.contains(impl)) {
+                if (routine.isEquivalentTo(impl)) {
+                    ind = impls.size();
+                }
+                impls.add(impl);
+                implSet.add(impl);
+            }
+        }
+        // starting from the index search for declarations
+        for (int i = ind - 1; (i >= 0) && (res < 0); i--) {
+            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))));
+            res = decl != null ? decl.getTextRange().getEndOffset() : -1;
+        }
+        for (int i = ind + 1; (i < impls.size()) && (res < 0); i++) {
+            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))));
+            if (decl != null) {
+                res = decl.getTextRange().getStartOffset();
             }
         }
         return res;

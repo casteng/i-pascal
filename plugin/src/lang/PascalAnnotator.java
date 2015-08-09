@@ -8,6 +8,7 @@ import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -18,6 +19,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -38,7 +40,7 @@ public class PascalAnnotator implements Annotator {
             annotateRoutineInImplementation((PasRoutineImplDeclImpl) element, holder);
         }
 
-        if (PsiUtil.isEntityName(element)) {
+        if (PsiUtil.isEntityName(element) && !isLastPartOfMethodImplName((PascalNamedElement) element)) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
             if (refs.isEmpty()) {
@@ -56,12 +58,22 @@ public class PascalAnnotator implements Annotator {
         }
     }
 
+    private boolean isLastPartOfMethodImplName(PascalNamedElement element) {
+        PsiElement parent = element.getParent();
+        if (parent instanceof PasClassQualifiedIdent) {
+            PasClassQualifiedIdent name = (PasClassQualifiedIdent) parent;
+            return (element == name.getSubIdentList().get(name.getSubIdentList().size() - 1))
+                 && PsiUtil.isRoutineName((PascalNamedElement) parent) && !StringUtils.isEmpty(((PascalNamedElement) parent).getNamespace());
+        }
+        return false;
+    }
+
     /**
      * # unimplemented routine error
      * # unimplemented method  error
      * # filter external/abstract routines/methods
-     * implement routine fix
-     * implement method fix
+     * # implement routine fix
+     * # implement method fix
      * error on class if not all methods implemented
      * implement all methods fix
      */
@@ -92,9 +104,13 @@ public class PascalAnnotator implements Annotator {
     private void annotateRoutineInImplementation(PasRoutineImplDeclImpl routine, AnnotationHolder holder) {
         if (null == SectionToggle.getRoutineTarget(routine)) {
             if (routine.getContainingScope() instanceof PasModule) {
-                Annotation ann = holder.createWeakWarningAnnotation(routine.getNamedIdent() != null ? routine.getNamedIdent() : routine, message("ann.error.missing.declaration"));
+                if (((PasModule) routine.getContainingScope()).getUnitInterface() != null) {
+                    Annotation ann = holder.createWeakWarningAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.declaration"));
+                    ann.registerFix(new PascalActionDeclare(routine, PascalRoutineActions.DECLARE));
+                }
             } else {
-                Annotation ann = holder.createErrorAnnotation(routine.getNamedIdent() != null ? routine.getNamedIdent() : routine, message("ann.error.missing.declaration"));
+                Annotation ann = holder.createErrorAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.declaration"));
+                ann.registerFix(new PascalActionDeclare(routine, PascalRoutineActions.DECLARE));
             }
         }
     }

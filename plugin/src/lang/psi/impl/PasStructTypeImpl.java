@@ -24,12 +24,10 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +39,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
 
-    private List<Map<String, PasField>> members = null;
+    private Map<String, PasField> members = null;
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
 
@@ -99,13 +97,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         if (!isCacheActual(members, buildStamp)) { // TODO: check correctness
             buildMembers();
         }
-        for (PasField.Visibility visibility : PasField.Visibility.values()) {
-            PasField result = members.get(visibility.ordinal()).get(name.toUpperCase());
-            if (null != result) {
-                return result;
-            }
-        }
-        return null;
+        return members.get(name.toUpperCase());
     }
 
     @NotNull
@@ -117,11 +109,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         if (!isCacheActual(members, buildStamp)) {
             buildMembers();
         }
-        Collection<PasField> result = new LinkedHashSet<PasField>();
-        for (Map<String, PasField> fields : members) {
-            result.addAll(fields.values());
-        }
-        return result;
+        return members.values();
     }
 
     private PasField.Visibility getVisibility(PsiElement element) {
@@ -137,23 +125,19 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     }
 
     private void buildMembers() throws PasInvalidScopeException {
+        if (isCacheActual(members, buildStamp)) {
+            return;
+        }  // TODO: check correctness
         if (null == getContainingFile()) {
             PascalPsiImplUtil.logNullContainingFile(this);
             return;
         }
-        if (isCacheActual(members, buildStamp)) {
-            return;
-        }  // TODO: check correctness
         if (building) {
             LOG.info("WARNING: Reentered in buildXXX");
             return;
         }
         building = true;
-        members = new ArrayList<Map<String, PasField>>(PasField.Visibility.values().length);
-        for (PasField.Visibility visibility : PasField.Visibility.values()) {
-            members.add(visibility.ordinal(), new LinkedHashMap<String, PasField>());
-        }
-        assert members.size() == PasField.Visibility.values().length;
+        members = new LinkedHashMap<String, PasField>();
 
         PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
         PsiElement child = getFirstChild();
@@ -211,10 +195,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     private PasField addField(PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         PasField field = new PasField(this, element, name, fieldType, visibility);
-        if (members.get(visibility.ordinal()) == null) {
-            members.set(visibility.ordinal(), new LinkedHashMap<String, PasField>());
-        }
-        members.get(visibility.ordinal()).put(name.toUpperCase(), field);
+        members.put(name.toUpperCase(), field);
         return field;
     }
 

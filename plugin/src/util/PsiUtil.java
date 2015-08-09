@@ -143,7 +143,6 @@ public class PsiUtil {
 
     /**
      * Searches for a next sibling element ignoring whitespace elements
-     *
      * @param element - element from where to search
      * @return next sibling element or null if not found
      */
@@ -151,6 +150,20 @@ public class PsiUtil {
     public static PsiElement getNextSibling(@NotNull PsiElement element) {
         PsiElement result = element.getNextSibling();
         while (result instanceof PsiWhiteSpace) {
+            result = result.getNextSibling();
+        }
+        return result;
+    }
+
+    /**
+     * Searches for sibling element which contains "end" text
+     * @param element - element from where to search
+     * @return next sibling element or null if not found
+     */
+    @Nullable
+    public static PsiElement findEndSibling(PsiElement element) {
+        PsiElement result = element.getNextSibling();
+        while ((result != null) && !(result instanceof LeafPsiElement) && (!"end".equalsIgnoreCase(result.getText()))) {
             result = result.getNextSibling();
         }
         return result;
@@ -617,4 +630,5 @@ public class PsiUtil {
         PascalStructType struct = getStructTypeByName(named);
         return struct != null ? struct : PsiTreeUtil.getParentOfType(element, PascalStructType.class);
     }
+
 }

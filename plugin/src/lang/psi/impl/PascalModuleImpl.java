@@ -103,6 +103,17 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return result;
     }
 
+    @NotNull
+    synchronized public Collection<PasField> getPrivateFields() throws PasInvalidScopeException {
+        if (!PsiUtil.checkeElement(this)) {
+            return Collections.emptyList();
+        }
+        if (!isCacheActual(privateMembers, buildPrivateStamp)) {
+            buildPrivateMembers();
+        }
+        return privateMembers.values();
+    }
+
     private void buildPrivateMembers() throws PasInvalidScopeException {
         if (isCacheActual(privateMembers, buildPrivateStamp)) { return; } // TODO: check correctness
         privateMembers = new LinkedHashMap<String, PasField>();
@@ -144,6 +155,17 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         if (unit != null) {
             result.add(unit);
         }
+    }
+
+    @NotNull
+    synchronized public Collection<PasField> getPubicFields() throws PasInvalidScopeException {
+        if (!PsiUtil.checkeElement(this)) {
+            return Collections.emptyList();
+        }
+        if (!isCacheActual(publicMembers, buildPublicStamp)) {
+            buildPublicMembers();
+        }
+        return publicMembers.values();
     }
 
     private void buildPublicMembers() throws PasInvalidScopeException {
