@@ -7,6 +7,7 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -65,12 +66,12 @@ public class PascalActionDeclare extends BaseIntentionAction {
                 if (null == root) { root = file; }
                 final PsiElement section = root;
 
-                new WriteCommandAction(project) {
-                    @Override
-                    protected void run(@NotNull Result result) throws Throwable {
-                        fixActionData.calcData(section, element);
-
-                        if ((fixActionData.parent != null)) {
+                fixActionData.calcData(section, element);
+                if ((fixActionData.parent != null)) {
+                    new WriteCommandAction(project) {
+                        @Override
+                        protected void run(@NotNull Result result) throws Throwable {
+                            cutLFs(document, fixActionData);
                             document.insertString(fixActionData.offset, fixActionData.text);
                             editor.getCaretModel().moveToOffset(fixActionData.offset + fixActionData.text.length() - 1 - (fixActionData.text.endsWith("\n") ? 1 : 0));
                             PsiDocumentManager.getInstance(project).commitDocument(document);
@@ -79,10 +80,32 @@ public class PascalActionDeclare extends BaseIntentionAction {
                                 CodeStyleManager.getInstance(manager).reformat(fixActionData.parent, true);
                             }
                         }
-                    }
-                }.execute();
+                    }.execute();
+                }
             }
         });
+    }
+
+    private void cutLFs(Document document, FixActionData data) {
+        final int MAX = 2;
+        int l = Math.max(0, data.offset - MAX);
+        int r = Math.min(document.getTextLength(), data.offset + 1 + MAX);
+        String chars = document.getText(TextRange.create(l, r));
+        // get text [offset - MAX, offset + MAX]
+        // remove from data.text start sequence of linefeeds if it present both at data.text start and text starting back from offset
+        // remove from data.text end sequence of linefeeds if it present both at data.text end and text starting from offset
+        // TODO: possible reference chars[-1]?
+        int cl = 0;
+        while ((cl < Math.min(MAX, Math.min(data.offset - l, data.text.length())))
+                && (chars.charAt(data.offset - l - cl - 1) == '\n') && (data.text.charAt(cl) == '\n')) {
+            cl++;
+        }
+        int cr = 0;
+        while ((cr < Math.min(MAX, Math.min(chars.length() - r + data.offset + 1, data.text.length() - cl)))
+                && (chars.charAt(r - data.offset - 1 + cr) == '\n') && (data.text.charAt(data.text.length() - 1 - cr) == '\n')) {
+            cr++;
+        }
+        data.text = data.text.substring(cl, data.text.length() - cr);
     }
 
     /*private void moveCaretToAdded(Editor editor, @Nullable PsiElement block, int offsetFromEnd) {

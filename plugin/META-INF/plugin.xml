@@ -11,6 +11,8 @@
     <change-notes><![CDATA[
         <p>0.98</p>
         <ul>
+          <li>missing method declaration/implementation highlight and quick fixes</li>
+          <li>missing routine implementation highlight and quick fixes</li>
           <li>super method search</li>
           <li>implementations/descendants search</li>
           <li>fixed predefined conditionals for Delphi compilers</li>
