@@ -32,17 +32,19 @@ import org.jetbrains.annotations.NotNull;
 public class PascalActionDeclare extends BaseIntentionAction {
 
     private final PascalNamedElement element;
-    private final FixActionData fixActionData;
+    private final FixActionData[] fixActionDataArray;
+    private final String name;
 
-    public PascalActionDeclare(PascalNamedElement namedElement, FixActionData fixActionData) {
+    public PascalActionDeclare(PascalNamedElement namedElement, String name, FixActionData... fixActionDataArray) {
         this.element = namedElement;
-        this.fixActionData = fixActionData;
+        this.name = name;
+        this.fixActionDataArray = fixActionDataArray;
     }
 
     @NotNull
     @Override
     public String getText() {
-        return fixActionData.getActionName();
+        return name;
     }
 
     @NotNull
@@ -66,21 +68,23 @@ public class PascalActionDeclare extends BaseIntentionAction {
                 if (null == root) { root = file; }
                 final PsiElement section = root;
 
-                fixActionData.calcData(section, element);
-                if ((fixActionData.parent != null)) {
-                    new WriteCommandAction(project) {
-                        @Override
-                        protected void run(@NotNull Result result) throws Throwable {
-                            cutLFs(document, fixActionData);
-                            document.insertString(fixActionData.offset, fixActionData.text);
-                            editor.getCaretModel().moveToOffset(fixActionData.offset + fixActionData.text.length() - 1 - (fixActionData.text.endsWith("\n") ? 1 : 0));
-                            PsiDocumentManager.getInstance(project).commitDocument(document);
-                            PsiManager manager = fixActionData.parent.getManager();
-                            if (manager != null) {
-                                CodeStyleManager.getInstance(manager).reformat(fixActionData.parent, true);
+                for (final FixActionData actionData : fixActionDataArray) {
+                    actionData.calcData(section, element);
+                    if ((actionData.parent != null)) {
+                        new WriteCommandAction(project) {
+                            @Override
+                            protected void run(@NotNull Result result) throws Throwable {
+                                cutLFs(document, actionData);
+                                document.insertString(actionData.offset, actionData.text);
+                                editor.getCaretModel().moveToOffset(actionData.offset + actionData.text.length() - 1 - (actionData.text.endsWith("\n") ? 1 : 0));
+                                PsiDocumentManager.getInstance(project).commitDocument(document);
+                                PsiManager manager = actionData.parent.getManager();
+                                if (manager != null) {
+                                    CodeStyleManager.getInstance(manager).reformat(actionData.parent, true);
+                                }
                             }
-                        }
-                    }.execute();
+                        }.execute();
+                    }
                 }
             }
         });
@@ -138,11 +142,6 @@ public class PascalActionDeclare extends BaseIntentionAction {
                 offset = parent.getTextRange().getEndOffset();
             }
         }
-
-        @Override
-        String getActionName() {
-            return PascalBundle.message("action.createVar");
-        }
     };
 
     public static final FixActionData CREATE_CONST = new FixActionData() {
@@ -160,11 +159,6 @@ public class PascalActionDeclare extends BaseIntentionAction {
                 text = "\n" + element.getName() + " = ;";
                 offset = parent.getTextRange().getEndOffset();
             }
-        }
-
-        @Override
-        String getActionName() {
-            return PascalBundle.message("action.createConst");
         }
     };
 
@@ -184,11 +178,6 @@ public class PascalActionDeclare extends BaseIntentionAction {
                 offset = parent.getTextRange().getEndOffset();
             }
 
-        }
-
-        @Override
-        String getActionName() {
-            return PascalBundle.message("action.createType");
         }
     };
 

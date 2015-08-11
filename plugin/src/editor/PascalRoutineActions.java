@@ -4,7 +4,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
@@ -50,11 +49,6 @@ public class PascalRoutineActions {
             if (offset < 0) {
                 parent = null;
             }
-        }
-
-        @Override
-        String getActionName() {
-            return PascalBundle.message("action.implement");
         }
     };
 
@@ -102,11 +96,6 @@ public class PascalRoutineActions {
             if (offset < 0) {
                 parent = null;
             }
-        }
-
-        @Override
-        String getActionName() {
-            return PascalBundle.message("action.declare");
         }
     };
 }
