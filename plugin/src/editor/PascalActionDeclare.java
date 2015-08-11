@@ -14,6 +14,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
@@ -25,24 +26,30 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 /**
  * Author: George Bakhtadze
  * Date: 06/10/2013
  */
 public abstract class PascalActionDeclare extends BaseIntentionAction {
 
-    private final FixActionData[] fixActionDataArray;
+    private final List<FixActionData> fixActionDataArray;
     private final String name;
 
     abstract void calcData(final PsiFile file, final FixActionData data);
 
-    public PascalActionDeclare(String name, FixActionData... fixActionDataArray) {
+    public PascalActionDeclare(String name, PascalNamedElement element) {
         this.name = name;
-        this.fixActionDataArray = fixActionDataArray;
+        this.fixActionDataArray = new SmartList<FixActionData>(data(element));
     }
 
     public static FixActionData data(PascalNamedElement element) {
         return new FixActionData(element);
+    }
+
+    public void addData(FixActionData data) {
+        fixActionDataArray.add(data);
     }
 
     @NotNull
@@ -127,8 +134,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateVar extends PascalActionDeclare {
-        public ActionCreateVar(String name, FixActionData... fixActionDataArray) {
-            super(name, fixActionDataArray);
+        public ActionCreateVar(String name, PascalNamedElement element) {
+            super(name, element);
         }
 
         @SuppressWarnings("unchecked")
@@ -151,8 +158,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateConst extends PascalActionDeclare {
-        public ActionCreateConst(String name, FixActionData... fixActionDataArray) {
-            super(name, fixActionDataArray);
+        public ActionCreateConst(String name, PascalNamedElement element) {
+            super(name, element);
         }
 
         @SuppressWarnings("unchecked")
@@ -175,8 +182,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateType extends PascalActionDeclare {
-        public ActionCreateType(String name, FixActionData... fixActionDataArray) {
-            super(name, fixActionDataArray);
+        public ActionCreateType(String name, PascalNamedElement element) {
+            super(name, element);
         }
 
         @SuppressWarnings("unchecked")

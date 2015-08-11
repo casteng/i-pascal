@@ -63,6 +63,11 @@ public class SectionToggle {
     }
 
     @Nullable
+    public static PsiElement retrieveImplementation(PascalRoutineImpl routine) {
+        return retrieveImplementation(calcPrefix(new Container(routine)));
+    }
+
+    @Nullable
     private static PsiElement retrieveImplementation(Container container) {
         if (null == container) {
             return null;
@@ -98,6 +103,11 @@ public class SectionToggle {
                 targets.add(res.iterator().next().element);
             }
         }
+    }
+
+    @Nullable
+    public static PsiElement retrieveDeclaration(PascalRoutineImpl routine) {
+        return retrieveDeclaration(calcPrefix(new Container(routine)));
     }
 
     @Nullable
@@ -150,28 +160,18 @@ public class SectionToggle {
         }
     }
 
-    public static int findImplPos(PascalRoutineImpl routine) {
+    public static int findImplPos(final PascalRoutineImpl routine) {
         // collect all routine/method declarations in module/structure
         // remember index of the given routine declaration
         int res = -1;
         int ind = -1;
-        List<PascalRoutineImpl> decls = new SmartList<PascalRoutineImpl>();
-        Set<PascalRoutineImpl> declSet = new SmartHashSet<PascalRoutineImpl>();
         PasEntityScope scope = routine.getContainingScope();
         if (scope != null) {
-            Collection<PasField> fields;
-            if (scope instanceof PascalModuleImpl) {
-                fields = ((PascalModuleImpl) scope).getPubicFields();
-            } else {
-                fields = scope.getAllFields();
-            }
-            for (PasField field : fields) {
-                if ((field.fieldType == PasField.FieldType.ROUTINE) && !declSet.contains(field.element)) {
-                    if (routine.isEquivalentTo(field.element)) {
-                        ind = decls.size();
-                    }
-                    decls.add((PascalRoutineImpl) field.element);
-                    declSet.add((PascalRoutineImpl) field.element);
+            Collection<PasField> fields = getDeclFields(scope);
+            List<PascalRoutineImpl> decls = collectFields(fields, PasField.FieldType.ROUTINE, null);
+            for (int i = 0; i < decls.size(); i++) {
+                if (decls.get(i).isEquivalentTo(routine)) {
+                    ind = i;
                 }
             }
             // starting from the index search for implementations
@@ -187,6 +187,26 @@ public class SectionToggle {
             }
         }
         return res;
+    }
+
+    public static <T extends PsiElement> List<T> collectFields(Collection<PasField> fields, PasField.FieldType type, PasFilter<PasField> filter) {
+        List<T> result = new SmartList<T>();
+        Set<T> resultSet = new SmartHashSet<T>();
+        for (PasField field : fields) {
+            if (((null == type) || (field.fieldType == type)) && !resultSet.contains(field.element) && ((null == filter) || filter.allow(field))) {
+                result.add((T) field.element);
+                resultSet.add((T) field.element);
+            }
+        }
+        return result;
+    }
+
+    public static Collection<PasField> getDeclFields(PasEntityScope scope) {
+        if (scope instanceof PascalModuleImpl) {
+            return ((PascalModuleImpl) scope).getPubicFields();
+        } else {
+            return scope.getAllFields();
+        }
     }
 
     // Returns suggested position of declaration in interface/structure of the specified implementation of routine/method
@@ -228,4 +248,7 @@ public class SectionToggle {
         return res;
     }
 
+    public interface PasFilter<T> {
+        boolean allow(T value);
+    }
 }
