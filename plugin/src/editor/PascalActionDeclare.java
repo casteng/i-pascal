@@ -29,16 +29,20 @@ import org.jetbrains.annotations.NotNull;
  * Author: George Bakhtadze
  * Date: 06/10/2013
  */
-public class PascalActionDeclare extends BaseIntentionAction {
+public abstract class PascalActionDeclare extends BaseIntentionAction {
 
-    private final PascalNamedElement element;
     private final FixActionData[] fixActionDataArray;
     private final String name;
 
-    public PascalActionDeclare(PascalNamedElement namedElement, String name, FixActionData... fixActionDataArray) {
-        this.element = namedElement;
+    abstract void calcData(final PsiFile file, final FixActionData data);
+
+    public PascalActionDeclare(String name, FixActionData... fixActionDataArray) {
         this.name = name;
         this.fixActionDataArray = fixActionDataArray;
+    }
+
+    public static FixActionData data(PascalNamedElement element) {
+        return new FixActionData(element);
     }
 
     @NotNull
@@ -64,12 +68,8 @@ public class PascalActionDeclare extends BaseIntentionAction {
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                PsiElement root = PsiUtil.getNearestAffectingDeclarationsRoot(element);
-                if (null == root) { root = file; }
-                final PsiElement section = root;
-
                 for (final FixActionData actionData : fixActionDataArray) {
-                    actionData.calcData(section, element);
+                    calcData(file, actionData);
                     if ((actionData.parent != null)) {
                         new WriteCommandAction(project) {
                             @Override
@@ -126,63 +126,95 @@ public class PascalActionDeclare extends BaseIntentionAction {
         return false;
     }
 
-    public static final FixActionData CREATE_VAR = new FixActionData() {
+    public static class ActionCreateVar extends PascalActionDeclare {
+        public ActionCreateVar(String name, FixActionData... fixActionDataArray) {
+            super(name, fixActionDataArray);
+        }
+
         @SuppressWarnings("unchecked")
         @Override
-        void calcData(final PsiElement section, final PascalNamedElement element) {
-            parent = PsiUtil.findInSameSection(section, PasVarSection.class);
-            if (!canAffect(parent, element)) {
-                parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
-                if (canAffect(parent, element)) {
-                    text = "var " + element.getName() + ": T;\n";
-                    offset = parent.getTextOffset();
+        void calcData(final PsiFile file, final FixActionData data) {
+            PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
+            section = section != null ? section : file;
+            data.parent = PsiUtil.findInSameSection(section, PasVarSection.class);
+            if (!canAffect(data.parent, data.element)) {
+                data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
+                if (canAffect(data.parent, data.element)) {
+                    data.text = "var " + data.element.getName() + ": T;\n";
+                    data.offset = data.parent.getTextOffset();
                 }
             } else {
-                text = "\n" + element.getName() + ": T;";
-                offset = parent.getTextRange().getEndOffset();
+                data.text = "\n" + data.element.getName() + ": T;";
+                data.offset = data.parent.getTextRange().getEndOffset();
             }
         }
-    };
+    }
 
-    public static final FixActionData CREATE_CONST = new FixActionData() {
+    public static class ActionCreateConst extends PascalActionDeclare {
+        public ActionCreateConst(String name, FixActionData... fixActionDataArray) {
+            super(name, fixActionDataArray);
+        }
+
         @SuppressWarnings("unchecked")
         @Override
-        void calcData(final PsiElement section, final PascalNamedElement element) {
-            parent = PsiUtil.findInSameSection(section, PasConstSection.class);
-            if (!canAffect(parent, element)) {
-                parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
-                if (canAffect(parent, element)) {
-                    text = "const " + element.getName() + " = ;\n";
-                    offset = parent.getTextOffset();
+        void calcData(final PsiFile file, final FixActionData data) {
+            PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
+            section = section != null ? section : file;
+            data.parent = PsiUtil.findInSameSection(section, PasConstSection.class);
+            if (!canAffect(data.parent, data.element)) {
+                data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
+                if (canAffect(data.parent, data.element)) {
+                    data.text = "const " + data.element.getName() + " = ;\n";
+                    data.offset = data.parent.getTextOffset();
                 }
             } else {
-                text = "\n" + element.getName() + " = ;";
-                offset = parent.getTextRange().getEndOffset();
+                data.text = "\n" + data.element.getName() + " = ;";
+                data.offset = data.parent.getTextRange().getEndOffset();
             }
         }
-    };
+    }
 
-    public static final FixActionData CREATE_TYPE = new FixActionData() {
+    public static class ActionCreateType extends PascalActionDeclare {
+        public ActionCreateType(String name, FixActionData... fixActionDataArray) {
+            super(name, fixActionDataArray);
+        }
+
         @SuppressWarnings("unchecked")
         @Override
-        void calcData(final PsiElement section, final PascalNamedElement element) {
-            parent = PsiUtil.findInSameSection(section, PasTypeSection.class);
-            if (!canAffect(parent, element)) {
-                parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
-                if (canAffect(parent, element)) {
-                    text = "type " + element.getName() + " = ;\n";
-                    offset = parent.getTextOffset();
+        void calcData(final PsiFile file, final FixActionData data) {
+            PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
+            section = section != null ? section : file;
+            data.parent = PsiUtil.findInSameSection(section, PasTypeSection.class);
+            if (!canAffect(data.parent, data.element)) {
+                data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
+                if (canAffect(data.parent, data.element)) {
+                    data.text = "type " + data.element.getName() + " = ;\n";
+                    data.offset = data.parent.getTextOffset();
                 }
             } else {
-                text = "\n" + element.getName() + "  = ;";
-                offset = parent.getTextRange().getEndOffset();
+                data.text = "\n" + data.element.getName() + "  = ;";
+                data.offset = data.parent.getTextRange().getEndOffset();
             }
 
         }
-    };
+    }
 
     private static boolean canAffect(PsiElement parent, PascalNamedElement element) {
         return (parent != null) && (parent.getTextOffset() <= element.getTextOffset());
     }
 
+    /**
+     * Author: George Bakhtadze
+     * Date: 24/03/2015
+     */
+    static final class FixActionData {
+        final PascalNamedElement element;
+        PsiElement parent;
+        String text = null;
+        int offset = 0;
+
+        public FixActionData(PascalNamedElement element) {
+            this.element = element;
+        }
+    }
 }

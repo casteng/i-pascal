@@ -10,7 +10,6 @@ import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -24,33 +23,76 @@ import java.util.List;
  */
 public class PascalRoutineActions {
 
-    public static final FixActionData IMPLEMENT = new FixActionData() {
+    public static class ActionDeclare extends PascalActionDeclare {
+        public ActionDeclare(String name, FixActionData... fixActionDataArray) {
+            super(name, fixActionDataArray);
+        }
+
         @Override
-        void calcData(PsiElement section, PascalNamedElement element) {
-            PascalRoutineImpl routine = (PascalRoutineImpl) element;
-            String prefix = SectionToggle.getPrefix(routine);
-            text = element.getText();
-            String name = PsiUtil.getFieldName(element);
-            text = "\n\n" + StringUtil.replace(text, name, prefix + name) + "\nbegin\n\nend;\n\n";
-            offset = SectionToggle.findImplPos(routine);
-            parent = routine;
-            if (offset < 0) {
-                parent = PsiUtil.getModuleImplementationSection(element.getContainingFile());
-                parent = parent != null ? PsiTreeUtil.findChildOfType(parent, PasImplDeclSection.class) : null;
-                if (null != parent) {
-                    offset = parent.getTextRange().getEndOffset();
-                } else {                                                // program or library
-                    offset = getModuleMainDeclSection(routine.getContainingFile());
-                    if (offset >= 0) {
-                        parent = routine.getContainingFile();
+        void calcData(final PsiFile file, final FixActionData data) {
+            PasRoutineImplDeclImpl routine = (PasRoutineImplDeclImpl) data.element;
+
+            String prefix = routine.getNamespace() + ".";
+            PasProcBodyBlock block = routine.getProcBodyBlock();
+            int endoffs = block != null ? block.getStartOffsetInParent() : routine.getTextLength();
+            data.text = "\n" + routine.getText().substring(0, endoffs);
+            if (prefix.length() > 1) {
+                data.text = data.text.replaceFirst(prefix, "");
+            }
+
+            data.parent = routine.getContainingScope();
+            data.offset = SectionToggle.findIntfPos(routine);
+            if (data.offset < 0) {
+                if (data.parent instanceof PascalStructType) {
+                    PsiElement pos = PsiUtil.findEndSibling(data.parent.getFirstChild());
+                    data.offset = pos != null ? pos.getTextRange().getStartOffset() : -1;
+                } else {
+                    PsiElement pos = PsiUtil.getModuleInterfaceSection(routine.getContainingFile());
+                    pos = pos != null ? PsiTreeUtil.findChildOfType(pos, PasInterfaceDecl.class) : null;
+                    if (null != pos) {
+                        data.offset = pos.getTextRange().getEndOffset();
+                    } else {                                            // program or library. Should not go here.
+                        data.offset = getModuleMainDeclSection(routine.getContainingFile());
                     }
                 }
             }
-            if (offset < 0) {
-                parent = null;
+            if (data.offset < 0) {
+                data.parent = null;
             }
         }
-    };
+    }
+
+    public static class ActionImplement extends PascalActionDeclare {
+        public ActionImplement(String name, FixActionData... fixActionDataArray) {
+            super(name, fixActionDataArray);
+        }
+
+        @Override
+        void calcData(final PsiFile file, final FixActionData data) {
+            PascalRoutineImpl routine = (PascalRoutineImpl) data.element;
+            String prefix = SectionToggle.getPrefix(routine);
+            data.text = data.element.getText();
+            String name = PsiUtil.getFieldName(data.element);
+            data.text = "\n\n" + StringUtil.replace(data.text, name, prefix + name) + "\nbegin\n\nend;\n\n";
+            data.offset = SectionToggle.findImplPos(routine);
+            data.parent = routine;
+            if (data.offset < 0) {
+                data.parent = PsiUtil.getModuleImplementationSection(data.element.getContainingFile());
+                data.parent = data.parent != null ? PsiTreeUtil.findChildOfType(data.parent, PasImplDeclSection.class) : null;
+                if (null != data.parent) {
+                    data.offset = data.parent.getTextRange().getEndOffset();
+                } else {                                                // program or library
+                    data.offset = getModuleMainDeclSection(routine.getContainingFile());
+                    if (data.offset >= 0) {
+                        data.parent = routine.getContainingFile();
+                    }
+                }
+            }
+            if (data.offset < 0) {
+                data.parent = null;
+            }
+        }
+    }
 
     private static int getModuleMainDeclSection(PsiFile section) {
         PasBlockGlobal block = PsiTreeUtil.findChildOfType(section, PasBlockGlobal.class);
@@ -64,38 +106,4 @@ public class PascalRoutineActions {
         return -1;
     }
 
-    public static final FixActionData DECLARE = new FixActionData() {
-        @Override
-        void calcData(PsiElement section, PascalNamedElement element) {
-            PasRoutineImplDeclImpl routine = (PasRoutineImplDeclImpl) element;
-
-            String prefix = routine.getNamespace() + ".";
-            PasProcBodyBlock block = routine.getProcBodyBlock();
-            int endoffs = block != null ? block.getStartOffsetInParent() : routine.getTextLength();
-            text = "\n" + routine.getText().substring(0, endoffs);
-            if (prefix.length() > 1) {
-                text = text.replaceFirst(prefix, "");
-            }
-
-            parent = routine.getContainingScope();
-            offset = SectionToggle.findIntfPos(routine);
-            if (offset < 0) {
-                if (parent instanceof PascalStructType) {
-                    PsiElement pos = PsiUtil.findEndSibling(parent.getFirstChild());
-                    offset = pos != null ? pos.getTextRange().getStartOffset() : -1;
-                } else {
-                    PsiElement pos = PsiUtil.getModuleInterfaceSection(routine.getContainingFile());
-                    pos = pos != null ? PsiTreeUtil.findChildOfType(pos, PasInterfaceDecl.class) : null;
-                    if (null != pos) {
-                        offset = pos.getTextRange().getEndOffset();
-                    } else {                                            // program or library. Should not go here.
-                        offset = getModuleMainDeclSection(routine.getContainingFile());
-                    }
-                }
-            }
-            if (offset < 0) {
-                parent = null;
-            }
-        }
-    };
 }

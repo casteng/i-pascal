@@ -47,12 +47,12 @@ public class PascalAnnotator implements Annotator {
                 Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
                 String name = namedElement.getName();
                 if (!StrUtil.hasLowerCaseChar(name)) {
-                    ann.registerFix(new PascalActionDeclare(namedElement, message("action.createConst"), PascalActionDeclare.CREATE_CONST));
+                    ann.registerFix(new PascalActionDeclare.ActionCreateConst(message("action.createConst"), PascalActionDeclare.data(namedElement)));
                 } else {
-                    ann.registerFix(new PascalActionDeclare(namedElement, message("action.createVar"), PascalActionDeclare.CREATE_VAR));
+                    ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createVar"), PascalActionDeclare.data(namedElement)));
                 }
                 if (name.startsWith("T")) {
-                    ann.registerFix(new PascalActionDeclare(namedElement, message("action.createType"), PascalActionDeclare.CREATE_TYPE));
+                    ann.registerFix(new PascalActionDeclare.ActionCreateType(message("action.createType"), PascalActionDeclare.data(namedElement)));
                 }
             }
         }
@@ -91,8 +91,8 @@ public class PascalAnnotator implements Annotator {
                     return;
                 }
             }
-            Annotation ann = holder.createErrorAnnotation(routine, message("ann.error.missing.implemenation"));
-            ann.registerFix(new PascalActionDeclare(routine, message("action.implement"), PascalRoutineActions.IMPLEMENT));
+            Annotation ann = holder.createErrorAnnotation(routine, message("ann.error.missing.implementation"));
+            ann.registerFix(new PascalRoutineActions.ActionImplement(message("action.implement"), PascalActionDeclare.data(routine)));
         }
     }
 
@@ -106,11 +106,11 @@ public class PascalAnnotator implements Annotator {
             if (routine.getContainingScope() instanceof PasModule) {
                 if (((PasModule) routine.getContainingScope()).getUnitInterface() != null) {
                     Annotation ann = holder.createWeakWarningAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.declaration"));
-                    ann.registerFix(new PascalActionDeclare(routine, message("action.declare"), PascalRoutineActions.DECLARE));
+                    ann.registerFix(new PascalRoutineActions.ActionDeclare(message("action.declare"), PascalActionDeclare.data(routine)));
                 }
             } else {
                 Annotation ann = holder.createErrorAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.declaration"));
-                ann.registerFix(new PascalActionDeclare(routine, message("action.declare"), PascalRoutineActions.DECLARE));
+                ann.registerFix(new PascalRoutineActions.ActionDeclare(message("action.declare"), PascalActionDeclare.data(routine)));
             }
         }
     }
