@@ -65,7 +65,7 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testOperators() {
         myFixture.configureByFiles("operators.pas");
-        myFixture.checkHighlighting(false, false, true);
+        myFixture.checkHighlighting(false, false, false);
     }
 
     public void testRecordConst() {
@@ -85,17 +85,17 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testException() {
         myFixture.configureByFiles("exception.pas");
-        myFixture.checkHighlighting(false, false, true);
+        myFixture.checkHighlighting(false, false, false);
     }
 
     public void testClasses() {
         myFixture.configureByFiles("classesTest.pas");
-        myFixture.checkHighlighting(false, false, true);
+        myFixture.checkHighlighting(false, false, false);
     }
 
     public void testRoutines() {
         myFixture.configureByFiles("routines.pas");
-        myFixture.checkHighlighting(false, false, true);
+        myFixture.checkHighlighting(false, false, false);
     }
 
     public void testNestedMembers() {

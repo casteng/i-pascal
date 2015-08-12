@@ -12,6 +12,7 @@ import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -100,9 +101,14 @@ public class PascalRoutineActions {
         public ActionImplementAll(String name, PascalNamedElement element) {
             super(name, element);
             PascalRoutineImpl routine = (PascalRoutineImpl) element;
-            List<PascalRoutineImpl> fields = SectionToggle.collectFields(SectionToggle.getDeclFields(routine.getContainingScope()), PasField.FieldType.ROUTINE, null);
-            for (PascalRoutineImpl field : fields) {
-                if ((field != routine) && (null == SectionToggle.retrieveImplementation(field))) {
+            List<PasExportedRoutineImpl> fields = SectionToggle.collectFields(SectionToggle.getDeclFields(routine.getContainingScope()), PasField.FieldType.ROUTINE, new SectionToggle.PasFilter<PasField>() {
+                @Override
+                public boolean allow(PasField value) {
+                    return value.element instanceof PasExportedRoutineImpl;
+                }
+            });
+            for (PasExportedRoutineImpl field : fields) {
+                if ((field != routine) && (PsiUtil.needImplementation(field)) && (null == SectionToggle.retrieveImplementation(field))) {
                     addData(new FixActionData(field));
                 }
             }

@@ -39,10 +39,10 @@ type
     protected
       class function Instance: TObserverMapping;
     public
-      constructor Create;
+        constructor Create;
       destructor Destroy; override;
-      class destructor Destroy;
-      class function GetObserverID(const Key: Single): Integer;
+        class destructor Destroy;
+        class function GetObserverID(const Key: Single): Integer;
     end;
 
     CA = class of TA;
@@ -113,6 +113,47 @@ implementation
 var
     vec: TVarRec2;
     a: tvarrec;
+
+class function TObserverMapping.Instance: TObserverMapping;
+begin
+
+end;
+
+constructor TObserverMapping.Create;
+begin
+
+end;
+
+class destructor TObserverMapping.Destroy;
+begin
+
+end;
+
+class function TObserverMapping.GetObserverID(const Key: Single): Integer;
+begin
+
+end;
+
+class function TAHelper.Func: TA;
+begin
+
+end;
+
+constructor TAHelper.Create(a, b: TA);
+begin
+
+end;
+
+class function TVecHelper.v: TVec;
+begin
+
+end;
+
+constructor TVecHelper.Create();
+begin
+
+end;
+
 begin
     with a do begin
         v[0] := 1;

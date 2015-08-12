@@ -28,7 +28,9 @@ import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasGenericPostfix;
+import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -48,6 +50,7 @@ import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRefNamedIdentImpl;
@@ -631,4 +634,18 @@ public class PsiUtil {
         return struct != null ? struct : PsiTreeUtil.getParentOfType(element, PascalStructType.class);
     }
 
+    public static boolean needImplementation(PasExportedRoutineImpl routine) {
+        if (routine.getExternalDirective() != null) {
+            return false;
+        }
+        if (routine.getContainingScope() instanceof PasInterfaceTypeDecl) {
+            return false;
+        }
+        for (PasFunctionDirective dir : routine.getFunctionDirectiveList()) {
+            if (dir.getText().toUpperCase().startsWith("ABSTRACT")) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

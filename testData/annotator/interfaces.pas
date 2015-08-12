@@ -26,7 +26,7 @@ type
 
 implementation
 
-procedure TA.IntfGetComponent();
+procedure TA.IntfGetComponent;
 begin
 
 end;

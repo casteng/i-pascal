@@ -13,7 +13,7 @@ type
         class operator conversionOp(a: Integer): Integer;
     end;
 
-operator Explicit(AVariant: Single) z: Single;
+    operator Explicit(AVariant: Single) z: Single;
 
 implementation
 

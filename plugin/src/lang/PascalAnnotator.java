@@ -9,8 +9,6 @@ import com.siberika.idea.pascal.editor.PascalRoutineActions;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
-import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
@@ -23,7 +21,6 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.List;
 
 import static com.siberika.idea.pascal.PascalBundle.message;
 
@@ -78,19 +75,7 @@ public class PascalAnnotator implements Annotator {
      * implement all methods fix
      */
     private void annotateRoutineInInterface(PasExportedRoutineImpl routine, AnnotationHolder holder) {
-        if (routine.getContainingScope() instanceof PasInterfaceTypeDecl) {
-            return;
-        }
-        if (null == SectionToggle.getRoutineTarget(routine)) {
-            if (routine.getExternalDirective() != null) {
-                return;
-            }
-            List<PasFunctionDirective> dirs = routine.getFunctionDirectiveList();
-            for (PasFunctionDirective dir : dirs) {
-                if (dir.getText().toUpperCase().startsWith("ABSTRACT")) {
-                    return;
-                }
-            }
+        if (PsiUtil.needImplementation(routine) && (null == SectionToggle.getRoutineTarget(routine))) {
             Annotation ann = holder.createErrorAnnotation(routine, message("ann.error.missing.implementation"));
             ann.registerFix(new PascalRoutineActions.ActionImplement(message("action.implement"), routine));
             ann.registerFix(new PascalRoutineActions.ActionImplementAll(message("action.implement.all"), routine));

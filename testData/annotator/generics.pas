@@ -11,8 +11,25 @@ type
         property Items[Index: Integer]: T read GetItem write SetItem; default;
     end;
 implementation
+
 var
     List: TList<Integer>;
+
+constructor TList<T>.Create();
+begin
+
+end;
+
+function TList<T>.GetItem(const Value: T): Integer;
+begin
+
+end;
+
+procedure TList<T>.SetItem(const Value: T);
+begin
+
+end;
+
 begin
     List := List^.Create;
 end.
