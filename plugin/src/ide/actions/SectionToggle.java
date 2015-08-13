@@ -1,11 +1,14 @@
 package com.siberika.idea.pascal.ide.actions;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
+import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -150,6 +153,18 @@ public class SectionToggle {
         return scope.getContainingScope();
     }
 
+    public static int getModuleMainDeclSectionOffset(PsiFile section) {
+        PasBlockGlobal block = PsiTreeUtil.findChildOfType(section, PasBlockGlobal.class);
+        if (block != null) {
+            List<PasRoutineImplDecl> impls = block.getRoutineImplDeclList();
+            if (!impls.isEmpty()) {
+                return impls.get(impls.size() - 1).getTextRange().getEndOffset();
+            }
+            return block.getBlockBody().getTextOffset();
+        }
+        return -1;
+    }
+
     private static class Container {
         String prefix = "";
         PasEntityScope element;
@@ -211,13 +226,14 @@ public class SectionToggle {
     }
 
     // Returns suggested position of declaration in interface/structure of the specified implementation of routine/method
-    public static int findIntfPos(PascalRoutineImpl routine) {
+    public static int findIntfPos(final PascalRoutineImpl routine) {
         // collect all routine implementations in module with the same prefix
         // remember index of the given routine implementation
         int res = -1;
         int ind = -1;
-        List<PascalRoutineImpl> impls = new SmartList<PascalRoutineImpl>();
-        Set<PascalRoutineImpl> implSet = new SmartHashSet<PascalRoutineImpl>();
+        int member = -1;                        // To be used if right place will not be found
+
+        final PasEntityScope scope = routine.getContainingScope();
         Container cont = calcPrefix(new Container(routine));
         Collection<PasField> fields;
         if (cont.scope instanceof PascalModule) {
@@ -225,14 +241,22 @@ public class SectionToggle {
         } else {
             fields = cont.scope.getAllFields();
         }
-        for (PasField field : fields) if (field.element instanceof PascalRoutineImpl) {
-            PascalRoutineImpl impl = (PascalRoutineImpl) field.element;
-            if ((field.fieldType == PasField.FieldType.ROUTINE) && (impl.getContainingScope() == routine.getContainingScope()) && !implSet.contains(impl)) {
-                if (routine.isEquivalentTo(impl)) {
-                    ind = impls.size();
+        List<PascalRoutineImpl> impls = collectFields(fields, PasField.FieldType.ROUTINE, new PasFilter<PasField>() {
+            @Override
+            public boolean allow(PasField value) {
+                return (value.element instanceof PascalRoutineImpl) && (((PascalRoutineImpl) value.element).getContainingScope() == scope);
+            }
+        });
+        for (int i = 0; i < impls.size(); i++) {
+            if (impls.get(i).isEquivalentTo(routine)) {
+                ind = i;
+            }
+        }
+        for (PasField field : getDeclFields(scope)) {
+            if (field.element != null) {
+                if (field.fieldType == PasField.FieldType.PROPERTY) {
+                    member = field.element.getTextRange().getStartOffset();
                 }
-                impls.add(impl);
-                implSet.add(impl);
             }
         }
         // starting from the index search for declarations
@@ -244,6 +268,21 @@ public class SectionToggle {
             PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))));
             if (decl != null) {
                 res = decl.getTextRange().getStartOffset();
+            }
+        }
+        res = res < 0 ? member : res;
+        if (res < 0) {                             // other declarations not found
+            if (scope instanceof PascalStructType) {
+                PsiElement pos = PsiUtil.findEndSibling(scope.getFirstChild());
+                res = pos != null ? pos.getTextRange().getStartOffset() : -1;
+            } else {
+                PsiElement pos = PsiUtil.getModuleInterfaceSection(routine.getContainingFile());
+                pos = pos != null ? PsiTreeUtil.findChildOfType(pos, PasInterfaceDecl.class) : null;
+                if (null != pos) {
+                    res = pos.getTextRange().getEndOffset();
+                } else {                                            // program or library. Should not go here.
+                    res = getModuleMainDeclSectionOffset(routine.getContainingFile());
+                }
             }
         }
         return res;

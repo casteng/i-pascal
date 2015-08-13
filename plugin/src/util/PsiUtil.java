@@ -166,7 +166,7 @@ public class PsiUtil {
     @Nullable
     public static PsiElement findEndSibling(PsiElement element) {
         PsiElement result = element.getNextSibling();
-        while ((result != null) && !(result instanceof LeafPsiElement) && (!"end".equalsIgnoreCase(result.getText()))) {
+        while ((result != null) && !((result instanceof LeafPsiElement) && ("end".equalsIgnoreCase(result.getText())))) {
             result = result.getNextSibling();
         }
         return result;

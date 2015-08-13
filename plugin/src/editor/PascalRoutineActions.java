@@ -1,19 +1,14 @@
 package com.siberika.idea.pascal.editor;
 
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
-import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
-import com.siberika.idea.pascal.lang.psi.PasInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
-import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
@@ -48,21 +43,7 @@ public class PascalRoutineActions {
             data.parent = routine.getContainingScope();
             data.offset = SectionToggle.findIntfPos(routine);
             if (data.offset < 0) {
-                if (data.parent instanceof PascalStructType) {
-                    PsiElement pos = PsiUtil.findEndSibling(data.parent.getFirstChild());
-                    data.offset = pos != null ? pos.getTextRange().getStartOffset() : -1;
-                } else {
-                    PsiElement pos = PsiUtil.getModuleInterfaceSection(routine.getContainingFile());
-                    pos = pos != null ? PsiTreeUtil.findChildOfType(pos, PasInterfaceDecl.class) : null;
-                    if (null != pos) {
-                        data.offset = pos.getTextRange().getEndOffset();
-                    } else {                                            // program or library. Should not go here.
-                        data.offset = getModuleMainDeclSection(routine.getContainingFile());
-                    }
-                }
-            }
-            if (data.offset < 0) {
-                data.parent = null;
+                data.text = "";
             }
         }
     }
@@ -104,7 +85,7 @@ public class PascalRoutineActions {
                 if (null != data.parent) {
                     data.offset = data.parent.getTextRange().getEndOffset();
                 } else {                                                // program or library
-                    data.offset = getModuleMainDeclSection(routine.getContainingFile());
+                    data.offset = SectionToggle.getModuleMainDeclSectionOffset(routine.getContainingFile());
                     if (data.offset >= 0) {
                         data.parent = routine.getContainingFile();
                     }
@@ -133,18 +114,6 @@ public class PascalRoutineActions {
                 }
             }
         }
-    }
-
-    private static int getModuleMainDeclSection(PsiFile section) {
-        PasBlockGlobal block = PsiTreeUtil.findChildOfType(section, PasBlockGlobal.class);
-        if (block != null) {
-            List<PasRoutineImplDecl> impls = block.getRoutineImplDeclList();
-            if (!impls.isEmpty()) {
-                return impls.get(impls.size() - 1).getTextRange().getEndOffset();
-            }
-            return block.getBlockBody().getTextOffset();
-        }
-        return -1;
     }
 
 }
