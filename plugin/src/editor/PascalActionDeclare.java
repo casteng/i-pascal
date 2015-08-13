@@ -21,10 +21,9 @@ import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
-import com.siberika.idea.pascal.lang.psi.PasTypeSection;
-import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -35,6 +34,7 @@ import java.util.List;
  */
 public abstract class PascalActionDeclare extends BaseIntentionAction {
 
+    public static final int MAX_SECTION_LEVELS = 20;
     private final List<FixActionData> fixActionDataArray;
     private final String name;
 
@@ -78,7 +78,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             public void run() {
                 for (final FixActionData actionData : fixActionDataArray) {
                     calcData(file, actionData);
-                    if ((actionData.parent != null)) {
+                    if (!StringUtils.isEmpty(actionData.text)) {
                         new WriteCommandAction(project) {
                             @Override
                             protected void run(@NotNull Result result) throws Throwable {
@@ -87,9 +87,11 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                                 editor.getCaretModel().moveToOffset(actionData.offset + actionData.text.length() - 1 - (actionData.text.endsWith("\n") ? 1 : 0));
                                 editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
                                 PsiDocumentManager.getInstance(project).commitDocument(document);
-                                PsiManager manager = actionData.parent.getManager();
-                                if (manager != null) {
-                                    CodeStyleManager.getInstance(manager).reformat(actionData.parent, true);
+                                if (actionData.parent != null) {
+                                    PsiManager manager = actionData.parent.getManager();
+                                    if (manager != null) {
+                                        CodeStyleManager.getInstance(manager).reformat(actionData.parent, true);
+                                    }
                                 }
                             }
                         }.execute();
@@ -143,18 +145,10 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
-            section = section != null ? section : file;
-            data.parent = PsiUtil.findInSameSection(section, PasVarSection.class);
-            if (!canAffect(data.parent, data.element)) {
-                data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
-                if (canAffect(data.parent, data.element)) {
-                    data.text = "var " + data.element.getName() + ": T;\n";
-                    data.offset = data.parent.getTextOffset();
-                }
-            } else {
+            if (findParent(file, data, PasConstSection.class)) {
                 data.text = "\n" + data.element.getName() + ": T;";
-                data.offset = data.parent.getTextRange().getEndOffset();
+            } else if (data.parent != null) {
+                data.text = "var " + data.element.getName() + ": T;\n";
             }
         }
     }
@@ -167,18 +161,10 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
-            section = section != null ? section : file;
-            data.parent = PsiUtil.findInSameSection(section, PasConstSection.class);
-            if (!canAffect(data.parent, data.element)) {
-                data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
-                if (canAffect(data.parent, data.element)) {
-                    data.text = "const " + data.element.getName() + " = ;\n";
-                    data.offset = data.parent.getTextOffset();
-                }
-            } else {
+            if (findParent(file, data, PasConstSection.class)) {
                 data.text = "\n" + data.element.getName() + " = ;";
-                data.offset = data.parent.getTextRange().getEndOffset();
+            } else if (data.parent != null) {
+                data.text = "const " + data.element.getName() + " = ;\n";
             }
         }
     }
@@ -191,21 +177,33 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
+            if (findParent(file, data, PasConstSection.class)) {
+                data.text = "\n" + data.element.getName() + "  = ;";
+            } else if (data.parent != null) {
+                data.text = "type " + data.element.getName() + " = ;\n";
+            }
+        }
+    }
+
+    private static boolean findParent(PsiFile file, FixActionData data, Class<? extends PsiElement> sectionClass) {
+        PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
+        for (int i = 0; i < MAX_SECTION_LEVELS; i++) {
             section = section != null ? section : file;
-            data.parent = PsiUtil.findInSameSection(section, PasTypeSection.class);
+            data.parent = PsiUtil.findInSameSection(section, sectionClass);
             if (!canAffect(data.parent, data.element)) {
                 data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
                 if (canAffect(data.parent, data.element)) {
-                    data.text = "type " + data.element.getName() + " = ;\n";
                     data.offset = data.parent.getTextOffset();
+                    return false;
                 }
             } else {
-                data.text = "\n" + data.element.getName() + "  = ;";
                 data.offset = data.parent.getTextRange().getEndOffset();
+                return true;
             }
-
+            section = PsiUtil.getNearestAffectingDeclarationsRoot(section);
         }
+        data.parent = null;
+        return false;
     }
 
     private static boolean canAffect(PsiElement parent, PascalNamedElement element) {
@@ -218,6 +216,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
      */
     static final class FixActionData {
         final PascalNamedElement element;
+        // The parent will be formatterd
         PsiElement parent;
         String text = null;
         int offset = 0;
