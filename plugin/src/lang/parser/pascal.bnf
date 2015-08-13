@@ -220,7 +220,7 @@
 external pascal             ::= parsePascal Module
 Module                      ::= [prolog] (moduleUnit | moduleLibrary | modulePackage | moduleProgram)
                             {extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
-                             implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
+                             implements="com.siberika.idea.pascal.lang.psi.impl.PascalModule"}
 
 private moduleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead progWoHead {pin=1}

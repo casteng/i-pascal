@@ -28,7 +28,7 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 14/09/2013
  */
-public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
+public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     private Map<String, PasField> privateMembers = null;
     private Map<String, PasField> publicMembers = null;
@@ -43,10 +43,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         super(node);
     }
 
-    public enum ModuleType {
-        UNIT, PROGRAM, LIBRARY, PACKAGE
-    }
-
+    @Override
     public ModuleType getModuleType() {
         PasModule pm = (PasModule) this;
         if (pm.getUnitModuleHead() != null) {
@@ -69,6 +66,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return result;
     }
 
+    @Override
     @Nullable
     synchronized public final PasField getPublicField(final String name) throws PasInvalidScopeException {
         if (!isCacheActual(publicMembers, buildPublicStamp)) {
@@ -77,6 +75,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return publicMembers.get(name.toUpperCase());
     }
 
+    @Override
     @Nullable
     synchronized public final PasField getPrivateField(final String name) throws PasInvalidScopeException {
         if (!isCacheActual(privateMembers, buildPrivateStamp)) {
@@ -103,6 +102,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return result;
     }
 
+    @Override
     @NotNull
     synchronized public Collection<PasField> getPrivateFields() throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
@@ -157,6 +157,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         }
     }
 
+    @Override
     @NotNull
     synchronized public Collection<PasField> getPubicFields() throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
@@ -201,6 +202,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return (cache != null) && (PsiUtil.getFileStamp(getContainingFile()) == stamp);
     }
 
+    @Override
     synchronized public List<PasEntityScope> getPrivateUnits() throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
             return Collections.emptyList();
@@ -211,6 +213,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PasEntityScope {
         return privateUnits;
     }
 
+    @Override
     synchronized public List<PasEntityScope> getPublicUnits() throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
             return Collections.emptyList();

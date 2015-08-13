@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -202,8 +203,8 @@ public class SectionToggle {
     }
 
     public static Collection<PasField> getDeclFields(PasEntityScope scope) {
-        if (scope instanceof PascalModuleImpl) {
-            return ((PascalModuleImpl) scope).getPubicFields();
+        if (scope instanceof PascalModule) {
+            return ((PascalModule) scope).getPubicFields();
         } else {
             return scope.getAllFields();
         }
@@ -219,8 +220,8 @@ public class SectionToggle {
         Set<PascalRoutineImpl> implSet = new SmartHashSet<PascalRoutineImpl>();
         Container cont = calcPrefix(new Container(routine));
         Collection<PasField> fields;
-        if (cont.scope instanceof PascalModuleImpl) {
-            fields = ((PascalModuleImpl) cont.scope).getPrivateFields();
+        if (cont.scope instanceof PascalModule) {
+            fields = ((PascalModule) cont.scope).getPrivateFields();
         } else {
             fields = cont.scope.getAllFields();
         }

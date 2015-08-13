@@ -6,8 +6,10 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceDecl;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -65,6 +67,23 @@ public class PascalRoutineActions {
         }
     }
 
+    public static class ActionDeclareAll extends ActionDeclare {
+        public ActionDeclareAll(String name, PascalNamedElement element) {
+            super(name, element);
+            PascalRoutineImpl routine = (PascalRoutineImpl) element;
+            PasEntityScope scope = routine.getContainingScope();
+            PasModule module = PsiUtil.getElementPasModule(routine);
+            if (null != module) {
+                List<PascalRoutineImpl> fields = SectionToggle.collectFields(module.getPrivateFields(), PasField.FieldType.ROUTINE, null);
+                for (PascalRoutineImpl field : fields) {
+                    if ((field != routine) && (field.getContainingScope() == scope) && (null == SectionToggle.retrieveDeclaration(field))) {
+                        addData(new FixActionData(field));
+                    }
+                }
+            }
+        }
+    }
+
     public static class ActionImplement extends PascalActionDeclare {
         public ActionImplement(String name, PascalNamedElement element) {
             super(name, element);
@@ -101,7 +120,8 @@ public class PascalRoutineActions {
         public ActionImplementAll(String name, PascalNamedElement element) {
             super(name, element);
             PascalRoutineImpl routine = (PascalRoutineImpl) element;
-            List<PasExportedRoutineImpl> fields = SectionToggle.collectFields(SectionToggle.getDeclFields(routine.getContainingScope()), PasField.FieldType.ROUTINE, new SectionToggle.PasFilter<PasField>() {
+            List<PasExportedRoutineImpl> fields = SectionToggle.collectFields(SectionToggle.getDeclFields(routine.getContainingScope()),
+                    PasField.FieldType.ROUTINE, new SectionToggle.PasFilter<PasField>() {
                 @Override
                 public boolean allow(PasField value) {
                     return value.element instanceof PasExportedRoutineImpl;
@@ -111,32 +131,6 @@ public class PascalRoutineActions {
                 if ((field != routine) && (PsiUtil.needImplementation(field)) && (null == SectionToggle.retrieveImplementation(field))) {
                     addData(new FixActionData(field));
                 }
-            }
-        }
-
-        @Override
-        void calcData(final PsiFile file, final FixActionData data) {
-            PascalRoutineImpl routine = (PascalRoutineImpl) data.element;
-            String prefix = SectionToggle.getPrefix(routine);
-            data.text = data.element.getText();
-            String name = PsiUtil.getFieldName(data.element);
-            data.text = "\n\n" + StringUtil.replace(data.text, name, prefix + name) + "\nbegin\n\nend;\n\n";
-            data.offset = SectionToggle.findImplPos(routine);
-            data.parent = routine;
-            if (data.offset < 0) {
-                data.parent = PsiUtil.getModuleImplementationSection(data.element.getContainingFile());
-                data.parent = data.parent != null ? PsiTreeUtil.findChildOfType(data.parent, PasImplDeclSection.class) : null;
-                if (null != data.parent) {
-                    data.offset = data.parent.getTextRange().getEndOffset();
-                } else {                                                // program or library
-                    data.offset = getModuleMainDeclSection(routine.getContainingFile());
-                    if (data.offset >= 0) {
-                        data.parent = routine.getContainingFile();
-                    }
-                }
-            }
-            if (data.offset < 0) {
-                data.parent = null;
             }
         }
     }

@@ -91,12 +91,14 @@ public class PascalAnnotator implements Annotator {
         if (null == SectionToggle.getRoutineTarget(routine)) {
             if (routine.getContainingScope() instanceof PasModule) {
                 if (((PasModule) routine.getContainingScope()).getUnitInterface() != null) {
-                    Annotation ann = holder.createWeakWarningAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.declaration"));
-                    ann.registerFix(new PascalRoutineActions.ActionDeclare(message("action.declare"), routine));
+                    Annotation ann = holder.createWeakWarningAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.routine.declaration"));
+                    ann.registerFix(new PascalRoutineActions.ActionDeclare(message("action.declare.routine"), routine));
+                    ann.registerFix(new PascalRoutineActions.ActionDeclareAll(message("action.declare.routine.all"), routine));
                 }
             } else {
-                Annotation ann = holder.createErrorAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.declaration"));
-                ann.registerFix(new PascalRoutineActions.ActionDeclare(message("action.declare"), routine));
+                Annotation ann = holder.createErrorAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.method.declaration"));
+                ann.registerFix(new PascalRoutineActions.ActionDeclare(message("action.declare.method"), routine));
+                ann.registerFix(new PascalRoutineActions.ActionDeclareAll(message("action.declare.method.all"), routine));
             }
         }
     }

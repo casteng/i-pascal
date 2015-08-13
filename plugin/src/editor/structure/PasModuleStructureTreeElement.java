@@ -4,7 +4,6 @@ import com.intellij.ide.structureView.StructureViewTreeElement;
 import com.intellij.ide.structureView.impl.common.PsiTreeElementBase;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,7 +29,7 @@ public class PasModuleStructureTreeElement extends PsiTreeElementBase<PasModule>
     @Override
     public Icon getIcon(boolean open) {
         if (getElement() != null) {
-            switch (((PascalModuleImpl) getElement()).getModuleType()) {
+            switch (getElement().getModuleType()) {
                 case PACKAGE:
                 case LIBRARY:
                     return PascalIcons.MODULE;

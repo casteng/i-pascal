@@ -6,6 +6,7 @@ import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
@@ -84,6 +85,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                                 cutLFs(document, actionData);
                                 document.insertString(actionData.offset, actionData.text);
                                 editor.getCaretModel().moveToOffset(actionData.offset + actionData.text.length() - 1 - (actionData.text.endsWith("\n") ? 1 : 0));
+                                editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
                                 PsiDocumentManager.getInstance(project).commitDocument(document);
                                 PsiManager manager = actionData.parent.getManager();
                                 if (manager != null) {
