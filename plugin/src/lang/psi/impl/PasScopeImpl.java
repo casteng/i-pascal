@@ -67,10 +67,10 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
             if (names.length <= 1) {                                                                            // should not be true
                 return;
             }
-            PasField field = containingScope.getField(names[0]);
+            PasField field = containingScope.getField(PsiUtil.cleanGenericDef(names[0]));
             updateContainingScope(field);
             for (int i = 1; i < names.length - 1; i++) {
-                updateContainingScope(containingScope.getField(names[i]));
+                updateContainingScope(containingScope.getField(PsiUtil.cleanGenericDef(names[i])));
             }
         }
     }

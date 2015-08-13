@@ -648,4 +648,9 @@ public class PsiUtil {
         }
         return true;
     }
+
+    public static String cleanGenericDef(String name) {
+        int ind = name.indexOf('<');
+        return ind < 0 ? name : name.substring(0, ind);
+    }
 }

@@ -65,7 +65,7 @@ import java.util.Set;
  */
 public class PasReferenceUtil {
 
-    private static final Logger LOG = Logger.getInstance(PascalModuleImpl.class.getName());
+    private static final Logger LOG = Logger.getInstance(PasReferenceUtil.class.getName());
 
     private static final int MAX_RECURSION_COUNT = 1000;
     private static final int MAX_NAMESPACES = 300;
