@@ -234,7 +234,7 @@ private progWoHead          ::= [UsesClause] BlockGlobal "." {pin=2 recoverWhile
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 private prolog              ::= {recoverWhile=rec_module_start}
 UnitModuleHead              ::= UNIT NamespaceIdent hintingDirective* ";" {pin=1 recoverWhile=rec_module}
-UsesClause                  ::= USES namespaceNameList ";" {pin=1 recoverWhile=rec_block_local_end}
+UsesClause                  ::= USES namespaceNameList ";" {pin=1}
 
 private moduleLibrary       ::= LibraryModuleHead [UsesClause] BlockGlobal "." {pin=1}
 LibraryModuleHead           ::= LIBRARY NamespaceIdent hintingDirective* ";" {pin=1}
@@ -254,7 +254,7 @@ private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ASM)
 private rec_implementation_dot  ::= !(".") & rec_implementation
 private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | PROPERTY | Visibility |
-                                 (NAME "<") | (END DOT) | "[") & rec_interface
+                                 (identifier "<") | (END DOT) | "[") & rec_interface
 private rec_section         ::= !rec__routine_key & rec_section_nested
 private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
@@ -264,7 +264,7 @@ private rec_semi            ::= !(";")
 private rec_struct_field    ::= !(";" | ")" | END | CASE)
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
-private rec_name            ::= !(NAME | END) & rec_section
+private rec_name            ::= !(identifier | END) & rec_section
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | ":" | "]")
 private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
@@ -620,7 +620,7 @@ private customAttributes	::=	LBRACK CustomAttributeList RBRACK | assemblyAttribu
 private CustomAttributeList ::= CustomAttributeDecl (COMMA CustomAttributeDecl)* {recoverWhile=rec_attr2}
 private rec_attr2 ::= !(RBRACK)
 CustomAttributeDecl         ::= FullyQualifiedIdent [LPAREN AttributeParamList RPAREN] {recoverWhile=rec_attr}
-private rec_attr            ::= !(COMMA | RBRACK | NAME)
+private rec_attr            ::= !(COMMA | RBRACK | identifier)
 StringFactor                ::= controlString (quotedString controlString)* [quotedString]
                               | quotedString (controlString quotedString)* [controlString]
 private quotedString        ::=	STRING_LITERAL

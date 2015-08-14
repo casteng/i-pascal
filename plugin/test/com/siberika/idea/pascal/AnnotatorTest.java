@@ -102,4 +102,10 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("nestedMembers.pas");
         myFixture.checkHighlighting(false, false, true);
     }
+
+    public void testAllowedKeywords() {
+        myFixture.configureByFiles("allowedKeywords.pas");
+        myFixture.checkHighlighting(false, false, false);
+    }
+
 }
