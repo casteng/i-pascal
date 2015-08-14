@@ -244,7 +244,7 @@ PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1}
 RequiresClause              ::= REQUIRES namespaceNameList ";" {pin=1}
 ContainsClause              ::= CONTAINS namespaceNameList ";" {pin=1}
 
-UnitInterface               ::= INTERFACE [UsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
+UnitInterface               ::= INTERFACE [UsesClause] InterfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
 
 private rec_block_global_end ::= !(".")
 private rec_block_local_end  ::= !(END) & rec_section
@@ -270,10 +270,10 @@ private rec_formal_param    ::= !(")" | ";" | ":" | "]")
 private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
 
 
-private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
+InterfaceDecl               ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=1}
 ExportsSection              ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
-private exportItem          ::= ["(" [FormalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
+private exportItem          ::= ["(" [formalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
 
 private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | LE | GT | GE | "<>" | IN | "explicit"
 private procName            ::= ClassQualifiedIdent | NamedIdent
@@ -429,7 +429,7 @@ ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="meta
 Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
 ClassProperty ::= customAttributes* [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] hintingDirective* [";"] {pin=3 recoverWhile=rec_routine}
-ClassPropertyArray ::= "[" FormalParameterList "]" {pin=1}
+ClassPropertyArray ::= "[" formalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
 ClassPropertySpecifier ::= ClassPropertyReadWrite | classPropertyDispInterface | "stored" Expression
                          | DEFAULT Expression | "nodefault" | IMPLEMENTS TypeID {recoverWhile=rec_propspec}
@@ -609,8 +609,8 @@ private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExp
 private callGroup           ::= callExpr | indexExpr | dereferenceExpr
 literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
-FormalParameterSection      ::= "(" [ FormalParameterList ] ")" {pin=1}
-private FormalParameterList ::= FormalParameter (";" FormalParameter)*
+FormalParameterSection      ::= "(" [ formalParameterList ] ")" {pin=1}
+private formalParameterList ::= FormalParameter (";" FormalParameter)*
 FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" TypeDecl ] [ "=" Expression ] {recoverWhile=rec_formal_param}
 ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 

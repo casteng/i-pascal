@@ -75,6 +75,7 @@ public class PsiUtil {
 
     private static final int MAX_NON_BREAKING_NAMESPACES = 2;
     private static final long MIN_REPARSE_INTERVAL = 2000;
+    public static final String TYPE_UNTYPED_NAME = "<untyped>";
     private static long lastReparseRequestTime = System.currentTimeMillis() - MIN_REPARSE_INTERVAL;
 
     @NotNull
@@ -461,7 +462,8 @@ public class PsiUtil {
         } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {                                    // type declaration case
             return entityDecl;
         } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
-            return ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent().getFullyQualifiedIdent();
+            PasTypeID type = ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
+            return type != null ? type.getFullyQualifiedIdent() : null;
         }
         return null;
     }
@@ -599,14 +601,41 @@ public class PsiUtil {
     }
 
     public static String getFieldName(PascalNamedElement element) {
-        String name = element.getName();
         if (element instanceof PascalRoutineImpl) {
-            PascalRoutineImpl routine = (PascalRoutineImpl) element;
-            PasFormalParameterSection params = routine.getFormalParameterSection();
-            name = name + (params != null ? params.getText() : "");
-            name = name.replaceAll("\\s+", " ");
+            return normalizeRoutineName((PascalRoutineImpl) element);
+        } else {
+            return element.getName();
         }
-        return name;
+    }
+
+    public static String normalizeRoutineName(PascalRoutineImpl routine) {
+        StringBuilder res = new StringBuilder(routine.getName());
+        PasFormalParameterSection params = routine.getFormalParameterSection();
+        if (params != null) {
+            res.append("(");
+            boolean nonFirst = false;
+            for (PasFormalParameter param : params.getFormalParameterList()) {
+                PasTypeDecl td = param.getTypeDecl();
+                String typeStr = TYPE_UNTYPED_NAME;
+                if (td != null) {
+                    typeStr = td.getText();
+                }
+                for (int i = 0; i < param.getNamedIdentList().size(); i++) {
+                    res.append(nonFirst ? "," : "").append(typeStr);
+                    nonFirst = true;
+                }
+            }
+            res.append(")");
+            //name = name + (params != null ? params.getText() : "");
+            //name = name.replaceAll("\\s+", " ");
+        } else {
+            res.append("()");
+        }
+        PasTypeID type = routine.getFunctionTypeIdent();
+        if (type != null) {
+            res.append(": ").append(type.getFullyQualifiedIdent().getName());
+        }
+        return res.toString();
     }
 
     public static boolean isParentOf(PsiElement element, PsiElement parent) {
