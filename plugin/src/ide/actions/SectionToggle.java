@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
+import com.siberika.idea.pascal.lang.psi.PasVisibility;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
@@ -273,12 +274,23 @@ public class SectionToggle {
         res = res < 0 ? member : res;
         if (res < 0) {                             // other declarations not found
             if (scope instanceof PascalStructType) {
-                PsiElement pos = PsiUtil.findEndSibling(scope.getFirstChild());
-                res = pos != null ? pos.getTextRange().getStartOffset() : -1;
+                List<PasVisibility> visList = ((PascalStructType) scope).getVisibilityList();
+                if (!visList.isEmpty()) {                                                           // after private visibility clause
+                    PasVisibility privateSection = visList.get(0);
+                    for (PasVisibility visibility : visList) {
+                        if (visibility.getText().toUpperCase().contains("PRIVATE")) {
+                            privateSection = visibility;
+                        }
+                    }
+                    res = privateSection.getTextRange().getEndOffset();
+                } else {                                                                            // before END
+                    PsiElement pos = PsiUtil.findEndSibling(scope.getFirstChild());
+                    res = pos != null ? pos.getTextRange().getStartOffset() : -1;
+                }
             } else {
                 PsiElement pos = PsiUtil.getModuleInterfaceSection(routine.getContainingFile());
                 pos = pos != null ? PsiTreeUtil.findChildOfType(pos, PasInterfaceDecl.class) : null;
-                if (null != pos) {
+                if (null != pos) {                                                                  // to the end of interface section
                     res = pos.getTextRange().getEndOffset();
                 } else {                                            // program or library. Should not go here.
                     res = getModuleMainDeclSectionOffset(routine.getContainingFile());

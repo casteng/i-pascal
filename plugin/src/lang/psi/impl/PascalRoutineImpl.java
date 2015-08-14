@@ -108,8 +108,9 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         return members.values();
     }
 
+    @Nullable
     public PasTypeID getFunctionTypeIdent() {
-        PasTypeDecl type = PsiTreeUtil.getChildOfType(this, PasTypeDecl.class);
+        PasTypeDecl type = findChildByClass(PasTypeDecl.class);
         return PsiTreeUtil.findChildOfType(type, PasTypeID.class);
     }
 
