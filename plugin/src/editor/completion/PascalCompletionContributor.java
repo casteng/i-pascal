@@ -36,6 +36,7 @@ import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
+import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
@@ -76,7 +77,7 @@ import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -169,7 +170,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 int level = PsiUtil.getElementLevel(originalPos);
                 //System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
-                if (!(prev instanceof PasTypeSection) && !(PsiUtil.isInstanceOfAny(originalPos, PasTypeSection.class, PasRoutineImplDecl.class))) {
+                if (!(prev instanceof PasTypeSection) && !(PsiUtil.isInstanceOfAny(originalPos, PasTypeSection.class, PasRoutineImplDecl.class, PasBlockLocal.class))) {
                     handleModuleHeader(result, parameters, pos);
                     handleModuleSection(result, parameters, pos, originalPos);
                     handleUses(result, parameters, pos, originalPos);
@@ -256,9 +257,9 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
         if (PsiUtil.isInstanceOfAny(pos, PasUnitInterface.class, PasUnitImplementation.class,
                 PasTypeDeclaration.class, PasConstDeclaration.class, PasVarDeclaration.class,
-                PasRoutineImplDecl.class, PasBlockGlobal.class, PasImplDeclSection.class)) {
+                PasRoutineImplDecl.class, PasBlockLocal.class, PasBlockGlobal.class, PasImplDeclSection.class)) {
             PsiElement scope = pos instanceof PasEntityScope ? (PasEntityScope) pos : PsiUtil.getNearestSection(pos);
-            if (scope instanceof PasUnitImplementation) {
+            if ((scope instanceof PasUnitImplementation) || (pos instanceof PasUnitImplementation)) {
                 appendTokenSetUnique(result, PascalLexer.UNIT_SECTIONS, scope.getParent());
             }
             if (scope instanceof PascalRoutineImpl) {
@@ -272,8 +273,8 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private void handleModuleSection(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
-        if ((pos instanceof PascalModuleImpl)) {
-            PascalModuleImpl module = (PascalModuleImpl) pos;
+        if ((pos instanceof PascalModule)) {
+            PascalModule module = (PascalModule) pos;
             switch (module.getModuleType()) {
                 case UNIT: {
                     if (!(originalPos instanceof PascalFile)) {
@@ -322,12 +323,12 @@ public class PascalCompletionContributor extends CompletionContributor {
             }*/
             PasModule module = PsiUtil.getElementPasModule(pos);
             Set<String> excludedUnits = new HashSet<String>();
-            if (module instanceof PascalModuleImpl) {
+            if (module != null) {
                 excludedUnits.add(module.getName().toUpperCase());
-                for (PasEntityScope scope : ((PascalModuleImpl) module).getPublicUnits()) {
+                for (PasEntityScope scope : module.getPublicUnits()) {
                     excludedUnits.add(scope.getName().toUpperCase());
                 }
-                for (PasEntityScope scope : ((PascalModuleImpl) module).getPrivateUnits()) {
+                for (PasEntityScope scope : module.getPrivateUnits()) {
                     excludedUnits.add(scope.getName().toUpperCase());
                 }
             }
@@ -399,7 +400,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
-        if (PsiUtil.isInstanceOfAny(pos, PasExportedRoutine.class, PasRoutineImplDecl.class)) {
+        if (PsiUtil.isInstanceOfAny(pos, PasExportedRoutine.class, PasRoutineImplDecl.class, PasBlockLocal.class)) {
             appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
         }
     }
