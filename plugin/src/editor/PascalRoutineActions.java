@@ -75,7 +75,7 @@ public class PascalRoutineActions {
             PascalRoutineImpl routine = (PascalRoutineImpl) data.element;
             String prefix = SectionToggle.getPrefix(routine);
             data.text = data.element.getText();
-            String name = PsiUtil.getFieldName(data.element);
+            String name = data.element.getName();
             data.text = "\n\n" + StringUtil.replace(data.text, name, prefix + name) + "\nbegin\n\nend;\n\n";
             data.offset = SectionToggle.findImplPos(routine);
             data.parent = routine;
@@ -92,7 +92,7 @@ public class PascalRoutineActions {
                 }
             }
             if (data.offset < 0) {
-                data.parent = null;
+                data.text = "";
             }
         }
     }
