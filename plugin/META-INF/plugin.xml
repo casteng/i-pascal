@@ -17,6 +17,7 @@
           <li>implementations/descendants search</li>
           <li>fixed predefined conditionals for Delphi compilers</li>
           <li>fixed custom attributes support</li>
+          <li>added support of allowed keywords as identifiers</li>
         </ul>
         <p>0.97</p>
         <ul>
