@@ -44,6 +44,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Pattern TYPE = Pattern.compile("\\s*\\w+\\.\\w+\\s*=.*");
     private static final Pattern COMMENTED_TYPE = Pattern.compile("\\s*\\{type}\\s*");
     private static final Pattern ROUTINE = Pattern.compile("(\\s*)(procedure|function|operator)(\\s+)(@)(\\w+)");
+    private static final Pattern INLINE_TYPE = Pattern.compile("\\s*\\:\\d+\\s+\\=\\s+.*");
     private static final File NULL_FILE = new File("");
 
     @NotNull
@@ -136,7 +137,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
             } else {
                 inConst = false;
             }
-            if (isWarning(line) || isVar(line)) {                  // Comment out all decompiler warnings
+            if (shouldCommentOut(line)) {                          // Comment out all decompiler warnings
                 res.append("// ");
             } else if (!unitDone) {                                // Comment out all lines before unit declaration
                 if (line.startsWith("unit")) {
@@ -149,6 +150,8 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
                 res.append("__").append(line.trim());
             } else if (COMMENTED_TYPE.matcher(line).matches()) {
                 res.append("  type\n    ");
+            } else if (INLINE_TYPE.matcher(line).matches()) {
+                res.append(line.replaceFirst("\\:", "_"));
             } else {
                 Matcher m = ROUTINE.matcher(line);
                 if (m.find()) {
@@ -161,6 +164,10 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         }
         res.append("implementation\n  {compiled code}\nend.\n");
         return res.toString();
+    }
+
+    private static boolean shouldCommentOut(String line) {
+        return isWarning(line) || isVar(line);
     }
 
     private static boolean isConstant(String line) {
