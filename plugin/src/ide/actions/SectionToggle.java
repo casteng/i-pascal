@@ -8,8 +8,8 @@ import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
+import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasVisibility;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -289,7 +289,7 @@ public class SectionToggle {
                 }
             } else {
                 PsiElement pos = PsiUtil.getModuleInterfaceSection(routine.getContainingFile());
-                pos = pos != null ? PsiTreeUtil.findChildOfType(pos, PasInterfaceDecl.class) : null;
+                pos = pos != null ? PsiTreeUtil.findChildOfType(pos, PasUnitInterface.class) : null;
                 if (null != pos) {                                                                  // to the end of interface section
                     res = pos.getTextRange().getEndOffset();
                 } else {                                            // program or library. Should not go here.

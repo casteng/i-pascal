@@ -224,14 +224,15 @@ Module                      ::= [prolog] (moduleUnit | moduleLibrary | modulePac
 
 private moduleProgram       ::= progWithHead | progWoHead
 private progWithHead        ::= ProgramModuleHead progWoHead {pin=1}
-private progWoHead          ::= [UsesClause] BlockGlobal "." {pin=2 recoverWhile=rec_section_global}
+private progWoHead          ::= [intUsesClause] BlockGlobal "." {pin=2 recoverWhile=rec_section_global}
 
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 private prolog              ::= {recoverWhile=rec_module_start}
 UnitModuleHead              ::= UNIT NamespaceIdent hintingDirective* ";" {pin=1 recoverWhile=rec_module}
+private intUsesClause       ::= UsesClause {recoverWhile=rec_block_local_end}
 UsesClause                  ::= USES namespaceNameList ";" {pin=1}
 
-private moduleLibrary       ::= LibraryModuleHead [UsesClause] BlockGlobal "." {pin=1}
+private moduleLibrary       ::= LibraryModuleHead [intUsesClause] BlockGlobal "." {pin=1}
 LibraryModuleHead           ::= LIBRARY NamespaceIdent hintingDirective* ";" {pin=1}
 
 private modulePackage       ::= PackageModuleHead RequiresClause [ContainsClause] END "." {pin=1}
@@ -239,7 +240,7 @@ PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1}
 RequiresClause              ::= REQUIRES namespaceNameList ";" {pin=1}
 ContainsClause              ::= CONTAINS namespaceNameList ";" {pin=1}
 
-UnitInterface               ::= INTERFACE [UsesClause] InterfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
+UnitInterface               ::= INTERFACE [intUsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
 
 private rec_block_global_end ::= !(".")
 private rec_block_local_end  ::= !(END) & rec_section
@@ -265,7 +266,7 @@ private rec_formal_param    ::= !(")" | ";" | ":" | "]")
 private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
 
 
-InterfaceDecl               ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
+private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=1}
 ExportsSection              ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
 private exportItem          ::= ["(" [formalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
@@ -299,7 +300,7 @@ private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclS
 private declSectionNested1  ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_block_local_end}
 private declSectionWONested ::= commonDecl | LabelDeclSection {recoverWhile=rec_section_nested}
 
-UnitImplementation          ::= IMPLEMENTATION [UsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation_dot name="implementation section"}
+UnitImplementation          ::= IMPLEMENTATION [intUsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation_dot name="implementation section"}
 ImplDeclSection             ::= declSection* {}
 private unitBlock           ::= [UnitInitialization] [UnitFinalization] END | CompoundStatement | END {}
 UnitInitialization          ::= INITIALIZATION statementList {pin=1 name="initialization section"}
