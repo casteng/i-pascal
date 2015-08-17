@@ -31,10 +31,13 @@ import static com.siberika.idea.pascal.PascalBundle.message;
 public class PascalAnnotator implements Annotator {
 
     public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
-        if (element instanceof PasExportedRoutineImpl) {
-            annotateRoutineInInterface((PasExportedRoutineImpl) element, holder);
-        } else if (element instanceof PasRoutineImplDeclImpl) {
-            annotateRoutineInImplementation((PasRoutineImplDeclImpl) element, holder);
+        if ((element instanceof PascalNamedElement) && (PsiUtil.isRoutineName((PascalNamedElement) element))) {
+            PsiElement parent = element.getParent();
+            if (parent instanceof PasExportedRoutineImpl) {
+                annotateRoutineInInterface((PasExportedRoutineImpl) parent, holder);
+            } else if (parent instanceof PasRoutineImplDeclImpl) {
+                annotateRoutineInImplementation((PasRoutineImplDeclImpl) parent, holder);
+            }
         }
 
         if (PsiUtil.isEntityName(element) && !isLastPartOfMethodImplName((PascalNamedElement) element)) {

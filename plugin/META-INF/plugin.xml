@@ -18,6 +18,7 @@
           <li>fixed predefined conditionals for Delphi compilers</li>
           <li>fixed custom attributes support</li>
           <li>added support of allowed keywords as identifiers</li>
+          <li>added support of forward interface declarations</li>
         </ul>
         <p>0.97</p>
         <ul>
