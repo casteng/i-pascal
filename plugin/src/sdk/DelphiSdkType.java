@@ -46,7 +46,7 @@ public class DelphiSdkType extends BasePascalSdkType {
 
     public DelphiSdkType() {
         super(JpsPascalModelSerializerExtension.DELPHI_SDK_TYPE_ID, PascalCompilerFamily.DELPHI);
-        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
+        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/delphiDefines.xml");
         if (definesStream != null) {
             DefinesParser.parse(definesStream);
         }

@@ -45,7 +45,7 @@ public class FPCSdkType extends BasePascalSdkType {
 
     public FPCSdkType() {
         super(JpsPascalModelSerializerExtension.FPC_SDK_TYPE_ID, PascalCompilerFamily.FPC);
-        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/defines.xml");
+        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/fpcDefines.xml");
         if (definesStream != null) {
             DefinesParser.parse(definesStream);
         }
@@ -64,6 +64,7 @@ public class FPCSdkType extends BasePascalSdkType {
                 return path;
             }
         }
+
         return null;
     }
 

@@ -1,0 +1,53 @@
+<compilers>
+    <compiler name="Delphi" version="15.0">
+        <define>DELPHI</define>
+        <define>PUREPASCAL</define>
+        <define>VER150</define>
+        <define>DCC</define>
+        <define>NATIVECODE</define>
+        <define>CONDITIONALEXPRESSIONS</define>
+    </compiler>
+    <compiler name="Delphi" version="16.0">
+        <define>VER160</define>
+    </compiler>
+    <compiler name="Delphi" version="17.0">
+        <define>VER170</define>
+    </compiler>
+    <compiler name="Delphi" version="18.0">
+        <define>VER180</define>
+    </compiler>
+    <compiler name="Delphi" version="18.5">
+        <define>VER185</define>
+    </compiler>
+    <compiler name="Delphi" version="20.0">
+        <define>UNICODE</define>
+        <define>VER200</define>
+    </compiler>
+    <compiler name="Delphi" version="21.0">
+        <define>VER210</define>
+    </compiler>
+    <compiler name="Delphi" version="22.0">
+        <define>VER220</define>
+    </compiler>
+    <compiler name="Delphi" version="23.0">
+        <define>VER230</define>
+    </compiler>
+    <compiler name="Delphi" version="24.0">
+        <define>VER240</define>
+    </compiler>
+    <compiler name="Delphi" version="25.0">
+        <define>VER250</define>
+    </compiler>
+    <compiler name="Delphi" version="26.0">
+        <define>VER260</define>
+    </compiler>
+    <compiler name="Delphi" version="27.0">
+        <define>VER270</define>
+    </compiler>
+    <compiler name="Delphi" version="28.0">
+        <define>VER280</define>
+    </compiler>
+    <compiler name="Delphi" version="29.0">
+        <define>VER290</define>
+    </compiler>
+</compilers>
