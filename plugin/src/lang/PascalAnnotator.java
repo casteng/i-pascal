@@ -33,9 +33,9 @@ public class PascalAnnotator implements Annotator {
     public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
         if ((element instanceof PascalNamedElement) && (PsiUtil.isRoutineName((PascalNamedElement) element))) {
             PsiElement parent = element.getParent();
-            if (parent instanceof PasExportedRoutineImpl) {
+            if (parent.getClass() == PasExportedRoutineImpl.class) {
                 annotateRoutineInInterface((PasExportedRoutineImpl) parent, holder);
-            } else if (parent instanceof PasRoutineImplDeclImpl) {
+            } else if (parent.getClass() == PasRoutineImplDeclImpl.class) {
                 annotateRoutineInImplementation((PasRoutineImplDeclImpl) parent, holder);
             }
         }

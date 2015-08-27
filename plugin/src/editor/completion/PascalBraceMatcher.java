@@ -71,6 +71,6 @@ public class PascalBraceMatcher implements BraceMatcher {
 
     @Override
     public int getCodeConstructStart(PsiFile file, int openingBraceOffset) {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return openingBraceOffset;
     }
 }

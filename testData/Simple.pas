@@ -3,7 +3,7 @@ unit Simple;
 interface
 
 uses
-    classes, unitTest1,
+    classes, unitTest1, scoped.myclass,
     //aaa
     objpas, scoped.myclass;
 
