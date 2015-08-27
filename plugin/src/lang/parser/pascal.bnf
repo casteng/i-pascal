@@ -451,7 +451,7 @@ private simpleProcedureType ::= procedureTypeHeading {recoverWhile=rec_semi_sect
 ClosureExpr                 ::= ClosureRoutine
 ClosureRoutine              ::= (funcHeading | procHeading) BlockLocal
 
-private procedureReference  ::= REFERENCE TO procedureTypeHeading {pin=1}
+private procedureReference  ::= REFERENCE TO procedureTypeHeading
 private procedureTypeHeading ::= (funcHeading | procHeading) [OF OBJECT]
 private funcHeading         ::= FUNCTION [FormalParameterSection] ":" customAttributes* TypeDecl [";" callConvention+] {pin=1}
 private procHeading         ::= PROCEDURE [FormalParameterSection] [";" callConvention+] {pin=1}
