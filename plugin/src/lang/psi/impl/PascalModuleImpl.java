@@ -2,8 +2,10 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
@@ -61,6 +63,13 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
             return (UnitMembers) cache.get(getKey(), builder);
         } catch (ExecutionException e) {
             LOG.error("Error occured during building private members", e.getCause());
+            return EMPTY_MEMBERS;
+        } catch (UncheckedExecutionException e) {
+            if (e.getCause() instanceof ProcessCanceledException) {
+                throw (ProcessCanceledException) e.getCause();
+            } else {
+                LOG.error("Unchecked error occured during building private members", e.getCause());
+            }
             return EMPTY_MEMBERS;
         }
     }
