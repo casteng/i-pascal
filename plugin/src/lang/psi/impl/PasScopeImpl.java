@@ -1,8 +1,10 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
+import com.google.common.cache.Cache;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -15,6 +17,9 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,9 +31,11 @@ import java.util.Set;
 public abstract class PasScopeImpl extends PascalNamedElementImpl implements PasEntityScope {
 
     protected static final Logger LOG = Logger.getInstance(PasScopeImpl.class.getName());
+    protected static final Members EMPTY_MEMBERS = new Members();
+
+    public static final int CACHE_LIVE_MS = 10000;
 
     protected boolean building = false;
-    protected long buildStamp = -1;
     protected long parentBuildStamp = -1;
     protected List<PasEntityScope> parentScopes;
     protected PasEntityScope containingScope;
@@ -37,11 +44,35 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         super(node);
     }
 
+    protected static long getStamp(PsiFile file) {
+        //return System.currentTimeMillis();
+        return file.getModificationStamp();
+    }
+
+    public String getKey() {
+        return String.format("%s.%s", getContainingFile() != null ? getContainingFile().getName() : "", PsiUtil.getFieldName(this));
+    }
+
+    protected void ensureChache(Cache<String, Members> cache) {
+/*        if (!PsiUtil.checkeElement(this)) {
+            return false;
+        }*/
+/*        if (null == getContainingFile()) {
+            PascalPsiImplUtil.logNullContainingFile(this);
+            return false;
+        }*/
+        Members members = cache.getIfPresent(getKey());
+        if ((members != null) && (getStamp(getContainingFile()) != members.stamp)) {
+            cache.invalidate(getKey());
+        }
+    }
+
     protected boolean isCacheActual(Object cache, long stamp) throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
             return false;
         }
-        return (getContainingFile() != null) && (cache != null) && (PsiUtil.getFileStamp(getContainingFile()) == stamp);
+        return (getContainingFile() != null) && (cache != null) && (getStamp(getContainingFile()) == stamp);
+//        return (cache != null) && (stamp > getStamp(getContainingFile()) - CACHE_LIVE_MS);
     }
 
     @Nullable
@@ -138,6 +169,16 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         }
 
         return type;
+    }
+
+    static class Members {
+        Map<String, PasField> all = new LinkedHashMap<String, PasField>();
+        Set<PascalNamedElement> redeclared = new LinkedHashSet<PascalNamedElement>();
+        long stamp;
+    }
+
+    static class UnitMembers extends Members {
+        List<PasEntityScope> units = Collections.emptyList();
     }
 
 }

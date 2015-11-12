@@ -1,15 +1,17 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasInvalidElementException;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -18,11 +20,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Author: George Bakhtadze
@@ -30,14 +33,9 @@ import java.util.Set;
  */
 public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
-    private Map<String, PasField> privateMembers = null;
-    private Map<String, PasField> publicMembers = null;
-    private Set<PascalNamedElement> redeclaredPrivateMembers = null;
-    private Set<PascalNamedElement> redeclaredPublicMembers = null;
-    private List<PasEntityScope> privateUnits = Collections.emptyList();
-    private List<PasEntityScope> publicUnits = Collections.emptyList();
-    private long buildPrivateStamp = -1;
-    private long buildPublicStamp = -1;
+    private static final UnitMembers EMPTY_MEMBERS = new UnitMembers();
+    private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -56,6 +54,17 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         return ModuleType.PROGRAM;
     }
 
+    @NotNull
+    private UnitMembers getMembers(Cache<String, Members> cache, Callable<? extends Members> builder) {
+        ensureChache(cache);
+        try {
+            return (UnitMembers) cache.get(getKey(), builder);
+        } catch (ExecutionException e) {
+            LOG.error("Error occured during building private members", e.getCause());
+            return EMPTY_MEMBERS;
+        }
+    }
+
     @Override
     @Nullable
     public final PasField getField(final String name) throws PasInvalidScopeException {
@@ -68,20 +77,84 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @Override
     @Nullable
-    synchronized public final PasField getPublicField(final String name) throws PasInvalidScopeException {
-        if (!isCacheActual(publicMembers, buildPublicStamp)) {
-            buildPublicMembers();
-        }
-        return publicMembers.get(name.toUpperCase());
+    synchronized public final PasField getPrivateField(final String name) throws PasInvalidScopeException {
+        return getMembers(privateCache, this.new PrivateBuilder()).all.get(name.toUpperCase());
+    }
+
+    @Override
+    @NotNull
+    synchronized public Collection<PasField> getPrivateFields() throws PasInvalidScopeException {
+        return getMembers(privateCache, this.new PrivateBuilder()).all.values();
+    }
+
+    @Override
+    synchronized public List<PasEntityScope> getPrivateUnits() throws PasInvalidScopeException {
+        return getMembers(privateCache, this.new PrivateBuilder()).units;
     }
 
     @Override
     @Nullable
-    synchronized public final PasField getPrivateField(final String name) throws PasInvalidScopeException {
-        if (!isCacheActual(privateMembers, buildPrivateStamp)) {
-            buildPrivateMembers();
+    synchronized public final PasField getPublicField(final String name) throws PasInvalidScopeException {
+        return getMembers(publicCache, this.new PublicBuilder()).all.get(name.toUpperCase());
+    }
+
+    @Override
+    @NotNull
+    synchronized public Collection<PasField> getPubicFields() throws PasInvalidScopeException {
+        return getMembers(publicCache, this.new PublicBuilder()).all.values();
+    }
+
+    @Override
+    synchronized public List<PasEntityScope> getPublicUnits() throws PasInvalidScopeException {
+        return getMembers(publicCache, this.new PublicBuilder()).units;
+    }
+
+    private class PrivateBuilder implements Callable<UnitMembers> {
+        @Override
+        public UnitMembers call() throws Exception {
+            PsiElement section = PsiUtil.getModuleImplementationSection(PascalModuleImpl.this);
+            if (null == section) section = PascalModuleImpl.this;
+            if (!PsiUtil.checkeElement(section)) {
+                throw new PasInvalidElementException(section);
+            };
+
+            UnitMembers res = new UnitMembers();
+            collectFields(section, PasField.Visibility.PRIVATE, res.all, res.redeclared);
+
+            res.units = retrieveUsedUnits(section);
+            for (PasEntityScope unit : res.units) {
+                res.all.put(unit.getName().toUpperCase(), new PasField(PascalModuleImpl.this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
+            }
+
+            res.stamp = getStamp(getContainingFile());
+            LOG.info(String.format("Unit %s private: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
+            return res;
         }
-        return privateMembers.get(name.toUpperCase());
+    }
+
+    private class PublicBuilder implements Callable<UnitMembers> {
+        @Override
+        public UnitMembers call() throws Exception {
+            UnitMembers res = new UnitMembers();
+            res.all.put(getName().toUpperCase(), new PasField(PascalModuleImpl.this, PascalModuleImpl.this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PUBLIC));
+
+            PsiElement section = PsiUtil.getModuleInterfaceSection(PascalModuleImpl.this);
+            if ((null == section) || (!PsiUtil.checkeElement(section))) {
+                //throw new PasInvalidElementException(section);
+                return res;
+            }
+
+            collectFields(section, PasField.Visibility.PRIVATE, res.all, res.redeclared);
+
+            res.units = retrieveUsedUnits(section);
+            for (PasEntityScope unit : res.units) {
+                res.all.put(unit.getName().toUpperCase(), new PasField(PascalModuleImpl.this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
+            }
+
+            res.stamp = getStamp(getContainingFile());
+            LOG.info(String.format("Unit %s public: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
+            return res;
+        }
     }
 
     @NotNull
@@ -90,48 +163,10 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         if (!PsiUtil.checkeElement(this)) {
             return Collections.emptyList();
         }
-        if (!isCacheActual(publicMembers, buildPublicStamp)) {
-            buildPublicMembers();
-        }
-        if (!isCacheActual(privateMembers, buildPrivateStamp)) {
-            buildPrivateMembers();
-        }
         Collection<PasField> result = new LinkedHashSet<PasField>();
-        result.addAll(publicMembers.values());
-        result.addAll(privateMembers.values());
+        result.addAll(getPubicFields());
+        result.addAll(getPrivateFields());
         return result;
-    }
-
-    @Override
-    @NotNull
-    synchronized public Collection<PasField> getPrivateFields() throws PasInvalidScopeException {
-        if (!PsiUtil.checkeElement(this)) {
-            return Collections.emptyList();
-        }
-        if (!isCacheActual(privateMembers, buildPrivateStamp)) {
-            buildPrivateMembers();
-        }
-        return privateMembers.values();
-    }
-
-    private void buildPrivateMembers() throws PasInvalidScopeException {
-        if (isCacheActual(privateMembers, buildPrivateStamp)) { return; } // TODO: check correctness
-        privateMembers = new LinkedHashMap<String, PasField>();
-        redeclaredPrivateMembers = new LinkedHashSet<PascalNamedElement>();
-
-        PsiElement section = PsiUtil.getModuleImplementationSection(this);
-        if (null == section) section = this;
-        if (!PsiUtil.checkeElement(section)) return;
-
-        collectFields(section, PasField.Visibility.PRIVATE, privateMembers, redeclaredPrivateMembers);
-
-        privateUnits = retrieveUsedUnits(section);
-        for (PasEntityScope unit : privateUnits) {
-            privateMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
-        }
-
-        buildPrivateStamp = PsiUtil.getFileStamp(getContainingFile());
-        LOG.info(String.format("Unit %s private: %d, used: %d", getName(), privateMembers.size(), privateUnits != null ? privateUnits.size() : 0));
     }
 
     @SuppressWarnings("unchecked")
@@ -157,40 +192,6 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         }
     }
 
-    @Override
-    @NotNull
-    synchronized public Collection<PasField> getPubicFields() throws PasInvalidScopeException {
-        if (!PsiUtil.checkeElement(this)) {
-            return Collections.emptyList();
-        }
-        if (!isCacheActual(publicMembers, buildPublicStamp)) {
-            buildPublicMembers();
-        }
-        return publicMembers.values();
-    }
-
-    private void buildPublicMembers() throws PasInvalidScopeException {
-        if (isCacheActual(publicMembers, buildPublicStamp)) { return; } // TODO: check correctness
-        publicMembers = new LinkedHashMap<String, PasField>();
-        redeclaredPublicMembers = new LinkedHashSet<PascalNamedElement>();
-
-        publicMembers.put(getName().toUpperCase(), new PasField(this, this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PUBLIC));
-
-        PsiElement section = PsiUtil.getModuleInterfaceSection(this);
-        if (null == section) return;
-        if (!PsiUtil.checkeElement(section)) return;
-
-        collectFields(section, PasField.Visibility.PRIVATE, publicMembers, redeclaredPublicMembers);
-
-        publicUnits = retrieveUsedUnits(section);
-        for (PasEntityScope unit : publicUnits) {
-            publicMembers.put(unit.getName().toUpperCase(), new PasField(this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
-        }
-
-        buildPublicStamp = PsiUtil.getFileStamp(getContainingFile());
-        LOG.info(String.format("Unit %s public: %d, used: %d", getName(), publicMembers.size(), publicUnits != null ? publicUnits.size() : 0));
-    }
-
     private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
             return false;
@@ -199,29 +200,8 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
             PascalPsiImplUtil.logNullContainingFile(this);
             return false;
         }
-        return (cache != null) && (PsiUtil.getFileStamp(getContainingFile()) == stamp);
-    }
-
-    @Override
-    synchronized public List<PasEntityScope> getPrivateUnits() throws PasInvalidScopeException {
-        if (!PsiUtil.checkeElement(this)) {
-            return Collections.emptyList();
-        }
-        if (!isCacheActual(privateMembers, buildPrivateStamp)) {
-            buildPrivateMembers();
-        }
-        return privateUnits;
-    }
-
-    @Override
-    synchronized public List<PasEntityScope> getPublicUnits() throws PasInvalidScopeException {
-        if (!PsiUtil.checkeElement(this)) {
-            return Collections.emptyList();
-        }
-        if (!isCacheActual(publicMembers, buildPublicStamp)) {
-            buildPublicMembers();
-        }
-        return publicUnits;
+        return (cache != null) && (getStamp(getContainingFile()) == stamp);
+        //return (cache != null) && (stamp > getStamp(getContainingFile()) - CACHE_LIVE_MS);
     }
 
     @NotNull
@@ -234,14 +214,6 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
     @Override
     public PasEntityScope getContainingScope() throws PasInvalidScopeException {
         return null;
-    }
-
-    @Override
-    synchronized public void invalidateCache() {
-        LOG.info("WARNING: invalidating cache");
-        privateMembers = null;
-        publicMembers = null;
-        containingScope = null;
     }
 
 }

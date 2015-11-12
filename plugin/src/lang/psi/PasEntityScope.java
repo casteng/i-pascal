@@ -34,5 +34,5 @@ public interface PasEntityScope extends PascalNamedElement {
     @Nullable
     PasEntityScope getContainingScope() throws PasInvalidScopeException;
 
-    void invalidateCache();
+    String getKey();
 }

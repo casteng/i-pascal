@@ -36,6 +36,7 @@ import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
+import com.siberika.idea.pascal.lang.psi.PasProcForwardDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -466,6 +467,10 @@ public class PsiUtil {
             return type != null ? type.getFullyQualifiedIdent() : null;
         }
         return null;
+    }
+
+    public static boolean isForwardProc(PascalRoutineImpl decl) {
+        return PsiTreeUtil.findChildOfType(decl, PasProcForwardDecl.class) != null;
     }
 
     public static boolean allowsForwardReference(PsiElement element) {

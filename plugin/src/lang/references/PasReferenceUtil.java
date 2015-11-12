@@ -376,6 +376,9 @@ public class PasReferenceUtil {
                     namespace.invalidateCache();
                 }
             }*/
+        } catch (Throwable e) {
+            //LOG.error(String.format("Error parsing scope %s, file %s", scope, scope != null ? scope.getContainingFile().getName() : ""), e);
+            throw e;
         }
         return result;
     }

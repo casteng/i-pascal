@@ -1,5 +1,7 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiComment;
@@ -27,9 +29,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Author: George Bakhtadze
@@ -39,7 +43,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
 
-    private Map<String, PasField> members = null;
+    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
 
@@ -91,25 +95,27 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         return null;
     }
 
+    @NotNull
+    private Members getMembers(Cache<String, Members> cache, Callable<? extends Members> builder) {
+        ensureChache(cache);
+        try {
+            return cache.get(getKey(), builder);
+        } catch (ExecutionException e) {
+            LOG.error("Error occured during building members", e.getCause());
+            return EMPTY_MEMBERS;
+        }
+    }
+
     @Nullable
     @Override
     synchronized public PasField getField(String name) throws PasInvalidScopeException {
-        if (!isCacheActual(members, buildStamp)) { // TODO: check correctness
-            buildMembers();
-        }
-        return members.get(name.toUpperCase());
+        return getMembers(cache, this.new MemberBuilder()).all.get(name.toUpperCase());
     }
 
     @NotNull
     @Override
     synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
-        if (!PsiUtil.checkeElement(this)) {
-            return Collections.emptyList();
-        }
-        if (!isCacheActual(members, buildStamp)) {
-            buildMembers();
-        }
-        return members.values();
+        return getMembers(cache, this.new MemberBuilder()).all.values();
     }
 
     private PasField.Visibility getVisibility(PsiElement element) {
@@ -124,78 +130,80 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         return STR_TO_VIS.get(sb.toString());
     }
 
-    private void buildMembers() throws PasInvalidScopeException {
-        if (isCacheActual(members, buildStamp)) {
-            return;
-        }  // TODO: check correctness
-        if (null == getContainingFile()) {
-            PascalPsiImplUtil.logNullContainingFile(this);
-            return;
-        }
-        if (building) {
-            LOG.info("WARNING: Reentered in buildXXX");
-            return;
-        }
-        building = true;
-        members = new LinkedHashMap<String, PasField>();
-
-        PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
-        PsiElement child = getFirstChild();
-        while (child != null) {
-            if (child.getClass() == PasClassFieldImpl.class) {
-                addFields(child, PasField.FieldType.VARIABLE, visibility);
-            } else if (child.getClass() == PasConstSectionImpl.class) {                                                // nested constants
-                addFields(child, PasField.FieldType.CONSTANT, visibility);
-            } else if (child.getClass() == PasTypeSectionImpl.class) {
-                addFields(child, PasField.FieldType.TYPE, visibility);
-            } else if (child.getClass() == PasVarSectionImpl.class) {
-                addFields(child, PasField.FieldType.VARIABLE, visibility);
-            } else if (child.getClass() == PasExportedRoutineImpl.class) {
-                addField((PascalNamedElement) child, PasField.FieldType.ROUTINE, visibility);
-            } else if (child.getClass() == PasClassPropertyImpl.class) {
-                addField((PascalNamedElement) child, PasField.FieldType.PROPERTY, visibility);
-            } else if (child.getClass() == PasVisibilityImpl.class) {
-                visibility = getVisibility(child);
-            } else if (child.getClass() == PasRecordVariantImpl.class) {
-                addFields(child, PasField.FieldType.VARIABLE, visibility);
+    private class MemberBuilder implements Callable<Members> {
+        @Override
+        public Members call() throws Exception {
+            System.out.println("*** STRUCT TYPE");
+            if (null == getContainingFile()) {
+                PascalPsiImplUtil.logNullContainingFile(PasStructTypeImpl.this);
+                return null;
             }
-            child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
+            if (building) {
+                LOG.info("WARNING: Reentered in buildXXX");
+                return null;
+            }
+            building = true;
+            Members res = new Members();
+
+            PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
+            PsiElement child = getFirstChild();
+            while (child != null) {
+                if (child.getClass() == PasClassFieldImpl.class) {
+                    addFields(res, child, PasField.FieldType.VARIABLE, visibility);
+                } else if (child.getClass() == PasConstSectionImpl.class) {                                                // nested constants
+                    addFields(res, child, PasField.FieldType.CONSTANT, visibility);
+                } else if (child.getClass() == PasTypeSectionImpl.class) {
+                    addFields(res, child, PasField.FieldType.TYPE, visibility);
+                } else if (child.getClass() == PasVarSectionImpl.class) {
+                    addFields(res, child, PasField.FieldType.VARIABLE, visibility);
+                } else if (child.getClass() == PasExportedRoutineImpl.class) {
+                    addField(res, (PascalNamedElement) child, PasField.FieldType.ROUTINE, visibility);
+                } else if (child.getClass() == PasClassPropertyImpl.class) {
+                    addField(res, (PascalNamedElement) child, PasField.FieldType.PROPERTY, visibility);
+                } else if (child.getClass() == PasVisibilityImpl.class) {
+                    visibility = getVisibility(child);
+                } else if (child.getClass() == PasRecordVariantImpl.class) {
+                    addFields(res, child, PasField.FieldType.VARIABLE, visibility);
+                }
+                child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
+            }
+            res.stamp = getStamp(getContainingFile());
+            LOG.info(getName() + ": buildMembers: " + res.all.size() + " members");
+            building = false;
+            return res;
         }
-        buildStamp = PsiUtil.getFileStamp(getContainingFile());
-        LOG.info(getName() + ": buildMembers: " + members.size() + " members");
-        building = false;
     }
 
-    private void addFields(PsiElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+    private void addFields(Members res, PsiElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         PsiElement child = element.getFirstChild();
         while (child != null) {
             if (child.getClass() == PasNamedIdentImpl.class) {
-                addField((PascalNamedElement) child, fieldType, visibility);
+                addField(res, (PascalNamedElement) child, fieldType, visibility);
             } else if (child.getClass() == PasConstDeclarationImpl.class) {
-                addField(((PasConstDeclarationImpl) child).getNamedIdent(), fieldType, visibility);
+                addField(res, ((PasConstDeclarationImpl) child).getNamedIdent(), fieldType, visibility);
             } else if (child.getClass() == PasVarDeclarationImpl.class) {
                 for (PasNamedIdent namedIdent : ((PasVarDeclarationImpl) child).getNamedIdentList()) {
-                    addField(namedIdent, fieldType, visibility);
+                    addField(res, namedIdent, fieldType, visibility);
                 }
             } else if (child.getClass() == PasTypeDeclarationImpl.class) {
-                addField(((PasTypeDeclarationImpl) child).getGenericTypeIdent(), fieldType, visibility);
+                addField(res, ((PasTypeDeclarationImpl) child).getGenericTypeIdent(), fieldType, visibility);
             } else if (child.getClass() == PasRecordVariantImpl.class) {
-                addFields(child, fieldType, visibility);
+                addFields(res, child, fieldType, visibility);
             }
             child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
         }
     }
 
-    private void addField(@NotNull PascalNamedElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
-        addField(element, element.getName(), fieldType, visibility);
+    private void addField(Members res, @NotNull PascalNamedElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+        addField(res, element, element.getName(), fieldType, visibility);
         if (fieldType == PasField.FieldType.ROUTINE) {
-            addField(element, PsiUtil.getFieldName(element), fieldType, visibility);                        // add with signature included in name
+            addField(res, element, PsiUtil.getFieldName(element), fieldType, visibility);                        // add with signature included in name
         }
     }
 
-    private PasField addField(PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+    private PasField addField(Members res, PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         PasField field = new PasField(this, element, name, fieldType, visibility);
-        members.put(name.toUpperCase(), field);
+        res.all.put(name.toUpperCase(), field);
         return field;
     }
 
@@ -216,7 +224,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     private void buildParentScopes() {
         PasClassParent parent;
         parent = getClassParent();
-        parentBuildStamp = PsiUtil.getFileStamp(getContainingFile());
+        parentBuildStamp = getStamp(getContainingFile());
         parentScopes = new SmartList<PasEntityScope>();
         if (parent != null) {
             for (PasTypeID typeID : parent.getTypeIDList()) {
@@ -244,9 +252,4 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         }
     }
 
-    @Override
-    synchronized public void invalidateCache() {
-        LOG.info("WARNING: invalidating cache");
-        members = null;
-    }
 }
