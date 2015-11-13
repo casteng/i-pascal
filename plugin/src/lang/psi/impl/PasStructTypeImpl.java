@@ -130,6 +130,10 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         return STR_TO_VIS.get(sb.toString());
     }
 
+    public static void invalidate(String key) {
+        cache.invalidate(key);
+    }
+
     private class MemberBuilder implements Callable<Members> {
         @Override
         public Members call() throws Exception {

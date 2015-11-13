@@ -66,8 +66,8 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
     }
 
     private static void addTarget(Collection<PasEntityScope> targets, PasField target) {
-        if ((target != null) && (target.element instanceof PasEntityScope)) {
-            targets.add((PasEntityScope) target.element);
+        if ((target != null) && (target.getElement() instanceof PasEntityScope)) {
+            targets.add((PasEntityScope) target.getElement());
             //target.element.putUserData(KEY_ELEMENT_FIELD, target);
         }
     }

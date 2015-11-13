@@ -105,7 +105,7 @@ public class PascalRoutineActions {
                     PasField.FieldType.ROUTINE, new SectionToggle.PasFilter<PasField>() {
                 @Override
                 public boolean allow(PasField value) {
-                    return value.element instanceof PasExportedRoutineImpl;
+                    return value.getElement() instanceof PasExportedRoutineImpl;
                 }
             });
             for (PasExportedRoutineImpl field : fields) {

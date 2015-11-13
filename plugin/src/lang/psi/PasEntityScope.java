@@ -35,4 +35,5 @@ public interface PasEntityScope extends PascalNamedElement {
     PasEntityScope getContainingScope() throws PasInvalidScopeException;
 
     String getKey();
+
 }

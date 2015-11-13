@@ -1,6 +1,9 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -19,6 +22,11 @@ import java.util.Set;
 public class PasField {
 
     public static final String DUMMY_IDENTIFIER = "____;";
+
+    @Nullable
+    public PascalNamedElement getElement() {
+        return element != null ? element.getElement() : null;
+    }
 
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY, PSEUDO_VARIABLE}
 
@@ -48,7 +56,7 @@ public class PasField {
     @Nullable
     public final PasEntityScope owner;
     @Nullable
-    public final PascalNamedElement element;
+    public final SmartPsiElementPointer<PascalNamedElement> element;
     public final String name;
     public final FieldType fieldType;
     @NotNull
@@ -65,7 +73,8 @@ public class PasField {
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, FieldType fieldType,
                     @NotNull Visibility visibility, @Nullable PsiElement target, ValueType valueType) {
         this.owner = owner;
-        this.element = element;
+        Project project = element != null ? element.getProject() : null;
+        this.element = project != null ? SmartPointerManager.getInstance(project).createSmartPsiElementPointer(element) : null;
         this.name = name;
         this.fieldType = fieldType;
         this.visibility = visibility;
@@ -87,7 +96,7 @@ public class PasField {
 
     @Override
     public String toString() {
-        return visibility + " " + fieldType + ": " + (owner != null ? owner.getName() : "-") + "." + name + ", " + element;
+        return visibility + " " + fieldType + ": " + (owner != null ? owner.getName() : "-") + "." + name + ", " + getElement();
     }
 
     @Override
@@ -98,7 +107,7 @@ public class PasField {
         PasField field = (PasField) o;
 
         if (!name.equals(field.name)) return false;
-        if (element != null ? !element.equals(field.element) : field.element != null) return false;
+        if (getElement() != null ? !getElement().equals(field.getElement()) : field.getElement() != null) return false;
 
         return true;
     }

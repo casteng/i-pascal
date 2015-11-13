@@ -94,6 +94,10 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         return getMembers(cache, this.new MemberBuilder()).all.values();
     }
 
+    public static void invalidate(String key) {
+        cache.invalidate(key);
+    }
+
     private class MemberBuilder implements Callable<Members> {
         @Override
         public Members call() throws Exception {

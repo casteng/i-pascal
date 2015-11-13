@@ -25,7 +25,7 @@ import java.util.Collections;
 public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> implements StructureViewTreeElement {
     private final PasField field;
     protected PasStructureViewTreeElement(PsiElement psiElement, PasField field) {
-        super(field != null ? field.element : psiElement);
+        super(field != null ? field.getElement() : psiElement);
         this.field = field;
     }
 
@@ -49,10 +49,10 @@ public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> 
                     if (structType != null) {
                         res.add(new PasStructStructureTreeElement(structType));
                     } else {
-                        res.add(new PasStructureViewTreeElement(field.element, field));
+                        res.add(new PasStructureViewTreeElement(field.getElement(), field));
                     }
                 } else {
-                    res.add(new PasStructureViewTreeElement(field.element, field));
+                    res.add(new PasStructureViewTreeElement(field.getElement(), field));
                 }
             }
         }

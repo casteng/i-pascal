@@ -10,7 +10,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasInvalidElementException;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -118,16 +117,22 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         return getMembers(publicCache, this.new PublicBuilder()).units;
     }
 
+    public static void invalidate(String key) {
+        privateCache.invalidate(key);
+        publicCache.invalidate(key);
+    }
+
     private class PrivateBuilder implements Callable<UnitMembers> {
         @Override
         public UnitMembers call() throws Exception {
             PsiElement section = PsiUtil.getModuleImplementationSection(PascalModuleImpl.this);
             if (null == section) section = PascalModuleImpl.this;
+            UnitMembers res = new UnitMembers();
             if (!PsiUtil.checkeElement(section)) {
-                throw new PasInvalidElementException(section);
+                //throw new PasInvalidElementException(section);
+                return res;
             };
 
-            UnitMembers res = new UnitMembers();
             collectFields(section, PasField.Visibility.PRIVATE, res.all, res.redeclared);
 
             res.units = retrieveUsedUnits(section);
@@ -148,9 +153,14 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
             res.all.put(getName().toUpperCase(), new PasField(PascalModuleImpl.this, PascalModuleImpl.this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PUBLIC));
 
             PsiElement section = PsiUtil.getModuleInterfaceSection(PascalModuleImpl.this);
-            if ((null == section) || (!PsiUtil.checkeElement(section))) {
+            if (null == section) {
                 //throw new PasInvalidElementException(section);
                 return res;
+            }
+            if ((!PsiUtil.checkeElement(section))) {
+                System.out.println("***");
+                //throw new PasInvalidElementException(section);
+                //return res;
             }
 
             collectFields(section, PasField.Visibility.PRIVATE, res.all, res.redeclared);
@@ -170,7 +180,8 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
     @Override
     synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
         if (!PsiUtil.checkeElement(this)) {
-            return Collections.emptyList();
+            invalidateCaches(getKey());
+            //return Collections.emptyList();
         }
         Collection<PasField> result = new LinkedHashSet<PasField>();
         result.addAll(getPubicFields());

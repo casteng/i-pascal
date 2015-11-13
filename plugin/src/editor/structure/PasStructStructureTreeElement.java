@@ -60,7 +60,7 @@ public class PasStructStructureTreeElement extends PsiTreeElementBase<PascalStru
     }
 
     public static PascalStructType getStructElement(PasField field) {
-        PasTypeDecl typeDecl = PsiUtil.getTypeDeclaration(field.element);
+        PasTypeDecl typeDecl = PsiUtil.getTypeDeclaration(field.getElement());
         if (typeDecl != null) {
             if (typeDecl.getInterfaceTypeDecl() != null) {
                 return typeDecl.getInterfaceTypeDecl();

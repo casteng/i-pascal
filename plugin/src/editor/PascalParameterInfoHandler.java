@@ -81,10 +81,10 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
         }
         Map<String, PasFormalParameterSection> res = new TreeMap<String, PasFormalParameterSection>();
         for (PasField field : routines) {
-            if (field.element instanceof PascalRoutineImpl) {
-                PasFormalParameterSection parameters = ((PascalRoutineImpl) field.element).getFormalParameterSection();
+            if (field.getElement() instanceof PascalRoutineImpl) {
+                PasFormalParameterSection parameters = ((PascalRoutineImpl) field.getElement()).getFormalParameterSection();
                 if (parameters != null) {
-                    res.put(PsiUtil.getFieldName(field.element), parameters);
+                    res.put(PsiUtil.getFieldName(field.getElement()), parameters);
                 }
             }
         }

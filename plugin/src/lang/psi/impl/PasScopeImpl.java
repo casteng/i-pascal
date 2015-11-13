@@ -44,6 +44,12 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         super(node);
     }
 
+    public static void invalidateCaches(String key) {
+        PascalModuleImpl.invalidate(key);
+        PascalRoutineImpl.invalidate(key);
+        PasStructTypeImpl.invalidate(key);
+    }
+
     protected static long getStamp(PsiFile file) {
         //return System.currentTimeMillis();
         return file.getModificationStamp();
@@ -63,7 +69,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         }*/
         Members members = cache.getIfPresent(getKey());
         if ((members != null) && (getStamp(getContainingFile()) != members.stamp)) {
-            cache.invalidate(getKey());
+            invalidateCaches(getKey());
         }
     }
 
@@ -150,7 +156,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     // Add forward declared field even if it exists as we need full declaration
     // Routines can have various signatures
     private boolean shouldAddField(PasField existing) {
-        return (null == existing) || (PsiUtil.isForwardClassDecl(existing.element) || (existing.fieldType == PasField.FieldType.ROUTINE));
+        return (null == existing) || (PsiUtil.isForwardClassDecl(existing.getElement()) || (existing.fieldType == PasField.FieldType.ROUTINE));
     }
 
     private PasField addField(PasEntityScope owner, String name, PascalNamedElement namedElement, PasField.Visibility visibility) {

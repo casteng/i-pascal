@@ -594,7 +594,7 @@ public class PsiUtil {
 
     public static boolean checkeElement(PsiElement element) {
         if (!isElementValid(element)) {
-            rebuildPsi(element);
+            //rebuildPsi(element);
             return false;
             //throw new PasInvalidScopeException(this);
         }

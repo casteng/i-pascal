@@ -80,7 +80,7 @@ public class SectionToggle {
         if (container.scope instanceof PasModuleImpl) {
             field = ((PasModuleImpl) container.scope).getPrivateField(container.prefix + PsiUtil.getFieldName(container.element));
         }
-        return field != null ? field.element : null;
+        return field != null ? field.getElement() : null;
     }
 
     private static void retrieveFirstImplementations(Collection<PsiElement> targets, Container container) {
@@ -92,10 +92,10 @@ public class SectionToggle {
             Set<PasField> res = new TreeSet<PasField>(new Comparator<PasField>() {
                 @Override
                 public int compare(PasField o1, PasField o2) {
-                    if ((null == o1.element) || (null == o2.element)) {
+                    if ((null == o1.getElement()) || (null == o2.getElement())) {
                         return 0;
                     }
-                    return o1.element.getTextOffset() - o2.element.getTextOffset();
+                    return o1.getElement().getTextOffset() - o2.getElement().getTextOffset();
                 }
             });
             for (PasField field : container.scope.getAllFields()) {
@@ -104,7 +104,7 @@ public class SectionToggle {
                 }
             }
             if (!res.isEmpty()) {
-                targets.add(res.iterator().next().element);
+                targets.add(res.iterator().next().getElement());
             }
         }
     }
@@ -130,7 +130,7 @@ public class SectionToggle {
                 field = scope.getField(name);
             }
         }
-        return field != null ? field.element : null;
+        return field != null ? field.getElement() : null;
     }
 
     public static String getPrefix(PasEntityScope scope) {
@@ -209,9 +209,9 @@ public class SectionToggle {
         List<T> result = new SmartList<T>();
         Set<T> resultSet = new SmartHashSet<T>();
         for (PasField field : fields) {
-            if (((null == type) || (field.fieldType == type)) && !resultSet.contains(field.element) && ((null == filter) || filter.allow(field))) {
-                result.add((T) field.element);
-                resultSet.add((T) field.element);
+            if (((null == type) || (field.fieldType == type)) && !resultSet.contains(field.getElement()) && ((null == filter) || filter.allow(field))) {
+                result.add((T) field.getElement());
+                resultSet.add((T) field.getElement());
             }
         }
         return result;
@@ -244,7 +244,7 @@ public class SectionToggle {
         List<PascalRoutineImpl> impls = collectFields(fields, PasField.FieldType.ROUTINE, new PasFilter<PasField>() {
             @Override
             public boolean allow(PasField value) {
-                return (value.element instanceof PascalRoutineImpl) && (((PascalRoutineImpl) value.element).getContainingScope() == scope);
+                return (value.getElement() instanceof PascalRoutineImpl) && (((PascalRoutineImpl) value.getElement()).getContainingScope() == scope);
             }
         });
         for (int i = 0; i < impls.size(); i++) {
@@ -253,9 +253,9 @@ public class SectionToggle {
             }
         }
         for (PasField field : getDeclFields(scope)) {
-            if (field.element != null) {
+            if (field.getElement() != null) {
                 if (field.fieldType == PasField.FieldType.PROPERTY) {
-                    member = field.element.getTextRange().getStartOffset();
+                    member = field.getElement().getTextRange().getStartOffset();
                 }
             }
         }

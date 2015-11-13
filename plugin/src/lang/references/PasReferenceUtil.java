@@ -37,6 +37,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasFileTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasPointerTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasProcedureTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSetTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStringTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
@@ -155,7 +156,7 @@ public class PasReferenceUtil {
     }
 
     private static boolean isVisibleWithinUnit(@NotNull PasField field, @NotNull NamespaceRec fqn) {
-        if ((field.element != null) && (field.element.getContainingFile() == fqn.getParentIdent().getContainingFile())) {
+        if ((field.getElement() != null) && (field.getElement().getContainingFile() == fqn.getParentIdent().getContainingFile())) {
             // check if declaration comes earlier then usage or declaration allows forward mode
             int offs;
             offs = fqn.getParentIdent().getTextRange().getStartOffset();
@@ -171,21 +172,21 @@ public class PasReferenceUtil {
 
     private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
         if (recursionCount > PascalParserUtil.MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
-            throw new PascalRTException("Too much recursion during resolving type for: " + field.element);
+            throw new PascalRTException("Too much recursion during resolving type for: " + field.getElement());
         }
         PasTypeID typeId = null;
         PasField.ValueType res = null;
-        if (field.element instanceof PasClassProperty) {
-            typeId = PsiTreeUtil.getChildOfType(field.element, PasTypeID.class);
-        } else if (field.element instanceof PascalRoutineImpl) {                                     // routine declaration case
-            typeId = ((PascalRoutineImpl) field.element).getFunctionTypeIdent();
-        } else if ((field.element != null) && (field.element.getParent() instanceof PasHandler)) {                                     // routine declaration case
-            typeId = ((PasHandler) field.element.getParent()).getTypeID();
+        if (field.getElement() instanceof PasClassProperty) {
+            typeId = PsiTreeUtil.getChildOfType(field.getElement(), PasTypeID.class);
+        } else if (field.getElement() instanceof PascalRoutineImpl) {                                     // routine declaration case
+            typeId = ((PascalRoutineImpl) field.getElement()).getFunctionTypeIdent();
+        } else if ((field.getElement() != null) && (field.getElement().getParent() instanceof PasHandler)) {                                     // exception handler case
+            typeId = ((PasHandler) field.getElement().getParent()).getTypeID();
         } else {
-            if ((field.element != null) && PsiUtil.isTypeDeclPointingToSelf(field.element)) {
-                res = PasField.getValueType(field.element.getName());
+            if ((field.getElement() != null) && PsiUtil.isTypeDeclPointingToSelf(field.getElement())) {
+                res = PasField.getValueType(field.getElement().getName());
             } else {
-                res = retrieveAnonymousType(PsiUtil.getTypeDeclaration(field.element), includeLibrary, recursionCount);
+                res = retrieveAnonymousType(PsiUtil.getTypeDeclaration(field.getElement()), includeLibrary, recursionCount);
             }
         }
         if (typeId != null) {
@@ -244,7 +245,7 @@ public class PasReferenceUtil {
 
     @Nullable
     private static PasEntityScope retrieveFieldUnitScope(PasField field, boolean includeLibrary) {
-        return (field.element != null) && (includeLibrary || !PsiUtil.isFromLibrary(field.element)) ? (PasEntityScope) field.element : null;
+        return (field.getElement() != null) && (includeLibrary || !PsiUtil.isFromLibrary(field.getElement())) ? (PasEntityScope) field.getElement() : null;
     }
 
     @Nullable
@@ -266,7 +267,7 @@ public class PasReferenceUtil {
     public static PasEntityScope resolveTypeScope(NamespaceRec fqn, boolean includeLibrary) {
         Collection<PasField> types = resolve(fqn, PasField.TYPES_TYPE, includeLibrary, 0);
         for (PasField field : types) {
-            PasEntityScope struct = field.element != null ? PascalParserUtil.getStructTypeByIdent(field.element, 0) : null;
+            PasEntityScope struct = field.getElement() != null ? PascalParserUtil.getStructTypeByIdent(field.getElement(), 0) : null;
             if (struct != null) {
                 return struct;
             }
@@ -355,8 +356,9 @@ public class PasReferenceUtil {
             if (!fqn.isComplete() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
                     if (!PsiUtil.isElementValid(namespace)) {
-                        PsiUtil.rebuildPsi(namespace);
-                        return result;
+                        PasScopeImpl.invalidateCaches(namespace.getKey());
+                        //PsiUtil.rebuildPsi(namespace);
+                        //return result;
                     }
                     for (PasField pasField : namespace.getAllFields()) {
                         if ((pasField.element != null) && isFieldMatches(pasField, fqn, fieldTypes) &&

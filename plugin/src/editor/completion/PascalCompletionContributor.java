@@ -309,8 +309,8 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static String getFieldName(PasField field) {
-        if ((field.fieldType == PasField.FieldType.ROUTINE) && (field.element != null)) {
-            return PsiUtil.getFieldName(field.element);
+        if ((field.fieldType == PasField.FieldType.ROUTINE) && (field.getElement() != null)) {
+            return PsiUtil.getFieldName(field.getElement());
         } else {
             return field.name;
         }
@@ -353,8 +353,8 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private LookupElementBuilder createLookupElement(final Editor editor, @NotNull PasField field) {
-        assert field.element != null;
-        LookupElementBuilder res = LookupElementBuilder.create(field.element).withPresentableText(PsiUtil.getFieldName(field.element));
+        assert field.getElement() != null;
+        LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(PsiUtil.getFieldName(field.getElement()));
         if (field.fieldType == PasField.FieldType.ROUTINE) {
             res = res.withInsertHandler(new InsertHandler<LookupElement>() {
                 @Override
