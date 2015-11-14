@@ -13,9 +13,9 @@ import java.util.List;
  */
 public interface PascalStructType extends PasEntityScope {
     @Nullable
-    PasField getField(String name) throws PasInvalidScopeException;
+    PasField getField(String name);
     @NotNull
-    Collection<PasField> getAllFields() throws PasInvalidScopeException;
+    Collection<PasField> getAllFields();
     @NotNull
     List<PasVisibility> getVisibilityList();
 }

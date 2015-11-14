@@ -8,7 +8,6 @@ import com.intellij.psi.PsiFile;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -73,7 +72,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         }
     }
 
-    protected boolean isCacheActual(Object cache, long stamp) throws PasInvalidScopeException {
+    protected boolean isCacheActual(Object cache, long stamp) {
         if (!PsiUtil.checkeElement(this)) {
             return false;
         }
@@ -83,7 +82,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     @Nullable
     @Override
-    synchronized public PasEntityScope getContainingScope() throws PasInvalidScopeException {
+    synchronized public PasEntityScope getContainingScope() {
         if (null == containingScope) {
             calcContainingScope();
         }

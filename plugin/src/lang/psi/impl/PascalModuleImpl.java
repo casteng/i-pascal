@@ -10,7 +10,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -75,7 +74,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @Override
     @Nullable
-    public final PasField getField(final String name) throws PasInvalidScopeException {
+    public final PasField getField(final String name) {
         PasField result = getPublicField(name);
         if (null == result) {
             result = getPrivateField(name);
@@ -85,35 +84,35 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @Override
     @Nullable
-    synchronized public final PasField getPrivateField(final String name) throws PasInvalidScopeException {
+    synchronized public final PasField getPrivateField(final String name) {
         return getMembers(privateCache, this.new PrivateBuilder()).all.get(name.toUpperCase());
     }
 
     @Override
     @NotNull
-    synchronized public Collection<PasField> getPrivateFields() throws PasInvalidScopeException {
+    synchronized public Collection<PasField> getPrivateFields() {
         return getMembers(privateCache, this.new PrivateBuilder()).all.values();
     }
 
     @Override
-    synchronized public List<PasEntityScope> getPrivateUnits() throws PasInvalidScopeException {
+    synchronized public List<PasEntityScope> getPrivateUnits() {
         return getMembers(privateCache, this.new PrivateBuilder()).units;
     }
 
     @Override
     @Nullable
-    synchronized public final PasField getPublicField(final String name) throws PasInvalidScopeException {
+    synchronized public final PasField getPublicField(final String name) {
         return getMembers(publicCache, this.new PublicBuilder()).all.get(name.toUpperCase());
     }
 
     @Override
     @NotNull
-    synchronized public Collection<PasField> getPubicFields() throws PasInvalidScopeException {
+    synchronized public Collection<PasField> getPubicFields() {
         return getMembers(publicCache, this.new PublicBuilder()).all.values();
     }
 
     @Override
-    synchronized public List<PasEntityScope> getPublicUnits() throws PasInvalidScopeException {
+    synchronized public List<PasEntityScope> getPublicUnits() {
         return getMembers(publicCache, this.new PublicBuilder()).units;
     }
 
@@ -178,7 +177,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @NotNull
     @Override
-    synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
+    synchronized public Collection<PasField> getAllFields() {
         if (!PsiUtil.checkeElement(this)) {
             invalidateCaches(getKey());
             //return Collections.emptyList();
@@ -212,7 +211,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         }
     }
 
-    private boolean isCacheActual(Map<String, PasField> cache, long stamp) throws PasInvalidScopeException {
+    private boolean isCacheActual(Map<String, PasField> cache, long stamp) {
         if (!PsiUtil.checkeElement(this)) {
             return false;
         }
@@ -226,13 +225,13 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @NotNull
     @Override
-    public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
+    public List<PasEntityScope> getParentScope() {
         return Collections.emptyList();
     }
 
     @Nullable
     @Override
-    public PasEntityScope getContainingScope() throws PasInvalidScopeException {
+    public PasEntityScope getContainingScope() {
         return null;
     }
 

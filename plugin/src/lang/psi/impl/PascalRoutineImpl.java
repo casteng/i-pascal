@@ -9,7 +9,6 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -84,13 +83,13 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     @Nullable
     @Override
-    synchronized public PasField getField(String name) throws PasInvalidScopeException {
+    synchronized public PasField getField(String name) {
         return getMembers(cache, this.new MemberBuilder()).all.get(name.toUpperCase());
     }
 
     @NotNull
     @Override
-    synchronized public Collection<PasField> getAllFields() throws PasInvalidScopeException {
+    synchronized public Collection<PasField> getAllFields() {
         return getMembers(cache, this.new MemberBuilder()).all.values();
     }
 
@@ -155,7 +154,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     @NotNull
     @Override
-    synchronized public List<PasEntityScope> getParentScope() throws PasInvalidScopeException {
+    synchronized public List<PasEntityScope> getParentScope() {
         if (!isCacheActual(parentScopes, parentBuildStamp)) {
             buildParentScopes();
         }

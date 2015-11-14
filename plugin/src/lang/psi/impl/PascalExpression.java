@@ -10,7 +10,6 @@ import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
@@ -39,7 +38,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return PsiUtil.findImmChildOfAnyType(this, PascalOperation.class);
     }
 
-    public static List<PasField.ValueType> getType(PascalExpression expr) throws PasInvalidScopeException {
+    public static List<PasField.ValueType> getType(PascalExpression expr) {
         List<PasField.ValueType> res;
 
         if (expr instanceof PasReferenceExpr) {
@@ -69,7 +68,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return res;
     }
 
-    private static List<PasField.ValueType> getChildType(PsiElement child) throws PasInvalidScopeException {
+    private static List<PasField.ValueType> getChildType(PsiElement child) {
         if (child instanceof PascalExpression) {
             return PascalExpression.getType((PascalExpression) child);
         }

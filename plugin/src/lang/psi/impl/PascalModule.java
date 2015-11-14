@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,19 +20,19 @@ public interface PascalModule extends PasEntityScope {
     ModuleType getModuleType();
 
     @Nullable
-    PasField getPublicField(final String name) throws PasInvalidScopeException;
+    PasField getPublicField(final String name);
 
     @Nullable
-    PasField getPrivateField(final String name) throws PasInvalidScopeException;
+    PasField getPrivateField(final String name);
 
     @NotNull
-    Collection<PasField> getPrivateFields() throws PasInvalidScopeException;
+    Collection<PasField> getPrivateFields();
 
     @NotNull
-    Collection<PasField> getPubicFields() throws PasInvalidScopeException;
+    Collection<PasField> getPubicFields();
 
-    List<PasEntityScope> getPrivateUnits() throws PasInvalidScopeException;
+    List<PasEntityScope> getPrivateUnits();
 
-    List<PasEntityScope> getPublicUnits() throws PasInvalidScopeException;
+    List<PasEntityScope> getPublicUnits();
 
 }

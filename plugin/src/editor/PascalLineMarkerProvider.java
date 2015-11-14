@@ -41,7 +41,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     public static final Logger LOG = Logger.getInstance(PascalLineMarkerProvider.class.getName());
 
-    private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result) throws PasInvalidScopeException {
+    private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result) {
         boolean impl = true;
         PsiElement target = null;
         if (element instanceof PasExportedRoutineImpl) {

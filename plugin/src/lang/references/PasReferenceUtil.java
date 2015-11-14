@@ -249,7 +249,7 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, int recursionCount) throws PasInvalidScopeException {
+    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, int recursionCount) {
         synchronized (field) {
             if (!field.isTypeResolved()) {
                 field.setValueType(resolveFieldType(field, true, recursionCount));
@@ -259,7 +259,7 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field) throws PasInvalidScopeException {
+    public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field) {
         return retrieveFieldTypeScope(field, 0);
     }
 
@@ -378,9 +378,9 @@ public class PasReferenceUtil {
                     namespace.invalidateCache();
                 }
             }*/
-        } catch (Throwable e) {
+        /*} catch (Throwable e) {
             //LOG.error(String.format("Error parsing scope %s, file %s", scope, scope != null ? scope.getContainingFile().getName() : ""), e);
-            throw e;
+            throw e;*/
         }
         return result;
     }
@@ -412,7 +412,7 @@ public class PasReferenceUtil {
         return null;
     }
 
-    private static void handleWith(List<PasEntityScope> namespaces, PasEntityScope scope, PsiElement ident) throws PasInvalidScopeException {
+    private static void handleWith(List<PasEntityScope> namespaces, PasEntityScope scope, PsiElement ident) {
         if (null == scope) {
             return;
         }
@@ -455,7 +455,7 @@ public class PasReferenceUtil {
       . SELF - in method context
       . RESULT - in routine context
 */
-    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope section, boolean includeLibrary) throws PasInvalidScopeException {
+    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope section, boolean includeLibrary) {
         namespaces.add(section);
         if (section instanceof PascalModuleImpl) {
             addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPrivateUnits(), includeLibrary);
@@ -472,7 +472,7 @@ public class PasReferenceUtil {
         }
     }
 
-    private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @Nullable PasEntityScope section, boolean first) throws PasInvalidScopeException {
+    private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @Nullable PasEntityScope section, boolean first) {
         if ((null == namespaces) || (namespaces.size() > MAX_NAMESPACES)) {
             return;
         }

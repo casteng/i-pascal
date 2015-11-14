@@ -3,7 +3,6 @@ package com.siberika.idea.pascal;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
@@ -18,7 +17,7 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         return "testData/annotator";
     }
 
-    public void testFindSymbol() throws PasInvalidScopeException {
+    public void testFindSymbol() {
         myFixture.configureByFiles("structTypes.pas", "calcTypeTest.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
                 PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "calcTypeTest");
@@ -44,7 +43,7 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         }
     }
 
-    private void printIdent(PasField field) throws PasInvalidScopeException {
+    private void printIdent(PasField field) {
         PasReferenceUtil.retrieveFieldTypeScope(field);
         System.out.println(String.format("%s: %s", field.name, field.getValueType()));
         System.out.println("Scope: " + field.getValueType().getTypeScope());

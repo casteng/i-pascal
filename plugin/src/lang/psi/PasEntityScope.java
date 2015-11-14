@@ -15,13 +15,13 @@ public interface PasEntityScope extends PascalNamedElement {
     @NotNull
     String getName();
     @Nullable
-    PasField getField(final String name) throws PasInvalidScopeException;
+    PasField getField(final String name);
     @NotNull
-    Collection<PasField> getAllFields() throws PasInvalidScopeException;
+    Collection<PasField> getAllFields();
 
     // owning class for methods, parent classes/interfaces for structured types
     @NotNull
-    List<PasEntityScope> getParentScope() throws PasInvalidScopeException;
+    List<PasEntityScope> getParentScope();
 
     /**
      * For methods and method implementations returns containing class
@@ -32,7 +32,7 @@ public interface PasEntityScope extends PascalNamedElement {
      * For modules returns null
      */
     @Nullable
-    PasEntityScope getContainingScope() throws PasInvalidScopeException;
+    PasEntityScope getContainingScope();
 
     String getKey();
 
