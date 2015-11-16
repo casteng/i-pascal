@@ -4,6 +4,8 @@ import com.intellij.openapi.application.QueryExecutorBase;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.search.searches.DefinitionsScopedSearch;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -14,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
@@ -53,7 +56,11 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
     public static void findImplementingMethods(Collection<PasEntityScope> targets, PascalRoutineImpl routine, int rCnt) {
         Collection<PasEntityScope> scopes = new LinkedHashSet<PasEntityScope>();
         findDescendingStructs(scopes, PsiUtil.getStructByElement(routine), rCnt);
-        GotoSuper.extractMethodsByName(targets, scopes, routine, false);
+        Collection<SmartPsiElementPointer<PasEntityScope>> scopePtrs = new ArrayList<>(scopes.size());
+        for (PasEntityScope scope : scopes) {
+            scopePtrs.add(SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope));
+        }
+        GotoSuper.extractMethodsByName(targets, scopePtrs, routine, false);
     }
 
     public static void findDescendingStructs(Collection<PasEntityScope> targets, PascalStructType struct, int rCnt) {

@@ -98,6 +98,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
      */
     private void calcContainingScope() {
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);  // 2, 3, 4, 5, 1 for method declarations
+        containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
         if ((scope instanceof PascalModuleImpl) && (this instanceof PasRoutineImplDecl)) {            // 1 for method implementations
             String[] names = PsiUtil.getQualifiedMethodName(this).split("\\.");
             if (names.length <= 1) {                                                                            // should not be true
@@ -110,7 +111,6 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
                 updateContainingScope(scope.getField(PsiUtil.cleanGenericDef(names[i])));
             }
         }
-        containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
     }
 
     private void updateContainingScope(PasField field) {
