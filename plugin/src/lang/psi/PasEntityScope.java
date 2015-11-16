@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.psi;
 
+import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +22,7 @@ public interface PasEntityScope extends PascalNamedElement {
 
     // owning class for methods, parent classes/interfaces for structured types
     @NotNull
-    List<PasEntityScope> getParentScope();
+    List<SmartPsiElementPointer<PasEntityScope>> getParentScope();
 
     /**
      * For methods and method implementations returns containing class

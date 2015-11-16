@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasVisibility;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
@@ -209,9 +210,10 @@ public class SectionToggle {
         List<T> result = new SmartList<T>();
         Set<T> resultSet = new SmartHashSet<T>();
         for (PasField field : fields) {
-            if (((null == type) || (field.fieldType == type)) && !resultSet.contains(field.getElement()) && ((null == filter) || filter.allow(field))) {
-                result.add((T) field.getElement());
-                resultSet.add((T) field.getElement());
+            PascalNamedElement el = field.getElement();
+            if (((null == type) || (field.fieldType == type)) && !resultSet.contains(el) && ((null == filter) || filter.allow(field))) {
+                result.add((T) el);
+                resultSet.add((T) el);
             }
         }
         return result;
@@ -220,8 +222,10 @@ public class SectionToggle {
     public static Collection<PasField> getDeclFields(PasEntityScope scope) {
         if (scope instanceof PascalModule) {
             return ((PascalModule) scope).getPubicFields();
-        } else {
+        } else if (scope != null) {
             return scope.getAllFields();
+        } else {
+            return null;
         }
     }
 

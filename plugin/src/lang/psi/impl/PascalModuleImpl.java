@@ -8,6 +8,7 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -225,7 +226,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @NotNull
     @Override
-    public List<PasEntityScope> getParentScope() {
+    public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
         return Collections.emptyList();
     }
 

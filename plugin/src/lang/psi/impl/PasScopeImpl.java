@@ -5,6 +5,8 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -32,12 +34,10 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     protected static final Logger LOG = Logger.getInstance(PasScopeImpl.class.getName());
     protected static final Members EMPTY_MEMBERS = new Members();
 
-    public static final int CACHE_LIVE_MS = 10000;
-
     protected boolean building = false;
     protected long parentBuildStamp = -1;
-    protected List<PasEntityScope> parentScopes;
-    protected PasEntityScope containingScope;
+    protected List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
+    protected SmartPsiElementPointer<PasEntityScope> containingScope;
 
     public PasScopeImpl(ASTNode node) {
         super(node);
@@ -86,7 +86,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         if (null == containingScope) {
             calcContainingScope();
         }
-        return containingScope;
+        return containingScope != null ? containingScope.getElement() : null;
     }
 
     /**
@@ -97,18 +97,20 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
      * 5. For nested structured types returns containing type
      */
     private void calcContainingScope() {
-        containingScope = PsiUtil.getNearestAffectingScope(this);  // 2, 3, 4, 5, 1 for method declarations
-        if ((containingScope instanceof PascalModuleImpl) && (this instanceof PasRoutineImplDecl)) {            // 1 for method implementations
+        PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);  // 2, 3, 4, 5, 1 for method declarations
+        if ((scope instanceof PascalModuleImpl) && (this instanceof PasRoutineImplDecl)) {            // 1 for method implementations
             String[] names = PsiUtil.getQualifiedMethodName(this).split("\\.");
             if (names.length <= 1) {                                                                            // should not be true
+                containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
                 return;
             }
-            PasField field = containingScope.getField(PsiUtil.cleanGenericDef(names[0]));
+            PasField field = scope.getField(PsiUtil.cleanGenericDef(names[0]));
             updateContainingScope(field);
             for (int i = 1; i < names.length - 1; i++) {
-                updateContainingScope(containingScope.getField(PsiUtil.cleanGenericDef(names[i])));
+                updateContainingScope(scope.getField(PsiUtil.cleanGenericDef(names[i])));
             }
         }
+        containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
     }
 
     private void updateContainingScope(PasField field) {
@@ -117,7 +119,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         }
         PasEntityScope scope = PasReferenceUtil.retrieveFieldTypeScope(field);
         if (scope != null) {
-            containingScope = scope;
+            containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
         }
     }
 

@@ -7,6 +7,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
@@ -212,7 +214,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     @NotNull
     @Override
-    synchronized public List<PasEntityScope> getParentScope() {
+    synchronized public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
         if (!PsiUtil.checkeElement(this)) {
             return Collections.emptyList();
         }
@@ -228,7 +230,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         PasClassParent parent;
         parent = getClassParent();
         parentBuildStamp = getStamp(getContainingFile());
-        parentScopes = new SmartList<PasEntityScope>();
+        parentScopes = new SmartList<SmartPsiElementPointer<PasEntityScope>>();
         if (parent != null) {
             for (PasTypeID typeID : parent.getTypeIDList()) {
                 NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
@@ -251,7 +253,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     private void addScope(PasEntityScope scope) {
         if (scope != null) {
-            parentScopes.add(scope);
+            parentScopes.add(SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope));
         }
     }
 

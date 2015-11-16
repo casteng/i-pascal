@@ -4,6 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
@@ -25,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Author: George Bakhtadze
@@ -35,7 +36,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     private static final String BUILTIN_RESULT = "Result";
     private static final String BUILTIN_SELF = "Self";
 
-    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().build();
     private String cachedKey;
 
     @Nullable
@@ -154,7 +155,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     @NotNull
     @Override
-    synchronized public List<PasEntityScope> getParentScope() {
+    synchronized public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
         if (!isCacheActual(parentScopes, parentBuildStamp)) {
             buildParentScopes();
         }
@@ -169,7 +170,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             parentScopes = Collections.emptyList();                             // To prevent infinite recursion
             PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn, true);
             if (type != null) {
-                parentScopes = Collections.singletonList(type);
+                parentScopes = Collections.singletonList(SmartPointerManager.getInstance(type.getProject()).createSmartPsiElementPointer(type));
             }
         } else {
             parentScopes = Collections.emptyList();

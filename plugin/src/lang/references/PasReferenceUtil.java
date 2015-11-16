@@ -7,6 +7,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
@@ -479,8 +480,9 @@ public class PasReferenceUtil {
         if (null == section) {
             return;
         }
-        for (PasEntityScope scope : section.getParentScope()) {
-            if (first || (scope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
+        for (SmartPsiElementPointer<PasEntityScope> scopePtr : section.getParentScope()) {
+            if (first || (scopePtr instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
+                PasEntityScope scope = scopePtr.getElement();
                 namespaces.add(scope);
                 addParentNamespaces(namespaces, scope, first);
             }

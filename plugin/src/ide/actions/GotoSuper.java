@@ -1,10 +1,12 @@
 package com.siberika.idea.pascal.ide.actions;
 
 import com.intellij.lang.LanguageCodeInsightActionHandler;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -24,6 +26,9 @@ import java.util.LinkedHashSet;
  * Date: 02/07/2015
  */
 public class GotoSuper implements LanguageCodeInsightActionHandler {
+
+    private static final Logger LOG = Logger.getInstance(GotoSuper.class.getName());
+
     @Override
     public boolean isValidFor(Editor editor, PsiFile file) {
         return false;
@@ -52,9 +57,10 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
 
     private static void getStructTarget(Collection<PasEntityScope> targets, PasEntityScope struct) {
         if (struct instanceof PascalStructType) {
-            for (PasEntityScope parent : struct.getParentScope()) {
-                addTarget(targets, parent);
-                getStructTarget(targets, parent);
+            for (SmartPsiElementPointer<PasEntityScope> parent : struct.getParentScope()) {
+                PasEntityScope el = parent.getElement();
+                addTarget(targets, el);
+                getStructTarget(targets, el);
             }
         }
     }
@@ -88,16 +94,21 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
      * @param scopes     scopes where to search methods
      * @param routine    routine which name to search
      */
-    static void extractMethodsByName(Collection<PasEntityScope> targets, Collection<PasEntityScope> scopes, PascalRoutineImpl routine, boolean handleParents) {
-        for (PasEntityScope scope : scopes) {
-            if (scope instanceof PascalStructType) {
-                PasField field = scope.getField(StrUtil.getFieldName(PsiUtil.getFieldName(routine)));
-                if ((field != null) && (field.fieldType == PasField.FieldType.ROUTINE)) {
-                    addTarget(targets, field);
+    static void extractMethodsByName(Collection<PasEntityScope> targets, Collection<SmartPsiElementPointer<PasEntityScope>> scopes, PascalRoutineImpl routine, boolean handleParents) {
+        for (SmartPsiElementPointer<PasEntityScope> scopePtr : scopes) {
+            PasEntityScope scope = scopePtr.getElement();
+            if (scope != null) {
+                if (scope instanceof PascalStructType) {
+                    PasField field = scope.getField(StrUtil.getFieldName(PsiUtil.getFieldName(routine)));
+                    if ((field != null) && (field.fieldType == PasField.FieldType.ROUTINE)) {
+                        addTarget(targets, field);
+                    }
+                    if (handleParents) {
+                        extractMethodsByName(targets, scope.getParentScope(), routine, true);
+                    }
                 }
-                if (handleParents) {
-                    extractMethodsByName(targets, scope.getParentScope(), routine, true);
-                }
+            } else {
+                LOG.warn("Invalid scope pointer resolved while extracting methods for: " + routine);
             }
         }
     }
