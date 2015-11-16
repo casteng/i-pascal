@@ -301,10 +301,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         }
 
         if (referencing != null) {
-            String path = referencing.getParent().getPath();
-            VirtualFile result = tryExtensions(new File(path, name));
-            if (result != null) {
-                return result;
+            if (referencing.getParent() != null) {
+                String path = referencing.getParent().getPath();
+                return tryExtensions(new File(path, name));
+            } else {
+                System.out.println(String.format("*** Parent of file %s is null", referencing.getName()));
             }
 
             Module module = ModuleUtil.findModuleForFile(referencing, project);
