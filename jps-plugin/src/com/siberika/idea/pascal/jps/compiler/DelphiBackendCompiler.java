@@ -6,6 +6,7 @@ import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.jps.util.ParamMap;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,9 +21,9 @@ import java.util.List;
  */
 public class DelphiBackendCompiler extends PascalBackendCompiler {
 
-    private static final String COMPILER_SETTING_OPATH = "-E";
-    private static final String COMPILER_SETTING_DCU_OPATH = "-N";
-    private static final String COMPILER_SETTING_DCU_OPATH_D2007 = "-N0";
+    private static final String COMPILER_SETTING_OPATH_EXE = "-E";
+    private static final String COMPILER_SETTING_OPATH_UNIT = "-N";
+    private static final String COMPILER_SETTING_OPATH_UNIT_D2007 = "-N0";
     private static final String COMPILER_SETTING_COMMON = "";
     private static final String COMPILER_SETTING_SRCPATH = "-U";
     private static final String COMPILER_SETTING_INCPATH = "-I";
@@ -50,7 +51,7 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
     }
 
     @Override
-    protected void createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDir,
+    protected void createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
                                           List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild,
                                           @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine) {
         File executable = checkCompilerExe(sdkHomePath, moduleName, compilerMessager, PascalSdkUtil.getDCC32Executable(sdkHomePath));
@@ -69,9 +70,13 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
             commandLine.add(COMPILER_SETTING_BUILDMODIFIED);
         }
 
-        commandLine.add(COMPILER_SETTING_OPATH + outputDir);
-        commandLine.add(COMPILER_SETTING_DCU_OPATH + outputDir);
-        commandLine.add(COMPILER_SETTING_DCU_OPATH_D2007 + outputDir);
+        commandLine.add(COMPILER_SETTING_OPATH_UNIT + outputDirUnit);
+        commandLine.add(COMPILER_SETTING_OPATH_UNIT_D2007 + outputDirUnit);
+        if (StringUtils.isEmpty(outputDirExe)) {
+            commandLine.add(COMPILER_SETTING_OPATH_EXE + outputDirUnit);
+        } else {
+            commandLine.add(COMPILER_SETTING_OPATH_EXE + outputDirExe);
+        }
 
         for (File sourceRoot : FileUtil.retrievePaths(moduleLibFiles)) {
             addLibPathToCmdLine(commandLine, sourceRoot, COMPILER_SETTING_SRCPATH, COMPILER_SETTING_INCPATH);

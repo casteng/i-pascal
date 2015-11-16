@@ -79,4 +79,14 @@ public class PascalModuleType extends ModuleType<PascalModuleBuilder> {
             module.setOption(JpsPascalModuleType.USERDATA_KEY_MAIN_FILE.toString(), file.getPath());
         }
     }
+
+    @Nullable
+    public static String getExeOutputPath(Module module) {
+        return module.getOptionValue(JpsPascalModuleType.USERDATA_KEY_EXE_OUTPUT_PATH.toString());
+    }
+
+    public static void setExeOutputPath(Module module, String path) {
+        module.setOption(JpsPascalModuleType.USERDATA_KEY_EXE_OUTPUT_PATH.toString(), path);
+    }
+
 }

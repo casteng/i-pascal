@@ -27,7 +27,7 @@ public abstract class PascalBackendCompiler {
         this.compilerMessager = compilerMessager;
     }
 
-    abstract protected void createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDir,
+    abstract protected void createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
                                           List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild,
                                           @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine);
     @NotNull
@@ -44,7 +44,7 @@ public abstract class PascalBackendCompiler {
                                          @Nullable final ParamMap pascalSdkData) throws IOException, IllegalArgumentException {
         final ArrayList<String> commandLine = new ArrayList<String>();
         if (outputDir != null) {
-            createStartupCommandImpl(sdkHomePath, moduleName, outputDir, sdkLibFiles, moduleLibFiles, isRebuild, pascalSdkData, commandLine);
+            createStartupCommandImpl(sdkHomePath, moduleName, getExeOutputPath(moduleData), outputDir, sdkLibFiles, moduleLibFiles, isRebuild, pascalSdkData, commandLine);
             File mainFile = getMainFile(moduleData);
             if (files.size() == 1) {
                 mainFile = files.get(0);
@@ -72,6 +72,10 @@ public abstract class PascalBackendCompiler {
     static File getMainFile(ParamMap moduleData) {
         String fileName = moduleData != null ? moduleData.get(JpsPascalModuleType.USERDATA_KEY_MAIN_FILE.toString()) : null;
         return fileName != null ? new File(fileName) : null;
+    }
+
+    static String getExeOutputPath(ParamMap moduleData) {
+        return moduleData != null ? moduleData.get(JpsPascalModuleType.USERDATA_KEY_EXE_OUTPUT_PATH.toString()) : null;
     }
 
     protected static void addLibPathToCmdLine(final ArrayList<String> commandLine, File sourceRoot,
