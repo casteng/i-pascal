@@ -547,6 +547,11 @@ public class PsiUtil {
     }
 
     public static PasEntityScope getNearestAffectingScope(PsiElement element) {
+        PasClassParent parent = PsiTreeUtil.getParentOfType(element, PasClassParent.class);
+        if (parent != null) {
+            PascalStructType struct = PsiTreeUtil.getParentOfType(element, PascalStructType.class);
+            element = struct != null ? struct : element;
+        }
         return PsiTreeUtil.getParentOfType(element, PasEntityScope.class);
     }
 

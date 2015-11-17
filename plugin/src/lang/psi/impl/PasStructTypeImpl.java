@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
@@ -102,20 +103,24 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         try {
             return cache.get(getKey(), builder);
         } catch (ExecutionException e) {
-            LOG.error("Error occured during building members", e.getCause());
-            return EMPTY_MEMBERS;
+            if (e.getCause() instanceof ProcessCanceledException) {
+                throw (ProcessCanceledException) e.getCause();
+            } else {
+                LOG.error("Error occured during building members for: " + this, e.getCause());
+                return EMPTY_MEMBERS;
+            }
         }
     }
 
     @Nullable
     @Override
-    synchronized public PasField getField(String name) {
+    public PasField getField(String name) {
         return getMembers(cache, this.new MemberBuilder()).all.get(name.toUpperCase());
     }
 
     @NotNull
     @Override
-    synchronized public Collection<PasField> getAllFields() {
+    public Collection<PasField> getAllFields() {
         return getMembers(cache, this.new MemberBuilder()).all.values();
     }
 
@@ -138,14 +143,13 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     private class MemberBuilder implements Callable<Members> {
         @Override
         public Members call() throws Exception {
-            System.out.println("*** STRUCT TYPE");
             if (null == getContainingFile()) {
                 PascalPsiImplUtil.logNullContainingFile(PasStructTypeImpl.this);
                 return null;
             }
             if (building) {
                 LOG.info("WARNING: Reentered in buildXXX");
-                return null;
+                //return null;
             }
             building = true;
             Members res = new Members();
@@ -214,47 +218,62 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     @NotNull
     @Override
-    synchronized public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        if (!PsiUtil.checkeElement(this)) {
-            return Collections.emptyList();
+    public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
+        ensureChache(parentCache);
+        try {
+            return parentCache.get(getKey(), new ParentBuilder()).scopes;
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof ProcessCanceledException) {
+                throw (ProcessCanceledException) e.getCause();
+            } else {
+                LOG.error("Error occured during building members for: " + this, e.getCause());
+                return Collections.emptyList();
+            }
         }
-        if (!isCacheActual(parentScopes, parentBuildStamp)) {
-            buildParentScopes();
-        }
-        return parentScopes;
     }
 
     public abstract PasClassParent getClassParent();
 
-    private void buildParentScopes() {
-        PasClassParent parent;
-        parent = getClassParent();
-        parentBuildStamp = getStamp(getContainingFile());
-        parentScopes = new SmartList<SmartPsiElementPointer<PasEntityScope>>();
-        if (parent != null) {
-            for (PasTypeID typeID : parent.getTypeIDList()) {
-                NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
-                PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
-                addScope(scope);
+    private class ParentBuilder implements Callable<Parents> {
+        @Override
+        public Parents call() throws Exception {
+            if (null == getContainingFile()) {
+                PascalPsiImplUtil.logNullContainingFile(PasStructTypeImpl.this);
+                return null;
             }
-        } else {
-            PasEntityScope defEntity = null;
-            if (this instanceof PasClassTypeDecl) {
-                defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(this, "system.TObject"), true);
-            } else if (this instanceof PasInterfaceTypeDecl) {
-                defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(this, "system.IInterface"), true);
-            }
-            if ((defEntity != null) && (defEntity != this)) {
-                addScope(defEntity);
+            Parents res = new Parents();
+            res.stamp = getStamp(getContainingFile());
+
+            res.stamp = getStamp(getContainingFile());
+            res.scopes = new SmartList<SmartPsiElementPointer<PasEntityScope>>();
+            PasClassParent parent = getClassParent();
+            if (parent != null) {
+                for (PasTypeID typeID : parent.getTypeIDList()) {
+                    NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
+                    PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
+                    addScope(res, scope);
+                }
+            } else {
+                PasEntityScope defEntity = null;
+                if (this instanceof PasClassTypeDecl) {
+                    defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStructTypeImpl.this, "system.TObject"), true);
+                } else if (this instanceof PasInterfaceTypeDecl) {
+                    defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStructTypeImpl.this, "system.IInterface"), true);
+                }
+                if ((defEntity != null) && (defEntity != this)) {
+                    addScope(res, defEntity);
+                }
             }
 
+            return res;
         }
-    }
 
-    private void addScope(PasEntityScope scope) {
-        if (scope != null) {
-            parentScopes.add(SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope));
+        private void addScope(Parents res, PasEntityScope scope) {
+            if (scope != null) {
+                res.scopes.add(SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope));
+            }
         }
+
     }
 
 }

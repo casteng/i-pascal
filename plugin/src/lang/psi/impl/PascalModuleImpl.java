@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -85,35 +84,35 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @Override
     @Nullable
-    synchronized public final PasField getPrivateField(final String name) {
+    public final PasField getPrivateField(final String name) {
         return getMembers(privateCache, this.new PrivateBuilder()).all.get(name.toUpperCase());
     }
 
     @Override
     @NotNull
-    synchronized public Collection<PasField> getPrivateFields() {
+    public Collection<PasField> getPrivateFields() {
         return getMembers(privateCache, this.new PrivateBuilder()).all.values();
     }
 
     @Override
-    synchronized public List<PasEntityScope> getPrivateUnits() {
+    public List<PasEntityScope> getPrivateUnits() {
         return getMembers(privateCache, this.new PrivateBuilder()).units;
     }
 
     @Override
     @Nullable
-    synchronized public final PasField getPublicField(final String name) {
+    public final PasField getPublicField(final String name) {
         return getMembers(publicCache, this.new PublicBuilder()).all.get(name.toUpperCase());
     }
 
     @Override
     @NotNull
-    synchronized public Collection<PasField> getPubicFields() {
+    public Collection<PasField> getPubicFields() {
         return getMembers(publicCache, this.new PublicBuilder()).all.values();
     }
 
     @Override
-    synchronized public List<PasEntityScope> getPublicUnits() {
+    public List<PasEntityScope> getPublicUnits() {
         return getMembers(publicCache, this.new PublicBuilder()).units;
     }
 
@@ -131,7 +130,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
             if (!PsiUtil.checkeElement(section)) {
                 //throw new PasInvalidElementException(section);
                 return res;
-            };
+            }
 
             collectFields(section, PasField.Visibility.PRIVATE, res.all, res.redeclared);
 
@@ -178,10 +177,9 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @NotNull
     @Override
-    synchronized public Collection<PasField> getAllFields() {
+    public Collection<PasField> getAllFields() {
         if (!PsiUtil.checkeElement(this)) {
             invalidateCaches(getKey());
-            //return Collections.emptyList();
         }
         Collection<PasField> result = new LinkedHashSet<PasField>();
         result.addAll(getPubicFields());
@@ -210,18 +208,6 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         if (unit != null) {
             result.add(unit);
         }
-    }
-
-    private boolean isCacheActual(Map<String, PasField> cache, long stamp) {
-        if (!PsiUtil.checkeElement(this)) {
-            return false;
-        }
-        if (null == getContainingFile()) {
-            PascalPsiImplUtil.logNullContainingFile(this);
-            return false;
-        }
-        return (cache != null) && (getStamp(getContainingFile()) == stamp);
-        //return (cache != null) && (stamp > getStamp(getContainingFile()) - CACHE_LIVE_MS);
     }
 
     @NotNull

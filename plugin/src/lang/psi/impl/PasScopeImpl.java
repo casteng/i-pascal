@@ -1,12 +1,14 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -34,9 +36,9 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     protected static final Logger LOG = Logger.getInstance(PasScopeImpl.class.getName());
     protected static final Members EMPTY_MEMBERS = new Members();
 
+    protected static final Cache<String, Parents> parentCache = CacheBuilder.newBuilder().build();
+
     protected boolean building = false;
-    protected long parentBuildStamp = -1;
-    protected List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
     protected SmartPsiElementPointer<PasEntityScope> containingScope;
 
     public PasScopeImpl(ASTNode node) {
@@ -58,7 +60,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         return String.format("%s.%s", getContainingFile() != null ? getContainingFile().getName() : "", PsiUtil.getFieldName(this));
     }
 
-    protected void ensureChache(Cache<String, Members> cache) {
+    synchronized protected <T extends Cached> void ensureChache(Cache<String, T> cache) {
 /*        if (!PsiUtil.checkeElement(this)) {
             return false;
         }*/
@@ -66,18 +68,10 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
             PascalPsiImplUtil.logNullContainingFile(this);
             return false;
         }*/
-        Members members = cache.getIfPresent(getKey());
+        Cached members = cache.getIfPresent(getKey());
         if ((members != null) && (getStamp(getContainingFile()) != members.stamp)) {
             invalidateCaches(getKey());
         }
-    }
-
-    protected boolean isCacheActual(Object cache, long stamp) {
-        if (!PsiUtil.checkeElement(this)) {
-            return false;
-        }
-        return (getContainingFile() != null) && (cache != null) && (getStamp(getContainingFile()) == stamp);
-//        return (cache != null) && (stamp > getStamp(getContainingFile()) - CACHE_LIVE_MS);
     }
 
     @Nullable
@@ -106,21 +100,22 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
                 return;
             }
             PasField field = scope.getField(PsiUtil.cleanGenericDef(names[0]));
-            updateContainingScope(field);
-            for (int i = 1; i < names.length - 1; i++) {
-                updateContainingScope(scope.getField(PsiUtil.cleanGenericDef(names[i])));
+            scope = updateContainingScope(field);
+            for (int i = 1; (i < names.length - 1) && (scope != null); i++) {
+                scope = updateContainingScope(scope.getField(PsiUtil.cleanGenericDef(names[i])));
             }
         }
     }
 
-    private void updateContainingScope(PasField field) {
+    private PasEntityScope updateContainingScope(PasField field) {
         if (null == field) {
-            return;
+            return null;
         }
         PasEntityScope scope = PasReferenceUtil.retrieveFieldTypeScope(field);
         if (scope != null) {
             containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
         }
+        return scope;
     }
 
     @SuppressWarnings("unchecked")
@@ -178,14 +173,21 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         return type;
     }
 
-    static class Members {
+    static class Cached {
+        long stamp;
+    }
+
+    static class Members extends Cached {
         Map<String, PasField> all = new LinkedHashMap<String, PasField>();
         Set<PascalNamedElement> redeclared = new LinkedHashSet<PascalNamedElement>();
-        long stamp;
     }
 
     static class UnitMembers extends Members {
         List<PasEntityScope> units = Collections.emptyList();
+    }
+
+    static class Parents extends Cached {
+        List<SmartPsiElementPointer<PasEntityScope>> scopes = new SmartList<SmartPsiElementPointer<PasEntityScope>>();
     }
 
 }

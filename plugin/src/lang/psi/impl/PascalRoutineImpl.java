@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
@@ -77,20 +78,24 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         try {
             return cache.get(getKey(), builder);
         } catch (ExecutionException e) {
-            LOG.error("Error occured during building members", e.getCause());
-            return EMPTY_MEMBERS;
+            if (e.getCause() instanceof ProcessCanceledException) {
+                throw (ProcessCanceledException) e.getCause();
+            } else {
+                LOG.error("Error occured during building members for: " + this, e.getCause());
+                return EMPTY_MEMBERS;
+            }
         }
     }
 
     @Nullable
     @Override
-    synchronized public PasField getField(String name) {
+    public PasField getField(String name) {
         return getMembers(cache, this.new MemberBuilder()).all.get(name.toUpperCase());
     }
 
     @NotNull
     @Override
-    synchronized public Collection<PasField> getAllFields() {
+    public Collection<PasField> getAllFields() {
         return getMembers(cache, this.new MemberBuilder()).all.values();
     }
 
@@ -153,27 +158,54 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         return PsiTreeUtil.findChildOfType(type, PasTypeID.class);
     }
 
+    private boolean parentBuilding = false;
+
     @NotNull
     @Override
     synchronized public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        if (!isCacheActual(parentScopes, parentBuildStamp)) {
-            buildParentScopes();
+        if (parentBuilding) {
+            return Collections.emptyList();
         }
-        return parentScopes;
+        try {
+            parentBuilding = true;
+            ensureChache(parentCache);
+            return parentCache.get(getKey(), new ParentBuilder()).scopes;
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof ProcessCanceledException) {
+                throw (ProcessCanceledException) e.getCause();
+            } else {
+                LOG.error("Error occured during building parents for: " + this, e.getCause());
+                return Collections.emptyList();
+            }
+        } finally {
+            parentBuilding = false;
+        }
     }
 
-    private void buildParentScopes() {
-        parentBuildStamp = getStamp(getContainingFile());
-        PasClassQualifiedIdent ident = PsiTreeUtil.getChildOfType(this, PasClassQualifiedIdent.class);
-        if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
-            NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
-            parentScopes = Collections.emptyList();                             // To prevent infinite recursion
-            PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn, true);
-            if (type != null) {
-                parentScopes = Collections.singletonList(SmartPointerManager.getInstance(type.getProject()).createSmartPsiElementPointer(type));
+    private class ParentBuilder implements Callable<Parents> {
+        @Override
+        public Parents call() throws Exception {
+            if (null == getContainingFile()) {
+                PascalPsiImplUtil.logNullContainingFile(PascalRoutineImpl.this);
+                return null;
             }
-        } else {
-            parentScopes = Collections.emptyList();
+
+            Parents res = new Parents();
+            res.stamp = getStamp(getContainingFile());
+
+            PasClassQualifiedIdent ident = PsiTreeUtil.getChildOfType(PascalRoutineImpl.this, PasClassQualifiedIdent.class);
+            if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
+                NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
+                res.scopes = Collections.emptyList();                             // To prevent infinite recursion
+                PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn, true);
+                if (type != null) {
+                    res.scopes = Collections.singletonList(SmartPointerManager.getInstance(type.getProject()).createSmartPsiElementPointer(type));
+                }
+            } else {
+                res.scopes = Collections.emptyList();
+            }
+
+            return res;
         }
     }
 
