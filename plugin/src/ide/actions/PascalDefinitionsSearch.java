@@ -56,7 +56,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
     public static void findImplementingMethods(Collection<PasEntityScope> targets, PascalRoutineImpl routine, int rCnt) {
         Collection<PasEntityScope> scopes = new LinkedHashSet<PasEntityScope>();
         findDescendingStructs(scopes, PsiUtil.getStructByElement(routine), rCnt);
-        Collection<SmartPsiElementPointer<PasEntityScope>> scopePtrs = new ArrayList<>(scopes.size());
+        Collection<SmartPsiElementPointer<PasEntityScope>> scopePtrs = new ArrayList<SmartPsiElementPointer<PasEntityScope>>(scopes.size());
         for (PasEntityScope scope : scopes) {
             scopePtrs.add(SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope));
         }

@@ -30,6 +30,7 @@ import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeTypeDeclImpl;
@@ -172,22 +173,23 @@ public class PasReferenceUtil {
 //-------------------------------------------------------------------
 
     private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
+        final PascalNamedElement element = field.getElement();
         if (recursionCount > PascalParserUtil.MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
-            throw new PascalRTException("Too much recursion during resolving type for: " + field.getElement());
+            throw new PascalRTException("Too much recursion during resolving type for: " + element);
         }
         PasTypeID typeId = null;
         PasField.ValueType res = null;
-        if (field.getElement() instanceof PasClassProperty) {
-            typeId = PsiTreeUtil.getChildOfType(field.getElement(), PasTypeID.class);
-        } else if (field.getElement() instanceof PascalRoutineImpl) {                                     // routine declaration case
-            typeId = ((PascalRoutineImpl) field.getElement()).getFunctionTypeIdent();
-        } else if ((field.getElement() != null) && (field.getElement().getParent() instanceof PasHandler)) {                                     // exception handler case
-            typeId = ((PasHandler) field.getElement().getParent()).getTypeID();
+        if (element instanceof PasClassProperty) {
+            typeId = PsiTreeUtil.getChildOfType(element, PasTypeID.class);
+        } else if (element instanceof PascalRoutineImpl) {                                     // routine declaration case
+            typeId = ((PascalRoutineImpl) element).getFunctionTypeIdent();
+        } else if ((element != null) && (element.getParent() instanceof PasHandler)) {                                     // exception handler case
+            typeId = ((PasHandler) element.getParent()).getTypeID();
         } else {
-            if ((field.getElement() != null) && PsiUtil.isTypeDeclPointingToSelf(field.getElement())) {
-                res = PasField.getValueType(field.getElement().getName());
+            if ((element != null) && PsiUtil.isTypeDeclPointingToSelf(element)) {
+                res = PasField.getValueType(element.getName());
             } else {
-                res = retrieveAnonymousType(PsiUtil.getTypeDeclaration(field.getElement()), includeLibrary, recursionCount);
+                res = retrieveAnonymousType(PsiUtil.getTypeDeclaration(element), includeLibrary, recursionCount);
             }
         }
         if (typeId != null) {
@@ -481,8 +483,8 @@ public class PasReferenceUtil {
             return;
         }
         for (SmartPsiElementPointer<PasEntityScope> scopePtr : section.getParentScope()) {
-            if (first || (scopePtr instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
-                PasEntityScope scope = scopePtr.getElement();
+            PasEntityScope scope = scopePtr.getElement();
+            if (first || (scope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
                 namespaces.add(scope);
                 addParentNamespaces(namespaces, scope, first);
             }

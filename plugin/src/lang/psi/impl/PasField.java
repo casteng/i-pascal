@@ -180,13 +180,13 @@ public class PasField {
         // base type (TBaseType in TRefType = array of TBaseType)
         public ValueType baseType;
         // type declaration element
-        public PasTypeDecl declaration;
+        public SmartPsiElementPointer<PasTypeDecl> declaration;
 
         public ValueType(PasField field, Kind kind, ValueType baseType, PasTypeDecl declaration) {
             this.field = field;
             this.kind = kind;
             this.baseType = baseType;
-            this.declaration = declaration;
+            this.declaration = declaration != null ? SmartPointerManager.getInstance(declaration.getProject()).createSmartPsiElementPointer(declaration) : null;
         }
 
         @Override
@@ -203,8 +203,9 @@ public class PasField {
             while (type.baseType != null) {
                 type = type.baseType;
             }
-            if ((type.declaration != null) && (type.declaration.getFirstChild() instanceof PasEntityScope)) {
-                return (PasEntityScope) type.declaration.getFirstChild();
+            PasTypeDecl typeDecl = type.declaration != null ? type.declaration.getElement() : null;
+            if ((typeDecl != null) && (typeDecl.getFirstChild() instanceof PasEntityScope)) {
+                return (PasEntityScope) typeDecl.getFirstChild();
             }
             return null;
         }
