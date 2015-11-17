@@ -60,14 +60,14 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         try {
             return (UnitMembers) cache.get(getKey(), builder);
         } catch (ExecutionException e) {
-            LOG.error("Error occured during building private members", e.getCause());
-            return EMPTY_MEMBERS;
-        } catch (UncheckedExecutionException e) {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
-                LOG.error("Unchecked error occured during building private members", e.getCause());
+                LOG.error("Error occured during building members for: " + this, e.getCause());
             }
+            return EMPTY_MEMBERS;
+        } catch (UncheckedExecutionException e) {
+            LOG.error("Unchecked error occured during building members for: " + this, e.getCause());
             return EMPTY_MEMBERS;
         }
     }

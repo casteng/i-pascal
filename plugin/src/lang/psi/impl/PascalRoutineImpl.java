@@ -101,6 +101,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     public static void invalidate(String key) {
         cache.invalidate(key);
+        parentCache.invalidate(key);
     }
 
     private class MemberBuilder implements Callable<Members> {
