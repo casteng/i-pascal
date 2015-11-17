@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.ProcessCanceledException;
@@ -24,7 +23,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -59,15 +57,12 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         ensureChache(cache);
         try {
             return (UnitMembers) cache.get(getKey(), builder);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
                 LOG.error("Error occured during building members for: " + this, e.getCause());
             }
-            return EMPTY_MEMBERS;
-        } catch (UncheckedExecutionException e) {
-            LOG.error("Unchecked error occured during building members for: " + this, e.getCause());
             return EMPTY_MEMBERS;
         }
     }

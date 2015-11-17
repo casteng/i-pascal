@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Author: George Bakhtadze
@@ -77,7 +76,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         ensureChache(cache);
         try {
             return cache.get(getKey(), builder);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
@@ -171,7 +170,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             parentBuilding = true;
             ensureChache(parentCache);
             return parentCache.get(getKey(), new ParentBuilder()).scopes;
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {

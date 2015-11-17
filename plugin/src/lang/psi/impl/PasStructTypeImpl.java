@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -102,7 +101,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         ensureChache(cache);
         try {
             return cache.get(getKey(), builder);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
@@ -223,7 +222,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         ensureChache(parentCache);
         try {
             return parentCache.get(getKey(), new ParentBuilder()).scopes;
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
@@ -256,12 +255,12 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
                 }
             } else {
                 PasEntityScope defEntity = null;
-                if (this instanceof PasClassTypeDecl) {
+                if (PasStructTypeImpl.this instanceof PasClassTypeDecl) {
                     defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStructTypeImpl.this, "system.TObject"), true);
-                } else if (this instanceof PasInterfaceTypeDecl) {
+                } else if (PasStructTypeImpl.this instanceof PasInterfaceTypeDecl) {
                     defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStructTypeImpl.this, "system.IInterface"), true);
                 }
-                if ((defEntity != null) && (defEntity != this)) {
+                if ((defEntity != null) && (defEntity != PasStructTypeImpl.this)) {
                     addScope(res, defEntity);
                 }
             }
