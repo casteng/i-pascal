@@ -103,7 +103,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         return new GutterIconNavigationHandler<T>() {
             @Override
             public void navigate(MouseEvent e, PsiElement elt) {
-                EditorUtil.navigateTo(e, title, targets);
+                EditorUtil.navigateTo(e, title, null, targets);
             }
         };
     }

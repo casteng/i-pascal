@@ -1,6 +1,8 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.codeInsight.daemon.impl.PsiElementListNavigator;
+import com.intellij.codeInsight.hint.HintManager;
+import com.intellij.codeInsight.hint.HintUtil;
 import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.ide.util.PsiElementModuleRenderer;
 import com.intellij.openapi.editor.Document;
@@ -9,8 +11,10 @@ import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.ui.awt.RelativePoint;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -22,14 +26,25 @@ import java.util.Collection;
  * Date: 21/07/2015
  */
 public class EditorUtil {
+
+    public static final int NO_ITEMS_HINT_TIMEOUT_MS = 3000;
+
     public static <T extends PsiElement> void navigateTo(Editor editor, String title, Collection<T> targets) {
         PsiElementListNavigator.openTargets(editor, targets.toArray(new NavigatablePsiElement[targets.size()]),
                 title, null, new MyPsiElementCellRenderer());
     }
 
-    public static <T extends PsiElement> void navigateTo(MouseEvent event, String title, Collection<T> targets) {
-        PsiElementListNavigator.openTargets(event, targets.toArray(new NavigatablePsiElement[targets.size()]),
-                title, null, new MyPsiElementCellRenderer());
+    public static <T extends PsiElement> void navigateTo(MouseEvent event, String title, @Nullable String emptyTitle, Collection<T> targets) {
+        if (!targets.isEmpty()) {
+            PsiElementListNavigator.openTargets(event, targets.toArray(new NavigatablePsiElement[targets.size()]),
+                    title, null, new MyPsiElementCellRenderer());
+        } else if (!StringUtils.isEmpty(emptyTitle)) {
+            final JLabel label = new JLabel(emptyTitle);
+            label.setBorder(HintUtil.createHintBorder());
+            label.setBackground(HintUtil.ERROR_COLOR);
+            label.setOpaque(true);
+            HintManager.getInstance().showHint(label, new RelativePoint(event), 0, NO_ITEMS_HINT_TIMEOUT_MS);
+        }
     }
 
     private static class MyPsiElementCellRenderer extends DefaultPsiElementCellRenderer {

@@ -47,11 +47,11 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
                     Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations(((PascalNamedElement) element).getNameIdentifier(), 1, 0);
                     if (!impls.isEmpty()) {
                         result.add(PascalLineMarkerProvider.createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod,
-                                        PascalBundle.message("navigate.title.goto.overridden"), getHandler(PascalBundle.message("navigate.title.goto.overridden"))));
+                                        PascalBundle.message("navigate.title.goto.subclassed"), getHandler(PascalBundle.message("navigate.title.goto.subclassed"))));
                     }
                 } else if ((element instanceof PasExportedRoutine) && (((PasExportedRoutine) element).getContainingScope() instanceof PascalStructType)) {
                     result.add(PascalLineMarkerProvider.createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod,
-                            PascalBundle.message("navigate.title.goto.overridden"), getHandler(PascalBundle.message("navigate.title.goto.overridden"))));
+                            PascalBundle.message("navigate.title.goto.subclassed"), getHandler(PascalBundle.message("navigate.title.goto.subclassed"))));
                 }
             }
         } catch (PasInvalidScopeException e) {
@@ -64,7 +64,7 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
             @Override
             public void navigate(MouseEvent e, final PasEntityScope elt) {
                 if (DumbService.isDumb(elt.getProject())) {
-                    DumbService.getInstance(elt.getProject()).showDumbModeNotification(PascalBundle.message("navigate.overridden.impossible.reindex"));
+                    DumbService.getInstance(elt.getProject()).showDumbModeNotification(PascalBundle.message("navigate.subclassed.impossible.reindex"));
                     return;
                 }
 
@@ -82,13 +82,12 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
                             }
                         });
                     }
-                }, PascalBundle.message("navigate.title.goto.overridden.search"), true, elt.getProject(), (JComponent)e.getComponent())) {
+                }, PascalBundle.message("navigate.title.goto.subclassed.search"), true, elt.getProject(), (JComponent)e.getComponent())) {
                     return;
                 }
 
                 List<PasEntityScope> inheritors = Arrays.asList(collectProcessor.toArray(new PasEntityScope[0]));
-
-                EditorUtil.navigateTo(e, title, inheritors);
+                EditorUtil.navigateTo(e, title, PascalBundle.message("navigate.info.subclassed.noitems"), inheritors);
             }
         };
     }
