@@ -40,6 +40,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     protected boolean building = false;
     protected SmartPsiElementPointer<PasEntityScope> containingScope;
+    private String cachedKey;
 
     public PasScopeImpl(ASTNode node) {
         super(node);
@@ -56,8 +57,15 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         return file.getModificationStamp();
     }
 
-    public String getKey() {
-        return String.format("%s.%s", getContainingFile() != null ? getContainingFile().getName() : "", PsiUtil.getFieldName(this));
+    synchronized public String getKey() {
+        if (null == cachedKey) {
+            calcKey();
+        }
+        return cachedKey;
+    }
+
+    private void calcKey() {
+        cachedKey = String.format("%s.%s", getContainingFile() != null ? getContainingFile().getName() : "", PsiUtil.getFieldName(this));
     }
 
     synchronized protected <T extends Cached> void ensureChache(Cache<String, T> cache) {
