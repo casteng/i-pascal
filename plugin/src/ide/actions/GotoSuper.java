@@ -29,6 +29,14 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
 
     private static final Logger LOG = Logger.getInstance(GotoSuper.class.getName());
 
+    public static final Integer LIMIT_NONE = null;
+
+    static final Integer LIMIT_FIRST_ATTEMPT = 5;        // for first attempts
+
+    static Integer calcRemainingLimit(Collection<PasEntityScope> targets, Integer limit) {
+        return limit != null ? limit - targets.size() : null;
+    }
+
     @Override
     public boolean isValidFor(Editor editor, PsiFile file) {
         return false;
@@ -83,7 +91,7 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         }
         PasEntityScope scope = routine.getContainingScope();
         if (scope instanceof PascalStructType) {
-            extractMethodsByName(targets, scope.getParentScope(), routine, true);
+            extractMethodsByName(targets, PsiUtil.extractSmartPointers(scope.getParentScope()), routine, true, LIMIT_NONE);
         }
     }
 
@@ -93,9 +101,11 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
      * @param scopes     scopes where to search methods
      * @param routine    routine which name to search
      */
-    static void extractMethodsByName(Collection<PasEntityScope> targets, Collection<SmartPsiElementPointer<PasEntityScope>> scopes, PascalRoutineImpl routine, boolean handleParents) {
-        for (SmartPsiElementPointer<PasEntityScope> scopePtr : scopes) {
-            PasEntityScope scope = scopePtr.getElement();
+    static void extractMethodsByName(Collection<PasEntityScope> targets, Collection<PasEntityScope> scopes, PascalRoutineImpl routine, boolean handleParents, Integer limit) {
+        for (PasEntityScope scope : scopes) {
+            if ((limit != null) && (limit <= targets.size())) {
+                return;
+            }
             if (scope != null) {
                 if (scope instanceof PascalStructType) {
                     PasField field = scope.getField(StrUtil.getFieldName(PsiUtil.getFieldName(routine)));
@@ -103,7 +113,7 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
                         addTarget(targets, field);
                     }
                     if (handleParents) {
-                        extractMethodsByName(targets, scope.getParentScope(), routine, true);
+                        extractMethodsByName(targets, PsiUtil.extractSmartPointers(scope.getParentScope()), routine, true, calcRemainingLimit(targets, limit));
                     }
                 }
             } else {

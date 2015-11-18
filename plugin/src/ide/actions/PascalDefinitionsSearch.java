@@ -4,8 +4,6 @@ import com.intellij.openapi.application.QueryExecutorBase;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.SmartPointerManager;
-import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.search.searches.DefinitionsScopedSearch;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -16,7 +14,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
@@ -36,34 +33,40 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
 
     @Override
     public void processQuery(@NotNull DefinitionsScopedSearch.SearchParameters queryParameters, @NotNull Processor<PsiElement> consumer) {
-        Collection<PasEntityScope> targets = findImplementations(queryParameters.getElement(), 0);
+        Collection<PasEntityScope> targets = findImplementations(queryParameters.getElement(), GotoSuper.LIMIT_NONE, 0);
         for (PsiElement target : targets) {
             consumer.process(target);
         }
     }
 
-    public static Collection<PasEntityScope> findImplementations(PsiElement element, int rCnt) {
+    public static Collection<PasEntityScope> findImplementations(PsiElement element, Integer limit, int rCnt) {
         Collection<PasEntityScope> targets = new LinkedHashSet<PasEntityScope>();
         PascalRoutineImpl routine = PsiTreeUtil.getParentOfType(element, PascalRoutineImpl.class);
         if (routine != null) {
-            findImplementingMethods(targets, routine, 0);
+            findImplementingMethods(targets, routine, limit, 0);
         } else {
-            findDescendingStructs(targets, PsiUtil.getStructByElement(element), 0);
+            findDescendingStructs(targets, PsiUtil.getStructByElement(element), limit, 0);
         }
         return targets;
     }
 
-    public static void findImplementingMethods(Collection<PasEntityScope> targets, PascalRoutineImpl routine, int rCnt) {
+    public static void findImplementingMethods(Collection<PasEntityScope> targets, PascalRoutineImpl routine, Integer limit, int rCnt) {
+        Collection<PasEntityScope> found = new LinkedHashSet<PasEntityScope>();
         Collection<PasEntityScope> scopes = new LinkedHashSet<PasEntityScope>();
-        findDescendingStructs(scopes, PsiUtil.getStructByElement(routine), rCnt);
-        Collection<SmartPsiElementPointer<PasEntityScope>> scopePtrs = new ArrayList<SmartPsiElementPointer<PasEntityScope>>(scopes.size());
-        for (PasEntityScope scope : scopes) {
-            scopePtrs.add(SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope));
+        findDescendingStructs(scopes, PsiUtil.getStructByElement(routine), limit != null ? GotoSuper.LIMIT_FIRST_ATTEMPT : GotoSuper.LIMIT_NONE, rCnt);
+        GotoSuper.extractMethodsByName(found, scopes, routine, false, GotoSuper.calcRemainingLimit(targets, limit));
+        if ((limit != null) && (scopes.size() == GotoSuper.LIMIT_FIRST_ATTEMPT) && (found.size() < limit)) {        // second attempt if the first one not found all results
+            System.out.println("Second attempt");
+            scopes = new LinkedHashSet<PasEntityScope>();
+            findDescendingStructs(scopes, PsiUtil.getStructByElement(routine), GotoSuper.LIMIT_NONE, rCnt);
+            GotoSuper.extractMethodsByName(targets, scopes, routine, false, GotoSuper.calcRemainingLimit(targets, limit));
         }
-        GotoSuper.extractMethodsByName(targets, scopePtrs, routine, false);
     }
 
-    public static void findDescendingStructs(Collection<PasEntityScope> targets, PascalStructType struct, int rCnt) {
+    public static void findDescendingStructs(Collection<PasEntityScope> targets, PascalStructType struct, Integer limit, int rCnt) {
+        if ((limit != null) && (limit <= 0)) {
+            return;
+        }
         if (rCnt > MAX_RECURSION) {
             LOG.error("Max recursion reached");
             return;
@@ -72,11 +75,14 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
             return;
         }
         for (PsiReference psiReference : ReferencesSearch.search(struct.getNameIdentifier())) {
+            if ((limit != null) && (limit <= targets.size())) {
+                return;
+            }
             if (PsiUtil.isClassParent(psiReference.getElement())) {
                 struct = PsiUtil.getStructByElement(psiReference.getElement());
                 if (PsiUtil.isElementUsable(struct)) {
                     targets.add(struct);
-                    findDescendingStructs(targets, struct, rCnt + 1);
+                    findDescendingStructs(targets, struct, GotoSuper.calcRemainingLimit(targets, limit), rCnt + 1);
                 }
             }
         }

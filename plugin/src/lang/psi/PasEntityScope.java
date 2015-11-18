@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.psi;
 
+import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +13,7 @@ import java.util.List;
  * Author: George Bakhtadze
  * Date: 15/09/2013
  */
-public interface PasEntityScope extends PascalNamedElement {
+public interface PasEntityScope extends PascalNamedElement, NavigatablePsiElement {
     @NotNull
     String getName();
     @Nullable

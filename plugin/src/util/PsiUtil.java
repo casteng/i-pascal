@@ -7,6 +7,7 @@ import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.PsiImplUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.PsiElementProcessor;
@@ -62,6 +63,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -691,5 +693,13 @@ public class PsiUtil {
     public static String cleanGenericDef(String name) {
         int ind = name.indexOf('<');
         return ind < 0 ? name : name.substring(0, ind);
+    }
+
+    public static <T extends PsiElement> Collection<T> extractSmartPointers(List<SmartPsiElementPointer<T>> smartPtrs) {
+        Collection<T> res = new ArrayList<T>(smartPtrs.size());
+        for (SmartPsiElementPointer<T> smartPtr : smartPtrs) {
+            res.add(smartPtr.getElement());
+        }
+        return res;
     }
 }
