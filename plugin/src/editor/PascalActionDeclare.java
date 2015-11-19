@@ -22,6 +22,8 @@ import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
+import com.siberika.idea.pascal.lang.psi.PasTypeSection;
+import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -145,7 +147,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            if (findParent(file, data, PasConstSection.class)) {
+            if (findParent(file, data, PasVarSection.class)) {
                 data.text = "\n" + data.element.getName() + ": T;";
             } else if (data.parent != null) {
                 data.text = "var " + data.element.getName() + ": T;\n";
@@ -177,7 +179,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            if (findParent(file, data, PasConstSection.class)) {
+            if (findParent(file, data, PasTypeSection.class)) {
                 data.text = "\n" + data.element.getName() + "  = ;";
             } else if (data.parent != null) {
                 data.text = "type " + data.element.getName() + " = ;\n";

@@ -51,7 +51,7 @@ public class PascalAnnotator implements Annotator {
                 } else {
                     ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createVar"), namedElement));
                 }
-                if (name.startsWith("T")) {
+                if (name.startsWith("T") || PsiUtil.isTypeName(element)) {
                     ann.registerFix(new PascalActionDeclare.ActionCreateType(message("action.createType"), namedElement));
                 }
             }
