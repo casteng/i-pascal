@@ -1,12 +1,12 @@
 package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.execution.process.ProcessAdapter;
+import com.intellij.openapi.util.text.StringUtil;
 import com.siberika.idea.pascal.jps.builder.DelphiCompilerProcessAdapter;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.jps.util.ParamMap;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,7 +72,7 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
 
         commandLine.add(COMPILER_SETTING_OPATH_UNIT + outputDirUnit);
         commandLine.add(COMPILER_SETTING_OPATH_UNIT_D2007 + outputDirUnit);
-        if (StringUtils.isEmpty(outputDirExe)) {
+        if (StringUtil.isEmpty(outputDirExe)) {
             commandLine.add(COMPILER_SETTING_OPATH_EXE + outputDirUnit);
         } else {
             commandLine.add(COMPILER_SETTING_OPATH_EXE + outputDirExe);

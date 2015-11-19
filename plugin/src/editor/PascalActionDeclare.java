@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -23,7 +24,6 @@ import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -78,7 +78,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             public void run() {
                 for (final FixActionData actionData : fixActionDataArray) {
                     calcData(file, actionData);
-                    if (!StringUtils.isEmpty(actionData.text)) {
+                    if (!StringUtil.isEmpty(actionData.text)) {
                         new WriteCommandAction(project) {
                             @Override
                             protected void run(@NotNull Result result) throws Throwable {
