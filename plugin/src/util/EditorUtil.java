@@ -27,7 +27,7 @@ import java.util.Collection;
  */
 public class EditorUtil {
 
-    public static final int NO_ITEMS_HINT_TIMEOUT_MS = 3000;
+    public static final int NO_ITEMS_HINT_TIMEOUT_MS = 2000;
 
     public static <T extends PsiElement> void navigateTo(Editor editor, String title, Collection<T> targets) {
         PsiElementListNavigator.openTargets(editor, targets.toArray(new NavigatablePsiElement[targets.size()]),

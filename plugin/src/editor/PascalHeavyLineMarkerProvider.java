@@ -9,11 +9,13 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.PsiElementProcessor;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.util.EditorUtil;
@@ -49,9 +51,16 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
                         result.add(PascalLineMarkerProvider.createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod,
                                         PascalBundle.message("navigate.title.goto.subclassed"), getHandler(PascalBundle.message("navigate.title.goto.subclassed"))));
                     }
-                } else if ((element instanceof PasExportedRoutine) && (((PasExportedRoutine) element).getContainingScope() instanceof PascalStructType)) {
-                    result.add(PascalLineMarkerProvider.createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod,
-                            PascalBundle.message("navigate.title.goto.subclassed"), getHandler(PascalBundle.message("navigate.title.goto.subclassed"))));
+                } else if ((element instanceof PasExportedRoutine) || (element instanceof PasRoutineImplDecl)) {
+                    PasEntityScope scope = ((PasEntityScope) element).getContainingScope();
+                    if (scope instanceof PascalStructType) {
+                        Collection<PasEntityScope> inheritedScopes = new SmartList<PasEntityScope>();
+                        PascalDefinitionsSearch.findDescendingStructs(inheritedScopes, (PascalStructType) scope, 1, 0);
+                        if (!inheritedScopes.isEmpty()) {
+                            result.add(PascalLineMarkerProvider.createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod,
+                                    PascalBundle.message("navigate.title.goto.subclassed"), getHandler(PascalBundle.message("navigate.title.goto.subclassed"))));
+                        }
+                    }
                 }
             }
         } catch (PasInvalidScopeException e) {

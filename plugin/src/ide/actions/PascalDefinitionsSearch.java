@@ -9,6 +9,8 @@ import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -53,7 +55,16 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
     public static void findImplementingMethods(Collection<PasEntityScope> targets, PascalRoutineImpl routine, Integer limit, int rCnt) {
         Collection<PasEntityScope> found = new LinkedHashSet<PasEntityScope>();
         Collection<PasEntityScope> scopes = new LinkedHashSet<PasEntityScope>();
-        findDescendingStructs(scopes, PsiUtil.getStructByElement(routine), limit != null ? GotoSuper.LIMIT_FIRST_ATTEMPT : GotoSuper.LIMIT_NONE, rCnt);
+        if (routine instanceof PasRoutineImplDecl) {
+            PsiElement el = SectionToggle.retrieveDeclaration(routine);
+            if (el instanceof PasExportedRoutine) {
+                routine = (PascalRoutineImpl) el;
+            } else {
+                return;
+            }
+        }
+        PascalStructType struct = PsiUtil.getStructByElement(routine);
+        findDescendingStructs(scopes, struct, limit != null ? GotoSuper.LIMIT_FIRST_ATTEMPT : GotoSuper.LIMIT_NONE, rCnt);
         GotoSuper.extractMethodsByName(found, scopes, routine, false, GotoSuper.calcRemainingLimit(targets, limit));
         if ((limit != null) && (scopes.size() == GotoSuper.LIMIT_FIRST_ATTEMPT) && (found.size() < limit)) {        // second attempt if the first one not found all results
             System.out.println("Second attempt");
