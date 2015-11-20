@@ -78,7 +78,7 @@ public class PascalAnnotator implements Annotator {
      * implement all methods fix
      */
     private void annotateRoutineInInterface(PasExportedRoutineImpl routine, AnnotationHolder holder) {
-        if (PsiUtil.needImplementation(routine) && (null == SectionToggle.getRoutineTarget(routine))) {
+        if (!PsiUtil.isFromBuiltinsUnit(routine) && PsiUtil.needImplementation(routine) && (null == SectionToggle.getRoutineTarget(routine))) {
             Annotation ann = holder.createErrorAnnotation(routine, message("ann.error.missing.implementation"));
             ann.registerFix(new PascalRoutineActions.ActionImplement(message("action.implement"), routine));
             ann.registerFix(new PascalRoutineActions.ActionImplementAll(message("action.implement.all"), routine));

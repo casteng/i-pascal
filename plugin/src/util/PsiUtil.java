@@ -518,6 +518,10 @@ public class PsiUtil {
         return (element.getContainingFile() != null) && "$system.pas".equalsIgnoreCase(element.getContainingFile().getName());
     }
 
+    public static boolean isFromBuiltinsUnit(PsiElement element) {
+        return (element.getContainingFile() != null) && "$builtins.pas".equalsIgnoreCase(element.getContainingFile().getName());
+    }
+
     public static boolean isForwardClassDecl(PascalNamedElement element) {
         LeafPsiElement leaf1 = getLeafSiblingOfType(element, LeafPsiElement.class);
         LeafPsiElement leaf2 = leaf1 != null ? getLeafSiblingOfType(leaf1, LeafPsiElement.class) : null;

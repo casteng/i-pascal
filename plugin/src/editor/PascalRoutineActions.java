@@ -5,9 +5,11 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -15,6 +17,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -74,7 +77,14 @@ public class PascalRoutineActions {
         void calcData(final PsiFile file, final FixActionData data) {
             PascalRoutineImpl routine = (PascalRoutineImpl) data.element;
             String prefix = SectionToggle.getPrefix(routine);
+
             data.text = data.element.getText();
+            Collection<PasFunctionDirective> directives = PsiTreeUtil.findChildrenOfType(data.element, PasFunctionDirective.class);
+            for (PasFunctionDirective directive : directives) {
+                if (directive.getNode().findChildByType(PasTypes.OVERLOAD) == null) {
+                    data.text = data.text.replace(directive.getText(), "");
+                }
+            }
             String name = data.element.getName();
             data.text = "\n\n" + StringUtil.replace(data.text, name, prefix + name) + "\nbegin\n\nend;\n\n";
             data.offset = SectionToggle.findImplPos(routine);

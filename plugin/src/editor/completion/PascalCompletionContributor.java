@@ -134,7 +134,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
         res.put(PasTypes.RECORD.toString(), String.format("  %s\nend;", PLACEHOLDER_CARET));
         res.put(PasTypes.OBJECT.toString(), String.format("  %s\nend;", PLACEHOLDER_CARET));
-        res.put(PasTypes.CLASS.toString(), String.format("(TObject)\nprivate\n%s\nprotected\npublic\npublished\nend;", PLACEHOLDER_CARET));
+        res.put(PasTypes.CLASS.toString(), String.format("(TObject)\nprivate\n%s\npublic\nend;", PLACEHOLDER_CARET));
         res.put(PasTypes.INTERFACE.toString() + " ", String.format("(IUnknown)\n%s\nend;", PLACEHOLDER_CARET));
         res.put(PasTypes.ARRAY.toString(), String.format("[0..%s] of ;", PLACEHOLDER_CARET));
         res.put(PasTypes.SET.toString(), String.format(" of %s;", PLACEHOLDER_CARET));
