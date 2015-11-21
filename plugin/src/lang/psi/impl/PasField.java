@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
 * Author: George Bakhtadze
@@ -69,6 +70,8 @@ public class PasField {
     private ValueType valueType;
 
     private final int cachedHash;
+
+    ReentrantLock typeLock = new ReentrantLock();
 
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, FieldType fieldType,
                     @NotNull Visibility visibility, @Nullable PsiElement target, ValueType valueType) {
@@ -212,4 +215,7 @@ public class PasField {
 
     }
 
+    public ReentrantLock getTypeLock() {
+        return typeLock;
+    }
 }

@@ -39,7 +39,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasFileTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasPointerTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasProcedureTypeImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PasScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSetTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStringTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
@@ -50,6 +49,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -253,12 +253,18 @@ public class PasReferenceUtil {
 
     @Nullable
     private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, int recursionCount) {
-        synchronized (field) {
-            if (!field.isTypeResolved()) {
-                field.setValueType(resolveFieldType(field, true, recursionCount));
+        try {
+            if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
+                if (!field.isTypeResolved()) {
+                    field.setValueType(resolveFieldType(field, true, recursionCount));
+                }
+                return field.getValueType() != null ? field.getValueType().getTypeScope() : null;
+            } else {
+                return null;
             }
+        } finally {
+            field.getTypeLock().unlock();
         }
-        return field.getValueType() != null ? field.getValueType().getTypeScope() : null;
     }
 
     @Nullable
@@ -358,10 +364,9 @@ public class PasReferenceUtil {
 
             if (!fqn.isComplete() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
-                    if (!PsiUtil.isElementValid(namespace)) {
-                        PasScopeImpl.invalidateCaches(namespace.getKey());
-                        //PsiUtil.rebuildPsi(namespace);
-                        //return result;
+                    if (null == namespace) {
+                        System.out.println(String.format("===*** null namespace! %s", fqn));
+                        continue;
                     }
                     for (PasField pasField : namespace.getAllFields()) {
                         if ((pasField.element != null) && isFieldMatches(pasField, fqn, fieldTypes) &&
@@ -485,6 +490,9 @@ public class PasReferenceUtil {
         for (SmartPsiElementPointer<PasEntityScope> scopePtr : section.getParentScope()) {
             PasEntityScope scope = scopePtr.getElement();
             if (first || (scope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
+                if (null == scope) {
+                    System.out.println(String.format("===*** null scope! parent of %s", section));
+                }
                 namespaces.add(scope);
                 addParentNamespaces(namespaces, scope, first);
             }

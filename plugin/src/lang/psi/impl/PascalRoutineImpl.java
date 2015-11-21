@@ -20,6 +20,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: George Bakhtadze
@@ -37,7 +39,9 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     private static final String BUILTIN_SELF = "Self";
 
     private static final Cache<String, Members> cache = CacheBuilder.newBuilder().build();
-    private String cachedKey;
+
+    private ReentrantLock parentLock = new ReentrantLock();
+    private boolean parentBuilding = false;
 
     @Nullable
     public abstract PasFormalParameterSection getFormalParameterSection();
@@ -46,14 +50,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         super(node);
     }
 
-    synchronized public String getKey() {
-        if (null == cachedKey) {
-            calcKey();
-        }
-        return cachedKey;
-    }
-
-    private void calcKey() {
+    protected String calcKey() {
         StringBuilder sb = new StringBuilder(PsiUtil.isForwardProc(this) ? "forward:" : "");
         PasEntityScope scope = this;
         while (scope != null) {
@@ -68,7 +65,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         }
         //sb.append(".").append(getContainingFile() != null ? getContainingFile().getName() : "");
         //System.out.println(String.format("%s for %s", sb.toString(), this));
-        cachedKey = sb.toString();
+        return sb.toString();
     }
 
     @NotNull
@@ -158,15 +155,13 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         return PsiTreeUtil.findChildOfType(type, PasTypeID.class);
     }
 
-    private boolean parentBuilding = false;
-
     @NotNull
     @Override
-    synchronized public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        if (parentBuilding) {
-            return Collections.emptyList();
-        }
+    public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
         try {
+            if (!SyncUtil.tryLockQuiet(parentLock, SyncUtil.LOCK_TIMEOUT_MS) || parentBuilding) {
+                return Collections.emptyList();
+            }
             parentBuilding = true;
             ensureChache(parentCache);
             return parentCache.get(getKey(), new ParentBuilder()).scopes;
@@ -179,6 +174,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             }
         } finally {
             parentBuilding = false;
+            parentLock.unlock();
         }
     }
 

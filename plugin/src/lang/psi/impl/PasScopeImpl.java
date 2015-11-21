@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -26,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: George Bakhtadze
@@ -38,12 +40,15 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     protected static final Cache<String, Parents> parentCache = CacheBuilder.newBuilder().build();
 
+    protected ReentrantLock containingScopeLock = new ReentrantLock();
+
     protected boolean building = false;
     protected SmartPsiElementPointer<PasEntityScope> containingScope;
-    private String cachedKey;
+    protected final String cachedKey;
 
     public PasScopeImpl(ASTNode node) {
         super(node);
+        cachedKey = calcKey();
     }
 
     public static void invalidateCaches(String key) {
@@ -57,18 +62,15 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         return file.getModificationStamp();
     }
 
-    synchronized public String getKey() {
-        if (null == cachedKey) {
-            calcKey();
-        }
+    public String getKey() {
         return cachedKey;
     }
 
-    private void calcKey() {
-        cachedKey = String.format("%s.%s", getContainingFile() != null ? getContainingFile().getName() : "", PsiUtil.getFieldName(this));
+    protected String calcKey() {
+        return String.format("%s.%s", getContainingFile() != null ? getContainingFile().getName() : "", PsiUtil.getFieldName(this));
     }
 
-    synchronized protected <T extends Cached> void ensureChache(Cache<String, T> cache) {
+    protected <T extends Cached> void ensureChache(Cache<String, T> cache) {
 /*        if (!PsiUtil.checkeElement(this)) {
             return false;
         }*/
@@ -84,11 +86,19 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     @Nullable
     @Override
-    synchronized public PasEntityScope getContainingScope() {
-        if (null == containingScope) {
-            calcContainingScope();
+    public PasEntityScope getContainingScope() {
+        try {
+            if (SyncUtil.tryLockQuiet(containingScopeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
+                if (null == containingScope) {
+                    calcContainingScope();
+                }
+                return containingScope != null ? containingScope.getElement() : null;
+            } else {
+                return null;
+            }
+        } finally {
+            containingScopeLock.unlock();
         }
-        return containingScope != null ? containingScope.getElement() : null;
     }
 
     /**
