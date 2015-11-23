@@ -26,6 +26,7 @@ import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
+import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -40,7 +41,7 @@ import java.util.List;
 public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     public static final int MAX_SECTION_LEVELS = 20;
-    private final List<FixActionData> fixActionDataArray;
+    final List<FixActionData> fixActionDataArray;
     private final String name;
 
     abstract void calcData(final PsiFile file, final FixActionData data);
@@ -87,16 +88,14 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                         new WriteCommandAction(project) {
                             @Override
                             protected void run(@NotNull Result result) throws Throwable {
+                                PsiManager manager = actionData.parent != null ? actionData.parent.getManager() : null;
                                 cutLFs(document, actionData);
                                 document.insertString(actionData.offset, actionData.text);
                                 editor.getCaretModel().moveToOffset(actionData.offset + actionData.text.length() - 1 - (actionData.text.endsWith("\n") ? 1 : 0));
                                 editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
                                 PsiDocumentManager.getInstance(project).commitDocument(document);
-                                if (actionData.parent != null) {
-                                    PsiManager manager = actionData.parent.getManager();
-                                    if (manager != null) {
-                                        CodeStyleManager.getInstance(manager).reformat(actionData.parent, true);
-                                    }
+                                if (manager != null) {
+                                    CodeStyleManager.getInstance(manager).reformat(actionData.parent, true);
                                 }
                             }
                         }.execute();
@@ -200,9 +199,15 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             section = section != null ? section : file;
             data.parent = PsiUtil.findInSameSection(section, sectionClass);
             if (!canAffect(data.parent, data.element)) {
-                data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class);
+                data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class, PasUnitInterface.class);
                 if (canAffect(data.parent, data.element)) {
                     data.offset = data.parent.getTextOffset();
+                    PasUnitInterface intf = PsiTreeUtil.findChildOfType(data.parent, PasUnitInterface.class, false);    // Move after INTERFACE
+                    if (intf != null) {
+                        data.offset += intf.getTextLength();
+                        data.offset = intf.getUsesClause() != null ? intf.getUsesClause().getTextRange().getEndOffset() : data.offset;
+                        data.text = "\n" + data.text;
+                    }
                     return false;
                 }
             } else {
@@ -211,13 +216,16 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 if ((sectionItemClass != null) && (PsiTreeUtil.getParentOfType(data.element, sectionClass) == data.parent)) {
                     PsiElement sectionItem = PsiTreeUtil.getParentOfType(data.element, sectionItemClass);
                     if (sectionItem != null) {
-                        data.offset = sectionItem.getTextRange().getStartOffset()-2;
+                        data.offset = sectionItem.getTextRange().getStartOffset();
                         data.text = PLACEHOLDER_DATA + "\n";
                     }
                 }
                 return true;
             }
             section = PsiUtil.getNearestAffectingDeclarationsRoot(section);
+            if (i == MAX_SECTION_LEVELS - 1) {
+                throw new RuntimeException("Error finding section");
+            }
         }
         data.parent = null;
         return false;

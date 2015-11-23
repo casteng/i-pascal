@@ -13,7 +13,7 @@
         <ul>
           <li>identifiers cache rewrite</li>
           <li>inherited classes/methods search optimization</li>
-          <li>separate setting for executable path</li>
+          <li>setting for executable path</li>
         </ul>
         <p>0.98</p>
         <ul>

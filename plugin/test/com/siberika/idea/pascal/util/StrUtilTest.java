@@ -19,5 +19,6 @@ public class StrUtilTest {
         Assert.assertEquals("Method: System.Integer", StrUtil.getFieldName("Class.Method: System.Integer"));
         Assert.assertEquals("Method()", StrUtil.getFieldName("Class.SubClass.Method()"));
         Assert.assertEquals("Method(param: System.Integer): System.Integer", StrUtil.getFieldName("Class.SubClass.Method(param: System.Integer): System.Integer"));
+        Assert.assertEquals("Method(System.Integer, Word): System.Integer", StrUtil.getFieldName("Class.SubClass.Method(System.Integer, Word): System.Integer"));
     }
 }

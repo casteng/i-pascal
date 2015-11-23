@@ -8,6 +8,7 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -159,4 +160,8 @@ public class NamespaceRec {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s (%d/%d) %s for: %s", Arrays.toString(levels), current, target, nested ? "nested" : "", parentIdent);
+    }
 }
