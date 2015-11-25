@@ -21,9 +21,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testCompletion() {
         myFixture.configureByFiles("completionTest.pas");
-        checkCompletion(myFixture, "r1",
-                "for", "while", "repeat", "if", "case", "with",
-                "goto", "exit", "try", "raise", "end");
+        checkCompletion(myFixture, "r1");
     }
 
     public void testUnitCompletion() {
@@ -50,7 +48,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
         List<String> exp = Arrays.asList(expected);
-        assertTrue(String.format("\nExpected to present: %s\nActual: %s", exp, strings), strings.containsAll(exp));
+        ArrayList<String> lacking = new ArrayList<String>(exp);
+        lacking.removeAll(strings);
+        assertTrue(String.format("\nExpected to present: %s\nLack of: %s", exp, lacking), strings.containsAll(exp));
     }
 
     private void checkCompletionNotContains(CodeInsightTestFixture myFixture, String...unexpected) {
@@ -134,7 +134,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testModuleSectionWithUses() {
         myFixture.configureByFiles("moduleSectionWithUses.pas");
         checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
-                "procedure", "function", "constructor", "destructor");
+                "procedure", "function", "constructor", "destructor", "begin");
         myFixture.type('i');
         checkCompletion(myFixture, "function", "resourcestring");
     }
@@ -176,14 +176,16 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletionContains(myFixture, "a", "b", "s1",
                 "for", "while", "repeat", "if", "case", "with",
                 "goto", "exit", "try", "raise", "end");
-
+        myFixture.type("i");
+        checkCompletionContains(myFixture, "while", "if", "with", "exit", "raise");
     }
 
     public void testStatementInStmt() {
         myFixture.configureByFiles("statementInStmt.pas");
-        checkCompletionNotContains(myFixture,
+        /*checkCompletionNotContains(myFixture,
                 "for", "while", "repeat", "if", "case", "with",
-                "goto", "exit", "try", "raise", "end");
+                "goto", "exit", "try", "raise", "begin", "end");*/
+        checkCompletionContains(myFixture, "do", "then", "of");
     }
 
     public void testStatementInExpr() {
@@ -201,6 +203,16 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testDcu() {
         myFixture.configureByFiles("dcu.pas");
         checkCompletionContains(myFixture, "spec", "v", "test", "proc");
+    }
+
+    public void testBeginend() {
+        myFixture.configureByFiles("beginend.pas");
+        checkCompletionContains(myFixture, "begin");
+    }
+
+    public void testElse() {
+        myFixture.configureByFiles("else.pas");
+        checkCompletionContains(myFixture, "else");
     }
 
 }
