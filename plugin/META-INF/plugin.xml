@@ -159,6 +159,10 @@
             <keyboard-shortcut first-keystroke="shift control KP_UP" keymap="$default"/>
             <add-to-group group-id="GoToMenu" relative-to-action="GotoRelated" anchor="after" />
         </action>
+        <action id="Pascal.OverrideMethod" class="com.siberika.idea.pascal.ide.actions.ActionImplement"
+                text="Override Pascal Methods" description="Override methods from a superclass/interface">
+            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="OverrideMethods"/>
+        </action>
     </actions>
 
     <extensions defaultExtensionNs="com.intellij">

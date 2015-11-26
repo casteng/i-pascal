@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -206,7 +207,7 @@ public class SectionToggle {
         return res;
     }
 
-    public static <T extends PsiElement> List<T> collectFields(Collection<PasField> fields, PasField.FieldType type, PasFilter<PasField> filter) {
+    public static <T extends PsiElement> List<T> collectFields(Collection<PasField> fields, PasField.FieldType type, Filter<PasField> filter) {
         List<T> result = new SmartList<T>();
         Set<T> resultSet = new SmartHashSet<T>();
         for (PasField field : fields) {
@@ -245,7 +246,7 @@ public class SectionToggle {
         } else {
             fields = cont.scope.getAllFields();
         }
-        List<PascalRoutineImpl> impls = collectFields(fields, PasField.FieldType.ROUTINE, new PasFilter<PasField>() {
+        List<PascalRoutineImpl> impls = collectFields(fields, PasField.FieldType.ROUTINE, new Filter<PasField>() {
             @Override
             public boolean allow(PasField value) {
                 return (value.getElement() instanceof PascalRoutineImpl) && (((PascalRoutineImpl) value.getElement()).getContainingScope() == scope);
@@ -302,7 +303,4 @@ public class SectionToggle {
         return res;
     }
 
-    public interface PasFilter<T> {
-        boolean allow(T value);
-    }
 }

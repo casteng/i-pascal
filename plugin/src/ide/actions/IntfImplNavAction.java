@@ -1,12 +1,8 @@
 package com.siberika.idea.pascal.ide.actions;
 
-import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.LangDataKeys;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
@@ -22,17 +18,16 @@ import java.util.Collections;
  * Author: George Bakhtadze
  * Date: 28/05/2015
  */
-public class IntfImplNavAction extends AnAction {
+public class IntfImplNavAction extends PascalAction {
 
     @Override
     public void actionPerformed(AnActionEvent e) {
-        PsiFile file = e.getData(LangDataKeys.PSI_FILE);
-        Editor editor = e.getData(PlatformDataKeys.EDITOR);
-        if ((null == file) || (null == editor)) {
+        Editor editor = getEditor(e);
+        PsiElement el = getElement(e);
+        if ((null == el) || (null == editor)) {
             return;
         }
         PsiElement target;
-        PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
         target = SectionToggle.getRoutineTarget(PsiTreeUtil.getParentOfType(el, PascalRoutineImpl.class));
         if (null == target) {
             target = SectionToggle.getUsesTarget(PsiTreeUtil.getParentOfType(el, PasUsesClause.class));

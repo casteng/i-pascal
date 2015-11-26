@@ -39,12 +39,16 @@ public class EditorUtil {
             PsiElementListNavigator.openTargets(event, targets.toArray(new NavigatablePsiElement[targets.size()]),
                     title, null, new MyPsiElementCellRenderer());
         } else if (!StringUtils.isEmpty(emptyTitle)) {
-            final JLabel label = new JLabel(emptyTitle);
-            label.setBorder(HintUtil.createHintBorder());
-            label.setBackground(HintUtil.ERROR_COLOR);
-            label.setOpaque(true);
-            HintManager.getInstance().showHint(label, new RelativePoint(event), 0, NO_ITEMS_HINT_TIMEOUT_MS);
+            showHint(emptyTitle, new RelativePoint(event));
         }
+    }
+
+    public static void showHint(String title, RelativePoint relativePoint) {
+        final JLabel label = new JLabel(title);
+        label.setBorder(HintUtil.createHintBorder());
+        label.setBackground(HintUtil.ERROR_COLOR);
+        label.setOpaque(true);
+        HintManager.getInstance().showHint(label, relativePoint, 0, NO_ITEMS_HINT_TIMEOUT_MS);
     }
 
     private static class MyPsiElementCellRenderer extends DefaultPsiElementCellRenderer {

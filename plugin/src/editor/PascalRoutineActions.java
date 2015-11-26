@@ -15,6 +15,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PsiUtil;
 
 import java.util.Collection;
@@ -112,7 +113,7 @@ public class PascalRoutineActions {
             super(name, element);
             PascalRoutineImpl routine = (PascalRoutineImpl) element;
             List<PasExportedRoutineImpl> fields = SectionToggle.collectFields(SectionToggle.getDeclFields(routine.getContainingScope()),
-                    PasField.FieldType.ROUTINE, new SectionToggle.PasFilter<PasField>() {
+                    PasField.FieldType.ROUTINE, new Filter<PasField>() {
                 @Override
                 public boolean allow(PasField value) {
                     return value.getElement() instanceof PasExportedRoutineImpl;

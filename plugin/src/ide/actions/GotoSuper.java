@@ -58,17 +58,17 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         if (routine != null) {
             getRoutineTarget(targets, routine);
         } else {
-            getStructTarget(targets, PsiUtil.getStructByElement(el));
+            getParentStructs(targets, PsiUtil.getStructByElement(el));
         }
         return targets;
     }
 
-    private static void getStructTarget(Collection<PasEntityScope> targets, PasEntityScope struct) {
+    public static void getParentStructs(Collection<PasEntityScope> targets, PasEntityScope struct) {
         if (struct instanceof PascalStructType) {
             for (SmartPsiElementPointer<PasEntityScope> parent : struct.getParentScope()) {
                 PasEntityScope el = parent.getElement();
                 addTarget(targets, el);
-                getStructTarget(targets, el);
+                getParentStructs(targets, el);
             }
         }
     }
