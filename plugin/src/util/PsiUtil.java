@@ -1,13 +1,17 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.Result;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.impl.PsiImplUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.PsiElementProcessor;
@@ -405,7 +409,7 @@ public class PsiUtil {
         return null;
     }
 
-    public static void rebuildPsi( PsiElement block) {
+    public static void rebuildPsi(PsiElement block) {
         LOG.info("WARNING: requesting reparse: " + block);
         if (System.currentTimeMillis() - lastReparseRequestTime >= MIN_REPARSE_INTERVAL) {
             lastReparseRequestTime = System.currentTimeMillis();
@@ -419,6 +423,25 @@ public class PsiUtil {
                     }
             );
         }
+    }
+
+    public static void reformat(final PsiElement block) {
+        ApplicationManager.getApplication().invokeLater(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        new WriteCommandAction(block.getProject()) {
+                            @Override
+                            protected void run(@NotNull Result result) throws Throwable {
+                                PsiManager manager = block.getManager();
+                                if (manager != null) {
+                                    CodeStyleManager.getInstance(manager).reformat(block, true);
+                                }
+                            }
+                        }.execute();
+                    }
+                }
+        );
     }
 
     public static boolean isFieldDecl(PascalNamedElement entityDecl) {

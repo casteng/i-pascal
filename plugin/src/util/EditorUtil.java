@@ -18,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
 
@@ -39,16 +40,20 @@ public class EditorUtil {
             PsiElementListNavigator.openTargets(event, targets.toArray(new NavigatablePsiElement[targets.size()]),
                     title, null, new MyPsiElementCellRenderer());
         } else if (!StringUtils.isEmpty(emptyTitle)) {
-            showHint(emptyTitle, new RelativePoint(event));
+            showErrorHint(emptyTitle, new RelativePoint(event));
         }
     }
 
-    public static void showHint(String title, RelativePoint relativePoint) {
+    public static void showErrorHint(String title, RelativePoint relativePoint) {
         final JLabel label = new JLabel(title);
         label.setBorder(HintUtil.createHintBorder());
         label.setBackground(HintUtil.ERROR_COLOR);
         label.setOpaque(true);
         HintManager.getInstance().showHint(label, relativePoint, 0, NO_ITEMS_HINT_TIMEOUT_MS);
+    }
+
+    public static RelativePoint getHintPos(Editor editor) {
+        return new RelativePoint(editor.getComponent(), new Point(0, 0));
     }
 
     private static class MyPsiElementCellRenderer extends DefaultPsiElementCellRenderer {
