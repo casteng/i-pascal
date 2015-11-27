@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.ui;
 
-import com.intellij.ide.util.treeView.NodeRenderer;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.DoubleClickListener;
@@ -69,7 +68,7 @@ public class TreeViewStruct extends DialogWrapper {
         myTree.setRootVisible(false);
         myTree.expandRow(0);
         myTree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-        myTree.setCellRenderer(new NodeRenderer());
+        myTree.setCellRenderer(new FieldRenderer());
         UIUtil.setLineStyleAngled(myTree);
 
         final JScrollPane scrollPane = ScrollPaneFactory.createScrollPane(myTree);
@@ -138,4 +137,8 @@ public class TreeViewStruct extends DialogWrapper {
         return myTree;
     }
 
+    @Override
+    protected String getDimensionServiceKey() {
+        return "#com.siberika.pascal.TreeViewStruct";
+    }
 }

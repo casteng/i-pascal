@@ -24,11 +24,6 @@ public class PasField {
 
     public static final String DUMMY_IDENTIFIER = "____;";
 
-    @Nullable
-    public PascalNamedElement getElement() {
-        return element != null ? element.getElement() : null;
-    }
-
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY, PSEUDO_VARIABLE}
 
     public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY}
@@ -57,7 +52,7 @@ public class PasField {
     @Nullable
     public final PasEntityScope owner;
     @Nullable
-    public final SmartPsiElementPointer<PascalNamedElement> element;
+    private final SmartPsiElementPointer<PascalNamedElement> element;
     public final String name;
     public final FieldType fieldType;
     @NotNull
@@ -95,6 +90,16 @@ public class PasField {
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, FieldType fieldType,
                     @NotNull Visibility visibility) {
         this(owner, element, name, fieldType, visibility, null, NOT_INITIALIZED);
+    }
+
+    @Nullable
+    public PascalNamedElement getElement() {
+        return element != null ? element.getElement() : null;
+    }
+
+    @Nullable
+    public SmartPsiElementPointer<PascalNamedElement> getElementPtr() {
+        return element;
     }
 
     @Override

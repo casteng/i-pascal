@@ -12,9 +12,12 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.ui.TreeViewStruct;
 import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.Filter;
+import com.siberika.idea.pascal.util.PsiUtil;
 
 import java.awt.*;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -39,10 +42,19 @@ public class ActionImplement extends PascalAction {
             }
         }
 
+        final Set<String> existing = new HashSet<String>();
+
         TreeViewStruct tree = new TreeViewStruct(el.getProject(), "Title", structs, new Filter<PasField>() {
             @Override
             public boolean allow(PasField value) {
-                return value.fieldType == PasField.FieldType.ROUTINE;
+                if (value.fieldType == PasField.FieldType.ROUTINE) {
+                    String name = PsiUtil.getFieldName(value.getElement());
+                    if (!existing.contains(name)) {
+                        existing.add(name);
+                        return true;
+                    }
+                }
+                return false;
             }
         });
         tree.show();

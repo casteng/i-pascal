@@ -452,7 +452,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static boolean buildFromElement(@NotNull PasField field) {
-        return (field.element != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE));
+        return (field.getElementPtr() != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE));
     }
 
     private LookupElementBuilder createLookupElement(final Editor editor, @NotNull PasField field) {
