@@ -44,11 +44,10 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     protected boolean building = false;
     protected SmartPsiElementPointer<PasEntityScope> containingScope;
-    protected final String cachedKey;
+    volatile protected String cachedKey;
 
     public PasScopeImpl(ASTNode node) {
         super(node);
-        cachedKey = calcKey();
     }
 
     public static void invalidateCaches(String key) {
@@ -63,7 +62,12 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     }
 
     public String getKey() {
-        return cachedKey;
+        String key = cachedKey;
+        if (null == key) {
+            key = calcKey();
+            cachedKey = key;
+        }
+        return key;
     }
 
     protected String calcKey() {
@@ -87,17 +91,17 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     @Nullable
     @Override
     public PasEntityScope getContainingScope() {
-        try {
-            if (SyncUtil.tryLockQuiet(containingScopeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
+        if (SyncUtil.tryLockQuiet(containingScopeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
+            try {
                 if (null == containingScope) {
                     calcContainingScope();
                 }
                 return containingScope != null ? containingScope.getElement() : null;
-            } else {
-                return null;
+            } finally {
+                containingScopeLock.unlock();
             }
-        } finally {
-            containingScopeLock.unlock();
+        } else {
+            return null;
         }
     }
 

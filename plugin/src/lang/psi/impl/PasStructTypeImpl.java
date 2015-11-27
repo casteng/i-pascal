@@ -105,7 +105,8 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
-                LOG.error("Error occured during building members for: " + this, e.getCause());
+                LOG.warn("Error occured during building members for: " + this, e.getCause());
+                invalidateCaches(getKey());
                 return EMPTY_MEMBERS;
             }
         }
@@ -226,7 +227,8 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
-                LOG.error("Error occured during building members for: " + this, e.getCause());
+                LOG.warn("Error occured during building members for: " + this, e.getCause());
+                invalidateCaches(getKey());
                 return Collections.emptyList();
             }
         }

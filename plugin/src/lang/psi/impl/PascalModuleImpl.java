@@ -61,8 +61,9 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
-                LOG.error("Error occured during building members for: " + this, e.getCause());
+                LOG.warn("Error occured during building members for: " + this, e.getCause());
             }
+            invalidateCaches(getKey());
             return EMPTY_MEMBERS;
         }
     }

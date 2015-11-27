@@ -253,17 +253,17 @@ public class PasReferenceUtil {
 
     @Nullable
     private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, int recursionCount) {
-        try {
-            if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
+        if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
+            try {
                 if (!field.isTypeResolved()) {
                     field.setValueType(resolveFieldType(field, true, recursionCount));
                 }
                 return field.getValueType() != null ? field.getValueType().getTypeScope() : null;
-            } else {
-                return null;
+            } finally {
+                field.getTypeLock().unlock();
             }
-        } finally {
-            field.getTypeLock().unlock();
+        } else {
+            return null;
         }
     }
 
@@ -369,7 +369,7 @@ public class PasReferenceUtil {
                         continue;
                     }
                     for (PasField pasField : namespace.getAllFields()) {
-                        if ((pasField.element != null) && isFieldMatches(pasField, fqn, fieldTypes) &&
+                        if ((pasField.getElementPtr() != null) && isFieldMatches(pasField, fqn, fieldTypes) &&
                                 !result.contains(pasField) &&
                                 isVisibleWithinUnit(pasField, fqn)) {
                             result.add(pasField);

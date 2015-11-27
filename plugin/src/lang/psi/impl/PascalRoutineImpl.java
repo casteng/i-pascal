@@ -50,6 +50,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         super(node);
     }
 
+    @Override
     protected String calcKey() {
         StringBuilder sb = new StringBuilder(PsiUtil.isForwardProc(this) ? "forward:" : "");
         PasEntityScope scope = this;
@@ -77,7 +78,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
-                LOG.error("Error occured during building members for: " + this, e.getCause());
+                LOG.warn("Error occured during building members for: " + this, e.getCause());
+                invalidateCaches(getKey());
                 return EMPTY_MEMBERS;
             }
         }
@@ -158,8 +160,11 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
+        if (!SyncUtil.tryLockQuiet(parentLock, SyncUtil.LOCK_TIMEOUT_MS)) {
+            return Collections.emptyList();
+        }
         try {
-            if (!SyncUtil.tryLockQuiet(parentLock, SyncUtil.LOCK_TIMEOUT_MS) || parentBuilding) {
+            if (parentBuilding) {
                 return Collections.emptyList();
             }
             parentBuilding = true;
@@ -169,7 +174,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
-                LOG.error("Error occured during building parents for: " + this, e.getCause());
+                LOG.warn("Error occured during building parents for: " + this, e.getCause());
+                invalidateCaches(getKey());
                 return Collections.emptyList();
             }
         } finally {
