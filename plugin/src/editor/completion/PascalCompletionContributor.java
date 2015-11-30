@@ -371,7 +371,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 appendTokenSet(result, PascalLexer.DECLARATIONS);
                 appendTokenSetUnique(result, PascalLexer.USES, scope);
             }
-            appendTokenSetUnique(result, PasTypes.BEGIN, scope);
+            appendTokenSet(result, TS_BEGIN);
         }
     }
 

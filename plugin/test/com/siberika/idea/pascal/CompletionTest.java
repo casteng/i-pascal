@@ -144,7 +144,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "const", "type", "var", "procedure", "function",
                 "abstract", "assembler", "cdecl", "deprecated", "dispid", "dynamic", "experimental",
                 "export", "final", "inline", "library", "message", "overload", "override", "pascal", "platform",
-                "register", "reintroduce", "safecall", "static", "stdcall", "virtual");
+                "register", "reintroduce", "safecall", "static", "stdcall", "virtual", "begin");
         myFixture.type('c');
         checkCompletionContains(myFixture, "const", "procedure", "function");
     }
