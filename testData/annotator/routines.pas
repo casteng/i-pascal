@@ -4,7 +4,9 @@ interface
 
 const kernel = 'kernel32.dll';
 
-type TVarData = TVarData;
+type
+    TVarData = TVarData;
+    PChar = PChar;
 
     procedure proc1i; external 'kernel32.dll' name 'proc1i';
     procedure proc2i; external kernel name 'proc2i';
@@ -33,5 +35,14 @@ end;
 procedure proc4; external 'kernel32.dll' index 'proc4';
 procedure proc5; external kernel index 'proc5';
 procedure proc6; external index 'proc6';
+
+Function f1(P : PChar) : Longint; cdecl; external;
+Function f2(P : PChar) : Longint; cdecl; external name 'Fname';
+Function f3(P : PChar) : Longint; cdecl; external index 0;
+Function f4(arg: TVarData):Integer; Cdecl; External 'libname';
+Function f5(P : PChar) : Longint; cdecl; external 'lname' name 'Fname';
+Function f6(P : PChar) : Longint; cdecl; external 'lname' index 0;
+function ExternalMethod(const SomeString: PChar): Integer; stdcall; external 'cstyle.dll' delayed;
+function DllGetDataSnapClassObject(const CLSID, IID: TVarData; var Obj): PChar; cdecl; external 'libmidas.a' dependency 'stdc++', 'dep2';
 
 end.

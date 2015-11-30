@@ -336,7 +336,9 @@ FunctionDirective           ::= overloadDirective | oldCallConventionDirectiveSe
 private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
-ExternalDirective           ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier ";" | EXTERNAL ConstExpression externalSpecifier ";"
+ExternalDirective           ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier [libLoadSpec] ";" | EXTERNAL ConstExpression [externalSpecifier] [libLoadSpec] ";"
+private libLoadSpec         ::= "delayed" | "dependency" constExpr [libListRest]
+private libListRest         ::= COMMA constExpr
 private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
 ProcBodyBlock               ::= ProcForwardDecl | ExternalDirective | BlockLocal [";"]
 ProcForwardDecl             ::= FORWARD ";" FunctionDirective*
@@ -548,7 +550,7 @@ private recordValueRest     ::= ";" recordValue
 private recordValue         ::= identifier ":" constExpr
 
 private rec_record_colon    ::= !(")" | END)
-private rec_expr_colon      ::= !(")" | ";" | INDEX | "name") & rec_section
+private rec_expr_colon      ::= !(")" | ";" | INDEX | "name" | "delayed" | "dependency") & rec_section
 
 /*private Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
                                 INHERITED [TypeID] exprParentheses? | EntityID DesignatorItemEx* | DesignatorItemEx+

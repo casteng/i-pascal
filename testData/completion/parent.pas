@@ -7,7 +7,9 @@ type
         constructor ChildConstructor();
         function ChildMethod(): TParent;
     end;
-var Test: TTest;
+var
+    Test: TTest;
+
 begin
     Test.<caret>
 end.
