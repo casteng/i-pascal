@@ -232,7 +232,8 @@ UnitModuleHead              ::= UNIT NamespaceIdent hintingDirective* ";" {pin=1
 private intUsesClause       ::= UsesClause {recoverWhile=rec_block_local_end}
 UsesClause                  ::= USES namespaceNameList ";" {pin=1}
 
-private moduleLibrary       ::= LibraryModuleHead [intUsesClause] BlockGlobal "." {pin=1}
+private moduleLibrary       ::= LibraryModuleHead [intUsesClause] libBlockGlobal "." {pin=1}
+private libBlockGlobal      ::= ImplDeclSection END | BlockGlobal
 LibraryModuleHead           ::= LIBRARY NamespaceIdent hintingDirective* ";" {pin=1}
 
 private modulePackage       ::= PackageModuleHead RequiresClause [ContainsClause] END "." {pin=1}
