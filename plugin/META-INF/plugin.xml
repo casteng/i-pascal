@@ -142,7 +142,9 @@
     <depends>com.intellij.modules.platform</depends>
 
     <application-components>
-        <!-- Add your application components here -->
+        <component>
+            <implementation-class>com.siberika.idea.pascal.PascalAppService</implementation-class>
+        </component>
     </application-components>
 
     <project-components>
