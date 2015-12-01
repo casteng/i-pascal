@@ -71,6 +71,8 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
             scopes = new LinkedHashSet<PasEntityScope>();
             findDescendingStructs(scopes, PsiUtil.getStructByElement(routine), GotoSuper.LIMIT_NONE, rCnt);
             GotoSuper.extractMethodsByName(targets, scopes, routine, false, GotoSuper.calcRemainingLimit(targets, limit));
+        } else {
+            targets.addAll(found);
         }
     }
 
