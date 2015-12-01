@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
  */
 public abstract class PascalCompilerProcessAdapter extends ProcessAdapter {
     private final CompilerMessager messager;
+    private StringBuilder sb = new StringBuilder();
 
     public PascalCompilerProcessAdapter(CompilerMessager messager) {
         this.messager = messager;
@@ -20,7 +21,24 @@ public abstract class PascalCompilerProcessAdapter extends ProcessAdapter {
 
     @Override
     public void onTextAvailable(ProcessEvent event, Key outputType) {
-        processLine(messager, event.getText());
+        String str = event.getText();
+        sb.append(str);
+        if (str.endsWith("\n")) {
+            doProcessLine();
+        }
+    }
+
+    @Override
+    public void processTerminated(ProcessEvent event) {
+        super.processTerminated(event);
+        if (sb.length() > 0) {
+            doProcessLine();
+        }
+    }
+
+    private void doProcessLine() {
+        processLine(messager, sb.toString());
+        sb = new StringBuilder();
     }
 
 }
