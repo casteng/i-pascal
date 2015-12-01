@@ -89,7 +89,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
                 return true;
             }
-        }, PascalStructType.class, PasConstDeclaration.class, PascalRoutineImpl.class);
+        }, PascalStructType.class, PasConstDeclaration.class, PascalRoutineImpl.class, PasNamedIdent.class, PasGenericTypeIdent.class);
         return new ArrayList<PascalNamedElement>(result);
     }
 

@@ -3,9 +3,13 @@ package com.siberika.idea.pascal.editor;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -30,6 +34,19 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
         return false;
     }
 
+    public void testFindSubMethods() throws Exception {
+        myFixture.configureByFiles("findSubMethods.pas");
+        PasEntityScope parent = findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TParent");
+        PasField r = parent.getField("test");
+        Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations((r.getElement()).getNameIdentifier(), 100, 0);
+        assertEquals(impls.iterator().next().getContainingScope(), findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TChild"));
+    }
+
+    private PasEntityScope findClass(PasModule module, String name) {
+        PasField parentField = module.getField(name);
+        return PasReferenceUtil.retrieveFieldTypeScope(parentField);
+    }
+
     public void testFindSymbol() {
         myFixture.configureByFiles("gotoSymbolTest.pas");
         Collection<PascalNamedElement> symbols = PascalParserUtil.findSymbols(myFixture.getProject(), "");
@@ -37,7 +54,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
         for (PascalNamedElement symbol : symbols) {
             names.add(symbol.getName());
         }
-        assertEquals(new HashSet<String>(Arrays.asList("a", "b", "c")), names);
+        assertEquals(new HashSet<String>(Arrays.asList("a", "b", "c", "d")), names);
     }
 
     public void testNormalizeRoutineName() throws Exception {

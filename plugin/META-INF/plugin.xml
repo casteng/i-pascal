@@ -171,7 +171,6 @@
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
 
         <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.GotoSuper"/>
-        <!--<definitionsSearch implementation="com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch"/>-->
         <definitionsScopedSearch implementation="com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch"/>
 
         <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
@@ -203,8 +202,7 @@
         <renamePsiElementProcessor implementation="com.siberika.idea.pascal.lang.references.impl.PascalRenameProcessor"/>
         <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
                                  implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
-        <!--<editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>-->
-        <!--<editorHighlighterProvider filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>-->
+        <editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalLineMarkerProvider"/>
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalHeavyLineMarkerProvider"/>
         <codeInsight.parameterInfo language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterInfoHandler"/>
@@ -222,7 +220,6 @@
         <structureViewBuilder key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.structure.PascalStructureViewBuilder" />
         <structureViewBuilder key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.structure.PascalStructureViewBuilder" />
 
-        <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>-->
         <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
         <filetype.decompiler filetype="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.lang.compiled.DCUFileDecompiler"/>
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
