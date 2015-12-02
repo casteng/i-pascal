@@ -1,11 +1,15 @@
 package com.siberika.idea.pascal.compiler;
 
+import com.intellij.openapi.compiler.CompilationStatusListener;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.compiler.CompileTask;
+import com.intellij.openapi.compiler.CompilerManager;
+import com.intellij.openapi.compiler.CompilerMessage;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.pom.Navigatable;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.siberika.idea.pascal.PascalBundle;
@@ -23,6 +27,7 @@ import java.util.List;
 public class Task implements CompileTask {
     @Override
     public boolean execute(CompileContext context) {
+        CompilerManager.getInstance(context.getProject()).addCompilationStatusListener(new MyListener());
         checkMainFile(context);
         return true;
     }
@@ -59,5 +64,24 @@ public class Task implements CompileTask {
             }
         }
         return null;
+    }
+
+    private static class MyListener implements CompilationStatusListener {
+        @Override
+        public void compilationFinished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
+            CompilerManager.getInstance(compileContext.getProject()).removeCompilationStatusListener(this);
+            for (CompilerMessage message : compileContext.getMessages(CompilerMessageCategory.ERROR)) {
+                Navigatable nav = message.getNavigatable();
+                if ((nav != null) && (nav.canNavigateToSource())) {
+                    message.getNavigatable().navigate(true);
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void fileGenerated(String outputRoot, String relativePath) {
+
+        }
     }
 }
