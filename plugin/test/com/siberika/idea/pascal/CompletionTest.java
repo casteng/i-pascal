@@ -134,9 +134,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testModuleSectionWithUses() {
         myFixture.configureByFiles("moduleSectionWithUses.pas");
         checkCompletion(myFixture, "const", "type", "var", "threadvar", "resourcestring",
-                "procedure", "function", "constructor", "destructor", "begin");
+                "procedure", "function", "constructor", "destructor", "begin  ");
         myFixture.type('i');
-        checkCompletion(myFixture, "function", "resourcestring");
+        checkCompletion(myFixture, "function", "resourcestring", "begin  ");
     }
 
     public void testLocalDeclSection() {
@@ -153,9 +153,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("structured.pas");
         checkCompletion(myFixture, "strict", "private", "protected", "public", "published", "automated",
                 "procedure", "function", "constructor", "destructor",
-                "class", "operator", "property", "end");
+                "class ", "operator", "property", "end");
         myFixture.type('a');
-        checkCompletion(myFixture, "automated", "private", "class", "operator");
+        checkCompletion(myFixture, "automated", "private", "class ", "operator");
     }
 
     public void testTypeId() {

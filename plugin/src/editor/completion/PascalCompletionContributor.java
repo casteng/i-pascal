@@ -43,6 +43,7 @@ import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasCaseItem;
 import com.siberika.idea.pascal.lang.psi.PasCaseStatement;
+import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
@@ -82,7 +83,6 @@ import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
-import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
@@ -116,7 +116,6 @@ public class PascalCompletionContributor extends CompletionContributor {
             PasTypes.TYPE, PasTypes.CLASS, PasTypes.DISPINTERFACE, PasTypes.RECORD, PasTypes.OBJECT,
             PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.HELPER, PasTypes.ARRAY
     );
-    private static final int MAX_CNT = 100;
 
     private static Map<String, String> getInsertMap() {
         Map<String, String> res = new HashMap<String, String>();
@@ -150,7 +149,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         res.put(PasTypes.SET.toString(), String.format(" of %s;", PLACEHOLDER_CARET));
 
         res.put(PasTypes.CONSTRUCTOR.toString(), String.format(" Create(%s);", PLACEHOLDER_CARET));
-        res.put(PasTypes.DESTRUCTOR.toString(), String.format(" Destroy(%s);", PLACEHOLDER_CARET));
+        res.put(PasTypes.DESTRUCTOR.toString(), String.format(" Destroy(%s); override;", PLACEHOLDER_CARET));
         res.put(PasTypes.FUNCTION.toString(), String.format(" %s(): ;", PLACEHOLDER_CARET));
         res.put(PasTypes.PROCEDURE.toString(), String.format(" %s();", PLACEHOLDER_CARET));
 
@@ -215,6 +214,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     TokenSet TS_UNTIL = TokenSet.create(PasTypes.UNTIL);
     TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF);
     TokenSet TS_ELSE = TokenSet.create(PasTypes.ELSE);
+    TokenSet TS_CLASS = TokenSet.create(PasTypes.CLASS);
 
     private void handleInsideStatement(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
         if ((pos instanceof PasStatement) && (parameters.getOriginalPosition() != null)) {
@@ -342,16 +342,22 @@ public class PascalCompletionContributor extends CompletionContributor {
             addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters.isExtendedCompletion());
             if (!PsiUtil.isInstanceOfAny(pos.getParent(), PasClassParent.class)) {
                 appendTokenSet(result, TYPE_DECLARATIONS);
-                result.addElement(getElement("interface "));
+                result.caseInsensitive().addElement(getElement("interface "));
             }
         }
     }
 
     private void handleStructured(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
-        if (originalPos instanceof PascalStructType) {
+        //if (originalPos instanceof PascalStructType) {
+        if (pos instanceof PasClassField) {
             appendTokenSet(result, PascalLexer.VISIBILITY);
-            appendTokenSet(result, PascalLexer.STRUCT_DECLARATIONS);
+            appendTokenSet(result, TokenSet.andNot(PascalLexer.STRUCT_DECLARATIONS, TS_CLASS));
+            appendText(result, "class ");
         }
+    }
+
+    private void appendText(CompletionResultSet result, String s) {
+        result.caseInsensitive().addElement(getElement(s));
     }
 
     private void handleDeclarations(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
@@ -390,11 +396,11 @@ public class PascalCompletionContributor extends CompletionContributor {
                 }
                 case LIBRARY:
                     result.caseInsensitive().addElement(getElement(PasTypes.EXPORTS.toString()));
-                    result.addElement(getElement("begin  "));
+                    result.caseInsensitive().addElement(getElement("begin  "));
                 case PROGRAM:
                     appendTokenSetUnique(result, TokenSet.create(PascalLexer.USES), parameters.getOriginalFile());
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
-                    result.addElement(getElement("begin  "));
+                    result.caseInsensitive().addElement(getElement("begin  "));
             }
         }
     }
@@ -404,9 +410,9 @@ public class PascalCompletionContributor extends CompletionContributor {
             appendTokenSetIfAbsent(result, PascalLexer.MODULE_HEADERS, parameters.getOriginalFile(),
                     PasProgramModuleHead.class, PasUnitModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);
             if ((parameters.getOriginalPosition() != null) && (PsiTreeUtil.skipSiblingsForward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class) != null)) {
-                result.addElement(getElement("begin"));
+                result.caseInsensitive().addElement(getElement("begin"));
             } else {
-                result.addElement(getElement("begin "));
+                result.caseInsensitive().addElement(getElement("begin "));
             }
         }
     }
