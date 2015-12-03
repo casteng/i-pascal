@@ -37,6 +37,7 @@ var
   arrInt: array of Integer;
   ArrVRec: array of TVarRec;
   arr1: TArr;
+  obj: TObserverMapping;
 
 implementation
 
@@ -45,6 +46,7 @@ var
 begin
   //arr[0][0]^[0].create();
     //arr[0]^[0];
+  obj[0].A;
   arr1^.arrInRec[0].innerField;
   //(TOuterRec).arrInRec;
   (int as TOuterRec).arrInRec;

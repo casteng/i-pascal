@@ -113,4 +113,9 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(false, false, false);
     }
 
+    public void testEnumTypes() {
+        myFixture.configureByFiles("enumTypes.pas");
+        myFixture.checkHighlighting(false, false, false);
+    }
+
 }

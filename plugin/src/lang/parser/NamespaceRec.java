@@ -89,6 +89,10 @@ public class NamespaceRec {
         return !nested && (current == 0);
     }
 
+    public int getRestLevels() {
+        return target - current;
+    }
+
     public boolean isTarget() {
         return current == target;
     }
@@ -134,6 +138,10 @@ public class NamespaceRec {
 
     public String getCurrentName() {
         return current < levels.length ? levels[current] : null;
+    }
+
+    public String getLastName() {
+        return levels[levels.length-1];
     }
 
     public void clearTarget() {

@@ -40,9 +40,10 @@ type
       class function Instance: TObserverMapping;
     public
         constructor Create;
-      destructor Destroy; override;
+        destructor Destroy; override;
         class destructor Destroy;
         class function GetObserverID(const Key: Single): Integer;
+        property DefProp[ind: Integer]: TA; default;
     end;
 
     CA = class of TA;

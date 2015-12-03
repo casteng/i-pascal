@@ -58,7 +58,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             res = getChildType(getFirstChild(expr));
             if (!res.isEmpty()) {                                           // Replace scope if indexing default array property
                 PasEntityScope scope = res.iterator().next().getTypeScope();
-                PascalNamedElement defProp = PsiUtil.getDefaultProperty(scope);
+                PascalNamedElement defProp = scope != null ? PsiUtil.getDefaultProperty(scope) : null;
                 if (defProp instanceof PasClassProperty) {
                     PasTypeID typeId = ((PasClassProperty) defProp).getTypeID();
                     if (typeId != null) {

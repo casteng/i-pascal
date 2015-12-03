@@ -23,10 +23,12 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
@@ -352,6 +354,27 @@ public class PasReferenceUtil {
                         newNS = fqn.isFirst() ? retrieveFieldUnitScope(field, includeLibrary) : null;                    // First qualifier can be unit name
                     } else {
                         newNS = retrieveFieldTypeScope(field, recursionCount);
+                        boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
+                        if ((fqn.getRestLevels() == 1) && ((null == newNs) || isDefault)         // "default" type pseudo value
+                         && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member
+                            if (isDefault) {
+                                fqn.next();
+                                PasField defaultField = new PasField(field.owner, field.getElement(), "default", PasField.FieldType.CONSTANT, field.visibility);
+                                if (isFieldMatches(defaultField, fqn, fieldTypes)) {
+                                    result.add(defaultField);
+                                }
+                                return result;
+                            }
+                            if (field.getValueType() != null) {
+                                SmartPsiElementPointer<PasTypeDecl> typePtr = field.getValueType().declaration;
+                                PasTypeDecl enumType = typePtr != null ? typePtr.getElement() : null;
+                                PasEnumType enumDecl = enumType != null ? PsiTreeUtil.findChildOfType(enumType, PasEnumType.class) : null;
+                                if (enumDecl != null) {
+                                    fqn.next();
+                                    return collectEnumFields(result, field, enumDecl, fqn, fieldTypes);
+                                }
+                            }
+                        }
                     }
 
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
@@ -389,6 +412,17 @@ public class PasReferenceUtil {
         /*} catch (Throwable e) {
             //LOG.error(String.format("Error parsing scope %s, file %s", scope, scope != null ? scope.getContainingFile().getName() : ""), e);
             throw e;*/
+        }
+        return result;
+    }
+
+    // Advances fqn
+    private static Collection<PasField> collectEnumFields(Collection<PasField> result, PasField field, PasEnumType enumDecl, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
+        for (PasNamedIdent ident : enumDecl.getNamedIdentList()) {
+            PasField enumField = new PasField(field.owner, ident, ident.getName(), PasField.FieldType.CONSTANT, field.visibility);
+            if (isFieldMatches(enumField, fqn, fieldTypes)) {
+                result.add(enumField);
+            }
         }
         return result;
     }
