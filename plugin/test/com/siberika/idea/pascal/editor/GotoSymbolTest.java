@@ -7,13 +7,13 @@ import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.TestUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,15 +36,10 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testFindSubMethods() throws Exception {
         myFixture.configureByFiles("findSubMethods.pas");
-        PasEntityScope parent = findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TParent");
+        PasEntityScope parent = TestUtil.findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TParent");
         PasField r = parent.getField("test");
         Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations((r.getElement()).getNameIdentifier(), 100, 0);
-        assertEquals(impls.iterator().next().getContainingScope(), findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TChild"));
-    }
-
-    private PasEntityScope findClass(PasModule module, String name) {
-        PasField parentField = module.getField(name);
-        return PasReferenceUtil.retrieveFieldTypeScope(parentField);
+        assertEquals(impls.iterator().next().getContainingScope(), TestUtil.findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TChild"));
     }
 
     public void testFindSymbol() {

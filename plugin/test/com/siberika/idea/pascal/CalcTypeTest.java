@@ -3,11 +3,14 @@ package com.siberika.idea.pascal;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.TestUtil;
 
 import java.util.List;
 
@@ -25,6 +28,12 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
             printIdent(field);
         }
     }*/
+
+    public void testGetDefaultProperty() throws Exception {
+        myFixture.configureByFiles("structTypes.pas");
+        PasEntityScope obj = TestUtil.findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TObserverMapping");
+        assertEquals(PsiUtil.getDefaultProperty(obj).getName(), "DefProp");
+    }
 
     public void testExprType() throws Exception {
         myFixture.configureByFiles("structTypes.pas", "calcTypeTest.pas");

@@ -6,12 +6,16 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -43,21 +47,28 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
 
         if (expr instanceof PasReferenceExpr) {
             res = getChildType(getFirstChild(expr));
-            final Collection<PasField> references = PasReferenceUtil.resolve(retrieveScope(res),
-                    NamespaceRec.fromElement(((PasReferenceExpr) expr).getFullyQualifiedIdent()), PasField.TYPES_ALL, true, 0);
-            if (!references.isEmpty()) {
-                PasField field = references.iterator().next();
-                PasReferenceUtil.retrieveFieldTypeScope(field);
-                PasField.ValueType fieldType = field.getValueType();
-                if (fieldType != null) {
-                    res.add(fieldType);
-                }
+            PasField.ValueType fieldType = resolveType(retrieveScope(res), ((PasReferenceExpr) expr).getFullyQualifiedIdent());
+            if (fieldType != null) {
+                res.add(fieldType);
             }
         } else if (expr instanceof PasDereferenceExpr) {
             res = getChildType(getFirstChild(expr));
             res.add(new PasField.ValueType(null, PasField.Kind.POINTER, null, null));
         } else if (expr instanceof PasIndexExpr) {
             res = getChildType(getFirstChild(expr));
+            if (!res.isEmpty()) {                                           // Replace scope if indexing default array property
+                PasEntityScope scope = res.iterator().next().getTypeScope();
+                PascalNamedElement defProp = PsiUtil.getDefaultProperty(scope);
+                if (defProp instanceof PasClassProperty) {
+                    PasTypeID typeId = ((PasClassProperty) defProp).getTypeID();
+                    if (typeId != null) {
+                        PasField.ValueType fieldType = resolveType(scope, typeId.getFullyQualifiedIdent());
+                        if (fieldType != null) {
+                            res = new SmartList<PasField.ValueType>(fieldType);
+                        }
+                    }
+                }
+            }
             res.add(new PasField.ValueType(null, PasField.Kind.ARRAY, null, null));
         } else if (expr instanceof PasProductExpr) {                                      // AS operator case
             res = getChildType(getLastChild(expr));
@@ -66,6 +77,16 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         }
 
         return res;
+    }
+
+    private static PasField.ValueType resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
+        final Collection<PasField> references = PasReferenceUtil.resolve(scope, NamespaceRec.fromElement(fullyQualifiedIdent), PasField.TYPES_ALL, true, 0);
+        if (!references.isEmpty()) {
+            PasField field = references.iterator().next();
+            PasReferenceUtil.retrieveFieldTypeScope(field);
+            return field.getValueType();
+        }
+        return null;
     }
 
     private static List<PasField.ValueType> getChildType(PsiElement child) {

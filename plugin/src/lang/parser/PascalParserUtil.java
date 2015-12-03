@@ -168,6 +168,12 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return section != null ? section.getTextRange().getEndOffset() : -1;
     }
 
+    /**
+     * Returns type scope from type declaration in type section
+     * @param typeIdent         name of declaring type
+     * @param recursionCount    to prevent infinite recursion
+     * @return                  scope if type is structured
+     */
     @Nullable
     public static PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent, int recursionCount) {
         if (recursionCount > MAX_STRUCT_TYPE_RESOLVE_RECURSION) {

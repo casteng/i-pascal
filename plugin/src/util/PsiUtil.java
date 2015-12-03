@@ -57,6 +57,7 @@ import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRefNamedIdentImpl;
@@ -728,5 +729,18 @@ public class PsiUtil {
             res.add(smartPtr.getElement());
         }
         return res;
+    }
+
+    @Nullable
+    public static PascalNamedElement getDefaultProperty(PasEntityScope typeScope) {
+        for (PasField field : typeScope.getAllFields()) {
+            if (field.fieldType == PasField.FieldType.PROPERTY) {
+                PascalNamedElement el = field.getElement();
+                if ((el != null) && (el.getNode().findChildByType(PasTypes.DEFAULT) != null)) {
+                    return el;
+                }
+            }
+        }
+        return null;
     }
 }
