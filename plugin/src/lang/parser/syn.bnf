@@ -274,7 +274,7 @@ private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDis
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=1}
-ExportsSection              ::= EXPORTS identifier exportItem ("," identifier exportItem)* ";" {pin=1}
+ExportsSection              ::= EXPORTS RefNamedIdent exportItem ("," RefNamedIdent exportItem)* ";" {pin=1}
 private exportItem          ::= ["(" [formalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
 
 private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | LE | GT | GE | "<>" | IN | "explicit"
@@ -293,7 +293,7 @@ RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="pr
 RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {extends=RoutineImplDecl}
 RoutineImplDeclNested1      ::= routineDeclaration BlockLocalNested1 [";"] {extends=RoutineImplDecl}
 
-ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" identifier ";"
+ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" RefNamedIdent ";"
 
 private complexType         ::= ClassTypeTypeDecl | structTypeDecl | ArrayType | SetType | FileType
 private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeDecl | ObjectDecl | RecordHelperDecl | RecordDecl
@@ -329,7 +329,7 @@ BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
 AssemblerStatement          ::= ASM asmBlock END {pin=1}
 private asmBlock            ::= assemblerItem* {recoverWhile=rec_struct_outer}
-private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | identifier | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN
+private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | RefNamedIdent | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN
 
 FunctionDirective           ::= overloadDirective | oldCallConventionDirectiveSemi
                               | inlineDirectiveSemi | callConventionSemi | hintingDirective ";"
@@ -355,7 +355,7 @@ private bindingDirective    ::= ((MESSAGE Expression) | STATIC | DYNAMIC | OVERR
 
 LabelDeclSection	        ::=	LABEL label labelsRest* ";" {pin=1 name="label declaration"}
 private labelsRest          ::= "," label {}
-private label               ::= identifier | NUMBER_INT | NUMBER_HEX
+private label               ::= RefNamedIdent | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section" recoverWhile=rec_block_local_end}
 private varKey	            ::=	VAR | THREADVAR
