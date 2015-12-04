@@ -42,7 +42,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     protected ReentrantLock containingScopeLock = new ReentrantLock();
 
-    protected boolean building = false;
+    volatile protected boolean building = false;
     volatile protected SmartPsiElementPointer<PasEntityScope> containingScope;
     volatile protected String cachedKey;
 

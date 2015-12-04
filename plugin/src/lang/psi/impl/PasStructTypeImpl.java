@@ -148,11 +148,6 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
                 PascalPsiImplUtil.logNullContainingFile(PasStructTypeImpl.this);
                 return null;
             }
-            if (building) {
-                LOG.info("WARNING: Reentered in buildXXX");
-                //return null;
-            }
-            building = true;
             Members res = new Members();
 
             PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
@@ -179,7 +174,6 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             }
             res.stamp = getStamp(getContainingFile());
             LOG.info(getName() + ": buildMembers: " + res.all.size() + " members");
-            building = false;
             return res;
         }
     }

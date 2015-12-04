@@ -110,7 +110,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
                 return null;
             }
             if (building) {
-                LOG.info("WARNING: Reentered in buildXXX");
+                LOG.info("WARNING: Reentered in routine.buildXXX");
                 return null;
             }
             building = true;
