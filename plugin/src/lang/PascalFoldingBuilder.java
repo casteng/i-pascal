@@ -17,6 +17,7 @@ import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
@@ -102,7 +103,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
     private void foldEnums(PsiElement root, List<FoldingDescriptor> descriptors) {
         @SuppressWarnings("unchecked")
         Collection<PasEnumType> enums = PsiUtil.findChildrenOfAnyType(root, PasEnumType.class);
-        for (final PascalPsiElement enumType : enums) {
+        for (final PasEnumType enumType : enums) {
             final PasTypeDeclaration decl = PsiTreeUtil.getParentOfType(enumType, PasTypeDeclaration.class);
             if (decl != null) {
                 TextRange range = getRange(decl.getGenericTypeIdent().getTextRange().getEndOffset(), decl.getTextRange().getEndOffset());
@@ -111,7 +112,18 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                         @Nullable
                         @Override
                         public String getPlaceholderText() {
-                            return "=(...);";
+                            StringBuilder sb = new StringBuilder(" = (");
+                            boolean first = true;
+                            for (PasNamedIdent ident : enumType.getNamedIdentList()) {
+                                if (!first) {
+                                    sb.append(", ").append(ident.getName());
+                                } else {
+                                    sb.append(ident.getName());
+                                    first = false;
+                                }
+                            }
+                            sb.append(");");
+                            return sb.toString();
                         }
                     });
                 }

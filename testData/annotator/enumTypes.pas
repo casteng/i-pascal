@@ -4,7 +4,9 @@ interface
 
 type
   Integer = Integer;
-  TEnum = (eOne, eTwo = 2, eThree);
+  TEnum = (eOne,
+      eTwo = 2,
+      eThree);
   TEnumArr = array[TEnum.eOne..TEnum.eThree] of TEnum;
 
 implementation

@@ -11,6 +11,6 @@ begin
 end;
 
 exports
-proc1, proc2;
+    proc1, proc2;
 
 end.
