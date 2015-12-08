@@ -6,7 +6,6 @@ import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
@@ -29,6 +28,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -90,9 +90,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                             protected void run(@NotNull Result result) throws Throwable {
                                 PsiManager manager = actionData.parent != null ? actionData.parent.getManager() : null;
                                 cutLFs(document, actionData);
-                                document.insertString(actionData.offset, actionData.text);
-                                editor.getCaretModel().moveToOffset(actionData.offset + actionData.text.length() - 1 - (actionData.text.endsWith("\n") ? 1 : 0));
-                                editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
+                                DocUtil.adjustDocument(editor, actionData.offset, actionData.text);
                                 PsiDocumentManager.getInstance(project).commitDocument(document);
                                 if (manager != null) {
                                     CodeStyleManager.getInstance(manager).reformat(actionData.parent, true);
@@ -150,9 +148,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (findParent(file, data, PasVarSection.class, null)) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + ": T;");
+                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + ": T" + DocUtil.PLACEHOLDER_CARET + ";");
             } else if (data.parent != null) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, "var " + data.element.getName() + ": T;");
+                data.text = data.text.replace(PLACEHOLDER_DATA, "var " + data.element.getName() + ": T" + DocUtil.PLACEHOLDER_CARET + ";");
             }
         }
     }
@@ -166,9 +164,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (findParent(file, data, PasConstSection.class, PasConstDeclaration.class)) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + " = ;");
+                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + " = " + DocUtil.PLACEHOLDER_CARET + ";");
             } else if (data.parent != null) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, "const " + data.element.getName() + " = ;");
+                data.text = data.text.replace(PLACEHOLDER_DATA, "const " + data.element.getName() + " = " + DocUtil.PLACEHOLDER_CARET + ";");
             }
         }
     }
@@ -183,9 +181,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (findParent(file, data, PasTypeSection.class, PasTypeDeclaration.class)) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + " = ;");
+                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + " = " + DocUtil.PLACEHOLDER_CARET + ";");
             } else if (data.parent != null) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, "type " + data.element.getName() + " = ;");
+                data.text = data.text.replace(PLACEHOLDER_DATA, "type " + data.element.getName() + " = " + DocUtil.PLACEHOLDER_CARET + ";");
             }
         }
     }

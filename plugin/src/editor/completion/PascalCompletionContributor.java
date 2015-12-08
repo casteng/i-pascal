@@ -16,9 +16,7 @@ import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -88,6 +86,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -108,7 +107,6 @@ public class PascalCompletionContributor extends CompletionContributor {
     private static final Map<String, String> INSERT_MAP = getInsertMap();
 
     private static final String PLACEHOLDER_FILENAME = "__FILENAME__";
-    private static final String PLACEHOLDER_CARET = "__CARET__";
     private static final TokenSet DECLARATIONS_LOCAL = TokenSet.create(
             PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.PROCEDURE, PasTypes.FUNCTION
     );
@@ -119,45 +117,45 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private static Map<String, String> getInsertMap() {
         Map<String, String> res = new HashMap<String, String>();
-        res.put(PasTypes.UNIT.toString(), String.format(" %s;\n\ninterface\n\n  %s\nimplementation\n\nend.\n", PLACEHOLDER_FILENAME, PLACEHOLDER_CARET));
-        res.put(PasTypes.PROGRAM.toString(), String.format(" %s;\nbegin\n  %s\nend.\n", PLACEHOLDER_FILENAME, PLACEHOLDER_CARET));
-        res.put(PasTypes.LIBRARY.toString(), String.format(" %s;\n\nexports %s\n\nbegin\n\nend.\n", PLACEHOLDER_FILENAME, PLACEHOLDER_CARET));
-        res.put(PasTypes.PACKAGE.toString(), String.format(" %s;\n\nrequires\n\n contains %s\n\nend.\n", PLACEHOLDER_FILENAME, PLACEHOLDER_CARET));
-        res.put(PasTypes.BEGIN.toString(),       String.format("\n  %s\nend;\n", PLACEHOLDER_CARET));
-        res.put(PasTypes.BEGIN.toString() + " ", String.format("\n  %s\nend.\n", PLACEHOLDER_CARET));
+        res.put(PasTypes.UNIT.toString(), String.format(" %s;\n\ninterface\n\n  %s\nimplementation\n\nend.\n", PLACEHOLDER_FILENAME, DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.PROGRAM.toString(), String.format(" %s;\nbegin\n  %s\nend.\n", PLACEHOLDER_FILENAME, DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.LIBRARY.toString(), String.format(" %s;\n\nexports %s\n\nbegin\n\nend.\n", PLACEHOLDER_FILENAME, DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.PACKAGE.toString(), String.format(" %s;\n\nrequires\n\n contains %s\n\nend.\n", PLACEHOLDER_FILENAME, DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.BEGIN.toString(),       String.format("\n%s\nend;\n", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.BEGIN.toString() + " ", String.format("\n%s\nend.\n", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.END.toString(), ";");
-        res.put(PasTypes.INTERFACE.toString(), String.format("\n  %s\nimplementation\n", PLACEHOLDER_CARET));
-        res.put(PasTypes.INITIALIZATION.toString(), String.format("\n  %s\nfinalization\n", PLACEHOLDER_CARET));
-        res.put(PasTypes.USES.toString(), String.format(" %s;", PLACEHOLDER_CARET));
+        res.put(PasTypes.INTERFACE.toString(), String.format("\n  %s\nimplementation\n", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.INITIALIZATION.toString(), String.format("\n  %s\nfinalization\n", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.USES.toString(), String.format(" %s;", DocUtil.PLACEHOLDER_CARET));
 
-        res.put(PasTypes.FOR.toString(), String.format(" %s do ;", PLACEHOLDER_CARET));
-        res.put(PasTypes.WHILE.toString(), String.format(" %s do ;", PLACEHOLDER_CARET));
-        res.put(PasTypes.REPEAT.toString(), String.format("\nuntil %s;", PLACEHOLDER_CARET));
+        res.put(PasTypes.FOR.toString(), String.format(" %s do ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.WHILE.toString(), String.format(" %s do ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.REPEAT.toString(), String.format("\nuntil %s;", DocUtil.PLACEHOLDER_CARET));
 
-        res.put(PasTypes.IF.toString(), String.format(" %s then ;\n", PLACEHOLDER_CARET));
-        res.put(PasTypes.CASE.toString(), String.format(" %s of\nend;", PLACEHOLDER_CARET));
+        res.put(PasTypes.IF.toString(), String.format(" %s then ;\n", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.CASE.toString(), String.format(" %s of\nend;", DocUtil.PLACEHOLDER_CARET));
 
-        res.put(PasTypes.WITH.toString(), String.format(" %s do ;", PLACEHOLDER_CARET));
+        res.put(PasTypes.WITH.toString(), String.format(" %s do ;", DocUtil.PLACEHOLDER_CARET));
 
-        res.put(PasTypes.TRY.toString(), String.format("\n  %s\nfinally\nend;", PLACEHOLDER_CARET));
+        res.put(PasTypes.TRY.toString(), String.format("\n  %s\nfinally\nend;", DocUtil.PLACEHOLDER_CARET));
 
-        res.put(PasTypes.RECORD.toString(), String.format("  %s\nend;", PLACEHOLDER_CARET));
-        res.put(PasTypes.OBJECT.toString(), String.format("  %s\nend;", PLACEHOLDER_CARET));
-        res.put(PasTypes.CLASS.toString(), String.format("(TObject)\nprivate\n%s\npublic\nend;", PLACEHOLDER_CARET));
-        res.put(PasTypes.INTERFACE.toString() + " ", String.format("(IUnknown)\n%s\nend;", PLACEHOLDER_CARET));
-        res.put(PasTypes.ARRAY.toString(), String.format("[0..%s] of ;", PLACEHOLDER_CARET));
-        res.put(PasTypes.SET.toString(), String.format(" of %s;", PLACEHOLDER_CARET));
+        res.put(PasTypes.RECORD.toString(), String.format("  %s\nend;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.OBJECT.toString(), String.format("  %s\nend;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.CLASS.toString(), String.format("(TObject)\nprivate\n%s\npublic\nend;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.INTERFACE.toString() + " ", String.format("(IUnknown)\n%s\nend;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.ARRAY.toString(), String.format("[0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.SET.toString(), String.format(" of %s;", DocUtil.PLACEHOLDER_CARET));
 
-        res.put(PasTypes.CONSTRUCTOR.toString(), String.format(" Create(%s);", PLACEHOLDER_CARET));
-        res.put(PasTypes.DESTRUCTOR.toString(), String.format(" Destroy(%s); override;", PLACEHOLDER_CARET));
-        res.put(PasTypes.FUNCTION.toString(), String.format(" %s(): ;", PLACEHOLDER_CARET));
-        res.put(PasTypes.PROCEDURE.toString(), String.format(" %s();", PLACEHOLDER_CARET));
+        res.put(PasTypes.CONSTRUCTOR.toString(), String.format(" Create(%s);", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.DESTRUCTOR.toString(), String.format(" Destroy(%s); override;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.FUNCTION.toString(), String.format(" %s(): ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.PROCEDURE.toString(), String.format(" %s();", DocUtil.PLACEHOLDER_CARET));
 
-        res.put(PasTypes.VAR.toString(), String.format(" %s: ;", PLACEHOLDER_CARET));
-        res.put(PasTypes.THREADVAR.toString(), String.format(" %s: ;", PLACEHOLDER_CARET));
-        res.put(PasTypes.CONST.toString(), String.format(" %s = ;", PLACEHOLDER_CARET));
-        res.put(PasTypes.RESOURCESTRING.toString(), String.format(" %s = '';", PLACEHOLDER_CARET));
-        res.put(PasTypes.TYPE.toString(), String.format(" T%s = ;", PLACEHOLDER_CARET));
+        res.put(PasTypes.VAR.toString(), String.format(" %s: ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.THREADVAR.toString(), String.format(" %s: ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.CONST.toString(), String.format(" %s = ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.RESOURCESTRING.toString(), String.format(" %s = '';", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.TYPE.toString(), String.format(" T%s = ;", DocUtil.PLACEHOLDER_CARET));
         return res;
     }
 
@@ -468,10 +466,10 @@ public class PascalCompletionContributor extends CompletionContributor {
             res = res.withInsertHandler(new InsertHandler<LookupElement>() {
                 @Override
                 public void handleInsert(InsertionContext context, LookupElement item) {
-                    adjustDocument(context, adjustContent(context, "()"), 1);
+                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), "(" + DocUtil.PLACEHOLDER_CARET + ")");
                     AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
                     DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
-                    act.actionPerformed(new AnActionEvent(null, dataContext,"",act.getTemplatePresentation(),ActionManager.getInstance(),0));
+                    act.actionPerformed(new AnActionEvent(null, dataContext, "", act.getTemplatePresentation(), ActionManager.getInstance(), 0));
                 }
             });
         }
@@ -585,9 +583,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             String content = INSERT_MAP.get(item.getLookupString());
             if (null != content) {
                 content = content.replaceAll(PLACEHOLDER_FILENAME, FileUtilRt.getNameWithoutExtension(context.getFile().getName()));
-                int caretPos = content.indexOf(PLACEHOLDER_CARET);
-                content = content.replaceAll(PLACEHOLDER_CARET, "");
-                adjustDocument(context, content, caretPos >= 0 ? caretPos : null);
+                DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), content);
             }
             context.commitDocument();
             PsiElement el = context.getFile().findElementAt(context.getEditor().getCaretModel().getOffset());
@@ -597,24 +593,5 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
     };
-
-    private static void adjustDocument(InsertionContext context, String content, Integer caretOffset) {
-        final Document document = context.getEditor().getDocument();
-        document.insertString(context.getEditor().getCaretModel().getOffset(), content);
-        if (caretOffset != null) {
-            context.getEditor().getCaretModel().moveToOffset(context.getEditor().getCaretModel().getOffset() + caretOffset);
-        }
-    }
-
-    private static String adjustContent(InsertionContext context, String content) {
-        final Document document = context.getEditor().getDocument();
-        if (content.endsWith("()")) {                                                     // don't add "()" if there is already "("
-            TextRange r = TextRange.from(context.getEditor().getCaretModel().getOffset(), 1);
-            if (document.getText(r).startsWith("(")) {
-                return content.substring(0, content.length() - 2);
-            }
-        }
-        return content;
-    }
 
 }

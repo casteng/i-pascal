@@ -15,6 +15,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PsiUtil;
 
@@ -87,7 +88,7 @@ public class PascalRoutineActions {
                 }
             }
             String name = data.element.getName();
-            data.text = "\n\n" + StringUtil.replace(data.text, name, prefix + name) + "\nbegin\n\nend;\n\n";
+            data.text = "\n\n" + StringUtil.replace(data.text, name, prefix + name) + "\nbegin\n" + DocUtil.PLACEHOLDER_CARET + "\nend;\n\n";
             data.offset = SectionToggle.findImplPos(routine);
             data.parent = routine;
             if (data.offset < 0) {
