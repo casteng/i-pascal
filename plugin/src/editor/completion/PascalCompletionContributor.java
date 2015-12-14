@@ -168,14 +168,14 @@ public class PascalCompletionContributor extends CompletionContributor {
                 PsiElement pos = parameters.getPosition();
                 PsiElement prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
                 PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
-                //System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent()));
+//                System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent()));
 
                 originalPos = skipToExpressionParent(parameters.getOriginalPosition());
                 pos = skipToExpressionParent(parameters.getPosition());
                 prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
                 oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
                 int level = PsiUtil.getElementLevel(originalPos);
-                //System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
+//                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
                 if (!(prev instanceof PasTypeSection) && !(PsiUtil.isInstanceOfAny(originalPos, PasTypeSection.class, PasRoutineImplDecl.class, PasBlockLocal.class))) {
                     handleModuleHeader(result, parameters, pos);
@@ -316,8 +316,16 @@ public class PascalCompletionContributor extends CompletionContributor {
         return null;
     }
 
+    private boolean isAtAssignmentRightPart(PsiElement pos, PsiElement originalPos) {
+        if (PsiTreeUtil.getParentOfType(originalPos, PasCaseStatement.class) != null) {
+            return true;
+        }
+        return PsiUtil.isInstanceOfAny(pos, PasAssignPart.class, PasArgumentList.class,
+                                            PasIfStatement.class, PasWhileStatement.class, PasCaseStatement.class);
+    }
+
     private void handleStatement(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
-        if (PsiUtil.isInstanceOfAny(pos, PasAssignPart.class, PasArgumentList.class)) {                                 // identifier completion in right part of assignment
+        if (isAtAssignmentRightPart(pos, parameters.getOriginalPosition())) {                           // identifier completion in right part of assignment
             addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
             PsiElement prev = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class);
             if ((null == prev) || (!prev.getText().equals("."))) {
@@ -336,7 +344,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private void handleEntities(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
-        if (pos instanceof PasTypeID) {                                                                          // Type declaration
+        if ((pos instanceof PasTypeID) || (originalPos instanceof PasTypeID)) {                                                                          // Type declaration
             addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters.isExtendedCompletion());
             if (!PsiUtil.isInstanceOfAny(pos.getParent(), PasClassParent.class)) {
                 appendTokenSet(result, TYPE_DECLARATIONS);

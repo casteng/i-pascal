@@ -262,6 +262,8 @@ private rec_struct_field    ::= !(";" | ")" | END | CASE)
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private rec_name            ::= !(identifier | END) & rec_section
+private rec_case            ::= !(ELSE) & rec_name
+private rec_classparent     ::= !(CASE) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | ":" | "]")
 private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
@@ -384,7 +386,7 @@ TypeID                      ::=	FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
-private classForwardDecl    ::= (CLASS | INTERFACE) [ClassParent] {name="forward class declaration"}
+private classForwardDecl    ::= (CLASS | INTERFACE) [ClassParentWORec] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
 
 ClassField                  ::= field
 private classFieldSemi      ::= ClassField ";"
@@ -393,7 +395,7 @@ private classDecl           ::= CLASS ((classBody END) | [ClassParent]) {pin=1}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
 ClassHelperDecl             ::= CLASS HELPER classHelperBody END {name="class helper declaration"}
-private classHelperBody     ::= [ClassParent] FOR TypeID structItem* {pin=2 recoverWhile=rec_struct_outer}
+private classHelperBody     ::= FOR TypeID structItem* {pin=2 recoverWhile=rec_struct_outer}
 
 InterfaceTypeDecl           ::= interfaceKey interfaceBody END
                               | interfaceKey [ClassParent] {pin(".*")=interfaceKey name="interface declaration"}
@@ -402,12 +404,12 @@ ObjectDecl                  ::= [PACKED] objectTypeDecl {name="object declaratio
 private objectTypeDecl      ::= OBJECT objectBody END {pin=1}
 private objectBody          ::= [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
-RecordDecl                  ::= [ClassParent] (variantRecord | simpleRecord) {name="record declaration"}
+RecordDecl                  ::= (variantRecord | simpleRecord) {name="record declaration"}
 private simpleRecord        ::= [PACKED | "bitpacked"] RECORD recordBody END {pin=2}
-private recordBody          ::= structItem* [ClassField] {recoverWhile=rec_struct_outer}
+private recordBody          ::= [ClassParent] structItem* [ClassField] {recoverWhile=rec_struct_outer}
 
 private variantRecord       ::= [PACKED | "bitpacked"] RECORD varRecDecl END
-private varRecDecl          ::= structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
+private varRecDecl          ::= [ClassParent] structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
 private varRecDeclInner     ::= (field ";")* [field] [recordVariantSection] {recoverWhile=rec_struct_field}
 private field               ::= customAttributes* identList ":" TypeDecl hintingDirective* {pin=2 recoverWhile=rec_struct_field}
 private recordVariantSection ::= CASE [identifier ":"] TypeDecl OF recordVariants {pin=1}
@@ -418,7 +420,8 @@ RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2}
 
 ClassState          ::= SEALED | ABSTRACT
 
-ClassParent         ::= "(" TypeID ("," TypeID)* ")" {pin=1}
+ClassParent         ::= "(" TypeID? ("," TypeID)* ")" {pin=1 recoverWhile=rec_classparent}
+ClassParentWORec    ::= "(" TypeID? ("," TypeID)* ")"
 
 private interfaceGuid       ::= "[" quotedString "]" {pin=1}
 private interfaceKey        ::= INTERFACE | DISPINTERFACE
@@ -495,7 +498,7 @@ private forCycle    ::= ":=" Expression (TO | DOWNTO)
 IfStatement                 ::= IF Expression THEN Statement [ELSE Statement] {pin=1}
 
 CaseStatement       ::= CASE Expression OF CaseItem* [ELSE statementList ] END {pin=1}
-CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" Statement [";"] {pin=3}
+CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" Statement [";"] {pin=3 recoverWhile=rec_case}
 CaseLabel	        ::=	ConstExpressionOrd [RANGE ConstExpressionOrd] //{}
 
 TryStatement                ::= TRY statementList (tryExcept | tryFinally) END {pin=1}

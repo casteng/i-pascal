@@ -228,7 +228,9 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
         }
     }
 
-    public abstract PasClassParent getClassParent();
+    public PasClassParent getClassParent() {
+        return null;
+    }
 
     private class ParentBuilder implements Callable<Parents> {
         @Override

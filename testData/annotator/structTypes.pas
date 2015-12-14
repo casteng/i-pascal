@@ -85,13 +85,13 @@ type
     end;
 
     TVarRec2 = record
-        a: Integer;
+        aa: Integer;
     private
-        case a: Single of
-            1: (a: Integer);
+        case aa: Single of
+            1: (aa: Integer);
             0: (
                 X1, Y1: Single;
-                case a: Single of
+                case aa: Single of
                 0: (X, Y: Single)
             )
     end;
@@ -158,7 +158,13 @@ end;
 begin
     with a do begin
         v[0] := 1;
+        v[1].X := 0;
     end;
+    with TVarRec2(a) do begin
+        aa := 111;
+    end;
+    with a as TVarRec2 do
+        aa := 111;
     with vec do
         Y := 1;
 end.

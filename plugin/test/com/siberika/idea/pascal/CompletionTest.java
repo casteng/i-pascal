@@ -47,10 +47,21 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.completeBasic();
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
+        checkContains(strings, expected, "\nMust present: ");
+    }
+
+    private void checkCompletionContainsAllCarets(CodeInsightTestFixture myFixture, String...expected) {
+        List<List<String>> strings = completeBasicAllCarets(myFixture);
+        for (int i = 0; i < strings.size(); i++) {
+            checkContains(strings.get(i), expected, String.format("\nCaret #%d, must present: ", strings.size()-i));
+        }
+    }
+
+    private void checkContains(List<String> strings, String[] expected, String prefix) {
         List<String> exp = Arrays.asList(expected);
         ArrayList<String> lacking = new ArrayList<String>(exp);
         lacking.removeAll(strings);
-        assertTrue(String.format("\nExpected to present: %s\nLack of: %s", exp, lacking), strings.containsAll(exp));
+        assertTrue(String.format(prefix + "%s\nLack of: %s", exp, lacking), strings.containsAll(exp));
     }
 
     private void checkCompletionNotContains(CodeInsightTestFixture myFixture, String...unexpected) {
@@ -67,7 +78,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         assertTrue(sb.toString(), sb.length() == 0);
     }
 
-    public final List<LookupElement> completeBasicAllCarets(CodeInsightTestFixture myFixture) {
+    public final List<List<String>> completeBasicAllCarets(CodeInsightTestFixture myFixture) {
         final CaretModel caretModel = myFixture.getEditor().getCaretModel();
         final List<Caret> carets = caretModel.getAllCarets();
 
@@ -81,12 +92,18 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         // We do it in reverse order because completions would affect offsets
         // i.e.: when you complete "spa" to "spam", next caret offset increased by 1
         Collections.reverse(originalOffsets);
-        final List<LookupElement> result = new ArrayList<LookupElement>();
+        final List<List<String>> result = new ArrayList<List<String>>(originalOffsets.size());
         for (final int originalOffset : originalOffsets) {
             caretModel.moveToOffset(originalOffset);
             final LookupElement[] lookupElements = myFixture.completeBasic();
             if (lookupElements != null) {
-                result.addAll(Arrays.asList(lookupElements));
+                List<String> res = new ArrayList<String>(lookupElements.length);
+                result.add(res);
+                for (LookupElement lookupElement : lookupElements) {
+                    res.add(lookupElement.getLookupString());
+                }
+            } else {
+                result.add(Collections.<String>emptyList());
             }
         }
         return result;
@@ -178,6 +195,12 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
                 "goto", "exit", "try", "raise", "end");
         myFixture.type("i");
         checkCompletionContains(myFixture, "while", "if", "with", "exit", "raise");
+    }
+
+    public void testConsts() {
+        myFixture.configureByFiles("consts.pas");
+        checkCompletionContainsAllCarets(myFixture, "a", "b", "CONST_1", "CONST_2");
+        //checkCompletionContains(myFixture, "a", "b", "CONST_1", "CONST_2");
     }
 
     public void testStatementInStmt() {

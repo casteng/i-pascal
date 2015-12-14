@@ -20,14 +20,14 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         return "testData/annotator";
     }
 
-    /*public void test() {
+    public void test() {
         myFixture.configureByFiles("structTypes.pas", "calcTypeTest.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
                 PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "calcTypeTest");
         for (PasField field : mod.getAllFields()) {
             printIdent(field);
         }
-    }*/
+    }
 
     public void testGetDefaultProperty() throws Exception {
         myFixture.configureByFiles("structTypes.pas");

@@ -10,7 +10,7 @@ type
         v1: Integer;
     end;
 
-    TCls = class()
+    TCls = class
     public
         procedure Message2(Rec: Integer);
     end;
