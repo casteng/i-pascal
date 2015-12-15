@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>0.992</version>
+    <version>0.993</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,12 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.993</p>
+        <ul>
+          <li>completion improvement</li>
+          <li></li>
+          <li></li>
+        </ul>
         <p>0.99</p>
         <ul>
           <li>identifiers cache rewrite</li>

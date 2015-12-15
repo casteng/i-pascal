@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.editor;
 
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
@@ -11,6 +10,7 @@ import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
@@ -88,10 +88,14 @@ public class PascalRoutineActions {
                 }
             }
             String name = data.element.getName();
-            data.text = "\n\n" + StringUtil.replace(data.text, name, prefix + name) + "\nbegin\n" + DocUtil.PLACEHOLDER_CARET + "\nend;\n\n";
+            data.text = "\n\n" + data.text.replaceFirst(" " + name, " " + prefix + name) + "\nbegin\n" + DocUtil.PLACEHOLDER_CARET + "\nend;\n\n";
             data.offset = SectionToggle.findImplPos(routine);
             data.parent = routine;
-            if (data.offset < 0) {
+            if (data.offset < 0) {                                                                            // Suitable implementation position not found - no implementations in the class
+                PasEntityScope classType = routine.getContainingScope();
+                if (classType instanceof PascalStructType) {
+                    data.text = "\n\n{ " + classType.getName() + " }" + data.text;
+                }
                 data.parent = PsiUtil.getModuleImplementationSection(data.element.getContainingFile());
                 data.parent = data.parent != null ? PsiTreeUtil.findChildOfType(data.parent, PasImplDeclSection.class) : null;
                 if (null != data.parent) {

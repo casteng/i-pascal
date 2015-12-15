@@ -83,7 +83,6 @@ public class ActionImplement extends PascalAction {
     // if methodImpl = null assuming interface part
     private void doOverride(final Editor editor, final PasEntityScope scope, final PsiElement el, PascalRoutineImpl methodImpl, final List<PasField> selected) {
         PsiElement prevMethod = getPrevMethod(el, methodImpl);
-        System.out.println("prev: " + prevMethod);
         final AtomicInteger offs = new AtomicInteger();
         if (prevMethod != null) {
             offs.set(prevMethod.getTextRange().getEndOffset());
@@ -97,27 +96,22 @@ public class ActionImplement extends PascalAction {
         }
 
         final Document document = editor.getDocument();
-        /*ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {*/
-                for (final PasField field : selected) {
-                    new WriteCommandAction(el.getProject()) {
-                        @Override
-                        protected void run(@NotNull Result result) throws Throwable {
-                            CommandProcessor.getInstance().setCurrentCommandName(PascalBundle.message("action.override"));
-                            PascalNamedElement element = field.getElement();
-                            if (PsiUtil.isElementUsable(element)) {
-                                CharSequence text = prepareText(element.getText());
-                                document.insertString(offs.get(), text);
-                                offs.addAndGet(text.length());
-                            }
-                            editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
-                            PsiDocumentManager.getInstance(el.getProject()).commitDocument(document);
-                        }
-                    }.execute();
+        for (final PasField field : selected) {
+            new WriteCommandAction(el.getProject()) {
+                @Override
+                protected void run(@NotNull Result result) throws Throwable {
+                    CommandProcessor.getInstance().setCurrentCommandName(PascalBundle.message("action.override"));
+                    PascalNamedElement element = field.getElement();
+                    if (PsiUtil.isElementUsable(element)) {
+                        CharSequence text = prepareText(element.getText());
+                        document.insertString(offs.get(), text);
+                        offs.addAndGet(text.length());
+                    }
+                    editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
+                    PsiDocumentManager.getInstance(el.getProject()).commitDocument(document);
                 }
-            //}
-        //});
+            }.execute();
+        }
         DocUtil.reformat(scope);
         for (final PasField field : selected) {
             PascalNamedElement element = field.getElement();
