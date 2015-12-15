@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.editor;
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -12,8 +13,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
@@ -88,13 +87,11 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                         new WriteCommandAction(project) {
                             @Override
                             protected void run(@NotNull Result result) throws Throwable {
-                                PsiManager manager = actionData.parent != null ? actionData.parent.getManager() : null;
+                                CommandProcessor.getInstance().setCurrentCommandName(name);
                                 cutLFs(document, actionData);
                                 DocUtil.adjustDocument(editor, actionData.offset, actionData.text);
                                 PsiDocumentManager.getInstance(project).commitDocument(document);
-                                if (manager != null) {
-                                    CodeStyleManager.getInstance(manager).reformat(actionData.parent, true);
-                                }
+                                DocUtil.reformatInSeparateCommand(project, file, editor);
                             }
                         }.execute();
                     }

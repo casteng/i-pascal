@@ -1,9 +1,17 @@
 package com.siberika.idea.pascal.util;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.siberika.idea.pascal.PascalBundle;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
@@ -55,4 +63,52 @@ public class DocUtil {
         }
         return content;
     }
+
+    public static void reformatInSeparateCommand(final Project project, final PsiFile file, final Editor editor) {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        CommandProcessor.getInstance().executeCommand(project, new Runnable() {
+                            @Override
+                            public void run() {
+                                PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
+                                el = PsiUtil.skipToExpressionParent(el);
+                                PsiManager manager = el != null ? el.getManager() : null;
+                                if ((el != null) && (manager != null)) {
+                                    CodeStyleManager.getInstance(manager).reformat(el, true);
+                                }
+                            }
+                        }, PascalBundle.message("action.reformat"), null);
+                    }
+                });
+            }
+        });
+    }
+
+    public static void reformat(final PsiElement block) {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        CommandProcessor.getInstance().executeCommand(block.getProject(), new Runnable() {
+                            @Override
+                            public void run() {
+                                PsiManager manager = block.getManager();
+                                if (manager != null) {
+                                    CodeStyleManager.getInstance(manager).reformat(block, true);
+                                }
+                            }
+                        }, PascalBundle.message("action.reformat"), null);
+                    }
+                });
+            }
+        });
+    }
+
+
 }

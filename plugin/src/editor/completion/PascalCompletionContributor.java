@@ -25,7 +25,6 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiWhiteSpace;
-import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -49,7 +48,6 @@ import com.siberika.idea.pascal.lang.psi.PasContainsClause;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
-import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -58,10 +56,8 @@ import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -82,7 +78,6 @@ import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -170,8 +165,8 @@ public class PascalCompletionContributor extends CompletionContributor {
                 PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
 //                System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent()));
 
-                originalPos = skipToExpressionParent(parameters.getOriginalPosition());
-                pos = skipToExpressionParent(parameters.getPosition());
+                originalPos = PsiUtil.skipToExpressionParent(parameters.getOriginalPosition());
+                pos = PsiUtil.skipToExpressionParent(parameters.getPosition());
                 prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
                 oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
                 int level = PsiUtil.getElementLevel(originalPos);
@@ -520,14 +515,6 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private static PsiElement skipToExpressionParent(PsiElement element) {
-        return PsiTreeUtil.skipParentsOfType(element,
-                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamespaceIdent.class, PasGenericTypeIdent.class,
-                PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class,
-                PascalExpression.class,
-                PasUnitModuleHead.class);
-    }
-
     private static void appendTokenSet(CompletionResultSet result, TokenSet tokenSet) {
         for (IElementType op : tokenSet.getTypes()) {
             result.caseInsensitive().addElement(getElement(op.toString()));
@@ -587,17 +574,13 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private static final InsertHandler<LookupElement> INSERT_HANDLER = new InsertHandler<LookupElement>() {
         @Override
-        public void handleInsert(InsertionContext context, LookupElement item) {
+        public void handleInsert(final InsertionContext context, LookupElement item) {
             String content = INSERT_MAP.get(item.getLookupString());
             if (null != content) {
                 content = content.replaceAll(PLACEHOLDER_FILENAME, FileUtilRt.getNameWithoutExtension(context.getFile().getName()));
                 DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), content);
-            }
-            context.commitDocument();
-            PsiElement el = context.getFile().findElementAt(context.getEditor().getCaretModel().getOffset());
-            el = skipToExpressionParent(el);
-            if (el != null) {
-                CodeStyleManager.getInstance(context.getFile().getManager()).reformat(el, true);
+                context.commitDocument();
+                DocUtil.reformatInSeparateCommand(context.getProject(), context.getFile(), context.getEditor());
             }
         }
     };

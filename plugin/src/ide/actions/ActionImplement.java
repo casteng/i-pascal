@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.ide.actions;
 
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.Result;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -19,6 +20,7 @@ import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.ui.TreeViewStruct;
+import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -29,6 +31,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.siberika.idea.pascal.PascalBundle.message;
 
 /**
  * Author: George Bakhtadze
@@ -100,6 +104,7 @@ public class ActionImplement extends PascalAction {
                     new WriteCommandAction(el.getProject()) {
                         @Override
                         protected void run(@NotNull Result result) throws Throwable {
+                            CommandProcessor.getInstance().setCurrentCommandName(PascalBundle.message("action.override"));
                             PascalNamedElement element = field.getElement();
                             if (PsiUtil.isElementUsable(element)) {
                                 CharSequence text = prepareText(element.getText());
@@ -113,12 +118,12 @@ public class ActionImplement extends PascalAction {
                 }
             //}
         //});
-        PsiUtil.reformat(scope);
+        DocUtil.reformat(scope);
         for (final PasField field : selected) {
             PascalNamedElement element = field.getElement();
             if (PsiUtil.isElementUsable(element)) {
                 PasField routine = scope.getField(PsiUtil.getFieldName(field.getElement()));
-                PascalRoutineActions.ActionImplement act = routine != null ? new PascalRoutineActions.ActionImplement("", routine.getElement()) : null;
+                PascalRoutineActions.ActionImplement act = routine != null ? new PascalRoutineActions.ActionImplement(message("action.implement"), routine.getElement()) : null;
                 if (act != null) {
                     act.invoke(el.getProject(), editor, el.getContainingFile());
                 }
