@@ -91,10 +91,10 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                                 cutLFs(document, actionData);
                                 DocUtil.adjustDocument(editor, actionData.offset, actionData.text);
                                 PsiDocumentManager.getInstance(project).commitDocument(document);
-                                DocUtil.reformatInSeparateCommand(project, file, editor);
                             }
                         }.execute();
                     }
+                    DocUtil.reformat(actionData.parent);
                 }
             }
         });
