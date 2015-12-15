@@ -69,102 +69,216 @@ type
 
 const
     PI: Extended = 3.1415926535897932385;
-
+    // Returns an absolute value.
     function Abs(X: Integer): Integer; overload;
+    // Returns an absolute value.
     function Abs(X: Extended): Extended; overload;
+    // Returns a pointer to a specified object.
     function Addr(const X): Pointer;
+    // Prepares an existing file for adding text to the end.
     function Append(var F: Text): Integer;
+    // Tests whether a Boolean expression is true.
     function Assert(expr: Boolean; const msg: string): boolean; overload;
+    // Tests whether a Boolean expression is true.
     function Assert(expr: Boolean; const msg: string): boolean; overload;
+    // Associates the name of an external file with a file variable.
     function Assign(var t: Text; const s: PChar): Integer;
+    // Tests for a nil (unassigned) pointer or procedural variable.
     function Assigned(const P): Boolean;
+    // Associates the name of an external file with a file variable.
     function AssignFile(var F: File; FileName: String): Integer; overload;
+    // Associates the name of an external file with a file variable.
     function AssignFile(var F: File; FileName: String; CodePage: Word): Integer; overload;
-    function Append(var t: Text): Integer;
+
+    // AtomicCmpExchange is used for comparing and exchanging memory values.
+    function AtomicCmpExchange(var Target; NewValue: Integer; Comparand: Integer): Integer; overload;
+    // AtomicCmpExchange is used for comparing and exchanging memory values.
+    function AtomicCmpExchange(var Target; NewValue: Integer; Comparand: Integer; out Succeeded: Boolean): Integer; overload;
+    // AtomicDecrement is used for decrementing memory values.
+    function AtomicDecrement(var Target; Decrement: Integer = 1): Int64;
+    // AtomicExchange is used for exchanging memory values.
+    function AtomicExchange(var Target; Value: Integer): Int64;
+    // AtomicIncrement is used for incrementing memory values.
+    function AtomicIncrement(var Target; Increment: Integer = 1): Int64;
+
+    // Reads one or more records from an open file into a variable.
     function BlockRead(var f: File; buffer: Pointer; recCnt: Longint; var recsRead: Longint): Longint;
+    // Writes one or more records from a variable to an open file.
     function BlockWrite(var f: File; buffer: Pointer; recCnt: Longint; var recsWritten: Longint): Longint;
+    // Returns the character for a specified ASCII value.
     function Chr(X: Byte): Char;
+    // Terminates the association between a file variable and an external file.
     function Close(var t: Text): Integer;
+    // Terminates the association between file variable and an external disk file.
+    procedure CloseFile(var F: File);
+    // Concatenates two or more strings into one.
     function Concat(S1, S2: string): string;
+    // Returns a substring of a string or a segment of a dynamic array.
     function Copy(S; Index, Count: Integer): string;
+    // Decrements a variable by 1 or N.
     procedure Dec(var X); overload;
+    // Decrements a variable by 1 or N.
     procedure Dec(var X; N: longint); overload;
+    // Removes a substring from a string.
     procedure Delete(var S: string; Index, Count : Integer);
+    // Releases memory allocated for a dynamic variable.
     procedure Dispose(var P: Pointer);
+    // Tests whether the file position is at the end of a file.
+    function Eof(var f: File): Boolean;
+    // Tests whether the file position is at the end of a file.
     function EofFile(var f: File): Boolean;
+    // // Tests whether the text file position is at the end of a file.
     function EofText(var t: Text): Boolean;
+    // Tests whether the file pointer is at the end of a line.
     function Eoln(var t: Text): Boolean;
+    // Deletes an external file.
     procedure Erase(var f: File);
+    // Removes an element from a Pascal set.
     procedure Exclude(var S: set of Byte; element: Byte);
+    // Cancels the construction of an object (Turbo Pascal object model).
+    procedure Fail;
+    // Returns the current file position.
     function FilePos(var f: File): Longint;
+    // Returns the number of records in a file.
     function FileSize(var f: File): Longint;
-    function Flush(var t: Text): Integer;
+    // Fills contiguous bytes with a specified value.
     procedure FillChar(var X; Count : Integer; Value : Byte);
+    // Uninitializes a dynamically allocated variable.
     procedure Finalize(var V); overload;
+    // Uninitializes a dynamically allocated variable.
     procedure Finalize(var V; Count: NativeUInt); overload;
+    // Empties the buffer of a text file opened for output.
+    function Flush(var t: Text): Integer;
+    // FreeMem frees a memory block.
     function FreeMem(P: Pointer): Integer;
+    // Returns the current directory.
     procedure GetDir(sDrive: Byte; var sDir: string);
+    // GetMem allocates a memory block.
     function GetMem(Size: Integer): Pointer;
+    // Initiates abnormal termination of a program.
     procedure Halt(Code: Integer); overload;
+    // Initiates abnormal termination of a program.
     procedure Halt(); overload;
+    // Returns the high-order byte of X as an unsigned value.
     function Hi(X: Integer): Byte;
+    // Returns the highest value in the range of an argument.
     function High(const X): Integer;
+    // Increments an ordinal value by one or N.
     procedure Inc(var X); overload;
+    // Increments an ordinal value by one or N.
     procedure Inc(var X; N: longint); overload;
+    // Adds an element to a Delphi set.
     procedure Include(var S: set of Byte; element: Byte);
+    // Initializes a dynamically allocated variable.
     procedure Initialize(var V); overload;
+    // Initializes a dynamically allocated variable.
     procedure Initialize(var V; Count: NativeUInt); overload;
+    // Inserts a substring into a string beginning at a specified point.
     procedure Insert(Source : string; var S : string; Index : Integer);
 
+    // Returns the number of characters in a string or elements in an array.
     function Length(const S: string): Integer;
+    // Returns the low order Byte of argument X.
     function Lo(X: Integer): Byte;
+    // Returns the lowest value in a range.
     function Low(const X): Integer;
+
+    // Enforces an ordering constraint on memory operations.
+    procedure MemoryBarrier;
+    // Returns the value of this expression: Int64((Int128(AValue) * Int128(AMul)) div Int128(ADiv)).
+    function MulDivInt64(AValue, AMul, ADiv: Int64;): Int64; overload;
+    // Returns the value of this expression: Int64((Int128(AValue) * Int128(AMul)) div Int128(ADiv)).
+    function MulDivInt64(AValue, AMul, ADiv: Int64; out Remainder: Int64): Int64; overload;
+
+    // Creates a new dynamic variable and sets P to point to it.
     procedure New(var X: Pointer);
+    // Returns true if argument is an odd number.
     function Odd(X: Longint): Boolean; overload;
+    // Returns the ordinal value of an ordinal-type expression.
     function Ord(X): Longint; overload;
 
+    // Returns the predecessor of the argument.
     function Pred(const X): Variant;
+    // Converts a specified address to a pointer.
     function Ptr(Address: Integer): Pointer;
+    // Read reads data from a file.
+    procedure Read(var t: Text);
+    // Read reads a line of text from a file.
     procedure ReadLn(var t: Text);
+    // ReallocMem reallocates a memory block.
     function ReallocMem(var P: Pointer; NewSize: Integer): Pointer;
+    // Changes the name of an external file.
     procedure Rename(var f: File; newName: PChar);
+    // Opens an existing file.
     procedure Reset(var F: File); overload;
+    // Opens an existing file.
     procedure Reset(var F: File; RecSize: Integer); overload;
+    // Creates a new file and opens it.
     procedure Rewrite(var F: File); overload;
+    // Creates a new file and opens it.
     procedure Rewrite(var F: File; RecSize: Integer); overload;
+    // Returns the value of X rounded to the nearest whole number.
     function Round(X: Extended): Int64;
+    // Stops execution and generates a runtime error.
     procedure RunError(); overload;
+    // Stops execution and generates a runtime error.
     procedure RunError(ErrorCode: Byte); overload;
+    // Moves the current position of a file to a specified component.
+    procedure Seek(var f: File; recNum: Cardinal);
+    // Returns the end-of-file status of a file, ignoring whitespace.
+    function SeekEof(): Boolean; overload;
+    // Returns the end-of-file status of a file, ignoring whitespace.
+    function SeekEof(var t: Text): Boolean; overload;
+    // Returns the end-of-line status of a file, ignoring whitespace.
+    function SeekEoln(): Boolean; overload;
+    // Returns the end-of-line status of a file, ignoring whitespace.
+    function SeekEoln(var t: Text): Boolean; overload;
+    // Sets the length of a string or dynamic-array variable.
     procedure SetLength(var S; Length1: Integer);
+    // Sets the contents and length of the given string.
     procedure SetString(var S: string; c : PChar; Length: Integer);
+    // Assigns an I/O buffer to a text file.
+    procedure SetTextBuf(var t: Text; p: Pointer; size: Longint);
+    // Returns the number of bytes occupied by a variable or type.
     function SizeOf(const X) : Integer;
+    // Returns a sub-section of an array.
     function Slice(var A: array of Variant; Count: Integer): array of Variant;
+    // Returns the square of a number.
     function Sqr(X: Extended): Extended;
+    // Formats a string and returns it to a variable.
     procedure Str(const X; var S);
+    // Returns the successor of an argument.
     function Succ(const X): Variant;
+    // Exchanges high order byte with the low order byte of an integer or word.
     function Swap(X: Integer): Integer;
+    // Truncates a real number to an integer.
     function Trunc(X: Extended): Int64;
+    // Deletes all the records after the current file position.
     procedure Truncate(var f: File);
+    // Returns the RTTI information for a given type.
     function TypeHandle(const T): Pointer;
+    // Returns the RTTI information for a given type.
     function TypeInfo(const T): Pointer;
-    function TypeOf(const X): Pointer;
+    // Deprecated routine.
+    function TypeOf(const X): Pointer; deprecated;
+    // Converts a string to a numeric representation.
     procedure Val(const S: string; var Result; var Code: integer);
+    // Resizes a Variant array.
+    procedure VarArrayRedim(var A: Variant; HighBound: Integer);
+    // Converts a variant to specified type.
     procedure VarCast(var Dest: Variant; Source: Variant; VarType: Integer);
+    // Empties a Variant so that it is unassigned.
+    procedure VarClear(var V: Variant);
+    // Copies a Variant to another Variant.
     procedure VarCopy(var Dest: Variant; Source: Variant);
+    // Writes to either a typed file or a text file.
+    procedure Write();
+    // Writes to a text file and adds an end-of-line marker.
+    procedure WriteLn();
+
 
     procedure Mark; deprecated;
     procedure Release; deprecated;
-
-    procedure Write();
-    procedure WriteLn();
-
-    procedure Seek(var f: File; recNum: Cardinal);
-    function SeekEof(): Boolean; overload;
-    function SeekEof(var t: Text): Boolean; overload;
-    function SeekEoln(): Boolean; overload;
-    function SeekEoln(var t: Text): Boolean; overload;
-    procedure SetTextBuf(var t: Text; p: Pointer; size: Longint);
-
     function StrLong(val, width: Longint): ShortString;
     function Str0Long(val: Longint): ShortString;
 
@@ -174,6 +288,19 @@ const
     function Exp(x: Extended): Extended;
     function Int(x: Extended): Extended;
     function Frac(x: Extended): Extended;
+
+    // Undocumented
+    // Returns the zero representation of type identifier T.
+    function Default(const T): T;
+    // True if T is a interface, string or dynamic array, or a record containing such. A class containing a managed type will return false.
+    function IsManagedType(const T): Boolean;
+    function HasWeakRef(const T): Boolean;
+    // Does the same thing as PTypeInfo(System.TypeInfo(T))^.Kind;, however because it is a compiler intrinsic the function is resolved at compiletime and conditional code that evaluates to false will be stripped by the compiler.
+    function GetTypeKind(const T): TTypeKind;
+    { True if Value is a constant, false if not.
+      This helps the compiler to eliminate dead code because the function is evaluated at compile time.
+      This is really only useful in inline functions, where it allows for shorter generated code. }
+    function IsConstValue(const Value): Boolean;
 
 // Include-based template stub classes
 type
@@ -244,7 +371,7 @@ type
         // Number of elements which the collection able to hold without memory allocations
         property Capacity: __CollectionIndexType read FCapacity write SetCapacity;
     end;
-    
+
     _GenHashMap = class(__Parent)
         function GetLoadFactor(): Single;
     protected
