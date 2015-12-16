@@ -66,6 +66,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -271,8 +272,8 @@ public class PsiUtil {
         return element.getParent() instanceof PascalRoutineImpl;
     }
 
-    public static boolean isUsedUnitName(@NotNull PascalNamedElement element) {
-        return element.getParent() instanceof PasUsesClause;
+    public static boolean isUsedUnitName(@NotNull PsiElement element) {
+        return (element instanceof PasNamespaceIdent) && (element.getParent() instanceof PasUsesClause);
     }
 
     public static boolean isModuleName(@NotNull PascalNamedElement element) {
@@ -732,5 +733,26 @@ public class PsiUtil {
                 PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class,
                 PascalExpression.class,
                 PasUnitModuleHead.class);
+    }
+
+    public static boolean isLastPartOfMethodImplName(PascalNamedElement element) {
+        PsiElement parent = element.getParent();
+        if (parent instanceof PasClassQualifiedIdent) {
+            PasClassQualifiedIdent name = (PasClassQualifiedIdent) parent;
+            return (element == name.getSubIdentList().get(name.getSubIdentList().size() - 1))
+                 && isRoutineName((PascalNamedElement) parent) && !StringUtils.isEmpty(((PascalNamedElement) parent).getNamespace());
+        }
+        return false;
+    }
+
+    // returns unique name of ident qualifying it with scopes
+    public static String getUniqueName(PascalNamedElement ident) {
+        StringBuilder sb = new StringBuilder(ident.getName());
+        PasEntityScope scope = getNearestAffectingScope(ident);
+        while (scope != null) {
+            sb.append(".").append(PsiUtil.getFieldName(scope));
+            scope = scope.getContainingScope();
+        }
+        return sb.toString();
     }
 }

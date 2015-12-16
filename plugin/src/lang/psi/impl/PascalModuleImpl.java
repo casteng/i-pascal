@@ -8,10 +8,13 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -20,8 +23,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -32,8 +37,10 @@ import java.util.concurrent.TimeUnit;
 public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     private static final UnitMembers EMPTY_MEMBERS = new UnitMembers();
+    private static final Idents EMPTY_IDENTS = new Idents();
     private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
     private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -112,9 +119,68 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         return getMembers(publicCache, this.new PublicBuilder()).units;
     }
 
+    private void collectIdents(PsiElement section, PasField.Visibility visibility, final Map<String, PasField> members) {
+        if (null == section) {
+            return;
+        }
+        for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, PasSubIdentImpl.class, PasRefNamedIdentImpl.class)) {
+            if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
+                Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(namedElement), PasField.TYPES_ALL, true, 0);
+                if (!refs.isEmpty()) {
+                    members.put(PsiUtil.getUniqueName(namedElement), refs.iterator().next());
+                }
+            }
+        }
+    }
+
+    @NotNull
+    private Idents getIdents(Cache<String, Idents> cache, Callable<? extends Idents> builder) {
+        ensureChache(cache);
+        try {
+            return cache.get(getKey(), builder);
+        } catch (Exception e) {
+            if (e.getCause() instanceof ProcessCanceledException) {
+                throw (ProcessCanceledException) e.getCause();
+            } else {
+                LOG.warn("Error occured during building idents for: " + this, e.getCause());
+            }
+            invalidateCaches(getKey());
+            return EMPTY_IDENTS;
+        }
+    }
+
+    @Override
+    public List<PascalNamedElement> getIdentsFrom(@NotNull String module) {
+        Idents idents = getIdents(identCache, this.new IdentsBuilder());
+        List<PascalNamedElement> res = new SmartList<PascalNamedElement>();
+        for (Map.Entry<String, PasField> entry : idents.idents.entrySet()) {
+            PasField field = entry.getValue();
+            if (PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
+                    && PasField.TYPES_STRUCTURE.contains(field.fieldType)
+                    && (field.owner != null) && (module.equalsIgnoreCase(field.owner.getName()))) {
+                res.add(field.getElement());
+            }
+        }
+        return res;
+    }
+
     public static void invalidate(String key) {
         privateCache.invalidate(key);
         publicCache.invalidate(key);
+        identCache.invalidate(key);
+    }
+
+    private static class Idents extends Cached {
+        Map<String, PasField> idents = new HashMap<String, PasField>();
+    }
+
+    private class IdentsBuilder implements Callable<Idents> {
+        @Override
+        public Idents call() throws Exception {
+            Idents res = new Idents();
+            collectIdents(PascalModuleImpl.this, null, res.idents);
+            return res;
+        }
     }
 
     private class PrivateBuilder implements Callable<UnitMembers> {
@@ -158,7 +224,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
                 //return res;
             }
 
-            collectFields(section, PasField.Visibility.PRIVATE, res.all, res.redeclared);
+            collectFields(section, PasField.Visibility.PUBLIC, res.all, res.redeclared);
 
             res.units = retrieveUsedUnits(section);
             for (PasEntityScope unit : res.units) {

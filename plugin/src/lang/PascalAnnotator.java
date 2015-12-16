@@ -8,16 +8,16 @@ import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -40,7 +40,7 @@ public class PascalAnnotator implements Annotator {
             }
         }
 
-        if (PsiUtil.isEntityName(element) && !isLastPartOfMethodImplName((PascalNamedElement) element)) {
+        if (PsiUtil.isEntityName(element) && !PsiUtil.isLastPartOfMethodImplName((PascalNamedElement) element)) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
             if (refs.isEmpty()) {
@@ -56,16 +56,13 @@ public class PascalAnnotator implements Annotator {
                 }
             }
         }
-    }
 
-    private boolean isLastPartOfMethodImplName(PascalNamedElement element) {
-        PsiElement parent = element.getParent();
-        if (parent instanceof PasClassQualifiedIdent) {
-            PasClassQualifiedIdent name = (PasClassQualifiedIdent) parent;
-            return (element == name.getSubIdentList().get(name.getSubIdentList().size() - 1))
-                 && PsiUtil.isRoutineName((PascalNamedElement) parent) && !StringUtils.isEmpty(((PascalNamedElement) parent).getNamespace());
+        if ((element instanceof PascalNamedElement) && PsiUtil.isUsedUnitName(element.getParent())) {
+            PascalModule module = PsiUtil.getElementPasModule(element);
+            if ((module != null) && module.getIdentsFrom(((PasNamespaceIdent) element.getParent()).getName()).isEmpty()) {
+                Annotation ann = holder.createWarningAnnotation(element, message("ann.warn.unused.unit"));
+            }
         }
-        return false;
     }
 
     /**
