@@ -3,8 +3,6 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
-import com.intellij.openapi.util.Pair;
-import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
@@ -16,14 +14,12 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.List;
 
 import static com.siberika.idea.pascal.PascalBundle.message;
 
@@ -65,22 +61,18 @@ public class PascalAnnotator implements Annotator {
         }
     }
 
-    private void annotateUnit(AnnotationHolder holder, PasNamespaceIdent element) {
-        PsiElement prev = element.getPrevSibling();
-        if ((prev instanceof PsiComment) && "{!}".equals(prev.getText())) {
+    private void annotateUnit(AnnotationHolder holder, PasNamespaceIdent usedUnitName) {
+        if (PascalImportOptimizer.isExcludedFromCheck(usedUnitName)) {
             return;
         }
-        PascalModule module = PsiUtil.getElementPasModule(element);
-        if ((module != null)) {
-            Pair<List<PascalNamedElement>, List<PascalNamedElement>> idents = module.getIdentsFrom(element.getName());
-            if (PsiUtil.belongsToInterface(element)) {
-                if (idents.getFirst().size() + idents.getSecond().size() == 0) {
-                    Annotation ann = holder.createWarningAnnotation(element, message("ann.warn.unused.unit"));
-                } else if (idents.getFirst().size() == 0) {
-                    Annotation ann = holder.createWarningAnnotation(element, message("ann.warn.unused.unit.interface"));
-                }
-            } else if (idents.getSecond().size() == 0) {
-                Annotation ann = holder.createWarningAnnotation(element, message("ann.warn.unused.unit"));
+        switch (PascalImportOptimizer.getUsedUnitStatus(usedUnitName)) {
+            case UNUSED: {
+                Annotation ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit"));
+                break;
+            }
+            case USED_IN_IMPL: {
+                Annotation ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit.interface"));
+                break;
             }
         }
     }
