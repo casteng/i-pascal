@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPsiElementPointer;
@@ -41,6 +42,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
     private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
     private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
     private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    public static final String INTERFACE_PREFIX = "interface.";
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -119,20 +121,6 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         return getMembers(publicCache, this.new PublicBuilder()).units;
     }
 
-    private void collectIdents(PsiElement section, PasField.Visibility visibility, final Map<String, PasField> members) {
-        if (null == section) {
-            return;
-        }
-        for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, PasSubIdentImpl.class, PasRefNamedIdentImpl.class)) {
-            if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
-                Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(namedElement), PasField.TYPES_ALL, true, 0);
-                if (!refs.isEmpty()) {
-                    members.put(PsiUtil.getUniqueName(namedElement), refs.iterator().next());
-                }
-            }
-        }
-    }
-
     @NotNull
     private Idents getIdents(Cache<String, Idents> cache, Callable<? extends Idents> builder) {
         ensureChache(cache);
@@ -150,15 +138,20 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
     }
 
     @Override
-    public List<PascalNamedElement> getIdentsFrom(@NotNull String module) {
+    public Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@NotNull String module) {
         Idents idents = getIdents(identCache, this.new IdentsBuilder());
-        List<PascalNamedElement> res = new SmartList<PascalNamedElement>();
+        Pair<List<PascalNamedElement>, List<PascalNamedElement>> res = new Pair<List<PascalNamedElement>, List<PascalNamedElement>>(
+                new SmartList<PascalNamedElement>(), new SmartList<PascalNamedElement>());
         for (Map.Entry<String, PasField> entry : idents.idents.entrySet()) {
             PasField field = entry.getValue();
             if (PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
                     && PasField.TYPES_STRUCTURE.contains(field.fieldType)
                     && (field.owner != null) && (module.equalsIgnoreCase(field.owner.getName()))) {
-                res.add(field.getElement());
+                if (entry.getKey().startsWith(INTERFACE_PREFIX)) {
+                    res.getFirst().add(field.getElement());
+                } else {
+                    res.getSecond().add(field.getElement());
+                }
             }
         }
         return res;
@@ -178,7 +171,15 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         @Override
         public Idents call() throws Exception {
             Idents res = new Idents();
-            collectIdents(PascalModuleImpl.this, null, res.idents);
+            for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(PascalModuleImpl.this, PasSubIdentImpl.class, PasRefNamedIdentImpl.class)) {
+                if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
+                    Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(namedElement), PasField.TYPES_ALL, true, 0);
+                    if (!refs.isEmpty()) {
+                        String name = (PsiUtil.belongsToInterface(namedElement) ? INTERFACE_PREFIX : "") + PsiUtil.getUniqueName(namedElement);
+                        res.idents.put(name, refs.iterator().next());
+                    }
+                }
+            }
             return res;
         }
     }

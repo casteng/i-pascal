@@ -338,8 +338,6 @@ type
         function Remove(const e: _VectorValueType): Boolean;
         // Removes all elements from the collection
         procedure Clear();
-        // Number of elements
-        property Count: __CollectionIndexType read FCount write SetCount;
         {/ Returns the element at the specified position in the list.
            Throws an error on invalid index if dsRangeCheck was included in the list options before instantiation. }
         function Get(Index: __CollectionIndexType): _VectorValueType;
@@ -364,6 +362,8 @@ type
         {/ Returns the index of the last occurrence of the specified element in the list,
            or -1 if the list does not contain the element. }
         function LastIndexOf(const e: _VectorValueType): __CollectionIndexType;
+        // Number of elements
+        property Count: __CollectionIndexType read FCount write SetCount;
         // Values retrieved by index
         property Values[Index: __CollectionIndexType]: _VectorValueType read Get write SetValue; default;
         // Pointer to values retrieved by index
@@ -402,6 +402,8 @@ type
         function ContainsKey(const Key: _HashMapKeyType): Boolean;
         // Returns True if the hash map contains the value
         function ContainsValue(const Value: _HashMapValueType): Boolean;
+        // Removes value for the specified key and returns True if there was value for the key
+        function RemoveValue(const Key: _HashMapKeyType): Boolean;
         // Calls a delegate for each value stored in the map
         procedure ForEach(Delegate: _HashMapDelegate; Data: Pointer);
         // Returns True if the collection contains no elements

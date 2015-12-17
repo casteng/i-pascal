@@ -45,7 +45,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @NotNull
     @Override
-    public String getName() {
+    public String getName() {                                                      // TODO: synchronize?
         if ((myCachedName == null) || (myCachedName.length() == 0)) {
             PsiElement element = getNameElement();
             myCachedName = element != null ? element.getText() : "";

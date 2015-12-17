@@ -118,4 +118,9 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(false, false, false);
     }
 
+    public void testUnusedUnits() {
+        myFixture.configureByFiles("unusedUnits.pas", "types.pas", "objects.pas", "scoped.types.pas", "exception.pas", "interfaces.pas", "routines.pas", "enumTypes.pas");
+        myFixture.checkHighlighting(true, false, false);
+    }
+
 }

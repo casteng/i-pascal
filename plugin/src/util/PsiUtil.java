@@ -755,4 +755,8 @@ public class PsiUtil {
         }
         return sb.toString();
     }
+
+    public static boolean belongsToInterface(PascalNamedElement ident) {
+        return PsiTreeUtil.getParentOfType(ident, PasUnitInterface.class) != null;
+    }
 }
