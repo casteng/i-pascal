@@ -16,6 +16,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -111,4 +112,18 @@ public class DocUtil {
     }
 
 
+    public static int expandRangeEnd(Document doc, int endOffset, Pattern pattern) {
+        while ((endOffset < doc.getTextLength()) && (pattern.matcher(doc.getText(TextRange.create(endOffset, endOffset+1)))).matches()) {
+            endOffset++;
+        }
+        return endOffset;
+    }
+
+    // Expands range's start for symbols matching pattern
+    public static int expandRangeStart(Document doc, int start, Pattern pattern) {
+        while ((start > 0) && (pattern.matcher(doc.getText(TextRange.create(start-1, start)))).matches()) {
+            start--;
+        }
+        return start;
+    }
 }

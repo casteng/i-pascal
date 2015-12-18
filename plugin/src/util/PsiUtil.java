@@ -35,7 +35,6 @@ import com.siberika.idea.pascal.lang.psi.PasGenericPostfix;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
@@ -274,10 +273,6 @@ public class PsiUtil {
 
     public static boolean isUsedUnitName(@NotNull PsiElement element) {
         return (element instanceof PasNamespaceIdent) && (element.getParent() instanceof PasUsesClause);
-    }
-
-    public static boolean isModuleName(@NotNull PascalNamedElement element) {
-        return element.getParent() instanceof PasModuleHead;
     }
 
     /**
