@@ -6,6 +6,7 @@ import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
+import com.siberika.idea.pascal.ide.actions.ExcludeUnitAction;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -68,6 +69,7 @@ public class PascalAnnotator implements Annotator {
         switch (PascalImportOptimizer.getUsedUnitStatus(usedUnitName)) {
             case UNUSED: {
                 Annotation ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit"));
+                ann.registerFix(new ExcludeUnitAction(message("action.excludeUnit"), usedUnitName));
                 break;
             }
             case USED_IN_IMPL: {
