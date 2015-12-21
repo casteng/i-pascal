@@ -267,7 +267,7 @@ private rec_struct_field    ::= !(";" | ")" | END | CASE)
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private rec_name            ::= !(identifier | END) & rec_section
-private rec_case            ::= !(ELSE) & rec_name
+private rec_case            ::= !(ELSE | Expression) & rec_name
 private rec_classparent     ::= !(CASE) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | ":" | "]")
