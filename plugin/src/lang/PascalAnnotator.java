@@ -6,8 +6,8 @@ import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
-import com.siberika.idea.pascal.ide.actions.ExcludeUnitAction;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
+import com.siberika.idea.pascal.ide.actions.UsesActions;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -66,16 +66,22 @@ public class PascalAnnotator implements Annotator {
         if (PascalImportOptimizer.isExcludedFromCheck(usedUnitName)) {
             return;
         }
+        Annotation ann = null;
         switch (PascalImportOptimizer.getUsedUnitStatus(usedUnitName)) {
             case UNUSED: {
-                Annotation ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit"));
-                ann.registerFix(new ExcludeUnitAction(message("action.excludeUnit"), usedUnitName));
+                ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit"));
                 break;
             }
             case USED_IN_IMPL: {
-                Annotation ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit.interface"));
+                ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit.interface"));
+                ann.registerFix(new UsesActions.MoveUnitAction(message("action.uses.move"), usedUnitName));
                 break;
             }
+        }
+        if (ann != null) {
+            ann.registerFix(new UsesActions.RemoveUnitAction(message("action.uses.remove"), usedUnitName));
+            ann.registerFix(new UsesActions.ExcludeUnitAction(message("action.uses.exclude"), usedUnitName));
+            ann.registerFix(new UsesActions.OptimizeUsesAction(message("action.uses.optimize")));
         }
     }
 

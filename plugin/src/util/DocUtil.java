@@ -12,7 +12,9 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,19 +38,24 @@ public class DocUtil {
         return res;
     }
 
+    // Adjusts content and inserts it into document placing cursor to placeholder position
     public static void adjustDocument(Editor editor, int offset, String content) {
         final Document document = editor.getDocument();
         int caretOffset = content.indexOf(PLACEHOLDER_CARET);
         content = content.replaceAll(PLACEHOLDER_CARET, "");
-        document.insertString(offset, adjustContent(editor, offset, content));
+        adjustDocument(document, offset, content);
         if (caretOffset >= 0) {
             editor.getCaretModel().moveToOffset(offset + caretOffset);
             editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
         }
     }
 
-    private static String adjustContent(Editor editor, int offset, String content) {
-        final Document document = editor.getDocument();
+    // Adjusts content and inserts it into document
+    public static void adjustDocument(Document document, int offset, String content) {
+        document.insertString(offset, adjustContent(document, offset, content));
+    }
+
+    private static String adjustContent(Document document, int offset, String content) {
         for (Map.Entry<String, String> entry : DUP_MAP.entrySet()) {
             String trimmedContent = StringUtils.stripEnd(content, null);
             if (trimmedContent.endsWith(entry.getKey())) {
@@ -66,51 +73,30 @@ public class DocUtil {
     }
 
     public static void reformatInSeparateCommand(final Project project, final PsiFile file, final Editor editor) {
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
+        runCommandLaterInWriteAction(project, PascalBundle.message("action.reformat"), new Runnable() {
             @Override
             public void run() {
-                ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-                            @Override
-                            public void run() {
-                                PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
-                                el = PsiUtil.skipToExpressionParent(el);
-                                PsiManager manager = el != null ? el.getManager() : null;
-                                if ((el != null) && (manager != null)) {
-                                    CodeStyleManager.getInstance(manager).reformat(el, true);
-                                }
-                            }
-                        }, PascalBundle.message("action.reformat"), null);
-                    }
-                });
+                PsiElement el = file.findElementAt(editor.getCaretModel().getOffset());
+                el = PsiUtil.skipToExpressionParent(el);
+                PsiManager manager = el != null ? el.getManager() : null;
+                if ((el != null) && (manager != null)) {
+                    CodeStyleManager.getInstance(manager).reformat(el, true);
+                }
             }
         });
     }
 
     public static void reformat(final PsiElement block) {
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
+        runCommandLaterInWriteAction(block.getProject(), PascalBundle.message("action.reformat"), new Runnable() {
             @Override
             public void run() {
-                ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        CommandProcessor.getInstance().executeCommand(block.getProject(), new Runnable() {
-                            @Override
-                            public void run() {
-                                PsiManager manager = block.getManager();
-                                if (manager != null) {
-                                    CodeStyleManager.getInstance(manager).reformat(block, true);
-                                }
-                            }
-                        }, PascalBundle.message("action.reformat"), null);
-                    }
-                });
+                PsiManager manager = block.getManager();
+                if (manager != null) {
+                    CodeStyleManager.getInstance(manager).reformat(block, true);
+                }
             }
         });
     }
-
 
     public static int expandRangeEnd(Document doc, int endOffset, Pattern pattern) {
         while ((endOffset < doc.getTextLength()) && (pattern.matcher(doc.getText(TextRange.create(endOffset, endOffset+1)))).matches()) {
@@ -125,5 +111,31 @@ public class DocUtil {
             start--;
         }
         return start;
+    }
+
+    public static void reformatRange(final PasModule module, final int start, final int end) {
+        runCommandLaterInWriteAction(module.getProject(), PascalBundle.message("action.reformat"), new Runnable() {
+            @Override
+            public void run() {
+                PsiManager manager = module.getManager();
+                if (manager != null) {
+                    CodeStyleManager.getInstance(manager).reformatRange(module, start, end, true);
+                }
+            }
+        });
+    }
+
+    public static void runCommandLaterInWriteAction(@NotNull final Project project, @NotNull final String name, final Runnable runnable) {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        CommandProcessor.getInstance().executeCommand(project, runnable, name, null);
+                    }
+                });
+            }
+        });
     }
 }

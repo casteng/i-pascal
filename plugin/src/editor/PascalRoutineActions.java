@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.editor;
 
+import com.intellij.codeInsight.intention.LowPriorityAction;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
@@ -53,7 +54,7 @@ public class PascalRoutineActions {
         }
     }
 
-    public static class ActionDeclareAll extends ActionDeclare {
+    public static class ActionDeclareAll extends ActionDeclare implements LowPriorityAction {
         public ActionDeclareAll(String name, PascalNamedElement element) {
             super(name, element);
             PascalRoutineImpl routine = (PascalRoutineImpl) element;
@@ -113,7 +114,7 @@ public class PascalRoutineActions {
         }
     }
 
-    public static class ActionImplementAll extends ActionImplement {
+    public static class ActionImplementAll extends ActionImplement implements LowPriorityAction {
         public ActionImplementAll(String name, PascalNamedElement element) {
             super(name, element);
             PascalRoutineImpl routine = (PascalRoutineImpl) element;

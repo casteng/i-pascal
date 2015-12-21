@@ -8,8 +8,11 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
@@ -22,6 +25,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -69,12 +73,20 @@ public class PascalImportOptimizer implements ImportOptimizer {
 
     @Override
     public boolean supports(PsiFile file) {
+        return supportsOptimization(file);
+    }
+
+    public static boolean supportsOptimization(PsiFile file) {
         return (file instanceof PascalFile) && (file.getFileType() == PascalFileType.INSTANCE);
     }
 
     @NotNull
     @Override
-    public Runnable processFile(PsiFile file) {
+    public Runnable processFile(final PsiFile file) {
+        return doProcess(file);
+    }
+
+    public static Runnable doProcess(final PsiFile file) {
         final Map<PasNamespaceIdent, UsedUnitStatus> units = new TreeMap<PasNamespaceIdent, UsedUnitStatus>(new ByOffsetComparator<PasNamespaceIdent>());
         Collection<PasUsesClause> usesClauses = PsiTreeUtil.findChildrenOfType(file, PasUsesClause.class);
 
@@ -115,14 +127,16 @@ public class PascalImportOptimizer implements ImportOptimizer {
                     List<TextRange> toRemoveImpl = new SmartList<TextRange>();
                     List<TextRange> unitRangesIntf = getUnitRanges(usesInterface);
                     List<TextRange> unitRangesImpl = getUnitRanges(usesImplementation);
+                    List<String> toMove = new SmartList<String>();
                     for (Map.Entry<PasNamespaceIdent, UsedUnitStatus> unit : units.entrySet()) {                                // perform add operations
                         if (unit.getValue() == UsedUnitStatus.USED_IN_IMPL) {                                                   // move from interface to implementation
-                            TextRange range = addUnitToSection(PsiUtil.getElementPasModule(unit.getKey()), unit.getKey().getName(), false);
-                            if (range != null) {
-                                remImpl++;
-                                unitRangesImpl.add(range);
-                            }
+                            toMove.add(unit.getKey().getName());
+                            remImpl++;
                         }
+                    }
+                    TextRange addedRange = addUnitToSection(PsiUtil.getElementPasModule(file), toMove, false);
+                    if (addedRange != null) {
+                        unitRangesImpl.add(addedRange);
                     }
                     for (Map.Entry<PasNamespaceIdent, UsedUnitStatus> unit : units.entrySet()) {                                // collect all removal ranges
                         if (unit.getValue() == UsedUnitStatus.USED_IN_IMPL) {                                                   // remove due to moving to implementation
@@ -168,7 +182,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         };
     }
 
-    private List<TextRange> getUnitRanges(PasUsesClause usesClause) {
+    public static List<TextRange> getUnitRanges(PasUsesClause usesClause) {
         if (null == usesClause) {
             return new SmartList<TextRange>();
         }
@@ -179,40 +193,52 @@ public class PascalImportOptimizer implements ImportOptimizer {
         return res;
     }
 
-    private static TextRange addUnitToSection(PasModule module, String name, boolean toInterface) {
-        if (null == module) {
+    public static TextRange addUnitToSection(final PasModule module, List<String> names, boolean toInterface) {
+        if ((null == module) || (names.isEmpty())) {
             return null;
         }
         assert (!toInterface || (module.getModuleType() == PascalModule.ModuleType.UNIT));
-        PasUsesClause uses;
+        final PasUsesClause uses;
         if (toInterface) {
             uses = PsiTreeUtil.findChildOfType(PsiUtil.getModuleInterfaceSection(module), PasUsesClause.class);
         } else {
             uses = PsiTreeUtil.findChildOfType((module.getModuleType() == PascalModule.ModuleType.UNIT) ? PsiUtil.getModuleImplementationSection(module) : module, PasUsesClause.class);
         }
         int offs = 0;
-        String content = ", " + name;
+        String content = StringUtils.join(names, ", ");
         if (uses != null) {
             offs = uses.getTextRange().getEndOffset() - 1;
+            content = ",\n" + content + ";";
         } else {
-            content = "\n\nuses\n" + name + ";";
+            content = "\n\nuses\n" + content + ";";
             @SuppressWarnings("unchecked") PsiElement prev = PsiTreeUtil.findChildOfAnyType(module, PasProgramModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);
             if (calcOffset(prev) >= 0) {
                 offs = calcOffset(prev);
             } else {
                 if (toInterface) {
                     PsiElement section = PsiUtil.getModuleInterfaceSection(module);
-                    offs = section != null ? section.getTextRange().getStartOffset() + "interface".length() + 1 : offs;
+                    offs = section != null ? section.getTextRange().getStartOffset() + "interface".length() : offs;
                 } else {
                     PsiElement section = PsiUtil.getModuleImplementationSection(module);
-                    offs = section != null ? section.getTextRange().getStartOffset() + "implementation".length() + 1: offs;
+                    offs = section != null ? section.getTextRange().getStartOffset() + "implementation".length(): offs;
                 }
             }
         }
         Document doc = PsiDocumentManager.getInstance(module.getProject()).getDocument(module.getContainingFile());
         if (doc != null) {
-            doc.insertString(offs, content);
+            DocUtil.adjustDocument(doc, offs, content);
         }
+        DocUtil.runCommandLaterInWriteAction(module.getProject(), PascalBundle.message("action.reformat"), new Runnable() {
+            @Override
+            public void run() {
+                for (PasUsesClause usesClause : PsiTreeUtil.findChildrenOfType(module, PasUsesClause.class)) {
+                    PsiManager manager = usesClause.getManager();
+                    if (manager != null) {
+                        CodeStyleManager.getInstance(manager).reformat(usesClause, true);
+                    }
+                }
+            }
+        });
         return TextRange.create(offs + 2, offs + content.length());
     }
 
@@ -220,7 +246,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         return prev != null ? prev.getTextRange().getEndOffset() : -1;
     }
 
-    private static TextRange removeUnitFromSection(PasNamespaceIdent usedUnit, PasUsesClause uses, List<TextRange> unitRanges, int remaining) {
+    public static TextRange removeUnitFromSection(PasNamespaceIdent usedUnit, PasUsesClause uses, List<TextRange> unitRanges, int remaining) {
         if ((0 == remaining) || (null == uses) || (null == uses.getContainingFile())) {
             return null;
         }
