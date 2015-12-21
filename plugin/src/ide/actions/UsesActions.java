@@ -13,6 +13,7 @@ import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
+import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -94,9 +95,14 @@ public class UsesActions {
         }
 
         protected TextRange getRangeToRemove() {
-            PasUsesClause usesInterface = (PasUsesClause) usedUnitName.getParent();
-            List<TextRange> ranges = PascalImportOptimizer.getUnitRanges(usesInterface);
-            return PascalImportOptimizer.removeUnitFromSection(usedUnitName, usesInterface, ranges, usesInterface.getNamespaceIdentList().size());
+            PasUsesClause usesClause = (PasUsesClause) usedUnitName.getParent();
+            List<TextRange> ranges = PascalImportOptimizer.getUnitRanges(usesClause);
+            TextRange res = PascalImportOptimizer.removeUnitFromSection(usedUnitName, usesClause, ranges, usesClause.getNamespaceIdentList().size());
+            if ((res != null) && (usesClause.getNamespaceIdentList().size() == 1)) {                                                              // Remove whole uses clause if last unit removed
+                final Document doc = PsiDocumentManager.getInstance(usedUnitName.getProject()).getDocument(usedUnitName.getContainingFile());
+                res = TextRange.create(usesClause.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesClause.getTextRange().getEndOffset(), PascalImportOptimizer.RE_LF));
+            }
+            return res;
         }
 
     }

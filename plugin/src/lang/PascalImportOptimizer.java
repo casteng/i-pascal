@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 public class PascalImportOptimizer implements ImportOptimizer {
 
     private static final Pattern RE_UNITNAME_PREFIX = Pattern.compile("[{}!]");
-    private static final Pattern RE_LF = Pattern.compile("\n");
+    public static final Pattern RE_LF = Pattern.compile("\n");
 
     static boolean isExcludedFromCheck(PasNamespaceIdent usedUnitName) {
         PsiElement prev = usedUnitName.getPrevSibling();
