@@ -11,9 +11,10 @@
     <change-notes><![CDATA[
         <p>0.993</p>
         <ul>
+          <li>used units usage check and quick fix</li>
+          <li>resolving enumeration constants qualified with type name</li>
           <li>completion improvement</li>
-          <li></li>
-          <li></li>
+          <li>many minor fixes</li>
         </ul>
         <p>0.99</p>
         <ul>
