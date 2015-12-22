@@ -173,7 +173,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
             Idents res = new Idents();
             for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(PascalModuleImpl.this, PasSubIdentImpl.class, PasRefNamedIdentImpl.class)) {
                 if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
-                    Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(namedElement), PasField.TYPES_ALL, true, 0);
+                    Collection<PasField> refs = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(namedElement), PasField.TYPES_ALL, true, 0);
                     if (!refs.isEmpty()) {
                         String name = (PsiUtil.belongsToInterface(namedElement) ? INTERFACE_PREFIX : "") + PsiUtil.getUniqueName(namedElement);
                         res.idents.put(name, refs.iterator().next());

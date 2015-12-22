@@ -75,7 +75,7 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
         if (null == ident) {
             return null;
         }
-        Collection<PasField> routines = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(ident), PasField.TYPES_ROUTINE, true, 0);
+        Collection<PasField> routines = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(ident), PasField.TYPES_ROUTINE, true, 0);
         if (routines.isEmpty()) {
             return null;
         }

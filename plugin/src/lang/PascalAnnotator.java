@@ -4,6 +4,7 @@ import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
@@ -21,6 +22,7 @@ import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.List;
 
 import static com.siberika.idea.pascal.PascalBundle.message;
 
@@ -42,9 +44,10 @@ public class PascalAnnotator implements Annotator {
 
         if (PsiUtil.isEntityName(element) && !PsiUtil.isLastPartOfMethodImplName((PascalNamedElement) element)) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
-            Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
+            List<PsiElement> scopes = new SmartList<PsiElement>();
+            Collection<PasField> refs = PasReferenceUtil.resolveExpr(scopes, NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
             if (refs.isEmpty()) {
-                Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
+                Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier") + scopes.toString());
                 String name = namedElement.getName();
                 if (!StrUtil.hasLowerCaseChar(name)) {
                     ann.registerFix(new PascalActionDeclare.ActionCreateConst(message("action.createConst"), namedElement));

@@ -77,7 +77,7 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
             if (PasField.DUMMY_IDENTIFIER.equals(pascalReference.key)) {
                 return new ResolveResult[0];
             }
-            final Collection<PasField> references = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(pascalReference.getElement()), PasField.TYPES_ALL, true, 0);
+            final Collection<PasField> references = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(pascalReference.getElement()), PasField.TYPES_ALL, true, 0);
             // return only first reference
             for (PasField el : references) {
                 if (el != null) {

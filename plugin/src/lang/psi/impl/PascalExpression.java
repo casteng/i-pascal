@@ -80,7 +80,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     private static PasField.ValueType resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
-        final Collection<PasField> references = PasReferenceUtil.resolve(scope, NamespaceRec.fromElement(fullyQualifiedIdent), PasField.TYPES_ALL, true, 0);
+        final Collection<PasField> references = PasReferenceUtil.resolve(null, scope, NamespaceRec.fromElement(fullyQualifiedIdent), PasField.TYPES_ALL, true, 0);
         if (!references.isEmpty()) {
             PasField field = references.iterator().next();
             PasReferenceUtil.retrieveFieldTypeScope(field);
