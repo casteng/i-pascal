@@ -10,7 +10,6 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.PasVisibility;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -19,11 +18,14 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.Filter;
+import com.siberika.idea.pascal.util.PosUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -185,8 +187,7 @@ public class SectionToggle {
         int ind = -1;
         PasEntityScope scope = routine.getContainingScope();
         if (scope != null) {
-            Collection<PasField> fields = getDeclFields(scope);
-            List<PascalRoutineImpl> decls = collectFields(fields, PasField.FieldType.ROUTINE, null);
+            List<PascalRoutineImpl> decls = collectFields(getDeclFields(scope), PasField.FieldType.ROUTINE, null);
             for (int i = 0; i < decls.size(); i++) {
                 if (decls.get(i).isEquivalentTo(routine)) {
                     ind = i;
@@ -207,11 +208,13 @@ public class SectionToggle {
         return res;
     }
 
-    public static <T extends PsiElement> List<T> collectFields(Collection<PasField> fields, PasField.FieldType type, Filter<PasField> filter) {
+    @SuppressWarnings("unchecked")
+    public static <T extends PsiElement> List<T> collectFields(@NotNull Collection<PasField> fields, PasField.FieldType type, Filter<PasField> filter) {
         List<T> result = new SmartList<T>();
         Set<T> resultSet = new SmartHashSet<T>();
         for (PasField field : fields) {
             PascalNamedElement el = field.getElement();
+            //noinspection SuspiciousMethodCalls
             if (((null == type) || (field.fieldType == type)) && !resultSet.contains(el) && ((null == filter) || filter.allow(field))) {
                 result.add((T) el);
                 resultSet.add((T) el);
@@ -220,13 +223,14 @@ public class SectionToggle {
         return result;
     }
 
+    @NotNull
     public static Collection<PasField> getDeclFields(PasEntityScope scope) {
         if (scope instanceof PascalModule) {
             return ((PascalModule) scope).getPubicFields();
         } else if (scope != null) {
             return scope.getAllFields();
         } else {
-            return null;
+            return Collections.emptyList();
         }
     }
 
@@ -278,19 +282,7 @@ public class SectionToggle {
         res = res < 0 ? member : res;
         if (res < 0) {                             // other declarations not found
             if (scope instanceof PascalStructType) {
-                List<PasVisibility> visList = ((PascalStructType) scope).getVisibilityList();
-                if (!visList.isEmpty()) {                                                           // after private visibility clause
-                    PasVisibility privateSection = visList.get(0);
-                    for (PasVisibility visibility : visList) {
-                        if (visibility.getText().toUpperCase().contains("PRIVATE")) {
-                            privateSection = visibility;
-                        }
-                    }
-                    res = privateSection.getTextRange().getEndOffset();
-                } else {                                                                            // before END
-                    PsiElement pos = PsiUtil.findEndSibling(scope.getFirstChild());
-                    res = pos != null ? pos.getTextRange().getStartOffset() : -1;
-                }
+                res = PosUtil.findPosInStruct((PascalStructType) scope, PasField.FieldType.ROUTINE, PasField.Visibility.PRIVATE.ordinal());
             } else {
                 PsiElement pos = PsiUtil.getModuleInterfaceSection(routine.getContainingFile());
                 if (null != pos) {                                                                  // to the end of interface section

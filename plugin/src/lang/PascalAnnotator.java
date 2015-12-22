@@ -10,6 +10,7 @@ import com.siberika.idea.pascal.editor.PascalRoutineActions;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.ide.actions.UsesActions;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -46,16 +47,26 @@ public class PascalAnnotator implements Annotator {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             List<PsiElement> scopes = new SmartList<PsiElement>();
             Collection<PasField> refs = PasReferenceUtil.resolveExpr(scopes, NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
+
+            if (!scopes.isEmpty() && (scopes.get(0) instanceof PasEnumType)) {
+            }
+
             if (refs.isEmpty()) {
-                Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier") + scopes.toString());
+                PsiElement scope = scopes.isEmpty() ? null : scopes.get(0);
+                Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
                 String name = namedElement.getName();
                 if (!StrUtil.hasLowerCaseChar(name)) {
-                    ann.registerFix(new PascalActionDeclare.ActionCreateConst(message("action.createConst"), namedElement));
+                    ann.registerFix(new PascalActionDeclare.ActionCreateConst(message("action.createConst"), namedElement, scope));
                 } else {
-                    ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createVar"), namedElement));
+                    if (scope != null) {
+                        ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createField"), namedElement, scope));
+                        ann.registerFix(new PascalActionDeclare.ActionCreateProperty(message("action.createProperty"), namedElement, scope));
+                    } else {
+                        ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createVar"), namedElement, scope));
+                    }
                 }
                 if (name.startsWith("T") || PsiUtil.isTypeName(element)) {
-                    ann.registerFix(new PascalActionDeclare.ActionCreateType(message("action.createType"), namedElement));
+                    ann.registerFix(new PascalActionDeclare.ActionCreateType(message("action.createType"), namedElement, scope));
                 }
             }
         }

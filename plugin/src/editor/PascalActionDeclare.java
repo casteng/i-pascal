@@ -27,7 +27,10 @@ import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.DocUtil;
+import com.siberika.idea.pascal.util.PosUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,11 +45,13 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     public static final int MAX_SECTION_LEVELS = 20;
     final List<FixActionData> fixActionDataArray;
     private final String name;
+    protected final PsiElement scope;
 
     abstract void calcData(final PsiFile file, final FixActionData data);
 
-    public PascalActionDeclare(String name, PascalNamedElement element) {
+    public PascalActionDeclare(String name, PascalNamedElement element, PsiElement scope) {
         this.name = name;
+        this.scope = scope;
         this.fixActionDataArray = new SmartList<FixActionData>(data(element));
     }
 
@@ -136,15 +141,26 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         return false;
     }
 
+    private static boolean findPlaceInStruct(PsiElement scope, FixActionData data, PasField.FieldType type, int targetVisibility) {
+        if (scope instanceof PascalStructType) {
+            PascalStructType struct = (PascalStructType) scope;
+            data.text = "\n" + PLACEHOLDER_DATA;
+            data.parent = struct;
+            data.offset = PosUtil.findPosInStruct(struct, type, targetVisibility);
+            return true;
+        }
+        return false;
+    }
+
     public static class ActionCreateVar extends PascalActionDeclare {
-        public ActionCreateVar(String name, PascalNamedElement element) {
-            super(name, element);
+        public ActionCreateVar(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
         }
 
         @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            if (findParent(file, data, PasVarSection.class, null)) {
+            if (findPlaceInStruct(scope, data, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal()) || findParent(file, data, PasVarSection.class, null)) {
                 data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + ": T" + DocUtil.PLACEHOLDER_CARET + ";");
             } else if (data.parent != null) {
                 data.text = data.text.replace(PLACEHOLDER_DATA, "var " + data.element.getName() + ": T" + DocUtil.PLACEHOLDER_CARET + ";");
@@ -152,9 +168,32 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
+    public static class ActionCreateProperty extends PascalActionDeclare {
+
+        private FixActionData varData;
+
+        public ActionCreateProperty(String name, PascalNamedElement element, @NotNull PsiElement scope) {
+            super(name, element, scope);
+            varData = new FixActionData(element);
+            addData(varData);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        void calcData(final PsiFile file, final FixActionData data) {
+            if (data == varData) {
+                findPlaceInStruct(scope, varData, PasField.FieldType.PROPERTY, PasField.Visibility.PRIVATE.ordinal());
+                varData.text = varData.text.replace(PLACEHOLDER_DATA, String.format("F%s: T" + DocUtil.PLACEHOLDER_CARET + ";", varData.element.getName()));
+            } else {
+                findPlaceInStruct(scope, data, PasField.FieldType.PROPERTY, PasField.Visibility.PUBLIC.ordinal());
+                data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: T read F%1$s write F%1$s;", data.element.getName()));
+            }
+        }
+    }
+
     public static class ActionCreateConst extends PascalActionDeclare {
-        public ActionCreateConst(String name, PascalNamedElement element) {
-            super(name, element);
+        public ActionCreateConst(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
         }
 
         @SuppressWarnings("unchecked")
@@ -169,9 +208,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateType extends PascalActionDeclare {
-
-        public ActionCreateType(String name, PascalNamedElement element) {
-            super(name, element);
+        public ActionCreateType(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
         }
 
         @SuppressWarnings("unchecked")
@@ -187,6 +225,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     private static final String PLACEHOLDER_DATA = "---";
 
+    @SuppressWarnings("unchecked")
     private static boolean findParent(PsiFile file, FixActionData data, Class<? extends PsiElement> sectionClass, Class<? extends PsiElement> sectionItemClass) {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
         data.text = PLACEHOLDER_DATA + "\n";

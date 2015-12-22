@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -36,6 +37,8 @@ public class PasField {
     public static final Set<FieldType> TYPES_STRUCTURE = new HashSet<FieldType>(Arrays.asList(FieldType.TYPE, FieldType.VARIABLE, FieldType.CONSTANT, FieldType.PROPERTY, FieldType.ROUTINE));
 
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
+
+    public static final List<String> VISIBILITY_STR = Arrays.asList("INTERNAL", "STRICT PRIVATE", "PRIVATE", "STRICT PROTECTED", "PROTECTED", "PUBLIC", "PUBLISHED", "AUTOMATED");
 
     public static final ValueType INTEGER = new ValueType(null, Kind.INTEGER, null, null);
     public static final ValueType FLOAT = new ValueType(null, Kind.FLOAT, null, null);
