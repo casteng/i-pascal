@@ -2,11 +2,13 @@ package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.UndoConfirmationPolicy;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -25,6 +27,8 @@ import java.util.regex.Pattern;
  * Date: 08/12/2015
  */
 public class DocUtil {
+    public static final Pattern RE_LF = Pattern.compile("\n");
+    public static final Pattern RE_WHITESPACE = Pattern.compile("\\s");
     private static final Map<String, String> DUP_MAP = getDupMap();
     public static final String PLACEHOLDER_CARET = "__CARET__";
     private static final int SPACES = 3;
@@ -132,10 +136,16 @@ public class DocUtil {
                 ApplicationManager.getApplication().runWriteAction(new Runnable() {
                     @Override
                     public void run() {
-                        CommandProcessor.getInstance().executeCommand(project, runnable, name, null);
+                        CommandProcessor.getInstance().executeCommand(project, runnable, name, null, UndoConfirmationPolicy.DO_NOT_REQUEST_CONFIRMATION);
                     }
                 });
             }
         });
     }
+
+    public static Document getDocument(PsiElement parent) {
+        PsiFile file = parent != null ? parent.getContainingFile() : null;
+        return file != null ? PsiDocumentManager.getInstance(parent.getProject()).getDocument(file) : null;
+    }
+
 }

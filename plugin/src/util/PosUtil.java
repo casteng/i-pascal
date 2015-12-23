@@ -1,6 +1,8 @@
 package com.siberika.idea.pascal.util;
 
-import com.intellij.psi.PsiElement;
+import com.intellij.lang.ASTNode;
+import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVisibility;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -29,7 +31,12 @@ public class PosUtil {
                 return struct.getExportedRoutineList().get(struct.getExportedRoutineList().size()-1).getTextRange().getEndOffset();
             }
         }
-        PsiElement end = PsiUtil.findEndSibling(struct.getFirstChild());
-        return end != null ? end.getTextRange().getStartOffset() : -1;
+        ASTNode before = null;
+        if (struct instanceof PasRecordDecl) {
+            before = struct.getNode().findChildByType(PasTypes.CASE);
+        };
+        before = before != null ? before : struct.getNode().findChildByType(PasTypes.END);
+        //PsiElement end = PsiUtil.findEndSibling(struct.getFirstChild());
+        return before != null ? before.getTextRange().getStartOffset() : -1;
     }
 }

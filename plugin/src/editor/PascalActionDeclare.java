@@ -7,6 +7,8 @@ import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
@@ -16,6 +18,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
+import com.intellij.util.containers.SortedList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
@@ -34,6 +37,7 @@ import com.siberika.idea.pascal.util.PosUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -86,16 +90,39 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                for (final FixActionData actionData : fixActionDataArray) {
+                List<FixActionData> sorted = new SortedList<FixActionData>(new Comparator<FixActionData>() {
+                    @Override
+                    public int compare(FixActionData o1, FixActionData o2) {
+                        return o2.offset - o1.offset;
+                    }
+                });
+                sorted.addAll(fixActionDataArray);
+                for (final FixActionData actionData : sorted) {
                     calcData(file, actionData);
                     if (!StringUtil.isEmpty(actionData.text)) {
                         new WriteCommandAction(project) {
                             @Override
                             protected void run(@NotNull Result result) throws Throwable {
                                 CommandProcessor.getInstance().setCurrentCommandName(name);
-                                cutLFs(document, actionData);
-                                DocUtil.adjustDocument(editor, actionData.offset, actionData.text);
-                                PsiDocumentManager.getInstance(project).commitDocument(document);
+                                Document doc = DocUtil.getDocument(actionData.parent);
+                                Editor edit;
+                                if ((doc != null) && (doc != document)) {                                        // Another document, open editor
+                                    edit = FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, actionData.parent.getContainingFile().getVirtualFile()), true);
+                                } else {
+                                    if (actionData.parent.getContainingFile() != file) {
+                                        return;                                                                  // Another file without document
+                                    }
+                                    doc = document;
+                                    edit = editor;
+                                }
+                                cutLFs(doc, actionData);
+                                actionData.offset = DocUtil.expandRangeStart(doc, actionData.offset, DocUtil.RE_WHITESPACE);
+                                if (edit != null) {
+                                    DocUtil.adjustDocument(edit, actionData.offset, actionData.text);
+                                } else {
+                                    DocUtil.adjustDocument(doc, actionData.offset, actionData.text.replace(DocUtil.PLACEHOLDER_CARET, ""));
+                                }
+                                PsiDocumentManager.getInstance(project).commitDocument(doc);
                             }
                         }.execute();
                     }

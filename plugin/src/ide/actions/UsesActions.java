@@ -100,7 +100,7 @@ public class UsesActions {
             TextRange res = PascalImportOptimizer.removeUnitFromSection(usedUnitName, usesClause, ranges, usesClause.getNamespaceIdentList().size());
             if ((res != null) && (usesClause.getNamespaceIdentList().size() == 1)) {                                                              // Remove whole uses clause if last unit removed
                 final Document doc = PsiDocumentManager.getInstance(usedUnitName.getProject()).getDocument(usedUnitName.getContainingFile());
-                res = TextRange.create(usesClause.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesClause.getTextRange().getEndOffset(), PascalImportOptimizer.RE_LF));
+                res = TextRange.create(usesClause.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesClause.getTextRange().getEndOffset(), DocUtil.RE_LF));
             }
             return res;
         }

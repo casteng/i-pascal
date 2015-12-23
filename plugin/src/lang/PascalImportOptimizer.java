@@ -44,7 +44,6 @@ import java.util.regex.Pattern;
 public class PascalImportOptimizer implements ImportOptimizer {
 
     private static final Pattern RE_UNITNAME_PREFIX = Pattern.compile("[{}!]");
-    public static final Pattern RE_LF = Pattern.compile("\n");
 
     static boolean isExcludedFromCheck(PasNamespaceIdent usedUnitName) {
         PsiElement prev = usedUnitName.getPrevSibling();
@@ -160,7 +159,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                         }
                     }
                     if ((usesImplementation != null) && (0 == remImpl)) {                                                         // remove implementation uses clause before other modifications
-                        doc.deleteString(usesImplementation.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesImplementation.getTextRange().getEndOffset(), RE_LF));
+                        doc.deleteString(usesImplementation.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesImplementation.getTextRange().getEndOffset(), DocUtil.RE_LF));
                     } else {
                         Collections.sort(toRemoveImpl, new ByOffsetComparator2());
                         for (TextRange textRange : toRemoveImpl) {
@@ -168,7 +167,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                         }
                     }
                     if ((usesInterface != null) && (0 == remIntf)) {
-                        doc.deleteString(usesInterface.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesInterface.getTextRange().getEndOffset(), RE_LF));
+                        doc.deleteString(usesInterface.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesInterface.getTextRange().getEndOffset(), DocUtil.RE_LF));
                     } else {
                         Collections.sort(toRemoveIntf, new ByOffsetComparator2());
                         for (TextRange textRange : toRemoveIntf) {
