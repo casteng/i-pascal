@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>0.993</version>
+    <version>0.995</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,12 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>0.995</p>
+        <ul>
+          <li>add field quick fix</li>
+          <li>add property quick fix</li>
+          <li>add enumeration constant quick fix</li>
+        </ul>
         <p>0.993</p>
         <ul>
           <li>used units usage check and quick fix</li>

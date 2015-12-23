@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
@@ -753,5 +754,22 @@ public class PsiUtil {
 
     public static boolean belongsToInterface(PsiElement ident) {
         return PsiTreeUtil.getParentOfType(ident, PasUnitInterface.class) != null;
+    }
+
+    // Returns pair sorted by starting offset. Nulls come last.
+    public static Pair<PsiElement, PsiElement> sortByStart(PsiElement o1, PsiElement o2, boolean ascending) {
+        if (null == o2) {
+            return Pair.create(o1, null);
+        }
+        if (null == o1) {
+            return Pair.create(o2, null);
+        }
+        boolean less = o1.getTextRange().getStartOffset() <= o2.getTextRange().getStartOffset();
+        less = ascending ? less : !less;
+        if (less) {
+            return Pair.create(o1, o2);
+        } else {
+            return Pair.create(o2, o1);
+        }
     }
 }

@@ -43,13 +43,12 @@ public class PascalAnnotator implements Annotator {
             }
         }
 
+        //noinspection ConstantConditions
         if (PsiUtil.isEntityName(element) && !PsiUtil.isLastPartOfMethodImplName((PascalNamedElement) element)) {
+            //noinspection ConstantConditions
             PascalNamedElement namedElement = (PascalNamedElement) element;
             List<PsiElement> scopes = new SmartList<PsiElement>();
             Collection<PasField> refs = PasReferenceUtil.resolveExpr(scopes, NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
-
-            if (!scopes.isEmpty() && (scopes.get(0) instanceof PasEnumType)) {
-            }
 
             if (refs.isEmpty()) {
                 PsiElement scope = scopes.isEmpty() ? null : scopes.get(0);
@@ -58,11 +57,13 @@ public class PascalAnnotator implements Annotator {
                 if (!StrUtil.hasLowerCaseChar(name)) {
                     ann.registerFix(new PascalActionDeclare.ActionCreateConst(message("action.createConst"), namedElement, scope));
                 } else {
-                    if (scope != null) {
+                    if (scope instanceof PasEnumType) {
+                        ann.registerFix(new PascalActionDeclare.ActionCreateEnum(message("action.createEnumConst"), namedElement, scope));
+                    } else if (scope != null) {
                         ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createField"), namedElement, scope));
                         ann.registerFix(new PascalActionDeclare.ActionCreateProperty(message("action.createProperty"), namedElement, scope));
                     } else {
-                        ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createVar"), namedElement, scope));
+                        ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createVar"), namedElement, null));
                     }
                 }
                 if (name.startsWith("T") || PsiUtil.isTypeName(element)) {

@@ -1,6 +1,8 @@
 package com.siberika.idea.pascal.editor;
 
+import com.google.common.collect.Iterables;
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.CommandProcessor;
@@ -24,9 +26,11 @@ import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
+import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -184,7 +188,6 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             super(name, element, scope);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (findPlaceInStruct(scope, data, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal()) || findParent(file, data, PasVarSection.class, null)) {
@@ -205,7 +208,6 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             addData(varData);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (data == varData) {
@@ -223,7 +225,6 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             super(name, element, scope);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (findParent(file, data, PasConstSection.class, PasConstDeclaration.class)) {
@@ -234,12 +235,35 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
+    public static class ActionCreateEnum extends PascalActionDeclare {
+        public ActionCreateEnum(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
+        }
+
+        @Override
+        void calcData(final PsiFile file, final FixActionData data) {
+            PasEnumType enumType = (PasEnumType) scope;
+            PsiElement last = PsiUtil.sortByStart(Iterables.getLast(enumType.getNamedIdentList(), null), Iterables.getLast(enumType.getExpressionList(), null), false).getFirst();
+            data.parent = enumType;
+            data.offset = -1;
+            if (last != null) {
+                data.text = ", " + data.element.getName();
+                data.offset = last.getTextRange().getEndOffset();
+            } else {
+                data.text = data.element.getName();
+                ASTNode rParen = enumType.getNode().findChildByType(PasTypes.RPAREN);
+                if (rParen != null) {
+                    data.offset = rParen.getTextRange().getStartOffset();
+                }
+            }
+        }
+    }
+
     public static class ActionCreateType extends PascalActionDeclare {
         public ActionCreateType(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (findParent(file, data, PasTypeSection.class, PasTypeDeclaration.class)) {
