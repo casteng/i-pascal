@@ -37,6 +37,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.DocUtil;
+import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PosUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -111,13 +112,18 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                                 Document doc = DocUtil.getDocument(actionData.parent);
                                 Editor edit;
                                 if ((doc != null) && (doc != document)) {                                        // Another document, open editor
-                                    edit = FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, actionData.parent.getContainingFile().getVirtualFile()), true);
+                                    edit = FileEditorManager.getInstance(project).openTextEditor(
+                                            new OpenFileDescriptor(project, actionData.parent.getContainingFile().getVirtualFile(), actionData.offset), true);
                                 } else {
                                     if (actionData.parent.getContainingFile() != file) {
+                                        EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(editor));
                                         return;                                                                  // Another file without document
                                     }
                                     doc = document;
                                     edit = editor;
+                                }
+                                if (!doc.isWritable()) {
+                                    EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(edit));
                                 }
                                 cutLFs(doc, actionData);
                                 actionData.offset = DocUtil.expandRangeStart(doc, actionData.offset, DocUtil.RE_WHITESPACE);
