@@ -16,7 +16,9 @@ import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
+import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.ModuleUtil;
+import com.siberika.idea.pascal.util.StrUtil;
 import com.siberika.idea.pascal.util.SysUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,12 +41,10 @@ public class PPUDecompilerCache {
     public static final String PPUDUMP_VERSION_MIN = "2.7.1";
 
     private final Module module;
-    private final PPUDecompilerCache self;
     private final LoadingCache<String, PPUDumpParser.Section> cache;
 
     public PPUDecompilerCache(@NotNull Module module) {
         this.module = module;
-        self = this;
         cache = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build(new Loader());//===***
     }
 
@@ -81,7 +81,7 @@ public class PPUDecompilerCache {
                 }
                 xml = SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
                 if (xml != null) {
-                    return PPUDumpParser.parse(xml, self);
+                    return PPUDumpParser.parse(xml, PPUDecompilerCache.this);
                 } else {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.empty.result"));
                 }
@@ -100,7 +100,7 @@ public class PPUDecompilerCache {
                 return new PPUDumpParser.Section(e1.getMessage());
             } catch (Exception e) {
                 LOG.info("Unknown error: " + e.getMessage(), e);
-                return new PPUDumpParser.Section(PascalBundle.message("decompile.unknown.error", xml));
+                return new PPUDumpParser.Section(PascalBundle.message("decompile.unknown.error", StrUtil.limit(xml, 2048)));
             }
         }
     }
@@ -113,7 +113,7 @@ public class PPUDecompilerCache {
                 int i1 = res.indexOf("Version");
                 int i2 = res.indexOf("\n");
                 if ((i1 < res.length()) && (i2 > i1)) {
-                    res = res.substring(i1+8, i2);
+                    res = res.substring(i1 + 8, i2);
                 }
             }
         } catch (Exception e) {
@@ -126,11 +126,16 @@ public class PPUDecompilerCache {
         Collection<VirtualFile> unitFiles = ModuleUtil.getAllCompiledModuleFilesByName(module, unitName, PPUFileType.INSTANCE);
         if (!unitFiles.isEmpty()) {
             try {
-                String key = FileUtil.getNameWithoutExtension(unitFiles.iterator().next().getName());
-                PPUDumpParser.Section section = cache.get(key);
+                VirtualFile file = unitFiles.iterator().next();
+                String key = getKey(file.getName());
+                PPUDumpParser.Section section = cache.getIfPresent(key);
+                boolean needReparsePsi = null == section;
+                section = cache.get(key);
                 if (section.isError()) {
                     LOG.info("ERROR: Invalidating ppu cache for key: " + key);
                     cache.invalidate(key);
+                } else if (needReparsePsi) {
+                    DocUtil.reparsePsi(module.getProject(), file);
                 }
                 return section;
             } catch (Exception e) {
@@ -138,6 +143,10 @@ public class PPUDecompilerCache {
             }
         }
         return new PPUDumpParser.Section(PascalBundle.message("decompile.unit.not.found", unitName));
+    }
+
+    private String getKey(String unitName) {
+        return FileUtil.getNameWithoutExtension(unitName);
     }
 
 }

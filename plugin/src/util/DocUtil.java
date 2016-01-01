@@ -1,18 +1,29 @@
 package com.siberika.idea.pascal.util;
 
+import com.intellij.codeInsight.template.Template;
+import com.intellij.codeInsight.template.impl.TemplateImpl;
+import com.intellij.codeInsight.template.impl.TextExpression;
+import com.intellij.codeInsight.template.impl.Variable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.UndoConfirmationPolicy;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileEvent;
+import com.intellij.openapi.vfs.VirtualFileListener;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.intellij.util.FileContentUtil;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import org.apache.commons.lang.StringUtils;
@@ -148,4 +159,37 @@ public class DocUtil {
         return file != null ? PsiDocumentManager.getInstance(parent.getProject()).getDocument(file) : null;
     }
 
+    public static Template createTemplate(String template, Map<String, String> defaults) {
+        TemplateImpl tpl = new TemplateImpl("", template, "");
+        tpl.setToIndent(false);
+        tpl.setToReformat(true);
+        tpl.setToShortenLongNames(true);
+        for (int i = 0; i < tpl.getSegmentsCount(); i++) {
+            String varName = tpl.getSegmentName(i);
+            String def = defaults != null ? defaults.get(varName) : null;
+            TextExpression expr = def != null ? new TextExpression(def) : null;
+            tpl.getVariables().add(new Variable(varName, expr, expr, true, false));
+        }
+        tpl.parseSegments();
+        tpl.setInline(false);
+        return tpl;
+    }
+
+    public static void reparsePsi(final Project project, final VirtualFile file) {
+        ApplicationManager.getApplication().invokeLater(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        new WriteCommandAction(project) {
+                            @Override
+                            protected void run(@NotNull Result result) throws Throwable {
+                                final FileDocumentManager documentManager = FileDocumentManager.getInstance();
+                                ((VirtualFileListener) documentManager).contentsChanged(new VirtualFileEvent(null, file, file.getName(), file.getParent()));
+                                FileContentUtil.reparseFiles(file);
+                            }
+                        }.execute();
+                    }
+                }
+        );
+    }
 }

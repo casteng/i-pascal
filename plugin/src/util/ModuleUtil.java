@@ -1,10 +1,12 @@
 package com.siberika.idea.pascal.util;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -34,15 +36,20 @@ public class ModuleUtil {
        2. Search for the filename all lowercased.
        3. Search for the filename all uppercased.
        Unit  names that are longer than 8 characters will first be looked for with  their  full length.
-       If the unit is not found with this name, the name will be truncated to 8 characters */
-    public static Collection<VirtualFile> getAllCompiledModuleFilesByName(@NotNull Module module, @NotNull String name, FileType fileType) {
-        Collection<VirtualFile> res = new ArrayList<VirtualFile>();
-        String[] nameVariants = name.length() > 8 ? new String[] {name, name.toLowerCase(), name.toUpperCase(), name.substring(0, 8)} : new String[] {name, name.toLowerCase(), name.toUpperCase()};
-        for (String unitName : nameVariants) {
-            res.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, unitName + "." + fileType.getDefaultExtension(),
-                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
-        }
-        return res;
+       If the unit is not found with this name, the name will be truncated to 8 characters. */
+    public static Collection<VirtualFile> getAllCompiledModuleFilesByName(@NotNull final Module module, @NotNull final String name, final FileType fileType) {
+        return ApplicationManager.getApplication().runReadAction(new Computable<Collection<VirtualFile>>() {
+            @Override
+            public Collection<VirtualFile> compute() {
+                Collection<VirtualFile> res = new ArrayList<VirtualFile>();
+                String[] nameVariants = name.length() > 8 ? new String[]{name, name.toLowerCase(), name.toUpperCase(), name.substring(0, 8)} : new String[]{name, name.toLowerCase(), name.toUpperCase()};
+                for (String unitName : nameVariants) {
+                    res.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, unitName + "." + fileType.getDefaultExtension(),
+                            GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
+                }
+                return res;
+            }
+        });
     }
 
     /**
