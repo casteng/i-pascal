@@ -212,7 +212,8 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         @Override
         public UnitMembers call() throws Exception {
             UnitMembers res = new UnitMembers();
-            res.all.put(getName().toUpperCase(), new PasField(PascalModuleImpl.this, PascalModuleImpl.this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PUBLIC));
+            res.all.put(getName().toUpperCase(), new PasField(PascalModuleImpl.this, PascalModuleImpl.this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
+            res.stamp = getStamp(getContainingFile());
 
             PsiElement section = PsiUtil.getModuleInterfaceSection(PascalModuleImpl.this);
             if (null == section) {
@@ -232,7 +233,6 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
                 res.all.put(unit.getName().toUpperCase(), new PasField(PascalModuleImpl.this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
             }
 
-            res.stamp = getStamp(getContainingFile());
             LOG.info(String.format("Unit %s public: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
             return res;
         }

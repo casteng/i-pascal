@@ -101,6 +101,8 @@ public class FPCSdkType extends BasePascalSdkType {
             return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getFPCExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
         } catch (PascalException e) {
             LOG.info("Error: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            LOG.info("Error: " + e.getMessage(), e);
         }
         return null;
     }
