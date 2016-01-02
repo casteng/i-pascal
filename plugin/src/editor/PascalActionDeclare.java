@@ -2,16 +2,19 @@ package com.siberika.idea.pascal.editor;
 
 import com.google.common.collect.Iterables;
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
+import com.intellij.codeInsight.template.Template;
+import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
-import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
@@ -20,10 +23,11 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
-import com.intellij.util.containers.SortedList;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.lang.psi.PasBlockBody;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
+import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
@@ -39,11 +43,14 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PosUtil;
+import com.siberika.idea.pascal.util.PreserveCaretTemplateAdapter;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: George Bakhtadze
@@ -55,6 +62,10 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     final List<FixActionData> fixActionDataArray;
     private final String name;
     protected final PsiElement scope;
+
+    private static final String TPL_VAR_RETURN_TYPE = "RETURN_TYPE";
+    private static final String TPL_VAR_CODE = "CODE";
+    private static final String TPL_VAR_TYPE = "TYPE";
 
     abstract void calcData(final PsiFile file, final FixActionData data);
 
@@ -95,54 +106,64 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                List<FixActionData> sorted = new SortedList<FixActionData>(new Comparator<FixActionData>() {
-                    @Override
-                    public int compare(FixActionData o1, FixActionData o2) {
-                        return o2.offset - o1.offset;
-                    }
-                });
-                sorted.addAll(fixActionDataArray);
+                List<FixActionData> sorted = new SmartList<FixActionData>(fixActionDataArray);
+                Collections.sort(sorted);
+                final RangeMarker marker = document.createRangeMarker(editor.getCaretModel().getOffset(), editor.getCaretModel().getOffset());
                 for (final FixActionData actionData : sorted) {
                     calcData(file, actionData);
                     if (!StringUtil.isEmpty(actionData.text)) {
-                        new WriteCommandAction(project) {
-                            @Override
-                            protected void run(@NotNull Result result) throws Throwable {
-                                CommandProcessor.getInstance().setCurrentCommandName(name);
-                                Document doc = DocUtil.getDocument(actionData.parent);
-                                Editor edit;
-                                if ((doc != null) && (doc != document)) {                                        // Another document, open editor
-                                    edit = FileEditorManager.getInstance(project).openTextEditor(
-                                            new OpenFileDescriptor(project, actionData.parent.getContainingFile().getVirtualFile(), actionData.offset), true);
-                                } else {
-                                    if (actionData.parent.getContainingFile() != file) {
-                                        EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(editor));
-                                        return;                                                                  // Another file without document
-                                    }
-                                    doc = document;
-                                    edit = editor;
-                                }
-                                if (!doc.isWritable()) {
-                                    EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(edit));
-                                }
-                                cutLFs(doc, actionData);
-                                actionData.offset = DocUtil.expandRangeStart(doc, actionData.offset, DocUtil.RE_WHITESPACE);
-                                if (edit != null) {
-                                    DocUtil.adjustDocument(edit, actionData.offset, actionData.text);
-                                } else {
-                                    DocUtil.adjustDocument(doc, actionData.offset, actionData.text.replace(DocUtil.PLACEHOLDER_CARET, ""));
-                                }
-                                PsiDocumentManager.getInstance(project).commitDocument(doc);
+                        Document doc = DocUtil.getDocument(actionData.parent);
+                        final Editor edit;
+                        if ((doc != null) && (doc != document)) {                                        // Another document, open editor
+                            edit = FileEditorManager.getInstance(project).openTextEditor(
+                                    new OpenFileDescriptor(project, actionData.parent.getContainingFile().getVirtualFile(), actionData.offset), true);
+                        } else {
+                            if (actionData.parent.getContainingFile() != file) {
+                                EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(editor));
+                                return;                                                                  // Another file without document
                             }
-                        }.execute();
+                            doc = document;
+                            edit = editor;
+                        }
+                        if (doc.isWritable()) {
+                            doModify(project, edit, doc, actionData, marker);
+                        } else {
+                            EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(edit));
+                        }
                     }
-                    DocUtil.reformat(actionData.parent);
                 }
             }
         });
     }
 
+    private void doModify(final Project project, final Editor editor, final Document doc, final FixActionData actionData, final RangeMarker marker) {
+        final TemplateManager templateManager = TemplateManager.getInstance(project);
+        final Template template = actionData.template ? DocUtil.createTemplate(actionData.text, actionData.variableDefaults) : null;
+        new WriteCommandAction(project, name) {
+            @Override
+            protected void run(@NotNull Result result) throws Throwable {
+                actionData.offset = DocUtil.expandRangeStart(doc, actionData.offset, DocUtil.RE_WHITESPACE);
+                cutLFs(doc, actionData);
+                if (editor != null) {
+                    if (template != null) {
+                        editor.getCaretModel().moveToOffset(actionData.offset);
+                        templateManager.startTemplate(editor, template, new PreserveCaretTemplateAdapter(editor, marker));
+                    } else {
+                        DocUtil.adjustDocument(editor, actionData.offset, actionData.text);
+                    }
+                } else {
+                    DocUtil.adjustDocument(doc, actionData.offset, actionData.text.replace(DocUtil.PLACEHOLDER_CARET, ""));
+                }
+                PsiDocumentManager.getInstance(project).commitDocument(doc);
+            }
+        }.execute();
+        DocUtil.reformat(actionData.parent);
+    }
+
     private void cutLFs(Document document, FixActionData data) {
+        if (StringUtil.isEmpty(data.text)) {
+            return;
+        }
         final int MAX = 2;
         int l = Math.max(0, data.offset - MAX);
         int r = Math.min(document.getTextLength(), data.offset + 1 + MAX);
@@ -161,7 +182,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 && (chars.charAt(r - data.offset - 1 + cr) == '\n') && (data.text.charAt(data.text.length() - 1 - cr) == '\n')) {
             cr++;
         }
-        data.text = data.text.substring(cl, data.text.length() - cr);
+        data.text = data.text.substring(cl, data.text.length() - cr - cl);
     }
 
     /*private void moveCaretToAdded(Editor editor, @Nullable PsiElement block, int offsetFromEnd) {
@@ -190,6 +211,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateVar extends PascalActionDeclare {
+
+        public static final Map<String, String> TYPE_VAR_DEFAULTS = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, "T")));
+
         public ActionCreateVar(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
         }
@@ -197,9 +221,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (findPlaceInStruct(scope, data, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal()) || findParent(file, data, PasVarSection.class, null)) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + ": T" + DocUtil.PLACEHOLDER_CARET + ";");
+                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s: $%s$;", data.element.getName(), TPL_VAR_TYPE)), TYPE_VAR_DEFAULTS);
             } else if (data.parent != null) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, "var " + data.element.getName() + ": T" + DocUtil.PLACEHOLDER_CARET + ";");
+                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("var %s: $%s$;", data.element.getName(), TPL_VAR_TYPE)), TYPE_VAR_DEFAULTS);
             }
         }
     }
@@ -217,11 +241,13 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (data == varData) {
-                findPlaceInStruct(scope, varData, PasField.FieldType.PROPERTY, PasField.Visibility.PRIVATE.ordinal());
-                varData.text = varData.text.replace(PLACEHOLDER_DATA, String.format("F%s: T" + DocUtil.PLACEHOLDER_CARET + ";", varData.element.getName()));
+                if (findPlaceInStruct(scope, varData, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal())) {
+                    varData.text = varData.text.replace(PLACEHOLDER_DATA, String.format("F%s: T" + DocUtil.PLACEHOLDER_CARET + ";", varData.element.getName()));
+                }
             } else {
-                findPlaceInStruct(scope, data, PasField.FieldType.PROPERTY, PasField.Visibility.PUBLIC.ordinal());
-                data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: T read F%1$s write F%1$s;", data.element.getName()));
+                if (findPlaceInStruct(scope, data, PasField.FieldType.PROPERTY, PasField.Visibility.PUBLIC.ordinal())) {
+                    data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: T read F%1$s write F%1$s;", data.element.getName()));
+                }
             }
         }
     }
@@ -280,6 +306,31 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
+    public static class ActionCreateRoutine extends PascalActionDeclare {
+        private final String returnType;
+
+        public ActionCreateRoutine(String name, PascalNamedElement element, PsiElement scope, String returnType) {
+            super(name, element, scope);
+            this.returnType = returnType;
+        }
+
+        @Override
+        void calcData(final PsiFile file, final FixActionData data) {
+            PsiElement block = PsiTreeUtil.getParentOfType(data.element, PasBlockBody.class);
+            block = block != null ? block : PsiTreeUtil.getParentOfType(data.element, PasCompoundStatement.class);
+            if (block != null) {
+                data.offset = block.getTextRange().getStartOffset();
+                data.parent = block.getParent();
+                if (returnType != null) {
+                    data.createTemplate(String.format("\n\nfunction %s($PARAMS$): $%s$;\nbegin\n$%s$\nend;\n\n", data.element.getName(), TPL_VAR_RETURN_TYPE, TPL_VAR_CODE),
+                            StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_RETURN_TYPE, returnType))));
+                } else {
+                    data.createTemplate(String.format("\n\nprocedure %s($PARAMS$);\nbegin\n$%s$\nend;\n\n", data.element.getName(), TPL_VAR_CODE), null);
+                }
+            }
+        }
+    }
+
     private static final String PLACEHOLDER_DATA = "---";
 
     @SuppressWarnings("unchecked")
@@ -330,15 +381,29 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
      * Author: George Bakhtadze
      * Date: 24/03/2015
      */
-    static final class FixActionData {
+    static final class FixActionData implements Comparable<FixActionData> {
         final PascalNamedElement element;
         // The parent will be formatted
         PsiElement parent;
         String text = null;
         int offset = 0;
+        boolean template = false;
+        Map<String, String> variableDefaults;
 
         public FixActionData(PascalNamedElement element) {
             this.element = element;
         }
+
+        @Override
+        public int compareTo(@NotNull FixActionData data) {
+            return data.offset - offset;
+        }
+
+        public void createTemplate(String text, Map<String, String> variableDefaults) {
+            this.variableDefaults = variableDefaults;
+            template = true;
+            this.text = text;
+        }
     }
+
 }

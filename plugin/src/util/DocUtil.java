@@ -167,7 +167,7 @@ public class DocUtil {
         for (int i = 0; i < tpl.getSegmentsCount(); i++) {
             String varName = tpl.getSegmentName(i);
             String def = defaults != null ? defaults.get(varName) : null;
-            TextExpression expr = def != null ? new TextExpression(def) : null;
+            TextExpression expr = new TextExpression(def != null ? def : "");
             tpl.getVariables().add(new Variable(varName, expr, expr, true, false));
         }
         tpl.parseSegments();

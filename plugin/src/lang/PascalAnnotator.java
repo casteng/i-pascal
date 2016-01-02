@@ -14,9 +14,11 @@ import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
@@ -59,11 +61,15 @@ public class PascalAnnotator implements Annotator {
                 } else {
                     if (scope instanceof PasEnumType) {
                         ann.registerFix(new PascalActionDeclare.ActionCreateEnum(message("action.createEnumConst"), namedElement, scope));
-                    } else if (scope != null) {
+                    } else if (scope instanceof PascalStructType) {
                         ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createField"), namedElement, scope));
                         ann.registerFix(new PascalActionDeclare.ActionCreateProperty(message("action.createProperty"), namedElement, scope));
                     } else {
                         ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createVar"), namedElement, null));
+                        ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.createRoutine"), namedElement, scope, null));
+                        if (scope instanceof PascalRoutineImpl) {
+                            ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createParameter"), namedElement, scope));
+                        }
                     }
                 }
                 if (name.startsWith("T") || PsiUtil.isTypeName(element)) {
