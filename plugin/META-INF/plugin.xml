@@ -11,9 +11,11 @@
     <change-notes><![CDATA[
         <p>0.995</p>
         <ul>
-          <li>add field quick fix</li>
-          <li>add property quick fix</li>
+          <li>template engine in quick fixes</li>
+          <li>create field quick fix</li>
+          <li>create property quick fix</li>
           <li>add enumeration constant quick fix</li>
+          <li>fixed bug with "undeclared identifier" on .ppu units</li>
         </ul>
         <p>0.993</p>
         <ul>
@@ -161,6 +163,9 @@
     </application-components>
 
     <project-components>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.PascalProjectService</implementation-class>
+        </component>
     </project-components>
 
     <actions>
