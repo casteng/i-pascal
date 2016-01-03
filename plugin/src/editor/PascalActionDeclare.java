@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.editor;
 import com.google.common.collect.Iterables;
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.codeInsight.template.Template;
+import com.intellij.codeInsight.template.TemplateEditingListener;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.application.ApplicationManager;
@@ -66,6 +67,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     private static final String TPL_VAR_RETURN_TYPE = "RETURN_TYPE";
     private static final String TPL_VAR_CODE = "CODE";
     private static final String TPL_VAR_TYPE = "TYPE";
+    private static final String TPL_VAR_CONST_EXPR = "CONST_EXPR";
 
     abstract void calcData(final PsiFile file, final FixActionData data);
 
@@ -126,7 +128,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                             edit = editor;
                         }
                         if (doc.isWritable()) {
-                            doModify(project, edit, doc, actionData, marker);
+                            doModify(project, edit, doc, actionData, new PreserveCaretTemplateAdapter(editor, file.getVirtualFile(), marker));
                         } else {
                             EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(edit));
                         }
@@ -136,7 +138,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         });
     }
 
-    private void doModify(final Project project, final Editor editor, final Document doc, final FixActionData actionData, final RangeMarker marker) {
+    private void doModify(final Project project, final Editor editor, final Document doc, final FixActionData actionData, final TemplateEditingListener templateEditingListener) {
         final TemplateManager templateManager = TemplateManager.getInstance(project);
         final Template template = actionData.template ? DocUtil.createTemplate(actionData.text, actionData.variableDefaults) : null;
         new WriteCommandAction(project, name) {
@@ -147,7 +149,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 if (editor != null) {
                     if (template != null) {
                         editor.getCaretModel().moveToOffset(actionData.offset);
-                        templateManager.startTemplate(editor, template, new PreserveCaretTemplateAdapter(editor, marker));
+                        templateManager.startTemplate(editor, template, templateEditingListener);
                     } else {
                         DocUtil.adjustDocument(editor, actionData.offset, actionData.text);
                     }
@@ -220,10 +222,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            if (findPlaceInStruct(scope, data, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal()) || findParent(file, data, PasVarSection.class, null)) {
-                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s: $%s$;", data.element.getName(), TPL_VAR_TYPE)), TYPE_VAR_DEFAULTS);
-            } else if (data.parent != null) {
-                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("var %s: $%s$;", data.element.getName(), TPL_VAR_TYPE)), TYPE_VAR_DEFAULTS);
+            String prefix = "";
+            if (!findPlaceInStruct(scope, data, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal()) && !findParent(file, data, PasVarSection.class, null)) {
+                prefix = "var ";
+            }
+            if (data.parent != null) {
+                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s: $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)), TYPE_VAR_DEFAULTS);
             }
         }
     }
@@ -259,10 +263,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            if (findParent(file, data, PasConstSection.class, PasConstDeclaration.class)) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + " = " + DocUtil.PLACEHOLDER_CARET + ";");
-            } else if (data.parent != null) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, "const " + data.element.getName() + " = " + DocUtil.PLACEHOLDER_CARET + ";");
+            String prefix = "";
+            if (!findParent(file, data, PasConstSection.class, PasConstDeclaration.class)) {
+                prefix = "const ";
+            }
+            if (data.parent != null) {
+                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s = $%s$;", prefix, data.element.getName(), TPL_VAR_CONST_EXPR)), null);
             }
         }
     }
@@ -279,10 +285,10 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             data.parent = enumType;
             data.offset = -1;
             if (last != null) {
-                data.text = ", " + data.element.getName();
+                data.createTemplate(", " + data.element.getName(), null);
                 data.offset = last.getTextRange().getEndOffset();
             } else {
-                data.text = data.element.getName();
+                data.createTemplate(data.element.getName(), null);
                 ASTNode rParen = enumType.getNode().findChildByType(PasTypes.RPAREN);
                 if (rParen != null) {
                     data.offset = rParen.getTextRange().getStartOffset();
@@ -298,10 +304,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            if (findParent(file, data, PasTypeSection.class, PasTypeDeclaration.class)) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, data.element.getName() + " = " + DocUtil.PLACEHOLDER_CARET + ";");
-            } else if (data.parent != null) {
-                data.text = data.text.replace(PLACEHOLDER_DATA, "type " + data.element.getName() + " = " + DocUtil.PLACEHOLDER_CARET + ";");
+            String prefix = "";
+            if (!findParent(file, data, PasTypeSection.class, PasTypeDeclaration.class)) {
+                prefix = "type ";
+            }
+            if (data.parent != null) {
+                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s = $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)), null);
             }
         }
     }
