@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -101,16 +102,25 @@ public class DocUtil {
         });
     }
 
-    public static void reformat(final PsiElement block) {
-        runCommandLaterInWriteAction(block.getProject(), PascalBundle.message("action.reformat"), new Runnable() {
+    public static void reformat(final PsiElement block, boolean inSeparateCommand) {
+        Runnable r = getReformatCode(block);
+        if (inSeparateCommand) {
+            runCommandLaterInWriteAction(block.getProject(), PascalBundle.message("action.reformat"), r);
+        } else {
+            r.run();
+        }
+    }
+
+    private static Runnable getReformatCode(final PsiElement element) {
+        return new Runnable() {
             @Override
             public void run() {
-                PsiManager manager = block.getManager();
+                PsiManager manager = element.getManager();
                 if (manager != null) {
-                    CodeStyleManager.getInstance(manager).reformat(block, true);
+                    CodeStyleManager.getInstance(manager).reformat(element, true);
                 }
             }
-        });
+        };
     }
 
     public static int expandRangeEnd(Document doc, int endOffset, Pattern pattern) {
@@ -159,19 +169,22 @@ public class DocUtil {
         return file != null ? PsiDocumentManager.getInstance(parent.getProject()).getDocument(file) : null;
     }
 
-    public static Template createTemplate(String template, Map<String, String> defaults) {
+    public static Template createTemplate(String template, Map<String, String> defaults, boolean inline) {
         TemplateImpl tpl = new TemplateImpl("", template, "");
         tpl.setToIndent(false);
-        tpl.setToReformat(true);
+        tpl.setToReformat(false);
         tpl.setToShortenLongNames(true);
         for (int i = 0; i < tpl.getSegmentsCount(); i++) {
             String varName = tpl.getSegmentName(i);
             String def = defaults != null ? defaults.get(varName) : null;
             TextExpression expr = new TextExpression(def != null ? def : "");
-            tpl.getVariables().add(new Variable(varName, expr, expr, true, false));
+            Variable var = new Variable(varName, expr, expr, true, false);
+            if (!tpl.getVariables().contains(var)) {
+                tpl.getVariables().add(var);
+            }
         }
         tpl.parseSegments();
-        tpl.setInline(false);
+        tpl.setInline(inline);
         return tpl;
     }
 
@@ -191,5 +204,19 @@ public class DocUtil {
                     }
                 }
         );
+    }
+
+    private static final Pattern PATTERN_TEMPLATE_VARIABLE = Pattern.compile("\\$\\w+\\$");
+    // Removes all template variables from the given range of the document
+    public static void removeTemplateVariables(Document document, TextRange textRange) {
+        String text = document.getText(textRange);
+        Matcher m = PATTERN_TEMPLATE_VARIABLE.matcher(text);
+        int offs = textRange.getStartOffset();
+        while (m.find()) {
+            //ranges.add(TextRange.create(m.start(), m.end()));
+            int len = m.end() - m.start();
+            document.deleteString(offs + m.start(), offs + m.end());
+            offs -= len;
+        }
     }
 }

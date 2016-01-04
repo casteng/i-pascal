@@ -108,58 +108,77 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                List<FixActionData> sorted = new SmartList<FixActionData>(fixActionDataArray);
+                final List<FixActionData> sorted = new SmartList<FixActionData>(fixActionDataArray);
                 Collections.sort(sorted);
                 final RangeMarker marker = document.createRangeMarker(editor.getCaretModel().getOffset(), editor.getCaretModel().getOffset());
-                for (final FixActionData actionData : sorted) {
-                    calcData(file, actionData);
-                    if (!StringUtil.isEmpty(actionData.text)) {
-                        Document doc = DocUtil.getDocument(actionData.parent);
-                        final Editor edit;
-                        if ((doc != null) && (doc != document)) {                                        // Another document, open editor
-                            edit = FileEditorManager.getInstance(project).openTextEditor(
-                                    new OpenFileDescriptor(project, actionData.parent.getContainingFile().getVirtualFile(), actionData.offset), true);
-                        } else {
-                            if (actionData.parent.getContainingFile() != file) {
-                                EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(editor));
-                                return;                                                                  // Another file without document
+                new WriteCommandAction(project, name) {
+                    @Override
+                    protected void run(@NotNull Result result) throws Throwable {
+                        Editor globalTemplateEditor = null;
+                        for (final FixActionData actionData : sorted) {
+                            calcData(file, actionData);
+                            if (!StringUtil.isEmpty(actionData.text)) {
+                                Document doc = DocUtil.getDocument(actionData.parent);
+                                final Editor edit;
+                                if ((doc != null) && (doc != document)) {                                        // Another document, open editor
+                                    edit = FileEditorManager.getInstance(project).openTextEditor(
+                                            new OpenFileDescriptor(project, actionData.parent.getContainingFile().getVirtualFile(), actionData.offset), true);
+                                } else {
+                                    if (actionData.parent.getContainingFile() != file) {
+                                        EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(editor));
+                                        return;                                                                  // Another file without document
+                                    }
+                                    doc = document;
+                                    edit = editor;
+                                }
+                                if (actionData.dataType == FixActionData.DataType.COMPLEX_TEMPLATE) {
+                                    globalTemplateEditor = edit;
+                                }
+                                if (doc.isWritable()) {
+                                    doModify(project, edit, doc, actionData, new PreserveCaretTemplateAdapter(editor, file.getVirtualFile(), marker, actionData.parent));
+                                    if ((actionData.dataType == FixActionData.DataType.TEXT) && (globalTemplateEditor == null)) {
+                                        DocUtil.reformat(actionData.parent, true);
+                                    }
+                                } else {
+                                    EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(edit));
+                                }
                             }
-                            doc = document;
-                            edit = editor;
                         }
-                        if (doc.isWritable()) {
-                            doModify(project, edit, doc, actionData, new PreserveCaretTemplateAdapter(editor, file.getVirtualFile(), marker));
-                        } else {
-                            EditorUtil.showErrorHint(PascalBundle.message("action.error.cantmodify"), EditorUtil.getHintPos(edit));
+                        if (globalTemplateEditor != null) {
+                            FixActionData globalTemplateData = sorted.iterator().next();
+                            handleGlobalTemplateEditor(project, globalTemplateEditor, globalTemplateData,
+                                    new PreserveCaretTemplateAdapter(editor, file.getVirtualFile(), marker, globalTemplateData.parent));
                         }
                     }
-                }
+                }.execute();
             }
         });
     }
 
+    private void handleGlobalTemplateEditor(Project project, final Editor editor, final FixActionData data, final TemplateEditingListener templateEditingListener) {
+        final TemplateManager templateManager = TemplateManager.getInstance(project);
+        final Template template = DocUtil.createTemplate(data.parent.getText(), data.variableDefaults, true);
+        DocUtil.removeTemplateVariables(editor.getDocument(), data.parent.getTextRange());
+        editor.getCaretModel().moveToOffset(data.parent.getTextRange().getStartOffset());
+        templateManager.startTemplate(editor, template, false, null, templateEditingListener);
+    }
+
     private void doModify(final Project project, final Editor editor, final Document doc, final FixActionData actionData, final TemplateEditingListener templateEditingListener) {
         final TemplateManager templateManager = TemplateManager.getInstance(project);
-        final Template template = actionData.template ? DocUtil.createTemplate(actionData.text, actionData.variableDefaults) : null;
-        new WriteCommandAction(project, name) {
-            @Override
-            protected void run(@NotNull Result result) throws Throwable {
-                actionData.offset = DocUtil.expandRangeStart(doc, actionData.offset, DocUtil.RE_WHITESPACE);
-                cutLFs(doc, actionData);
-                if (editor != null) {
-                    if (template != null) {
-                        editor.getCaretModel().moveToOffset(actionData.offset);
-                        templateManager.startTemplate(editor, template, templateEditingListener);
-                    } else {
-                        DocUtil.adjustDocument(editor, actionData.offset, actionData.text);
-                    }
-                } else {
-                    DocUtil.adjustDocument(doc, actionData.offset, actionData.text.replace(DocUtil.PLACEHOLDER_CARET, ""));
-                }
-                PsiDocumentManager.getInstance(project).commitDocument(doc);
+        final Template template = actionData.dataType == FixActionData.DataType.TEMPLATE ? DocUtil.createTemplate(actionData.text, actionData.variableDefaults, false) : null;
+        actionData.offset = DocUtil.expandRangeStart(doc, actionData.offset, DocUtil.RE_WHITESPACE);
+        cutLFs(doc, actionData);
+        if (editor != null) {
+            if (template != null) {
+                editor.getCaretModel().moveToOffset(actionData.offset);
+                templateManager.startTemplate(editor, template, templateEditingListener);
+            } else {
+                DocUtil.adjustDocument(editor, actionData.offset, actionData.text);
             }
-        }.execute();
-        DocUtil.reformat(actionData.parent);
+        } else {
+            DocUtil.adjustDocument(doc, actionData.offset, actionData.text.replace(DocUtil.PLACEHOLDER_CARET, ""));
+        }
+        PsiDocumentManager.getInstance(project).commitDocument(doc);
     }
 
     private void cutLFs(Document document, FixActionData data) {
@@ -224,7 +243,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
             if (!findPlaceInStruct(scope, data, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal()) && !findParent(file, data, PasVarSection.class, null)) {
-                prefix = "var ";
+                prefix = "\nvar ";
             }
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s: $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)), TYPE_VAR_DEFAULTS);
@@ -246,11 +265,13 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         void calcData(final PsiFile file, final FixActionData data) {
             if (data == varData) {
                 if (findPlaceInStruct(scope, varData, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal())) {
-                    varData.text = varData.text.replace(PLACEHOLDER_DATA, String.format("F%s: T" + DocUtil.PLACEHOLDER_CARET + ";", varData.element.getName()));
+                    varData.text = varData.text.replace(PLACEHOLDER_DATA, String.format("F%s: $%s$;", varData.element.getName(), TPL_VAR_TYPE));
+                    varData.variableDefaults = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, "Integer")));
+                    varData.dataType = FixActionData.DataType.COMPLEX_TEMPLATE;
                 }
             } else {
                 if (findPlaceInStruct(scope, data, PasField.FieldType.PROPERTY, PasField.Visibility.PUBLIC.ordinal())) {
-                    data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: T read F%1$s write F%1$s;", data.element.getName()));
+                    data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: $%2$s$ read F%1$s write F%1$s;", data.element.getName(), TPL_VAR_TYPE));
                 }
             }
         }
@@ -265,7 +286,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
             if (!findParent(file, data, PasConstSection.class, PasConstDeclaration.class)) {
-                prefix = "const ";
+                prefix = "\nconst ";
             }
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s = $%s$;", prefix, data.element.getName(), TPL_VAR_CONST_EXPR)), null);
@@ -306,7 +327,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
             if (!findParent(file, data, PasTypeSection.class, PasTypeDeclaration.class)) {
-                prefix = "type ";
+                prefix = "\ntype ";
             }
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s = $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)), null);
@@ -395,7 +416,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         PsiElement parent;
         String text = null;
         int offset = 0;
-        boolean template = false;
+        DataType dataType = DataType.TEXT;
         Map<String, String> variableDefaults;
 
         public FixActionData(PascalNamedElement element) {
@@ -408,9 +429,19 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
 
         public void createTemplate(String text, Map<String, String> variableDefaults) {
+            assert dataType != DataType.COMPLEX_TEMPLATE;
             this.variableDefaults = variableDefaults;
-            template = true;
+            dataType = DataType.TEMPLATE;
             this.text = text;
+        }
+
+        private enum  DataType {
+            // the action data will insert some text
+            TEXT,
+            // the action data will use template engine
+            TEMPLATE,
+            // all data of an action will form a complex inline template (parent fields should be the same)
+            COMPLEX_TEMPLATE
         }
     }
 

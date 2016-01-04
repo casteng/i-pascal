@@ -112,7 +112,7 @@ public class ActionImplement extends PascalAction {
                 }
             }.execute();
         }
-        DocUtil.reformat(scope);
+        DocUtil.reformat(scope, true);
         for (final PasField field : selected) {
             PascalNamedElement element = field.getElement();
             if (PsiUtil.isElementUsable(element)) {
