@@ -32,7 +32,7 @@ public class PosUtil {
             }
         }
 
-        Pair<Integer, Boolean> res = Pair.create(-1, false);
+        Pair<Integer, Boolean> res = Pair.create(-1, true);
         if (PasField.FieldType.TYPE == type) {
             res = getStructSectionPos(struct.getTypeSectionList());
         } else if (PasField.FieldType.CONSTANT == type) {

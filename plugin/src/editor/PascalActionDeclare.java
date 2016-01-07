@@ -222,19 +222,22 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         return false;
     }
 
-    private static boolean findPlaceInStruct(PsiElement scope, FixActionData data, PasField.FieldType type, int targetVisibility) {
+    // Fills data parent and offset and returns True if section for new member already exists
+    private static boolean fillMemberPlace(PsiElement scope, FixActionData data, int targetVisibility, PasField.FieldType type, Class<? extends PsiElement> sectionClass, Class<? extends PsiElement> sectionItemClass) {
         if (scope instanceof PascalStructType) {
-            PascalStructType struct = (PascalStructType) scope;
             data.text = "\n" + PLACEHOLDER_DATA;
-            data.parent = struct;
-            Pair<Integer, Boolean> res = PosUtil.findPosInStruct(struct, type, targetVisibility);
+            data.parent = scope;
+            Pair<Integer, Boolean> res = PosUtil.findPosInStruct((PascalStructType) scope, type, targetVisibility);
             data.offset = res.first;
-            if ((type == PasField.FieldType.CONSTANT) || (type == PasField.FieldType.TYPE)) {
-                return res.second;
-            }
-            return true;
+            return res.second;
+        } else if (scope instanceof PsiFile) {
+            return fillParent(scope, data, sectionClass, sectionItemClass);
         }
         return false;
+    }
+
+    private static PsiElement getScope(PsiFile file, PsiElement scope) {
+        return (scope instanceof PascalStructType) ? scope : file;
     }
 
     public static class ActionCreateVar extends PascalActionDeclare {
@@ -248,7 +251,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
-            if (!findPlaceInStruct(scope, data, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal()) && !findParent(file, data, PasVarSection.class, null)) {
+            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
                 prefix = "\nvar ";
             }
             if (data.parent != null) {
@@ -276,16 +279,16 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (data == varData) {
-                if (findPlaceInStruct(scope, varData, PasField.FieldType.VARIABLE, PasField.Visibility.PRIVATE.ordinal())) {
-                    varData.text = varData.text.replace(PLACEHOLDER_DATA, String.format("F%s: $%s$;", varData.element.getName(), TPL_VAR_TYPE));
-                    varData.variableDefaults = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, "Integer")));
-                    varData.dataType = FixActionData.DataType.COMPLEX_TEMPLATE;
+                if (fillMemberPlace(scope, data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
+                    data.text = data.text.replace(PLACEHOLDER_DATA, String.format("F%s: $%s$;", data.element.getName(), TPL_VAR_TYPE));
+                    data.dataType = FixActionData.DataType.COMPLEX_TEMPLATE;
                 }
             } else {
-                if (findPlaceInStruct(scope, data, PasField.FieldType.PROPERTY, PasField.Visibility.PUBLIC.ordinal())) {
+                if (fillMemberPlace(scope, data, PasField.Visibility.PUBLIC.ordinal(), PasField.FieldType.PROPERTY, PasVarSection.class, null)) {
                     data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: $%2$s$ read F%1$s write F%1$s;", data.element.getName(), TPL_VAR_TYPE));
                 }
             }
+            data.variableDefaults = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, "Integer")));
         }
     }
 
@@ -303,14 +306,14 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
-            if (!findPlaceInStruct(scope, data, PasField.FieldType.CONSTANT, PasField.Visibility.PRIVATE.ordinal()) || (data.parent != null)
-             && (!findParent(file, data, PasConstSection.class, PasConstDeclaration.class))) {
+            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.CONSTANT, PasConstSection.class, PasConstDeclaration.class)) {
                 prefix = "\nconst ";
             }
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s = $%s$;", prefix, data.element.getName(), TPL_VAR_CONST_EXPR)), null);
             }
         }
+
     }
 
     public static class ActionCreateConstHP extends ActionCreateConst implements HighPriorityAction {
@@ -357,8 +360,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
-            if (!findPlaceInStruct(scope, data, PasField.FieldType.TYPE, PasField.Visibility.PRIVATE.ordinal()) || (data.parent != null)
-             && (!findParent(file, data, PasTypeSection.class, PasTypeDeclaration.class))) {
+            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.TYPE, PasTypeSection.class, PasTypeDeclaration.class)) {
                 prefix = "\ntype ";
             }
             if (data.parent != null) {
@@ -407,7 +409,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     private static final String PLACEHOLDER_DATA = "---";
 
     @SuppressWarnings("unchecked")
-    private static boolean findParent(PsiFile file, FixActionData data, Class<? extends PsiElement> sectionClass, Class<? extends PsiElement> sectionItemClass) {
+    // Fills data parent and offset and returns True if section for new member already exists
+    private static boolean fillParent(PsiElement file, FixActionData data, Class<? extends PsiElement> sectionClass, Class<? extends PsiElement> sectionItemClass) {
         PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(data.element);
         data.text = PLACEHOLDER_DATA + "\n";
         for (int i = 0; i < MAX_SECTION_LEVELS; i++) {
