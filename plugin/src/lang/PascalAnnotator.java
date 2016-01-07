@@ -13,6 +13,7 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.ide.actions.UsesActions;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -72,8 +73,10 @@ public class PascalAnnotator implements Annotator {
                     fixes = EnumSet.of(AddFixType.TYPE);
                 } else if (PsiTreeUtil.getParentOfType(namedElement, PasConstExpression.class) != null) {   // [part of const expr] => -* +const +enum
                     fixes = EnumSet.of(AddFixType.CONST);
-                } else if ((context == PsiContext.PROPERTY_SPEC) || (context == PsiContext.EXPORT) || (context == PsiContext.CALL)) {
+                } else if ((context == PsiContext.EXPORT) || (context == PsiContext.CALL)) {
                     fixes = EnumSet.of(AddFixType.ROUTINE);
+                } else if (context == PsiContext.PROPERTY_SPEC) {
+                    fixes = EnumSet.of(AddFixType.VAR, AddFixType.ROUTINE);
                 } else if (context == PsiContext.FOR) {
                     fixes = EnumSet.of(AddFixType.VAR);
                 }
@@ -82,49 +85,59 @@ public class PascalAnnotator implements Annotator {
                 for (AddFixType fix : fixes) {
                     switch (fix) {
                         case VAR: {
-                            if (scope instanceof PascalStructType) {
+                            if (!(scope instanceof PascalStructType)) {
+                                ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.create.var"), namedElement, null));
+                            }
+                            PsiElement adjustedScope = adjustScope(scope);
+                            if (adjustedScope instanceof PascalStructType) {
                                 if (StrUtil.PATTERN_FIELD.matcher(name).matches()) {
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.createField"), namedElement, scope));
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateProperty(message("action.createProperty"), namedElement, scope));
+                                    ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.create.field"), namedElement, adjustedScope));
+                                    if (context != PsiContext.PROPERTY_SPEC) {
+                                        ann.registerFix(new PascalActionDeclare.ActionCreateProperty(message("action.create.property"), namedElement, adjustedScope));
+                                    }
                                 } else {
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createField"), namedElement, scope));
-                                    ann.registerFix(new PascalActionDeclare.ActionCreatePropertyHP(message("action.createProperty"), namedElement, scope));
+                                    ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.create.field"), namedElement, adjustedScope));
+                                    if (context != PsiContext.PROPERTY_SPEC) {
+                                        ann.registerFix(new PascalActionDeclare.ActionCreatePropertyHP(message("action.create.property"), namedElement, adjustedScope));
+                                    }
                                 }
-                            } else {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.createVar"), namedElement, null));
                             }
                             break;
                         }
                         case TYPE: {
-                            if (name.startsWith("T")) {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateTypeHP(message("action.createType"), namedElement, scope));
-                            } else {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateTypeLP(message("action.createType"), namedElement, scope));
+                            boolean priority = name.startsWith("T");
+                            if (!(scope instanceof PascalStructType)) {
+                                ann.registerFix(PascalActionDeclare.newActionCreateType(namedElement, scope, priority));
                             }
+                            ann.registerFix(PascalActionDeclare.newActionCreateType(namedElement, adjustScope(scope), priority));
                             break;
                         }
                         case CONST: {
-                            if (!StrUtil.hasLowerCaseChar(name)) {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateConstHP(message("action.createConst"), namedElement, scope));
-                            } else {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateConstLP(message("action.createConst"), namedElement, scope));
+                            boolean priority = !StrUtil.hasLowerCaseChar(name);
+                            if (!(scope instanceof PascalStructType)) {
+                                ann.registerFix(PascalActionDeclare.newActionCreateConst(namedElement, scope, priority));
                             }
+                            ann.registerFix(PascalActionDeclare.newActionCreateConst(namedElement, adjustScope(scope), priority));
                             break;
                         }
                         case ROUTINE: {
                             if (scope instanceof PascalStructType) {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.createMethod"), namedElement, scope, null));
+                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.method"), namedElement, scope, null));
                             } else {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.createRoutine"), namedElement, scope, null));
+                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.routine"), namedElement, scope, null));
+                                PsiElement adjustedScope = adjustScope(scope);
+                                if (adjustedScope instanceof PascalStructType) {
+                                    ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.method"), namedElement, adjustedScope, null));
+                                }
                             }
                             break;
                         }
                         case ENUM: {
-                            ann.registerFix(new PascalActionDeclare.ActionCreateEnum(message("action.createEnumConst"), namedElement, scope));
+                            ann.registerFix(new PascalActionDeclare.ActionCreateEnum(message("action.create.enumConst"), namedElement, scope));
                             break;
                         }
                         case PARAMETER: {
-                            ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.createParameter"), namedElement, scope));
+                            ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.create.parameter"), namedElement, scope));
                             break;
                         }
                     }
@@ -135,6 +148,16 @@ public class PascalAnnotator implements Annotator {
         if ((element instanceof PascalNamedElement) && PsiUtil.isUsedUnitName(element.getParent())) {
             annotateUnit(holder, (PasNamespaceIdent) element.getParent());
         }
+    }
+
+    private PsiElement adjustScope(PsiElement scope) {
+        if (scope instanceof PascalRoutineImpl) {
+            PasEntityScope struct = ((PascalRoutineImpl) scope).getContainingScope();
+            if (struct instanceof PascalStructType) {
+                return struct;
+            }
+        }
+        return scope;
     }
 
     private void annotateUnit(AnnotationHolder holder, PasNamespaceIdent usedUnitName) {

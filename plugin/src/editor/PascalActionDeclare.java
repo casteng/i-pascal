@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.editor;
 
 import com.google.common.collect.Iterables;
 import com.intellij.codeInsight.intention.HighPriorityAction;
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.codeInsight.intention.LowPriorityAction;
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.codeInsight.template.Template;
@@ -54,6 +55,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static com.siberika.idea.pascal.PascalBundle.message;
 
 /**
  * Author: George Bakhtadze
@@ -328,6 +331,15 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
+    public static IntentionAction newActionCreateConst(PascalNamedElement namedElement, PsiElement scope, boolean priority) {
+        String name = (scope instanceof PascalStructType) ? message("action.create.nestedConst") : message("action.create.const");
+        if (priority) {
+            return new PascalActionDeclare.ActionCreateConstHP(name, namedElement, scope);
+        } else {
+            return new PascalActionDeclare.ActionCreateConstLP(name, namedElement, scope);
+        }
+    }
+
     public static class ActionCreateEnum extends PascalActionDeclare {
         public ActionCreateEnum(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
@@ -378,6 +390,15 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     public static class ActionCreateTypeLP extends ActionCreateType implements LowPriorityAction {
         public ActionCreateTypeLP(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
+        }
+    }
+
+    public static IntentionAction newActionCreateType(PascalNamedElement namedElement, PsiElement scope, boolean priority) {
+        String name = (scope instanceof PascalStructType) ? message("action.create.nestedType") : message("action.create.type");
+        if (priority) {
+            return new PascalActionDeclare.ActionCreateTypeHP(name, namedElement, scope);
+        } else {
+            return new PascalActionDeclare.ActionCreateTypeLP(name, namedElement, scope);
         }
     }
 
