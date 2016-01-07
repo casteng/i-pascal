@@ -12,8 +12,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -39,6 +41,7 @@ public class PasField {
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 
     public static final List<String> VISIBILITY_STR = Arrays.asList("INTERNAL", "STRICT PRIVATE", "PRIVATE", "STRICT PROTECTED", "PROTECTED", "PUBLIC", "PUBLISHED", "AUTOMATED");
+    public static final Map<String, Visibility> VISIBILITY_MAP = getVisibilityMap();
 
     public static final ValueType INTEGER = new ValueType(null, Kind.INTEGER, null, null);
     public static final ValueType FLOAT = new ValueType(null, Kind.FLOAT, null, null);
@@ -47,6 +50,19 @@ public class PasField {
     public static final ValueType POINTER = new ValueType(null, Kind.POINTER, null, null);
 
     private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null, null);
+
+    private static Map<String, Visibility> getVisibilityMap() {
+        Map<String, Visibility> res = new HashMap<String, Visibility>();
+        res.put("INTERNAL", Visibility.INTERNAL);
+        res.put("STRICT PRIVATE", Visibility.STRICT_PRIVATE);
+        res.put("PRIVATE", Visibility.PRIVATE);
+        res.put("STRICT PROTECTED", Visibility.STRICT_PROTECTED);
+        res.put("PROTECTED", Visibility.PROTECTED);
+        res.put("PUBLIC", Visibility.PUBLIC);
+        res.put("PUBLISHED", Visibility.PUBLISHED);
+        res.put("AUTOMATED", Visibility.AUTOMATED);
+        return Collections.unmodifiableMap(res);
+    }
 
     public static boolean isAllowed(Visibility check, Visibility minAllowed) {
         return check.compareTo(minAllowed) >= 0;

@@ -1,6 +1,8 @@
 package com.siberika.idea.pascal.editor;
 
 import com.google.common.collect.Iterables;
+import com.intellij.codeInsight.intention.HighPriorityAction;
+import com.intellij.codeInsight.intention.LowPriorityAction;
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateEditingListener;
@@ -225,7 +227,11 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             PascalStructType struct = (PascalStructType) scope;
             data.text = "\n" + PLACEHOLDER_DATA;
             data.parent = struct;
-            data.offset = PosUtil.findPosInStruct(struct, type, targetVisibility);
+            Pair<Integer, Boolean> res = PosUtil.findPosInStruct(struct, type, targetVisibility);
+            data.offset = res.first;
+            if ((type == PasField.FieldType.CONSTANT) || (type == PasField.FieldType.TYPE)) {
+                return res.second;
+            }
             return true;
         }
         return false;
@@ -248,6 +254,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s: $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)), TYPE_VAR_DEFAULTS);
             }
+        }
+    }
+
+    public static class ActionCreateVarHP extends ActionCreateVar implements HighPriorityAction {
+        public ActionCreateVarHP(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
         }
     }
 
@@ -277,6 +289,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
+    public static class ActionCreatePropertyHP extends ActionCreateProperty implements HighPriorityAction {
+        public ActionCreatePropertyHP(String name, PascalNamedElement element, @NotNull PsiElement scope) {
+            super(name, element, scope);
+        }
+    }
+
     public static class ActionCreateConst extends PascalActionDeclare {
         public ActionCreateConst(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
@@ -285,12 +303,25 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
-            if (!findParent(file, data, PasConstSection.class, PasConstDeclaration.class)) {
+            if (!findPlaceInStruct(scope, data, PasField.FieldType.CONSTANT, PasField.Visibility.PRIVATE.ordinal()) || (data.parent != null)
+             && (!findParent(file, data, PasConstSection.class, PasConstDeclaration.class))) {
                 prefix = "\nconst ";
             }
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s = $%s$;", prefix, data.element.getName(), TPL_VAR_CONST_EXPR)), null);
             }
+        }
+    }
+
+    public static class ActionCreateConstHP extends ActionCreateConst implements HighPriorityAction {
+        public ActionCreateConstHP(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
+        }
+    }
+
+    public static class ActionCreateConstLP extends ActionCreateConst implements LowPriorityAction {
+        public ActionCreateConstLP(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
         }
     }
 
@@ -326,12 +357,25 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
-            if (!findParent(file, data, PasTypeSection.class, PasTypeDeclaration.class)) {
+            if (!findPlaceInStruct(scope, data, PasField.FieldType.TYPE, PasField.Visibility.PRIVATE.ordinal()) || (data.parent != null)
+             && (!findParent(file, data, PasTypeSection.class, PasTypeDeclaration.class))) {
                 prefix = "\ntype ";
             }
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s = $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)), null);
             }
+        }
+    }
+
+    public static class ActionCreateTypeHP extends ActionCreateType implements HighPriorityAction {
+        public ActionCreateTypeHP(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
+        }
+    }
+
+    public static class ActionCreateTypeLP extends ActionCreateType implements LowPriorityAction {
+        public ActionCreateTypeLP(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, element, scope);
         }
     }
 
@@ -435,7 +479,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             this.text = text;
         }
 
-        private enum  DataType {
+        private enum DataType {
             // the action data will insert some text
             TEXT,
             // the action data will use template engine

@@ -5,12 +5,15 @@ import com.intellij.openapi.util.Pair;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
  * Date: 09/04/2015
  */
 public class StrUtil {
+    public static final Pattern PATTERN_FIELD = Pattern.compile("[fF][A-Z]\\w*");
+
     public static boolean hasLowerCaseChar(String s) {
         for (char c : s.toCharArray()) {
             if (Character.isLowerCase(c)) {

@@ -277,7 +277,7 @@ private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDis
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
 private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=1}
 ExportsSection              ::= EXPORTS RefNamedIdent exportItem ("," RefNamedIdent exportItem)* ";" {pin=1}
-private exportItem          ::= ["(" [formalParameterList] ")"] [INDEX Expression] ["name" Expression] ["resident"]
+private exportItem          ::= [FormalParameterSection] [INDEX Expression] ["name" Expression] ["resident"]
 
 private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | LE | GT | GE | "<>" | IN | "explicit"
 private procName            ::= ClassQualifiedIdent | NamedIdent
@@ -340,9 +340,9 @@ private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
 ExternalDirective           ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier [libLoadSpec] ";" | EXTERNAL ConstExpression [externalSpecifier] [libLoadSpec] ";"
-private libLoadSpec         ::= "delayed" | "dependency" constExpr [libListRest]
+private libLoadSpec         ::= "delayed" | "dependency" constExpr libListRest*
 private libListRest         ::= COMMA constExpr
-private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpression
+private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpressionOrd
 ProcBodyBlock               ::= ProcForwardDecl | ExternalDirective | BlockLocal [";"]
 ProcForwardDecl             ::= FORWARD ";" FunctionDirective*
 
@@ -376,10 +376,10 @@ private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= classForwardDecl ";"
 
 GenericTypeIdent    ::= identifier [GenericDefinition] {recoverWhile=rec_typeId}
-GenericDefinition   ::= SimpleGenericDefinition | ConstrainedGenericDefinition
-SimpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {pin=1}                     //TODO use meta rule
+GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
+private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {pin=1}                     //TODO use meta rule
 private identsRest          ::= "," NamedIdent {pin=1}
-ConstrainedGenericDefinition ::= "<" constrainedGeneric constrainedGenericsRest ">" {pin=1}
+private constrainedGenericDefinition ::= "<" constrainedGeneric constrainedGenericsRest ">" {pin=1}
 private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstraintsRest ]
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
 private genericConstraintsRest ::= "," GenericConstraint {pin=1}
@@ -438,9 +438,9 @@ Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC |
 ClassProperty ::= customAttributes* [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] hintingDirective* [";"] {pin=3 recoverWhile=rec_routine}
 ClassPropertyArray ::= "[" formalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
-ClassPropertySpecifier ::= ClassPropertyReadWrite | classPropertyDispInterface | "stored" Expression
+ClassPropertySpecifier ::= classPropertyReadWrite | classPropertyDispInterface | "stored" Expression
                          | DEFAULT Expression | "nodefault" | IMPLEMENTS TypeID {recoverWhile=rec_propspec}
-ClassPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefNamedIdent | "remove" RefNamedIdent
+private classPropertyReadWrite ::= READ RefNamedIdent | WRITE RefNamedIdent | "add" RefNamedIdent | "remove" RefNamedIdent
 RefNamedIdent       ::= identifier
 private classPropertyDispInterface ::= "readonly" | "writeonly" | dispIDDirective
 
@@ -543,12 +543,11 @@ private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}
 private identListItem       ::= NamedIdent
 
-ConstExpression	            ::=	constExpr| NewConstExpression | Expression {recoverWhile=rec_expr_colon name="constant expression"}
-private constExpr           ::= ArrayConstExpr | RecordConstExpr | Expression
-ArrayConstExpr              ::= "(" constExpr ("," constExpr)* ")"
-ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression"}
-NewConstExpression	        ::=	LPAREN ConstExpression (COMMA ConstExpression)* RPAREN
-RecordConstExpr             ::= "(" recordConstInner ")"
+ConstExpression	            ::=	constExpr {recoverWhile=rec_expr_colon name="constant expression"}
+private constExpr           ::= arrayConstExpr | recordConstExpr | Expression
+private arrayConstExpr      ::= "(" constExpr ("," constExpr)* ")"
+ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression" extends=ConstExpression}
+private recordConstExpr     ::= "(" recordConstInner ")"
 private recordConstInner    ::= recordValue recordValueRest* {recoverWhile=rec_record_colon}
 private recordValueRest     ::= ";" recordValue
 private recordValue         ::= identifier ":" constExpr
@@ -603,9 +602,9 @@ unaryExpr                   ::= unaryOp Expr
 dereferenceExpr             ::= Expr '^'
 referenceExpr               ::= Expr '.' FullyQualifiedIdent [GenericPostfix]
 simpleRefExpr               ::= (INHERITED? FullyQualifiedIdent [GenericPostfix]) | INHERITED {elementType=referenceExpr}  // let qualified and simple references have the same type
-callExpr                    ::= Expr argumentList
+callExpr                    ::= Expr ArgumentList
 indexExpr                   ::= Expr indexList
-argumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
+ArgumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
 private parenConstruct      ::= '(' [ !')' Expr (',' Expr) * ] ')' {pin(".*")=1}
 ColonConstruct              ::= ':' Expr [':' Expr]
 indexList                   ::= '[' Expr (',' Expr) * ']' {pin=1}

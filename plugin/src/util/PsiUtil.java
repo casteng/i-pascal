@@ -16,10 +16,12 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.FileContentUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
+import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
+import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpr;
@@ -27,11 +29,15 @@ import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasExportsSection;
+import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
+import com.siberika.idea.pascal.lang.psi.PasGenericDefinition;
 import com.siberika.idea.pascal.lang.psi.PasGenericPostfix;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
@@ -41,6 +47,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasProcForwardDecl;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -771,5 +778,31 @@ public class PsiUtil {
         } else {
             return Pair.create(o2, o1);
         }
+    }
+
+    @NotNull
+    public static PsiContext getContext(@NotNull PascalNamedElement element) {
+        PascalNamedElement fqn = (element instanceof PasSubIdent) ? (PascalNamedElement) element.getParent() : element;
+        if ((element instanceof PasGenericTypeIdent) && (element.getParent() instanceof PasTypeDeclaration)) {
+            return PsiContext.TYPE_DECL;
+        } else if (isTypeName(element)) {
+            return PsiContext.TYPE_ID;
+        } else if (fqn.getParent() instanceof PasClassPropertySpecifier) {
+            return PsiContext.PROPERTY_SPEC;                                    // False positives possible
+        } else if (fqn.getParent() instanceof PasGenericDefinition) {
+            return PsiContext.GENERIC_PARAM;
+        } else if (fqn.getParent() instanceof PasForStatement) {
+            return PsiContext.FOR;
+        } else if ((fqn.getParent() instanceof PasUsesClause) || (fqn.getParent() instanceof PasRequiresClause)) {
+            return PsiContext.USES;
+        } else if (fqn.getParent() instanceof PasExportsSection) {
+            return PsiContext.EXPORT;
+        } else {
+            PasExpr expr = PsiTreeUtil.getParentOfType(element, PasExpr.class);
+            if ((expr != null) && (expr.getNextSibling() instanceof PasArgumentList)) {
+                return PsiContext.CALL;
+            }
+        }
+        return PsiContext.UNKNOWN;
     }
 }

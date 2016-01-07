@@ -282,7 +282,7 @@ public class SectionToggle {
         res = res < 0 ? member : res;
         if (res < 0) {                             // other declarations not found
             if (scope instanceof PascalStructType) {
-                res = PosUtil.findPosInStruct((PascalStructType) scope, PasField.FieldType.ROUTINE, PasField.Visibility.PRIVATE.ordinal());
+                res = PosUtil.findPosInStruct((PascalStructType) scope, PasField.FieldType.ROUTINE, PasField.Visibility.PRIVATE.ordinal()).first;
             } else {
                 PsiElement pos = PsiUtil.getModuleInterfaceSection(routine.getContainingFile());
                 if (null != pos) {                                                                  // to the end of interface section
