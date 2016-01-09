@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.util;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Pair;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
@@ -172,6 +173,21 @@ public class PsiUtil {
         PsiElement result = element.getNextSibling();
         while (result instanceof PsiWhiteSpace) {
             result = result.getNextSibling();
+        }
+        return result;
+    }
+
+    /**
+     * Searches for element within parent by the given offset skipping whitespaces and comments
+     * @param parent    parent element
+     * @param offset    offset within parent
+     * @return element or null if not found
+     */
+    @Nullable
+    public static PsiElement findElementAt(@NotNull PsiElement parent, int offset) {
+        PsiElement result = parent.findElementAt(offset);
+        if (PsiTreeUtil.instanceOf(result, PsiWhiteSpace.class, PsiComment.class)) {
+            result = PsiTreeUtil.skipSiblingsForward(result, PsiWhiteSpace.class, PsiComment.class);
         }
         return result;
     }
@@ -805,4 +821,5 @@ public class PsiUtil {
         }
         return PsiContext.UNKNOWN;
     }
+
 }

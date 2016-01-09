@@ -122,12 +122,12 @@ public class PascalAnnotator implements Annotator {
                         }
                         case ROUTINE: {
                             if (scope instanceof PascalStructType) {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.method"), namedElement, scope, null));
+                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.method"), namedElement, scope, null, null));
                             } else {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.routine"), namedElement, scope, null));
+                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.routine"), namedElement, scope, null, null));
                                 PsiElement adjustedScope = adjustScope(scope);
                                 if (adjustedScope instanceof PascalStructType) {
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.method"), namedElement, adjustedScope, null));
+                                    ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.method"), namedElement, adjustedScope, scope, null));
                                 }
                             }
                             break;
@@ -137,7 +137,7 @@ public class PascalAnnotator implements Annotator {
                             break;
                         }
                         case PARAMETER: {
-                            ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.create.parameter"), namedElement, scope));
+                            ann.registerFix(new PascalActionDeclare.ActionCreateParameter(message("action.create.parameter"), namedElement, scope));
                             break;
                         }
                     }
