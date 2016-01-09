@@ -289,8 +289,11 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     public static class ActionCreateVar extends PascalActionDeclare {
 
-        public ActionCreateVar(String name, PascalNamedElement element, PsiElement scope) {
+        private final String defaultType;
+
+        public ActionCreateVar(String name, PascalNamedElement element, PsiElement scope, String defaultType) {
             super(name, element, scope);
+            this.defaultType = defaultType;
         }
 
         @Override
@@ -300,14 +303,15 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 prefix = "\nvar ";
             }
             if (data.parent != null) {
-                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s: $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)), TYPE_VAR_DEFAULTS);
+                data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s: $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)),
+                        StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, defaultType))));
             }
         }
     }
 
     public static class ActionCreateVarHP extends ActionCreateVar implements HighPriorityAction {
-        public ActionCreateVarHP(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, element, scope);
+        public ActionCreateVarHP(String name, PascalNamedElement element, PsiElement scope, String defaultType) {
+            super(name, element, scope, defaultType);
         }
     }
 
@@ -333,7 +337,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                     data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: $%2$s$ read F%1$s write F%1$s;", data.element.getName(), TPL_VAR_TYPE));
                 }
             }
-            data.variableDefaults = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, "Integer")));
+            data.variableDefaults = TYPE_VAR_DEFAULTS;
         }
     }
 

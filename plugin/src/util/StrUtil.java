@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.util;
 
+import com.intellij.codeInspection.SmartHashMap;
 import com.intellij.openapi.util.Pair;
 
 import java.util.HashMap;
@@ -39,7 +40,7 @@ public class StrUtil {
     }
 
     public static <K, V> Map<K, V> getParams(List<Pair<K, V>> entries) {
-        Map<K, V> res = new HashMap<K, V>(entries.size());
+        Map<K, V> res = entries.size() <= 1 ? new SmartHashMap<K, V>() : new HashMap < K, V>(entries.size());
         for (Pair<K, V> entry : entries) {
             res.put(entry.first, entry.second);
         }

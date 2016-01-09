@@ -86,17 +86,17 @@ public class PascalAnnotator implements Annotator {
                     switch (fix) {
                         case VAR: {
                             if (!(scope instanceof PascalStructType)) {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.create.var"), namedElement, null));
+                                ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.create.var"), namedElement, null, context != PsiContext.FOR ? "T" : "Integer"));
                             }
                             PsiElement adjustedScope = adjustScope(scope);
                             if (adjustedScope instanceof PascalStructType) {
                                 if (StrUtil.PATTERN_FIELD.matcher(name).matches()) {
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.create.field"), namedElement, adjustedScope));
+                                    ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.create.field"), namedElement, adjustedScope, "T"));
                                     if (context != PsiContext.PROPERTY_SPEC) {
                                         ann.registerFix(new PascalActionDeclare.ActionCreateProperty(message("action.create.property"), namedElement, adjustedScope));
                                     }
                                 } else {
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.create.field"), namedElement, adjustedScope));
+                                    ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.create.field"), namedElement, adjustedScope, "T"));
                                     if (context != PsiContext.PROPERTY_SPEC) {
                                         ann.registerFix(new PascalActionDeclare.ActionCreatePropertyHP(message("action.create.property"), namedElement, adjustedScope));
                                     }

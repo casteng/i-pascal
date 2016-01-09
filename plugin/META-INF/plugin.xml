@@ -11,9 +11,10 @@
     <change-notes><![CDATA[
         <p>0.995</p>
         <ul>
-          <li>template engine in quick fixes</li>
-          <li>create field quick fix</li>
-          <li>create property quick fix</li>
+          <li>quick fixes are now context-aware and use template engine</li>
+          <li>create property/field quick fixes</li>
+          <li>create routine/method quick fix</li>
+          <li>create parameter quick fix</li>
           <li>add enumeration constant quick fix</li>
           <li>fixed bug with "undeclared identifier" on .ppu units</li>
         </ul>
