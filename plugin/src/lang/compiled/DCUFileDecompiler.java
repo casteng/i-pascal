@@ -9,7 +9,6 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderRootType;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.DCUFileType;
 import com.siberika.idea.pascal.PascalBundle;
@@ -23,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -44,7 +42,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Pattern TYPE = Pattern.compile("\\s*\\w+\\.\\w+\\s*=.*");
     private static final Pattern COMMENTED_TYPE = Pattern.compile("\\s*\\{type}\\s*");
     private static final Pattern ROUTINE = Pattern.compile("(\\s*)(procedure|function|operator)(\\s+)(@)(\\w+)");
-    private static final Pattern INLINE_TYPE = Pattern.compile("\\s*\\:\\d+\\s+\\=\\s+.*");
+    private static final Pattern INLINE_TYPE = Pattern.compile("\\s*:\\d+\\s+=\\s+.*");
     private static final File NULL_FILE = new File("");
 
     @NotNull
@@ -56,12 +54,13 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         if (projects.length == 0) return "";
         final Project project = projects[0];
 
-        return decompileText(file.getPath(), ModuleUtil.getModuleForFile(project, file));
+        return decompileText(project, file);
     }
 
-    public static String decompileText(String filename, Module module) {
+    static String decompileText(Project project, VirtualFile file) {
+        Module module = ModuleUtil.getModuleForFile(project, file);
         if (null == module) {
-            return PascalBundle.message("decompile.no.module", filename);
+            return PascalBundle.message("decompile.no.module", file.getPath());
         }
         Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
         if (null == sdk) {
@@ -70,19 +69,15 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         if ((sdk.getHomePath() == null) || !(sdk.getSdkType() instanceof DelphiSdkType)) {
             return PascalBundle.message("decompile.wrong.sdktype.delphi");
         }
-        String unitName = FileUtil.getNameWithoutExtension(com.siberika.idea.pascal.jps.util.FileUtil.getFilename(filename));
-        Collection<VirtualFile> files = ModuleUtil.getAllCompiledModuleFilesByName(module, unitName, DCUFileType.INSTANCE);
-        if (files.isEmpty()) {
-            return PascalBundle.message("decompile.file.notfound", filename);
-        }
+
         File decompilerCommand = BasePascalSdkType.getDecompilerCommand(sdk, NULL_FILE);
         String result = "";
         try {
             if (!decompilerCommand.isFile() || !decompilerCommand.canExecute()) {
                 return PascalBundle.message("decompile.wrong.delphi", decompilerCommand.getCanonicalPath());
             }
-            List<String> paths = collectUnitPaths(sdk, module);
-            String[] args = getArgs(BasePascalSdkType.getDecompilerArgs(sdk), files.iterator().next().getPath(), "-U" + Joiner.on(';').join(paths), "-I", "-SI", "-");
+            List<String> paths = collectUnitPaths(sdk);
+            String[] args = getArgs(BasePascalSdkType.getDecompilerArgs(sdk), file.getPath(), "-U" + Joiner.on(';').join(paths), "-I", "-SI", "-");
             result = SysUtils.runAndGetStdOut(sdk.getHomePath(), decompilerCommand.getCanonicalPath(), args);
             if (result != null) {
                 return handleText(result);
@@ -112,7 +107,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         return res;
     }
 
-    private static List<String> collectUnitPaths(Sdk sdk, Module module) {
+    private static List<String> collectUnitPaths(Sdk sdk) {
         VirtualFile[] sdkFiles = sdk.getRootProvider().getFiles(OrderRootType.CLASSES);
         Set<File> paths = com.siberika.idea.pascal.jps.util.FileUtil.retrievePaths(sdkFiles);
         List<String> result = new ArrayList<String>(paths.size());
@@ -151,7 +146,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
             } else if (COMMENTED_TYPE.matcher(line).matches()) {
                 res.append("  type\n    ");
             } else if (INLINE_TYPE.matcher(line).matches()) {
-                res.append(line.replaceFirst("\\:", "_"));
+                res.append(line.replaceFirst(":", "_"));
             } else {
                 Matcher m = ROUTINE.matcher(line);
                 if (m.find()) {

@@ -20,19 +20,18 @@ public class PPUFileDecompiler implements BinaryFileDecompiler {
     @Override
     public CharSequence decompile(VirtualFile file) {
         assert file.getFileType() == PPUFileType.INSTANCE;
-
         final Project[] projects = ProjectManager.getInstance().getOpenProjects();
         if (projects.length == 0) return "";
         final Project project = projects[0];
-
-        return decompileText(file.getPath(), ModuleUtil.getModuleForFile(project, file));
+        return decompileText(project, file);
     }
 
-    public static String decompileText(String filename, Module module) {
+    static String decompileText(Project project, VirtualFile file) {
+        Module module = ModuleUtil.getModuleForFile(project, file);
         if (null == module) {
-            return PascalBundle.message("decompile.no.module", filename);
+            return PascalBundle.message("decompile.no.module", file.getPath());
         }
-        return PPUDecompilerCache.decompile(module, filename);
+        return PPUDecompilerCache.decompile(module, file.getPath(), file);
     }
 
     /*@Override

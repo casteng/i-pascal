@@ -457,7 +457,7 @@ public class PPUDumpParser {
             String unitName = getUnit(unitIndex);
             pos = sec.insertText(pos, unitName + ".");
             String def = "__unresolved_" + id;
-            Section section = cache != null ? cache.getContents(unitName) : null;
+            Section section = cache != null ? cache.getContents(unitName, null) : null;
             if (section != null) {
                 return appendLocalReference(sec, pos, id, symid, "", "", def, section.idNameMap, section.symidNameMap);
             } else {

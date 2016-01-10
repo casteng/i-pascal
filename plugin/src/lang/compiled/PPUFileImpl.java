@@ -3,7 +3,6 @@ package com.siberika.idea.pascal.lang.compiled;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiManager;
-import com.siberika.idea.pascal.util.ModuleUtil;
 
 /**
  * Author: George Bakhtadze
@@ -16,6 +15,6 @@ public class PPUFileImpl extends CompiledFileImpl {
 
     @Override
     public String decompile(PsiManager manager, VirtualFile file) {
-        return PPUFileDecompiler.decompileText(file.getPath(), ModuleUtil.getModuleForFile(manager.getProject(), file));
+        return PPUFileDecompiler.decompileText(manager.getProject(), file);
     }
 }

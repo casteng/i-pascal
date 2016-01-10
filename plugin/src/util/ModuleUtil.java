@@ -8,15 +8,18 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.SmartList;
+import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.indexing.FileBasedIndex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -41,10 +44,17 @@ public class ModuleUtil {
         return ApplicationManager.getApplication().runReadAction(new Computable<Collection<VirtualFile>>() {
             @Override
             public Collection<VirtualFile> compute() {
-                Collection<VirtualFile> res = new ArrayList<VirtualFile>();
-                String[] nameVariants = name.length() > 8 ? new String[]{name, name.toLowerCase(), name.toUpperCase(), name.substring(0, 8)} : new String[]{name, name.toLowerCase(), name.toUpperCase()};
+                Collection<VirtualFile> res = new SmartList<VirtualFile>();
+                Set<String> nameVariants = new ArrayListSet<String>();
+                String nameExt = name + "." + fileType.getDefaultExtension();
+                nameVariants.add(nameExt);
+                nameVariants.add(nameExt.toUpperCase());
+                nameVariants.add(nameExt.toLowerCase());
+                if (name.length() > 8) {
+                    nameVariants.add(name.substring(0, 8) + "." + fileType.getDefaultExtension());
+                }
                 for (String unitName : nameVariants) {
-                    res.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, unitName + "." + fileType.getDefaultExtension(),
+                    res.addAll(FileBasedIndex.getInstance().getContainingFiles(FilenameIndex.NAME, unitName,
                             GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
                 }
                 return res;
@@ -65,5 +75,22 @@ public class ModuleUtil {
             }
         }
         return null;
+    }
+
+    public static Collection<VirtualFile> getCompiledByNameNoCase(final Module module, String unitName, final FileType fileType) {
+        final String fullName = unitName + "." + fileType.getDefaultExtension();
+        return ApplicationManager.getApplication().runReadAction(new Computable<Collection<VirtualFile>>() {
+            @Override
+            public Collection<VirtualFile> compute() {
+                Collection<VirtualFile> res = new SmartList<VirtualFile>();
+                for (VirtualFile file : FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, fileType,
+                        GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module))) {
+                    if (fullName.equalsIgnoreCase(file.getName())) {
+                        res.add(file);
+                    }
+                }
+                return res;
+            }
+        });
     }
 }

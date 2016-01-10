@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.StrUtil;
 import com.siberika.idea.pascal.util.SysUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,16 +49,20 @@ public class PPUDecompilerCache {
         cache = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build(new Loader());//===***
     }
 
-    synchronized public static String decompile(Module module, String filename) {
+    public static String decompile(Module module, String filename, @Nullable VirtualFile file) {
         Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
         if (null == sdk) { return PascalBundle.message("decompile.wrong.sdk"); }
-        PPUDecompilerCache decompilerCache = (PPUDecompilerCache) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE);
-        if ((null == decompilerCache) || (decompilerCache.module != module)) {
-            decompilerCache = new PPUDecompilerCache(module);
-            BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE, decompilerCache);
+        PPUDecompilerCache decompilerCache;
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
+        synchronized (sdk) {
+            decompilerCache = (PPUDecompilerCache) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE);
+            if ((null == decompilerCache) || (decompilerCache.module != module)) {
+                decompilerCache = new PPUDecompilerCache(module);
+                BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE, decompilerCache);
+            }
         }
         String unitName = FileUtil.getNameWithoutExtension(com.siberika.idea.pascal.jps.util.FileUtil.getFilename(filename));
-        PPUDumpParser.Section stub = decompilerCache.getContents(unitName);
+        PPUDumpParser.Section stub = decompilerCache.getContents(unitName, file);
         return stub != null ? stub.getResult() : "";
     }
 
@@ -69,7 +74,7 @@ public class PPUDecompilerCache {
             if ((sdk.getHomePath() == null) || !(sdk.getSdkType() instanceof FPCSdkType)) {
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.sdktype"));
             }
-            Collection<VirtualFile> files = ModuleUtil.getAllCompiledModuleFilesByName(module, key, PPUFileType.INSTANCE);
+            Collection<VirtualFile> files = ModuleUtil.getCompiledByNameNoCase(module, key, PPUFileType.INSTANCE);
             if (files.isEmpty()) {
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.file.notfound", key));
             }
@@ -122,11 +127,23 @@ public class PPUDecompilerCache {
         return res;
     }
 
-    PPUDumpParser.Section getContents(@NotNull String unitName) {
-        Collection<VirtualFile> unitFiles = ModuleUtil.getAllCompiledModuleFilesByName(module, unitName, PPUFileType.INSTANCE);
-        if (!unitFiles.isEmpty()) {
+    /**
+     * Retrieves decompiled contents from cache.
+     * Seems that compiled modules can't be found during PSI reparse. For that case virtualFile parameter is used.
+     * @param unitName       compiled unit name
+     * @param virtualFile    if this is not null it should be used instead of search by name
+     * @return               decompiled data
+     */
+    PPUDumpParser.Section getContents(@NotNull String unitName, @Nullable VirtualFile virtualFile) {
+        VirtualFile file = virtualFile;
+        if (null == file) {
+            Collection<VirtualFile> files = ModuleUtil.getCompiledByNameNoCase(module, unitName, PPUFileType.INSTANCE);
+            if (!files.isEmpty()) {
+                file = files.iterator().next();
+            }
+        }
+        if (file != null) {
             try {
-                VirtualFile file = unitFiles.iterator().next();
                 String key = getKey(file.getName());
                 PPUDumpParser.Section section = cache.getIfPresent(key);
                 boolean needReparsePsi = null == section;
