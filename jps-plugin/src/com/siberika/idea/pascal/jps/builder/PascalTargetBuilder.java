@@ -72,7 +72,8 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                       @NotNull BuildOutputConsumer outputConsumer, @NotNull CompileContext context) throws ProjectBuildException, IOException {
         if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) return;
         final Map<PascalTarget, List<File>> files = collectChangedFiles(holder);
-        if (files.isEmpty() && !JavaBuilderUtil.isForcedRecompilationAllJavaModules(context)) {
+        boolean isRebuild = JavaBuilderUtil.isForcedRecompilationAllJavaModules(context) || (!JavaBuilderUtil.isCompileJavaIncrementally(context));
+        if (files.isEmpty() && !isRebuild) {
             context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.INFO, "No changes detected"));
             return;
         }
@@ -84,28 +85,28 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
         if (sdk != null) {
             PascalBackendCompiler compiler = getCompiler(sdk, messager);
             if (compiler != null) {
-                messager.info("Compiler family:" + compiler.getId(), "", -1l, -1);
+                messager.info("Compiler family:" + compiler.getId(), "", -1L, -1);
                 List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
                 sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
                 File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
 
                 for (File file : files.get(target)) {
                     File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + compiler.getCompiledUnitExt());
-                    messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1l, -1l);
+                    //messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1L, -1L);
                     outputConsumer.registerOutputFile(compiled, Collections.singleton(file.getCanonicalPath()));
                 }
 
                 String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
                         sdkFiles, getFiles(module.getSourceRoots()),
                         files.get(target), ParamMap.getJpsParams(module.getProperties()),
-                        JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
+                        isRebuild,
                         ParamMap.getJpsParams(sdk.getSdkProperties()));
                 int exitCode = launchCompiler(compiler, messager, cmdLine);
                 if (exitCode != 0) {
-                    messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
+                    messager.error("Error. Compiler exit code: " + exitCode, null, -1L, -1L);
                 }
             } else {
-                messager.error("Can't determine compiler family", "", -1l, -1l);
+                messager.error("Can't determine compiler family", "", -1L, -1L);
             }
         } else {
             log(context, "Pascal SDK is not defined for module " + module.getName());
@@ -125,9 +126,9 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
     }
 
     private int launchCompiler(PascalBackendCompiler compiler, CompilerMessager messager, String[] cmdLine) throws IOException {
-        messager.info("Command line: ", null, -1l, -1l);
+        messager.info("Command line: ", null, -1L, -1L);
         for (String s : cmdLine) {
-            messager.info(s, null, -1l, -1l);
+            messager.info(s, null, -1L, -1L);
         }
         Process process = Runtime.getRuntime().exec(cmdLine);
         BaseOSProcessHandler handler = new BaseOSProcessHandler(process, "", Charset.defaultCharset());

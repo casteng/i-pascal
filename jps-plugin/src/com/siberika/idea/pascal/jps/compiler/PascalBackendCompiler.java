@@ -1,8 +1,6 @@
 package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.execution.process.ProcessAdapter;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.util.Processor;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.util.ParamMap;
@@ -80,16 +78,10 @@ public abstract class PascalBackendCompiler {
 
     protected static void addLibPathToCmdLine(final ArrayList<String> commandLine, File sourceRoot,
                                               final String compilerSettingSrcpath, final String compilerSettingIncpath) {
-        FileUtil.processFilesRecursively(sourceRoot, new Processor<File>() {
-            @Override
-            public boolean process(File file) {
-                if (file.isDirectory()) {
-                    commandLine.add(compilerSettingSrcpath + file.getAbsolutePath());
-                    commandLine.add(compilerSettingIncpath + file.getAbsolutePath());
-                }
-                return true;
-            }
-        });
+        if (sourceRoot.isDirectory()) {
+            commandLine.add(compilerSettingSrcpath + sourceRoot.getAbsolutePath());
+            commandLine.add(compilerSettingIncpath + sourceRoot.getAbsolutePath());
+        }
     }
 
     protected static String getMessage(String moduleName, @PropertyKey(resourceBundle = JpsPascalBundle.JPSBUNDLE)String msgId, String...args) {
@@ -99,11 +91,11 @@ public abstract class PascalBackendCompiler {
     protected static File checkCompilerExe(String sdkHomePath, String moduleName, CompilerMessager compilerMessager, File executable) {
         if (sdkHomePath != null) {
             if (!executable.canExecute()) {
-                compilerMessager.error(getMessage(moduleName, "compile.noCompiler", executable.getPath()), null, -1l, -1l);
+                compilerMessager.error(getMessage(moduleName, "compile.noCompiler", executable.getPath()), null, -1, -1);
                 return null;
             }
         } else {
-            compilerMessager.error(getMessage(moduleName, "compile.noSdkHomePath"), null, -1l, -1l);
+            compilerMessager.error(getMessage(moduleName, "compile.noSdkHomePath"), null, -1, -1);
             return null;
         }
         return executable;
