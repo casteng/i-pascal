@@ -524,10 +524,11 @@ public class PasReferenceUtil {
         addParentNamespaces(namespaces, section, true);
     }
 
-    private static void addUnitNamespaces(List<PasEntityScope> namespaces, List<PasEntityScope> units, boolean includeLibrary) {
-        for (PasEntityScope scope : units) {
-            if ((scope != null) && (includeLibrary || !PsiUtil.isFromLibrary(scope))) {
-                namespaces.add(scope);
+    private static void addUnitNamespaces(List<PasEntityScope> namespaces, List<SmartPsiElementPointer<PasEntityScope>> units, boolean includeLibrary) {
+        for (SmartPsiElementPointer<PasEntityScope> unitPtr : units) {
+            PasEntityScope unit = unitPtr.getElement();
+            if ((unit != null) && (includeLibrary || !PsiUtil.isFromLibrary(unit))) {
+                namespaces.add(unit);
             }
         }
     }

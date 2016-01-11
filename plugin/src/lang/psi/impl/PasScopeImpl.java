@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.SmartPointerManager;
@@ -84,6 +85,10 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
             PascalPsiImplUtil.logNullContainingFile(this);
             return false;
         }*/
+        if (!PsiUtil.isElementValid(this)) {
+            invalidateCaches(getKey());
+            throw new ProcessCanceledException();
+        }
         Cached members = cache.getIfPresent(getKey());
         if ((members != null) && (getStamp(getContainingFile()) != members.stamp)) {
             invalidateCaches(getKey());
@@ -207,7 +212,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     }
 
     static class UnitMembers extends Members {
-        List<PasEntityScope> units = Collections.emptyList();
+        List<SmartPsiElementPointer<PasEntityScope>> units = Collections.emptyList();
     }
 
     static class Parents extends Cached {

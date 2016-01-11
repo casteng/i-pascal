@@ -25,6 +25,7 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -435,11 +436,15 @@ public class PascalCompletionContributor extends CompletionContributor {
             Set<String> excludedUnits = new HashSet<String>();
             if (module != null) {
                 excludedUnits.add(module.getName().toUpperCase());
-                for (PasEntityScope scope : module.getPublicUnits()) {
-                    excludedUnits.add(scope.getName().toUpperCase());
+                for (SmartPsiElementPointer<PasEntityScope> scopePtr : module.getPublicUnits()) {
+                    if (scopePtr.getElement() != null) {
+                        excludedUnits.add(scopePtr.getElement().getName().toUpperCase());
+                    }
                 }
-                for (PasEntityScope scope : module.getPrivateUnits()) {
-                    excludedUnits.add(scope.getName().toUpperCase());
+                for (SmartPsiElementPointer<PasEntityScope> scopePtr : module.getPrivateUnits()) {
+                    if (scopePtr.getElement() != null) {
+                        excludedUnits.add(scopePtr.getElement().getName().toUpperCase());
+                    }
                 }
             }
             for (VirtualFile file : PasReferenceUtil.findUnitFiles(pos.getProject(), com.intellij.openapi.module.ModuleUtil.findModuleForPsiElement(pos))) {

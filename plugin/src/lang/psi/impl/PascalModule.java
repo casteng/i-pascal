@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.openapi.util.Pair;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
@@ -33,9 +34,9 @@ public interface PascalModule extends PasEntityScope {
     @NotNull
     Collection<PasField> getPubicFields();
 
-    List<PasEntityScope> getPrivateUnits();
+    List<SmartPsiElementPointer<PasEntityScope>> getPrivateUnits();
 
-    List<PasEntityScope> getPublicUnits();
+    List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits();
 
     // Used in interface and implementation identifiers list
     Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@NotNull String module);
