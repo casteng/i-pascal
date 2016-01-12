@@ -17,6 +17,7 @@
           <li>create parameter quick fix</li>
           <li>add enumeration constant quick fix</li>
           <li>fixed bug with "undeclared identifier" on .ppu units</li>
+          <li>performance improve</li>
         </ul>
         <p>0.993</p>
         <ul>

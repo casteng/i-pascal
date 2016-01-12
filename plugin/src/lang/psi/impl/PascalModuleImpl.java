@@ -146,9 +146,9 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
                 new SmartList<PascalNamedElement>(), new SmartList<PascalNamedElement>());
         for (Map.Entry<String, PasField> entry : idents.idents.entrySet()) {
             PasField field = entry.getValue();
-            if (PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
-                    && PasField.TYPES_STRUCTURE.contains(field.fieldType)
-                    && (field.owner != null) && (module.equalsIgnoreCase(field.owner.getName()))) {
+            if ((field != null) && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
+                                && PasField.TYPES_STRUCTURE.contains(field.fieldType)
+                                && (field.owner != null) && (module.equalsIgnoreCase(field.owner.getName()))) {
                 if (entry.getKey().startsWith(INTERFACE_PREFIX)) {
                     res.getFirst().add(field.getElement());
                 } else {
@@ -209,7 +209,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
             }
 
             res.stamp = getStamp(getContainingFile());
-            LOG.info(String.format("Unit %s private: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
+            LOG.debug(String.format("Unit %s private: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
             return res;
         }
     }
@@ -242,7 +242,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
                 }
             }
 
-            LOG.info(String.format("Unit %s public: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
+            LOG.debug(String.format("Unit %s public: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
             return res;
         }
     }

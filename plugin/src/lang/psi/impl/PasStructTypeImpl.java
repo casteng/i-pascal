@@ -173,7 +173,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
                 child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
             }
             res.stamp = getStamp(getContainingFile());
-            LOG.info(getName() + ": buildMembers: " + res.all.size() + " members");
+            LOG.debug(getName() + ": buildMembers: " + res.all.size() + " members");
             return res;
         }
     }

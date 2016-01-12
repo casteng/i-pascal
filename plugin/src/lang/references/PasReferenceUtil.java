@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.references;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -312,6 +313,7 @@ public class PasReferenceUtil {
      *  for namespace of target entry add all its entities
      */
     public static Collection<PasField> resolve(final List<PsiElement> resultScope, PasEntityScope scope, final NamespaceRec fqn, final Set<PasField.FieldType> fieldTypesOrig, final boolean includeLibrary, final int recursionCount) {
+        ProgressManager.checkCanceled();
         if (recursionCount > MAX_RECURSION_COUNT) {
             throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
         }

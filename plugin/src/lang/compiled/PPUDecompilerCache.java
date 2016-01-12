@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
@@ -103,6 +104,8 @@ public class PPUDecompilerCache {
                 }
             } catch (PascalException e1) {
                 return new PPUDumpParser.Section(e1.getMessage());
+            } catch (ProcessCanceledException e) {
+                throw e;
             } catch (Exception e) {
                 LOG.info("Unknown error: " + e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.unknown.error", StrUtil.limit(xml, 2048)));
@@ -156,7 +159,7 @@ public class PPUDecompilerCache {
                 }
                 return section;
             } catch (Exception e) {
-                LOG.info("Error: " + e.getMessage(), e);
+                LOG.info(String.format("Error: Exception while decompiling unit %s: %s", unitName, e.getMessage()), e);
             }
         }
         return new PPUDumpParser.Section(PascalBundle.message("decompile.unit.not.found", unitName));

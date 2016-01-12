@@ -73,7 +73,11 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     private Members getMembers(Cache<String, Members> cache, Callable<? extends Members> builder) {
         ensureChache(cache);
         try {
-            return cache.get(getKey(), builder);
+            Members res = cache.get(getKey(), builder);
+            if (!res.isChachable()) {
+                cache.invalidate(getKey());
+            }
+            return res;
         } catch (Exception e) {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
@@ -111,7 +115,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             }
             if (building) {
                 LOG.info("WARNING: Reentered in routine.buildXXX");
-                return null;
+                return Members.createNotCacheable();
             }
             building = true;
             Members res = new Members();
@@ -126,7 +130,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
             addPseudoFields(res);
 
-            LOG.info(getName() + ": buildMembers: " + res.all.size() + " members");
+            LOG.debug(getName() + ": buildMembers: " + res.all.size() + " members");
             building = false;
             return res;
         }

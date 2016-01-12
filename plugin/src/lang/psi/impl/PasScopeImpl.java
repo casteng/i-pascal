@@ -203,12 +203,21 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     }
 
     static class Cached {
+        protected static final int UNCACHEABLE_STAMP = -1000000000;
         long stamp;
+        public boolean isChachable() {
+            return stamp != UNCACHEABLE_STAMP;
+        }
     }
 
     static class Members extends Cached {
         Map<String, PasField> all = new LinkedHashMap<String, PasField>();
         Set<PascalNamedElement> redeclared = new LinkedHashSet<PascalNamedElement>();
+        static Members createNotCacheable() {
+            Members res = new Members();
+            res.stamp = UNCACHEABLE_STAMP;
+            return res;
+        }
     }
 
     static class UnitMembers extends Members {
