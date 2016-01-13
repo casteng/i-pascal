@@ -159,7 +159,11 @@ public class PPUDecompilerCache {
                 }
                 return section;
             } catch (Exception e) {
-                LOG.info(String.format("Error: Exception while decompiling unit %s: %s", unitName, e.getMessage()), e);
+                if (e.getCause() instanceof ProcessCanceledException) {
+                    throw (ProcessCanceledException) e.getCause();
+                } else {
+                    LOG.info(String.format("Error: Exception while decompiling unit %s: %s", unitName, e.getMessage()), e);
+                }
             }
         }
         return new PPUDumpParser.Section(PascalBundle.message("decompile.unit.not.found", unitName));

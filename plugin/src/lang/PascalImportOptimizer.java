@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.lang;
 
 import com.intellij.lang.ImportOptimizer;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
@@ -42,6 +43,8 @@ import java.util.regex.Pattern;
  * Date: 17/12/2015
  */
 public class PascalImportOptimizer implements ImportOptimizer {
+
+    private static final Logger LOG = Logger.getInstance(PascalImportOptimizer.class);
 
     private static final Pattern RE_UNITNAME_PREFIX = Pattern.compile("[{}!]");
 
@@ -175,7 +178,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOG.info("Error", e);
                 }
             }
         };
