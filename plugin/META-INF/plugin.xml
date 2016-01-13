@@ -164,12 +164,6 @@
         </component>
     </application-components>
 
-    <project-components>
-        <component>
-            <implementation-class>com.siberika.idea.pascal.PascalProjectService</implementation-class>
-        </component>
-    </project-components>
-
     <actions>
         <action id="Pascal.NewHPascalModule" class="com.siberika.idea.pascal.ide.actions.CreateModuleAction"
                 text="Pascal Module" description="Create new Pascal program/unit/library/package">
@@ -255,5 +249,6 @@
         <internalFileTemplate name="PascalPackage"/>
 
         <compileServer.plugin classpath="jps-plugin.jar"/>
+        <postStartupActivity implementation="com.siberika.idea.pascal.PostStartupActivity"/>
     </extensions>
 </idea-plugin>
