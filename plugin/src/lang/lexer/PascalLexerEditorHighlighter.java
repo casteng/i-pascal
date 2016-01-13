@@ -17,9 +17,16 @@ import org.jetbrains.annotations.Nullable;
  */
 public class PascalLexerEditorHighlighter extends LexerEditorHighlighter {
 
+    @Nullable
+    private Project project;
+    @Nullable
+    private VirtualFile virtualFile;
+
     public PascalLexerEditorHighlighter(@NotNull SyntaxHighlighter highlighter, @NotNull EditorColorsScheme scheme, @Nullable Project project, @Nullable VirtualFile virtualFile) {
         super(highlighter, scheme);
-        PascalFlexLexerImpl pascalFlexLexer = getPascalFlexLexerImpl();
+        this.project = project;
+        this.virtualFile = virtualFile;
+        initPascalFlexLexer();
     }
 
     @Override
@@ -31,18 +38,19 @@ public class PascalLexerEditorHighlighter extends LexerEditorHighlighter {
             //noinspection ConstantConditions
             setText(getDocument().getCharsSequence());
             // clear conditional defines
-            PascalFlexLexerImpl pascalFlexLexer = getPascalFlexLexerImpl();
+            initPascalFlexLexer();
         }
     }
 
-    public PascalFlexLexerImpl getPascalFlexLexerImpl() {
+    public void initPascalFlexLexer() {
         Lexer lexer = getLexer();
         if (lexer instanceof PascalLexer) {
             FlexLexer flexLexer = ((PascalLexer) lexer).getFlexLexer();
             if (flexLexer instanceof PascalFlexLexerImpl) {
-                return (PascalFlexLexerImpl) flexLexer;
+                PascalFlexLexerImpl pascalFlexLexer = (PascalFlexLexerImpl) flexLexer;
+                pascalFlexLexer.setProject(project);
+                pascalFlexLexer.setVirtualFile(virtualFile);
             }
         }
-        return null;
     }
 }

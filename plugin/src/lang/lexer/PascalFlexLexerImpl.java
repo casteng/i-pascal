@@ -4,16 +4,17 @@ import com.intellij.ide.DataManager;
 import com.intellij.lexer.FlexAdapter;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectLocator;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkAdditionalData;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.AsyncResult;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.search.FileTypeIndex;
@@ -47,7 +48,7 @@ import java.util.regex.Pattern;
  */
 public class PascalFlexLexerImpl extends _PascalLexer {
 
-    private static final Logger LOG = Logger.getInstance(PascalFlexLexerImpl.class);
+    //private static final Logger LOG = Logger.getInstance(PascalFlexLexerImpl.class);
 
     private int curLevel = -1;
     private int inactiveLevel = -1;
@@ -56,25 +57,26 @@ public class PascalFlexLexerImpl extends _PascalLexer {
 
     private VirtualFile virtualFile;
     private Project project;
+    private AsyncResult<DataContext> dataContextResult;
+    private DataContext dataContext;
+
+    public void setVirtualFile(VirtualFile virtualFile) {
+        this.virtualFile = virtualFile;
+    }
+
+    public void setProject(Project project) {
+        this.project = project;
+    }
 
     PascalFlexLexerImpl(Reader in, Project project, VirtualFile virtualFile) {
         super(in);
         this.virtualFile = virtualFile;
         this.project = project;
-//        initDefines(getProject(), getVirtualFile());
-    }
-
-    public Set<String> getDefines() {
-        if ((null == defines) || (defines.isEmpty())) {
-            initDefines(getProject(), getVirtualFile());
+        if (null == virtualFile) {
+            getDataContext();
+        } else if (null == project) {
+            this.project = ProjectLocator.getInstance().guessProjectForFile(virtualFile);
         }
-        return defines;
-    }
-
-    @Override
-    public void reset(CharSequence buffer, int initialState) {
-        super.reset(buffer, initialState);
-        defines = null;
     }
 
     @Override
@@ -83,70 +85,34 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         defines = null;
     }
 
-    @Override
-    public CharSequence getIncludeContent(CharSequence text) {
-        return new CharArrayCharSequence("{Some text}".toCharArray());
-    }
-
-    @Override
-    public void define(CharSequence sequence) {
-        String name = extractDefineName(sequence);
-        getDefines().add(name);
-    }
-
-    @Override
-    public void unDefine(CharSequence sequence) {
-        String name = extractDefineName(sequence);
-        getDefines().remove(name);
-    }
-
-    synchronized private void initDefines(Project project, VirtualFile virtualFile) {
-        defines = new HashSet<String>();
-        if ((project != null)) {
-            final Sdk sdk = getSdk(project, virtualFile);
-            if ((null != sdk) && (sdk.getSdkType() instanceof BasePascalSdkType)) {
-                SdkAdditionalData data = sdk.getSdkAdditionalData();
-                if (data instanceof PascalSdkData) {
-                    String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
-                    getDefinesFromCmdLine(options);
-                    String family = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY);
-                    defines.addAll(DefinesParser.getDefaultDefines(family, sdk.getVersionString()));
-                }
-            }
-            for (String define : defines) {
-                LOG.info("===*** def: " + define);
-            }
-
+    private DataContext getDataContext() {
+        if (dataContext != null) {
+            return dataContext;
         }
-    }
-
-    private void getDefinesFromCmdLine(@Nullable String options) {
-        if (null == options) {
-            return;
+        if (null == dataContextResult) {
+            dataContextResult = DataManager.getInstance().getDataContextFromFocus();
         }
-        String[] compilerOptions = options.split("\\s+");
-        for (String opt : compilerOptions) {
-            if (opt.startsWith("-d")) {
-                defines.add(opt.substring(2));
-            }
+        if (dataContextResult.isDone()) {
+            dataContext = dataContextResult.getResult();
+        } else if (dataContextResult.isRejected()) {
+            dataContextResult = DataManager.getInstance().getDataContextFromFocus();
         }
+        return dataContext;
     }
-
-    private DataContext dataContext;
 
     private <T> T getData(String s) {
-        dataContext = getDataContext();
+        DataContext dataContext = getDataContext();
         if (dataContext != null) {
             return (T) dataContext.getData(s);
         }
         return null;
     }
 
-    private DataContext getDataContext() {
-        if (null == dataContext) {
-            dataContext = DataManager.getInstance().getDataContextFromFocus().getResultSync(40);
+    public Set<String> getDefines() {
+        if ((null == defines) || (defines.isEmpty())) {
+            initDefines(getProject(), getVirtualFile());
         }
-        return dataContext;
+        return defines;
     }
 
     private Project getProject() {
@@ -187,6 +153,54 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             }
         }
         return ProjectRootManager.getInstance(project).getProjectSdk();
+    }
+
+    @Override
+    public CharSequence getIncludeContent(CharSequence text) {
+        return new CharArrayCharSequence("{Some text}".toCharArray());
+    }
+
+    @Override
+    public void define(CharSequence sequence) {
+        String name = extractDefineName(sequence);
+        getDefines().add(name);
+    }
+
+    @Override
+    public void unDefine(CharSequence sequence) {
+        String name = extractDefineName(sequence);
+        getDefines().remove(name);
+    }
+
+    synchronized private void initDefines(Project project, VirtualFile virtualFile) {
+        defines = new HashSet<String>();
+        if ((project != null)) {
+            final Sdk sdk = getSdk(project, virtualFile);
+            if ((null != sdk) && (sdk.getSdkType() instanceof BasePascalSdkType)) {
+                SdkAdditionalData data = sdk.getSdkAdditionalData();
+                if (data instanceof PascalSdkData) {
+                    String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
+                    getDefinesFromCmdLine(options);
+                    String family = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY);
+                    defines.addAll(DefinesParser.getDefaultDefines(family, sdk.getVersionString()));
+                }
+            }
+/*            for (String define : defines) {
+                LOG.info("===*** def: " + define);
+            }*/
+        }
+    }
+
+    private void getDefinesFromCmdLine(@Nullable String options) {
+        if (null == options) {
+            return;
+        }
+        String[] compilerOptions = options.split("\\s+");
+        for (String opt : compilerOptions) {
+            if (opt.startsWith("-d")) {
+                defines.add(opt.substring(2));
+            }
+        }
     }
 
     private IElementType doHandleIfDef(CharSequence sequence, boolean negate) {
@@ -258,6 +272,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                     Document doc = FileDocumentManager.getInstance().getDocument(incFile);
                     if (doc != null) {
                         lexer.reset(doc.getCharsSequence(), 0);
+                        lexer.setVirtualFile(incFile);
                         FlexAdapter flexAdapter = new FlexAdapter(lexer);
                         while (flexAdapter.getTokenType() != null) {
                             flexAdapter.advance();
@@ -265,7 +280,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                         getDefines().addAll(lexer.getDefines());
                     }
                 } else {
-                    LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
+                    //LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
+                    System.out.println(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -303,7 +319,10 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if (referencing != null) {
             if (referencing.getParent() != null) {
                 String path = referencing.getParent().getPath();
-                return tryExtensions(new File(path, name));
+                VirtualFile res = tryExtensions(new File(path, name));
+                if (res != null) {
+                    return res;
+                }
             } else {
                 System.out.println(String.format("*** Parent of file %s is null", referencing.getName()));
             }

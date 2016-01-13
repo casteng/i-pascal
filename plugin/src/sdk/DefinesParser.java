@@ -20,7 +20,7 @@ import java.util.TreeMap;
 */
 public class DefinesParser {
 
-    private static Map<String, Set<String>> defaultDefines = new TreeMap<String, Set<String>>();
+    private static Map<String, Map<String, Set<String>>> defaultDefines = new TreeMap<String, Map<String, Set<String>>>();
 
     static void parse(@NotNull InputStream stream) {
         try {
@@ -61,20 +61,26 @@ public class DefinesParser {
     }
 
     private static void addDefine(String compiler, String version, String name) {
-        Set<String> defines = defaultDefines.get(version);
+        Map<String, Set<String>> compilerDefines = defaultDefines.get(compiler);
+        if (null == compilerDefines) {
+            compilerDefines = new TreeMap<String, Set<String>>();
+            defaultDefines.put(compiler, compilerDefines);
+        }
+        Set<String> defines = compilerDefines.get(version);
         if (null == defines) {
             defines = new HashSet<String>();
         }
         defines.add(name);
-        defaultDefines.put(version, defines);
+        compilerDefines.put(version, defines);
     }
 
     public static Set<String> getDefaultDefines(String compiler, String version) {
-        if (null == version) {
+        Map<String, Set<String>> compilerDefines = defaultDefines.get(compiler);
+        if (null == compilerDefines) {
             return Collections.emptySet();
         }
         Set<String> result = new HashSet<String>();
-        for (Map.Entry<String, Set<String>> entry : defaultDefines.entrySet()) {
+        for (Map.Entry<String, Set<String>> entry : compilerDefines.entrySet()) {
             if (isVersionLessOrEqual(entry.getKey(), version)) {
                 result.addAll(entry.getValue());
             }
