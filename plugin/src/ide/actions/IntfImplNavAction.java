@@ -21,7 +21,7 @@ import java.util.Collections;
 public class IntfImplNavAction extends PascalAction {
 
     @Override
-    public void actionPerformed(AnActionEvent e) {
+    public void doActionPerformed(AnActionEvent e) {
         Editor editor = getEditor(e);
         PsiElement el = getElement(e);
         if ((null == el) || (null == editor)) {

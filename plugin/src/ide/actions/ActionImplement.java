@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
@@ -39,7 +40,8 @@ import static com.siberika.idea.pascal.PascalBundle.message;
  * Date: 26/11/2015
  */
 public class ActionImplement extends PascalAction {
-    public void actionPerformed(AnActionEvent e) {
+    @Override
+    public void doActionPerformed(AnActionEvent e) {
         PsiElement el = getElement(e);
         PascalRoutineImpl methodImpl = null;
         PasEntityScope scope = PsiTreeUtil.getParentOfType(el, PasEntityScope.class);
@@ -95,6 +97,7 @@ public class ActionImplement extends PascalAction {
             return;
         }
 
+        PsiFile file = el.getContainingFile();
         final Document document = editor.getDocument();
         for (final PasField field : selected) {
             new WriteCommandAction(el.getProject()) {
@@ -119,7 +122,7 @@ public class ActionImplement extends PascalAction {
                 PasField routine = scope.getField(PsiUtil.getFieldName(field.getElement()));
                 PascalRoutineActions.ActionImplement act = routine != null ? new PascalRoutineActions.ActionImplement(message("action.implement"), routine.getElement()) : null;
                 if (act != null) {
-                    act.invoke(el.getProject(), editor, el.getContainingFile());
+                    act.invoke(el.getProject(), editor, file);
                 }
             }
         }

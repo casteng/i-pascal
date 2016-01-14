@@ -545,11 +545,10 @@ public class PasReferenceUtil {
         for (SmartPsiElementPointer<PasEntityScope> scopePtr : section.getParentScope()) {
             PasEntityScope scope = scopePtr.getElement();
             if (first || (scope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
-                if (null == scope) {
-                    System.out.println(String.format("===*** null scope! parent of %s", section));
+                if (null != scope) {
+                    namespaces.add(scope);
+                    addParentNamespaces(namespaces, scope, first);
                 }
-                namespaces.add(scope);
-                addParentNamespaces(namespaces, scope, first);
             }
         }
     }
