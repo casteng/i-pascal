@@ -86,7 +86,7 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
                         return PsiElementResolveResult.createResults(new PsiElement[]{element});
                     }
                 } else {
-                    System.out.println("null resolved for " + this);
+                    LOG.info("ERROR: null resolved for " + this);
                 }
             }
             return PsiElementResolveResult.createResults(new PsiElement[] {});

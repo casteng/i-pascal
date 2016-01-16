@@ -227,7 +227,6 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
                 return res;
             }
             if ((!PsiUtil.checkeElement(section))) {
-                System.out.println("***");
                 //throw new PasInvalidElementException(section);
                 //return res;
             }

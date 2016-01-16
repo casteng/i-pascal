@@ -26,6 +26,8 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.impl.source.tree.TreeUtil;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
@@ -537,22 +539,22 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 data.parent = PsiUtil.findInSameSection(section, PasImplDeclSection.class, PasBlockGlobal.class, PasBlockLocal.class, PasUnitInterface.class);
                 if (canAffect(data.parent, data.element)) {
                     data.offset = data.parent.getTextOffset();
-                    PasUnitInterface intf = PsiTreeUtil.findChildOfType(data.parent, PasUnitInterface.class, false);    // Move after INTERFACE
-                    if (intf != null) {
-                        data.offset += intf.getTextLength();
-                        data.offset = intf.getUsesClause() != null ? intf.getUsesClause().getTextRange().getEndOffset() : data.offset;
+                    PasUnitInterface intf = PsiTreeUtil.findChildOfType(data.parent, PasUnitInterface.class, false);    // Move after "INTERFACE"
+                    ASTNode pos = intf != null ? TreeUtil.skipElements(intf.getNode().getFirstChildNode(), TokenSet.create(PasTypes.INTERFACE)) : null;
+                    if (pos != null) {
+                        data.offset = intf.getUsesClause() != null ? intf.getUsesClause().getTextRange().getEndOffset() : pos.getTextRange().getStartOffset();
                         data.text = "\n" + data.text;
                     }
                     return false;
                 }
-            } else {
+            } else {                                                                                  // section found and can affect target
                 data.offset = data.parent.getTextRange().getEndOffset();
                 data.text = "\n" + PLACEHOLDER_DATA;
                 if ((sectionItemClass != null) && (PsiTreeUtil.getParentOfType(data.element, sectionClass) == data.parent)) {
                     PsiElement sectionItem = PsiTreeUtil.getParentOfType(data.element, sectionItemClass);
                     if (sectionItem != null) {
                         data.offset = sectionItem.getTextRange().getStartOffset();
-                        data.text = PLACEHOLDER_DATA + "\n";
+                        data.text = data.text + "\n";
                     }
                 }
                 return true;

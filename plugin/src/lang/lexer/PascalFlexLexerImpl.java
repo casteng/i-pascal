@@ -4,6 +4,7 @@ import com.intellij.ide.DataManager;
 import com.intellij.lexer.FlexAdapter;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
@@ -48,7 +49,7 @@ import java.util.regex.Pattern;
  */
 public class PascalFlexLexerImpl extends _PascalLexer {
 
-    //private static final Logger LOG = Logger.getInstance(PascalFlexLexerImpl.class);
+    private static final Logger LOG = Logger.getInstance(PascalFlexLexerImpl.class);
 
     private int curLevel = -1;
     private int inactiveLevel = -1;
@@ -280,8 +281,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                         getDefines().addAll(lexer.getDefines());
                     }
                 } else {
-                    //LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
-                    System.out.println(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
+                    LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
+//                    System.out.println(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -324,7 +325,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                     return res;
                 }
             } else {
-                System.out.println(String.format("*** Parent of file %s is null", referencing.getName()));
+                //System.out.println(String.format("*** Parent of file %s is null", referencing.getName()));
             }
 
             Module module = ModuleUtil.findModuleForFile(referencing, project);

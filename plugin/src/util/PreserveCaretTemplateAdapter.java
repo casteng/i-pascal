@@ -31,7 +31,6 @@ public class PreserveCaretTemplateAdapter extends TemplateEditingAdapter {
 
     @Override
     public void templateFinished(Template template, boolean brokenOff) {
-        System.out.println("templateFinished(), brokenOff: " + brokenOff);
         if ((editor != null) && (editor.getProject() != null) && (file != null) && marker.isValid()) {
             editor.getCaretModel().moveToOffset(marker.getStartOffset());
             editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
