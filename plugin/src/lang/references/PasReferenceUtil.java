@@ -169,7 +169,7 @@ public class PasReferenceUtil {
                     || PsiUtil.allowsForwardReference(fqn.getParentIdent());
         } else {
             // check if field visibility allows usage from another unit
-            return PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE);
+            return (field.fieldType == PasField.FieldType.ROUTINE) || PasField.isAllowed(field.visibility, PasField.Visibility.STRICT_PROTECTED);
         }
     }
 

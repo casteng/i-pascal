@@ -638,10 +638,6 @@ public class PsiUtil {
         return true;
     }
 
-    public static long getFileStamp(PsiFile file) {
-        return file != null ? file.getModificationStamp() : -2;
-    }
-
     public static String getFieldName(PascalNamedElement element) {
         if (element instanceof PascalRoutineImpl) {
             return normalizeRoutineName((PascalRoutineImpl) element);
@@ -798,28 +794,58 @@ public class PsiUtil {
 
     @NotNull
     public static PsiContext getContext(@NotNull PascalNamedElement element) {
-        PascalNamedElement fqn = (element instanceof PasSubIdent) ? (PascalNamedElement) element.getParent() : element;
-        if ((element instanceof PasGenericTypeIdent) && (element.getParent() instanceof PasTypeDeclaration)) {
-            return PsiContext.TYPE_DECL;
-        } else if (isTypeName(element)) {
-            return PsiContext.TYPE_ID;
-        } else if (fqn.getParent() instanceof PasClassPropertySpecifier) {
-            return PsiContext.PROPERTY_SPEC;                                    // False positives possible
-        } else if (fqn.getParent() instanceof PasGenericDefinition) {
-            return PsiContext.GENERIC_PARAM;
-        } else if (fqn.getParent() instanceof PasForStatement) {
-            return PsiContext.FOR;
-        } else if ((fqn.getParent() instanceof PasUsesClause) || (fqn.getParent() instanceof PasRequiresClause)) {
-            return PsiContext.USES;
-        } else if (fqn.getParent() instanceof PasExportsSection) {
-            return PsiContext.EXPORT;
-        } else {
-            PasExpr expr = PsiTreeUtil.getParentOfType(element, PasExpr.class);
-            if ((expr != null) && (expr.getNextSibling() instanceof PasArgumentList)) {
-                return PsiContext.CALL;
+        PascalNamedElement fqn = element;
+        PasFullyQualifiedIdent fqi = getFQI(element);
+        int count = 1;
+        int index = 0;
+        if (fqi != null) {
+            fqn = fqi;
+            if (element instanceof PasSubIdent) {
+                index = fqi.getSubIdentList().indexOf(element);
+                count = fqi.getSubIdentList().size();
+            }
+        }
+        if (index == count - 1) {                    // Last part of FQN
+            if ((element instanceof PasGenericTypeIdent) && (element.getParent() instanceof PasTypeDeclaration)) {
+                return PsiContext.TYPE_DECL;
+            } else if (isTypeName(element)) {
+                return PsiContext.TYPE_ID;
+            } else if (fqn.getParent() instanceof PasClassPropertySpecifier) {
+                return PsiContext.PROPERTY_SPEC;                                    // False positives possible
+            } else if (fqn.getParent() instanceof PasGenericDefinition) {
+                return PsiContext.GENERIC_PARAM;
+            } else if (fqn.getParent() instanceof PasForStatement) {
+                return PsiContext.FOR;
+            } else if ((fqn.getParent() instanceof PasUsesClause) || (fqn.getParent() instanceof PasRequiresClause)) {
+                return PsiContext.USES;
+            } else if (fqn.getParent() instanceof PasExportsSection) {
+                return PsiContext.EXPORT;
+            } else {
+                PasExpr expr = PsiTreeUtil.getParentOfType(element, PasExpr.class);
+                if ((expr != null) && (expr.getNextSibling() instanceof PasArgumentList)) {
+                    return PsiContext.CALL;
+                }
+            }
+        }
+        if (fqi != null) {
+            if (0 == index) {
+                return PsiContext.FQN_FIRST;
+            } else {
+                return PsiContext.FQN_NEXT;
             }
         }
         return PsiContext.UNKNOWN;
     }
 
+    // Returns FQI which element is a part of
+    public static PasFullyQualifiedIdent getFQI(PsiElement element) {
+        if (element instanceof PasFullyQualifiedIdent) {
+            return (PasFullyQualifiedIdent) element;
+        }
+        PsiElement sub = (element instanceof PasSubIdent) ? element : element.getParent();
+        if (sub != null) {
+            return (sub.getParent() instanceof PasFullyQualifiedIdent) ? (PasFullyQualifiedIdent) sub.getParent() : null;
+        }
+        return null;
+    }
 }

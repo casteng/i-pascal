@@ -61,14 +61,17 @@ public class PascalAnnotator implements Annotator {
 
             if (refs.isEmpty()) {
                 Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
+                PsiContext context = PsiUtil.getContext(namedElement);
                 Set<AddFixType> fixes = EnumSet.of(AddFixType.VAR, AddFixType.TYPE, AddFixType.CONST, AddFixType.ROUTINE); // [*] => var type const routine
+                if (context == PsiContext.FQN_FIRST) {
+                    fixes.add(AddFixType.UNIT);
+                }
                 PsiElement scope = scopes.isEmpty() ? null : scopes.get(0);
                 if (scope instanceof PasEnumType) {                                                         // TEnum.* => -* +enum
                     fixes = EnumSet.of(AddFixType.ENUM);
                 } else if (scope instanceof PascalRoutineImpl) {                                            // [inRoutine] => +parameter
                     fixes.add(AddFixType.PARAMETER);
                 }
-                PsiContext context = PsiUtil.getContext(namedElement);
                 if (context == PsiContext.TYPE_ID) {                                                         // [TypeIdent] => -* +type
                     fixes = EnumSet.of(AddFixType.TYPE);
                 } else if (PsiTreeUtil.getParentOfType(namedElement, PasConstExpression.class) != null) {   // [part of const expr] => -* +const +enum
@@ -138,6 +141,10 @@ public class PascalAnnotator implements Annotator {
                         }
                         case PARAMETER: {
                             ann.registerFix(new PascalActionDeclare.ActionCreateParameter(message("action.create.parameter"), namedElement, scope));
+                            break;
+                        }
+                        case UNIT: {
+                            ann.registerFix(new UsesActions.AddUnitAction(message("action.create.unit"), namedElement.getName(), PsiUtil.belongsToInterface(namedElement)));
                             break;
                         }
                     }

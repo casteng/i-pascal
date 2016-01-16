@@ -229,6 +229,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         Document doc = PsiDocumentManager.getInstance(module.getProject()).getDocument(module.getContainingFile());
         if (doc != null) {
             DocUtil.adjustDocument(doc, offs, content);
+            PsiDocumentManager.getInstance(module.getProject()).commitDocument(doc);
         }
         DocUtil.runCommandLaterInWriteAction(module.getProject(), PascalBundle.message("action.reformat"), new Runnable() {
             @Override

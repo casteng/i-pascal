@@ -7,6 +7,7 @@ package com.siberika.idea.pascal.util;
 public enum PsiContext {
     TYPE_ID, PROPERTY_SPEC, GENERIC_PARAM,
     FOR, CALL,
+    FQN_FIRST, FQN_NEXT,
     USES, EXPORT,
 
     VAR_DECL, TYPE_DECL, CONST_DECL, PROPERTY_DECL, ENUM, EXCEPTION_HANDLER, FORMAL_PARAMETER, FIELD,

@@ -63,7 +63,6 @@ import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
-import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
@@ -284,7 +283,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private boolean isQualified(PsiElement pos) {
-        PasFullyQualifiedIdent fqi = getFQI(pos);
+        PasFullyQualifiedIdent fqi = PsiUtil.getFQI(pos);
         return (fqi != null) && (fqi.getSubIdentList().size() > 1);
     }
 
@@ -298,18 +297,6 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
         PsiElement parent = expr.getParent();
         return (parent != null) && (parent.getChildren().length > 1) && (parent instanceof PasExpr);
-    }
-
-    // Returns FQI which element is a part of
-    private PasFullyQualifiedIdent getFQI(PsiElement element) {
-        if (element instanceof PasFullyQualifiedIdent) {
-            return (PasFullyQualifiedIdent) element;
-        }
-        PsiElement sub = (element instanceof PasSubIdent) ? element : element.getParent();
-        if (sub != null) {
-            return (sub.getParent() instanceof PasFullyQualifiedIdent) ? (PasFullyQualifiedIdent) sub.getParent() : null;
-        }
-        return null;
     }
 
     private boolean isAtAssignmentRightPart(PsiElement pos, PsiElement originalPos) {

@@ -9,7 +9,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
@@ -18,6 +17,7 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -62,10 +62,27 @@ public class UsesActions {
             if (range != null) {
                 final Document doc = PsiDocumentManager.getInstance(usedUnitName.getProject()).getDocument(usedUnitName.getContainingFile());
                 if (doc != null) {
-                    PascalImportOptimizer.addUnitToSection(PsiUtil.getElementPasModule(file), new SmartList<String>(usedUnitName.getName()), false);
+                    PascalImportOptimizer.addUnitToSection(PsiUtil.getElementPasModule(file), Collections.singletonList(usedUnitName.getName()), false);
                     doc.deleteString(range.getStartOffset(), range.getEndOffset());
                 }
             }
+        }
+
+    }
+
+    public static class AddUnitAction extends BaseUsesAction {
+        private final String unitName;
+        private final boolean toInterface;
+
+        public AddUnitAction(String name, String unitName, boolean toInterface) {
+            super(name);
+            this.unitName = unitName;
+            this.toInterface = toInterface;
+        }
+
+        @Override
+        public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+            PascalImportOptimizer.addUnitToSection(PsiUtil.getElementPasModule(file), Collections.singletonList(unitName), toInterface);
         }
 
     }
