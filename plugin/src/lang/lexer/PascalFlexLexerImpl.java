@@ -29,6 +29,7 @@ import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.DefinesParser;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -82,8 +83,10 @@ public class PascalFlexLexerImpl extends _PascalLexer {
 
     @Override
     public void reset(CharSequence buffer, int start, int end, int initialState) {
-        super.reset(buffer, start, end, initialState);
+        super.reset(buffer, 0, end, YYINITIAL);
         defines = null;
+        curLevel = -1;
+        inactiveLevel = -1;
     }
 
     private DataContext getDataContext() {
@@ -138,7 +141,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return virtualFile;
     }
 
-    private boolean isValidFile(VirtualFile result) {
+    private static boolean isValidFile(VirtualFile result) {
         return result != null;
     }
 
@@ -146,7 +149,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return (project != null) && !project.isDisposed() && (ProjectRootManager.getInstance(project) != null);
     }
 
-    private Sdk getSdk(Project project, VirtualFile virtualFile) {
+    private static Sdk getSdk(Project project, VirtualFile virtualFile) {
         if (virtualFile != null) {
             Module module = ModuleUtil.findModuleForFile(virtualFile, project);
             if (module != null) {
@@ -263,7 +266,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         String name = extractIncludeName(sequence);
         Project project = getProject();
         VirtualFile virtualFile = getVirtualFile();
-        if ((!StringUtils.isEmpty(name)) && (project != null) && (virtualFile != null)) {
+        if ((!StringUtils.isEmpty(name)) && (project != null)) {
             Reader reader = null;
             try {
                 VirtualFile incFile = getIncludedFile(project, virtualFile, name);
@@ -281,8 +284,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                         getDefines().addAll(lexer.getDefines());
                     }
                 } else {
-                    LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
-//                    System.out.println(String.format("WARNING: Include %s referenced from %s not found", name, virtualFile.getName()));
+                    LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -300,6 +302,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return CT_DEFINE;
     }
 
+    @NotNull
+    private static String getVFName(VirtualFile virtualFile) {
+        return virtualFile != null ? virtualFile.getName() : "<unknown>";
+    }
+
     /**
      * Locates file specified in include directive and its full file name trying the following:
      *   1. if name specifies an absolute path return it
@@ -311,13 +318,13 @@ public class PascalFlexLexerImpl extends _PascalLexer {
      * @param name - name found in include directive
      * @return file name or null if not found
      */
-    private VirtualFile getIncludedFile(Project project, VirtualFile referencing, String name) throws IOException {
+    private static VirtualFile getIncludedFile(Project project, VirtualFile referencing, String name) throws IOException {
         File file = new File(name);
         if (file.isAbsolute()) {
             return tryExtensions(file);
         }
 
-        if (referencing != null) {
+        if (referencing != null) {                                                             // if referencing virtual file is known
             if (referencing.getParent() != null) {
                 String path = referencing.getParent().getPath();
                 VirtualFile res = tryExtensions(new File(path, name));
@@ -330,17 +337,17 @@ public class PascalFlexLexerImpl extends _PascalLexer {
 
             Module module = ModuleUtil.findModuleForFile(referencing, project);
 
-            return module != null ? trySearchPath(module, name) : null;
-        } else {
-            return null;
+            return module != null ? trySearchPath(name, GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false)) : null;
+        } else {                                                                               // often lexer can't determine which virtual file is referencing the include
+            return trySearchPath(name, GlobalSearchScope.projectScope(project));
         }
     }
 
-    private  List<String> includeExtensions = Arrays.asList(null, "pas", "pp", "Pas", "Pp", "PAS", "PP");
+    private static final List<String> INCLUDE_EXTENSIONS = Arrays.asList(null, "pas", "pp", "Pas", "Pp", "PAS", "PP");
 
-    private VirtualFile trySearchPath(Module module, String name) {
+    private static VirtualFile trySearchPath(String name, GlobalSearchScope filter) {
         Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false));
+                filter);
         for (VirtualFile virtualFile : virtualFiles) {
             String ext = FileUtil.getExtension(name);
             if (ext != null) {
@@ -348,7 +355,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                     return virtualFile;
                 }
             } else if (name.equalsIgnoreCase(virtualFile.getNameWithoutExtension())) {
-                if (includeExtensions.contains(virtualFile.getExtension())) {
+                if (INCLUDE_EXTENSIONS.contains(virtualFile.getExtension())) {
                     return virtualFile;
                 }
             }
@@ -356,12 +363,12 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return null;
     }
 
-    private VirtualFile tryExtensions(File file) throws IOException {
+    private static VirtualFile tryExtensions(File file) throws IOException {
         if (!file.isFile() && (FileUtil.getExtension(file.getName()) == null)) {
             String filename = file.getCanonicalPath();
-            file = new File(filename + "." + includeExtensions.get(1));
+            file = new File(filename + "." + INCLUDE_EXTENSIONS.get(1));
             if (!file.isFile()) {
-                file = new File(filename + "." + includeExtensions.get(2));
+                file = new File(filename + "." + INCLUDE_EXTENSIONS.get(2));
             }
         }
         return FileUtil.getVirtualFile(file.getCanonicalPath());
@@ -376,15 +383,15 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return yystate() == INACTIVE_BRANCH;
     }
 
-    private static Pattern patternDefine = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\}");
+    private static final Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\}");
     private static String extractDefineName(CharSequence sequence) {
-        Matcher m = patternDefine.matcher(sequence);
+        Matcher m = PATTERN_DEFINE.matcher(sequence);
         return m.matches() ? m.group(1).toUpperCase() : null;
     }
 
-    private static Pattern patternInclude = Pattern.compile("\\{\\$\\w+\\s+([\\w.]+)\\}");
+    private static final Pattern PATTERN_INCLUDE = Pattern.compile("\\{\\$\\w+\\s+([\\w.]+)\\}");
     private static String extractIncludeName(CharSequence sequence) {
-        Matcher m = patternInclude.matcher(sequence);
+        Matcher m = PATTERN_INCLUDE.matcher(sequence);
         return m.matches() ? m.group(1) : null;
     }
 

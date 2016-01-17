@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>0.995</version>
+    <version>1.0</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,12 +9,14 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>0.995</p>
+        <p>1.0</p>
         <ul>
+          <li>stable release</li>
           <li>quick fixes are now context-aware and use template engine</li>
           <li>create property/field quick fixes</li>
           <li>create routine/method quick fix</li>
-          <li>create parameter quick fix</li>
+          <li>create formal parameter quick fix</li>
+          <li>add unit to uses clause quick fix</li>
           <li>add enumeration constant quick fix</li>
           <li>fixed bug with "undeclared identifier" on .ppu units</li>
           <li>performance improve</li>
