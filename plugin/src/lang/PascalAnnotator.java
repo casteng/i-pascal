@@ -109,8 +109,8 @@ public class PascalAnnotator implements Annotator {
                         }
                         case TYPE: {
                             boolean priority = name.startsWith("T");
-                            if (!(scope instanceof PascalStructType)) {
-                                ann.registerFix(PascalActionDeclare.newActionCreateType(namedElement, scope, priority));
+                            if (!(scope instanceof PascalStructType) || (context != PsiContext.FQN_NEXT)) {
+                                ann.registerFix(PascalActionDeclare.newActionCreateType(namedElement, null, priority));
                             }
                             ann.registerFix(PascalActionDeclare.newActionCreateType(namedElement, adjustScope(scope), priority));
                             break;
