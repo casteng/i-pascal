@@ -19,6 +19,7 @@
           <li>add unit to uses clause quick fix</li>
           <li>add enumeration constant quick fix</li>
           <li>fixed bug with "undeclared identifier" on .ppu units</li>
+          <li>improved IFDEFs handling</li>
           <li>performance improve</li>
         </ul>
         <p>0.993</p>
