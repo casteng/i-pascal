@@ -36,6 +36,7 @@ public class UsesActions {
             final Document doc = PsiDocumentManager.getInstance(usedUnitName.getProject()).getDocument(usedUnitName.getContainingFile());
             if (doc != null) {
                 doc.insertString(usedUnitName.getTextRange().getStartOffset(), "{!}");
+                PsiDocumentManager.getInstance(project).commitDocument(doc);
             }
         }
     }
@@ -64,6 +65,7 @@ public class UsesActions {
                 if (doc != null) {
                     PascalImportOptimizer.addUnitToSection(PsiUtil.getElementPasModule(file), Collections.singletonList(usedUnitName.getName()), false);
                     doc.deleteString(range.getStartOffset(), range.getEndOffset());
+                    PsiDocumentManager.getInstance(project).commitDocument(doc);
                 }
             }
         }
@@ -99,6 +101,7 @@ public class UsesActions {
                 final Document doc = PsiDocumentManager.getInstance(usedUnitName.getProject()).getDocument(usedUnitName.getContainingFile());
                 if (doc != null) {
                     doc.deleteString(range.getStartOffset(), range.getEndOffset());
+                    PsiDocumentManager.getInstance(project).commitDocument(doc);
                 }
             }
         }

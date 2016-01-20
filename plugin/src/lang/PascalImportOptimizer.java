@@ -177,6 +177,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                             doc.deleteString(textRange.getStartOffset(), textRange.getEndOffset());
                         }
                     }
+                    PsiDocumentManager.getInstance(file.getProject()).commitDocument(doc);
                 } catch (Exception e) {
                     LOG.info("Error", e);
                 }
