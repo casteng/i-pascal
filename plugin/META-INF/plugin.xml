@@ -219,6 +219,8 @@
         <renamePsiElementProcessor implementation="com.siberika.idea.pascal.lang.references.impl.PascalRenameProcessor"/>
         <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
                                  implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
+        <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PasStringFactor"
+                                 implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalStringManipulator"/>
         <editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalLineMarkerProvider"/>
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalHeavyLineMarkerProvider"/>

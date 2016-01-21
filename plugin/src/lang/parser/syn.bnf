@@ -628,7 +628,7 @@ private rec_attr2 ::= !(RBRACK)
 CustomAttributeDecl         ::= FullyQualifiedIdent [LPAREN AttributeParamList RPAREN] {recoverWhile=rec_attr}
 private rec_attr            ::= !(COMMA | RBRACK | identifier)
 StringFactor                ::= controlString (quotedString controlString)* [quotedString]
-                              | quotedString (controlString quotedString)* [controlString]
+                              | quotedString (controlString quotedString)* [controlString] {extends="com.siberika.idea.pascal.lang.psi.impl.PascalStringImpl"}
 private quotedString        ::=	STRING_LITERAL
 private controlString       ::=	controlchar+
 private controlchar         ::= CHARNUM NUMBER_INT | CHARNUM NUMBER_HEX // ***===
