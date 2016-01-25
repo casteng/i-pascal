@@ -828,7 +828,9 @@ public class PsiUtil {
             }
         }
         if (fqi != null) {
-            if (0 == index) {
+            if (1 == count) {
+                return PsiContext.FQN_SINGLE;
+            } else if (0 == index) {
                 return PsiContext.FQN_FIRST;
             } else {
                 return PsiContext.FQN_NEXT;

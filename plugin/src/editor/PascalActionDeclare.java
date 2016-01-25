@@ -331,12 +331,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         void calcData(final PsiFile file, final FixActionData data) {
             if (data == varData) {
                 if (fillMemberPlace(scope, data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
-                    data.text = data.text.replace(PLACEHOLDER_DATA, String.format("F%s: $%s$;", data.element.getName(), TPL_VAR_TYPE));
+                    data.text = data.text.replace(PLACEHOLDER_DATA, String.format("F%s: $%s$;", StringUtil.capitalize(data.element.getName()), TPL_VAR_TYPE));
                     data.dataType = FixActionData.DataType.COMPLEX_TEMPLATE;
                 }
             } else {
                 if (fillMemberPlace(scope, data, PasField.Visibility.PUBLIC.ordinal(), PasField.FieldType.PROPERTY, PasVarSection.class, null)) {
-                    data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: $%2$s$ read F%1$s write F%1$s;", data.element.getName(), TPL_VAR_TYPE));
+                    data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: $%2$s$ read F%1$s write F%1$s;", StringUtil.capitalize(data.element.getName()), TPL_VAR_TYPE));
                 }
             }
             data.variableDefaults = TYPE_VAR_DEFAULTS;
