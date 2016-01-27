@@ -183,6 +183,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
                     }
                 }
             }
+            res.stamp = getStamp(getContainingFile());
             return res;
         }
     }

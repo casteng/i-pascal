@@ -241,8 +241,6 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             }
             Parents res = new Parents();
             res.stamp = getStamp(getContainingFile());
-
-            res.stamp = getStamp(getContainingFile());
             res.scopes = new SmartList<SmartPsiElementPointer<PasEntityScope>>();
             PasClassParent parent = getClassParent();
             if (parent != null) {

@@ -116,6 +116,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             if (building) {
                 LOG.info("WARNING: Reentered in routine.buildXXX");
                 return Members.createNotCacheable();
+//                throw new ProcessCanceledException();
             }
             building = true;
             Members res = new Members();
