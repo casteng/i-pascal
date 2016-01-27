@@ -44,7 +44,7 @@ public abstract class PascalBackendCompiler {
         if (outputDir != null) {
             createStartupCommandImpl(sdkHomePath, moduleName, getExeOutputPath(moduleData), outputDir, sdkLibFiles, moduleLibFiles, isRebuild, pascalSdkData, commandLine);
             File mainFile = getMainFile(moduleData);
-            if (files.size() == 1) {
+            if ((null == mainFile) && (files.size() > 0)) {
                 mainFile = files.get(0);
             }
             if (mainFile != null) {
