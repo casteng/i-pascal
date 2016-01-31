@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -38,7 +39,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     private static final String BUILTIN_RESULT = "Result";
     private static final String BUILTIN_SELF = "Self";
 
-    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().build();
+    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
 
     private ReentrantLock parentLock = new ReentrantLock();
     private boolean parentBuilding = false;
@@ -119,21 +120,24 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 //                throw new ProcessCanceledException();
             }
             building = true;
-            Members res = new Members();
-            res.stamp = getStamp(getContainingFile());
+            try {
+                Members res = new Members();
+                res.stamp = getStamp(getContainingFile());
 
-            List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
-            for (PasNamedIdent parameter : params) {
-                addField(res, parameter, PasField.FieldType.VARIABLE);
+                List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
+                for (PasNamedIdent parameter : params) {
+                    addField(res, parameter, PasField.FieldType.VARIABLE);
+                }
+
+                collectFields(PascalRoutineImpl.this, PasField.Visibility.STRICT_PRIVATE, res.all, res.redeclared);
+
+                addPseudoFields(res);
+
+                LOG.debug(getName() + ": buildMembers: " + res.all.size() + " members");
+                return res;
+            } finally {
+                building = false;
             }
-
-            collectFields(PascalRoutineImpl.this, PasField.Visibility.STRICT_PRIVATE, res.all, res.redeclared);
-
-            addPseudoFields(res);
-
-            LOG.debug(getName() + ": buildMembers: " + res.all.size() + " members");
-            building = false;
-            return res;
         }
     }
 

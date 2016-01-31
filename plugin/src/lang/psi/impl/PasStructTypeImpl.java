@@ -44,7 +44,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
 
-    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
 
@@ -247,7 +247,9 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
                 for (PasTypeID typeID : parent.getTypeIDList()) {
                     NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
                     PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
-                    addScope(res, scope);
+                    if (scope != PasStructTypeImpl.this) {
+                        addScope(res, scope);
+                    }
                 }
             } else {
                 PasEntityScope defEntity = null;
@@ -256,7 +258,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
                 } else if (PasStructTypeImpl.this instanceof PasInterfaceTypeDecl) {
                     defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStructTypeImpl.this, "system.IInterface"), true);
                 }
-                if ((defEntity != null) && (defEntity != PasStructTypeImpl.this)) {
+                if (defEntity != PasStructTypeImpl.this) {
                     addScope(res, defEntity);
                 }
             }

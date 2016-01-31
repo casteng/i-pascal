@@ -12,6 +12,7 @@
         <p>1.01</p>
         <ul>
           <li>ability to inject other languages in Pascal string literals</li>
+          <li>fixed spurious undeclared identifiers highlight bug</li>
         </ul>
         <p>1.0</p>
         <ul>

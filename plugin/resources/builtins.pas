@@ -186,7 +186,7 @@ const
     // Enforces an ordering constraint on memory operations.
     procedure MemoryBarrier;
     // Returns the value of this expression: Int64((Int128(AValue) * Int128(AMul)) div Int128(ADiv)).
-    function MulDivInt64(AValue, AMul, ADiv: Int64;): Int64; overload;
+    function MulDivInt64(AValue, AMul, ADiv: Int64): Int64; overload;
     // Returns the value of this expression: Int64((Int128(AValue) * Int128(AMul)) div Int128(ADiv)).
     function MulDivInt64(AValue, AMul, ADiv: Int64; out Remainder: Int64): Int64; overload;
 

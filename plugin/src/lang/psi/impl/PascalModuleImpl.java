@@ -41,9 +41,9 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     private static final UnitMembers EMPTY_MEMBERS = new UnitMembers();
     private static final Idents EMPTY_IDENTS = new Idents();
-    private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
-    private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
-    private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
     public static final String INTERFACE_PREFIX = "interface.";
 
     public PascalModuleImpl(ASTNode node) {
