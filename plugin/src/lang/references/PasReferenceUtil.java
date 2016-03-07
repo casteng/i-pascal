@@ -156,8 +156,8 @@ public class PasReferenceUtil {
     private static boolean isUnitExtension(VirtualFile virtualFile) {
         String ext = virtualFile.getExtension();
         return (ext != null) && PascalFileType.UNIT_EXTENSIONS.contains(ext.toLowerCase())
-                || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension())
-                || DCUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(virtualFile.getExtension());
+                || PPUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(ext)
+                || DCUFileType.INSTANCE.getDefaultExtension().equalsIgnoreCase(ext);
     }
 
     private static boolean isVisibleWithinUnit(@NotNull PasField field, @NotNull NamespaceRec fqn) {
@@ -389,7 +389,7 @@ public class PasReferenceUtil {
                 fieldTypes.remove(PasField.FieldType.PSEUDO_VARIABLE);                                                   // Pseudo variables can be only first in FQN
             }
 
-           if (!fqn.isComplete() && (namespaces != null)) {
+            if (!fqn.isComplete() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
                     if (null == namespace) {
                         System.out.println(String.format("===*** null namespace! %s", fqn));

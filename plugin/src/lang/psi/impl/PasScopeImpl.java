@@ -28,7 +28,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -40,7 +39,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     protected static final Logger LOG = Logger.getInstance(PasScopeImpl.class.getName());
     protected static final Members EMPTY_MEMBERS = new Members();
 
-    protected static final Cache<String, Parents> parentCache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    protected static final Cache<String, Parents> parentCache = CacheBuilder.newBuilder().softValues().build();
 
     protected ReentrantLock containingScopeLock = new ReentrantLock();
 

@@ -130,6 +130,9 @@ public class PascalCompletionContributor extends CompletionContributor {
         res.put(PasTypes.IF.toString(), String.format(" %s then ;\n", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.CASE.toString(), String.format(" %s of\nend;", DocUtil.PLACEHOLDER_CARET));
 
+        res.put(PasTypes.THEN.toString(), String.format(" %s", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.DO.toString(), String.format(" %s", DocUtil.PLACEHOLDER_CARET));
+
         res.put(PasTypes.WITH.toString(), String.format(" %s do ;", DocUtil.PLACEHOLDER_CARET));
 
         res.put(PasTypes.TRY.toString(), String.format("\n  %s\nfinally\nend;", DocUtil.PLACEHOLDER_CARET));
@@ -151,6 +154,8 @@ public class PascalCompletionContributor extends CompletionContributor {
         res.put(PasTypes.CONST.toString(), String.format(" %s = ;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.RESOURCESTRING.toString(), String.format(" %s = '';", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.TYPE.toString(), String.format(" T%s = ;", DocUtil.PLACEHOLDER_CARET));
+
+        res.put(PasTypes.PROPERTY.toString(), String.format(" %s: read ;", DocUtil.PLACEHOLDER_CARET));
         return res;
     }
 
@@ -461,7 +466,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             res = res.withInsertHandler(new InsertHandler<LookupElement>() {
                 @Override
                 public void handleInsert(InsertionContext context, LookupElement item) {
-                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), "(" + DocUtil.PLACEHOLDER_CARET + ")");
+                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), "(" + DocUtil.PLACEHOLDER_CARET + ");");
                     AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
                     DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
                     act.actionPerformed(new AnActionEvent(null, dataContext, "", act.getTemplatePresentation(), ActionManager.getInstance(), 0));

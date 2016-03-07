@@ -282,12 +282,14 @@ const
     function StrLong(val, width: Longint): ShortString;
     function Str0Long(val: Longint): ShortString;
 
+    {$IFDEF DELPHI}
     // Added for D7 compatibility
     function Sin(x: Extended): Extended;
     function Cos(x: Extended): Extended;
     function Exp(x: Extended): Extended;
     function Int(x: Extended): Extended;
     function Frac(x: Extended): Extended;
+    {$ENDIF}
 
     // Undocumented
     // Returns the zero representation of type identifier T.

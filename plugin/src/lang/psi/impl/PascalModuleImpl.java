@@ -31,7 +31,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Author: George Bakhtadze
@@ -41,9 +40,9 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     private static final UnitMembers EMPTY_MEMBERS = new UnitMembers();
     private static final Idents EMPTY_IDENTS = new Idents();
-    private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
-    private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
-    private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().softValues().build();
+    private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().softValues().build();
+    private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().softValues().build();
     public static final String INTERFACE_PREFIX = "interface.";
 
     public PascalModuleImpl(ASTNode node) {

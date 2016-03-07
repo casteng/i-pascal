@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -39,7 +38,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     private static final String BUILTIN_RESULT = "Result";
     private static final String BUILTIN_SELF = "Self";
 
-    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
 
     private ReentrantLock parentLock = new ReentrantLock();
     private boolean parentBuilding = false;

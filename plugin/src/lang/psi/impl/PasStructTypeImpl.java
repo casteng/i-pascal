@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Author: George Bakhtadze
@@ -44,7 +43,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
 
-    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().weakValues().expireAfterAccess(30, TimeUnit.MINUTES).build();
+    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
 
