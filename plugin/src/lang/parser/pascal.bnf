@@ -214,6 +214,7 @@
   extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl"
   extends("ExportedRoutine|RoutineImplDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
   extends(".*Expr")=Expr
+  extends(".*Expression.*")="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"
   implements(".*Op")="com.siberika.idea.pascal.lang.psi.impl.PascalOperation"
 }
 

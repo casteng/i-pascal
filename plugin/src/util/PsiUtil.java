@@ -27,12 +27,14 @@ import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpr;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasExportsSection;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasExpressionOrd;
 import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
@@ -745,8 +747,15 @@ public class PsiUtil {
     public static PsiElement skipToExpressionParent(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
                 PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamespaceIdent.class, PasGenericTypeIdent.class,
-                PasExpression.class, PsiWhiteSpace.class, PsiErrorElement.class,
-                PascalExpression.class,
+                PasExpression.class, PascalExpression.class, PasExpressionOrd.class, PasConstExpression.class,
+                PsiWhiteSpace.class, PsiErrorElement.class,
+                PasUnitModuleHead.class);
+    }
+
+    public static PsiElement skipToExpression(PsiElement element) {
+        return PsiTreeUtil.skipParentsOfType(element,
+                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamespaceIdent.class, PasGenericTypeIdent.class,
+                PsiWhiteSpace.class, PsiErrorElement.class,
                 PasUnitModuleHead.class);
     }
 

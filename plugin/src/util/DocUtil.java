@@ -68,6 +68,7 @@ public class DocUtil {
         document.insertString(offset, adjustContent(document, offset, content));
     }
 
+    // for each entry in DUP_MAP if content ends with key and document starts with value truncate content by key length
     private static String adjustContent(Document document, int offset, String content) {
         for (Map.Entry<String, String> entry : DUP_MAP.entrySet()) {
             String trimmedContent = StringUtils.stripEnd(content, null);

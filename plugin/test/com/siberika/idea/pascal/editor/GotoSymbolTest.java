@@ -90,7 +90,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
             PascalActionDeclare action = fixesMap.get(s);
             action.calcData(mod.getContainingFile(), getData(action));
             if (offs != getData(action).offset) {
-                System.out.println(String.format("%s: expected offset %d, actual %d", s, offs, getData(action).offset));
+                System.out.println(String.format("%s(%d): expected offset %d, actual %d", s, i, offs, getData(action).offset));
                 pass = false;
             }
             i++;

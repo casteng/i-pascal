@@ -35,8 +35,10 @@ public class PasField {
     public static final Set<FieldType> TYPES_LEFT_SIDE = new HashSet<FieldType>(Arrays.asList(FieldType.UNIT, FieldType.VARIABLE, FieldType.PSEUDO_VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE));
     public static final Set<FieldType> TYPES_TYPE = new HashSet<FieldType>(Collections.singletonList(FieldType.TYPE));
     public static final Set<FieldType> TYPES_TYPE_UNIT = new HashSet<FieldType>(Arrays.asList(FieldType.UNIT, FieldType.TYPE));
-    public static final Set<FieldType> TYPES_ROUTINE = new HashSet<FieldType>(Arrays.asList(FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_ROUTINE = new HashSet<FieldType>(Collections.singletonList(FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_PROPERTY_SPECIFIER = new HashSet<FieldType>(Arrays.asList(FieldType.ROUTINE, FieldType.VARIABLE));
     public static final Set<FieldType> TYPES_STRUCTURE = new HashSet<FieldType>(Arrays.asList(FieldType.TYPE, FieldType.VARIABLE, FieldType.CONSTANT, FieldType.PROPERTY, FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_STATIC = new HashSet<FieldType>(Arrays.asList(FieldType.UNIT, FieldType.TYPE, FieldType.CONSTANT, FieldType.ROUTINE));
 
     public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
 

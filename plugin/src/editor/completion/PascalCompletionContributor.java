@@ -43,8 +43,11 @@ import com.siberika.idea.pascal.lang.psi.PasCaseItem;
 import com.siberika.idea.pascal.lang.psi.PasCaseStatement;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
+import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasConstExpressionOrd;
 import com.siberika.idea.pascal.lang.psi.PasContainsClause;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
@@ -78,6 +81,7 @@ import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -123,7 +127,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         res.put(PasTypes.INITIALIZATION.toString(), String.format("\n  %s\nfinalization\n", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.USES.toString(), String.format(" %s;", DocUtil.PLACEHOLDER_CARET));
 
-        res.put(PasTypes.FOR.toString(), String.format(" %s do ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.FOR.toString(), String.format(" %s to do ;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.WHILE.toString(), String.format(" %s do ;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.REPEAT.toString(), String.format("\nuntil %s;", DocUtil.PLACEHOLDER_CARET));
 
@@ -156,6 +160,8 @@ public class PascalCompletionContributor extends CompletionContributor {
         res.put(PasTypes.TYPE.toString(), String.format(" T%s = ;", DocUtil.PLACEHOLDER_CARET));
 
         res.put(PasTypes.PROPERTY.toString(), String.format(" %s: read ;", DocUtil.PLACEHOLDER_CARET));
+
+        res.put(PasTypes.PACKED.toString(), " ");
         return res;
     }
 
@@ -168,14 +174,15 @@ public class PascalCompletionContributor extends CompletionContributor {
                 PsiElement pos = parameters.getPosition();
                 PsiElement prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
                 PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
-//                System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent()));
+                System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent()));
 
                 originalPos = PsiUtil.skipToExpressionParent(parameters.getOriginalPosition());
                 pos = PsiUtil.skipToExpressionParent(parameters.getPosition());
                 prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
                 oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
+                PsiElement expr = PsiUtil.skipToExpression(parameters.getOriginalPosition());
                 int level = PsiUtil.getElementLevel(originalPos);
-//                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
+                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
                 if (!(prev instanceof PasTypeSection) && !(PsiUtil.isInstanceOfAny(originalPos, PasTypeSection.class, PasRoutineImplDecl.class, PasBlockLocal.class))) {
                     handleModuleHeader(result, parameters, pos);
@@ -186,7 +193,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 handleStructured(result, parameters, pos, originalPos);
 
                 Collection<PasField> entities = new HashSet<PasField>();
-                handleEntities(result, parameters, pos, originalPos, entities);
+                handleEntities(result, parameters, pos, originalPos, expr, entities);
 
                 handleStatement(result, parameters, pos, originalPos, entities);
                 handleInsideStatement(result, parameters, pos, originalPos);
@@ -331,13 +338,19 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private void handleEntities(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
+    private void handleEntities(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, PsiElement expr, Collection<PasField> entities) {
         if ((pos instanceof PasTypeID) || (originalPos instanceof PasTypeID)) {                                                                          // Type declaration
             addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters.isExtendedCompletion());
             if (!PsiUtil.isInstanceOfAny(pos.getParent(), PasClassParent.class)) {
                 appendTokenSet(result, TYPE_DECLARATIONS);
                 result.caseInsensitive().addElement(getElement("interface "));
             }
+        } else if (pos instanceof PasClassPropertySpecifier || pos instanceof PasClassProperty) {
+            addEntities(entities, parameters.getPosition(), PasField.TYPES_PROPERTY_SPECIFIER, parameters.isExtendedCompletion());
+        } else if (pos instanceof PasConstExpressionOrd) {
+            addEntities(entities, parameters.getPosition(), PasField.TYPES_STATIC, parameters.isExtendedCompletion());
+        } else if (expr instanceof PascalExpression) {
+            addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
         }
     }
 
@@ -466,7 +479,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             res = res.withInsertHandler(new InsertHandler<LookupElement>() {
                 @Override
                 public void handleInsert(InsertionContext context, LookupElement item) {
-                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), "(" + DocUtil.PLACEHOLDER_CARET + ");");
+                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), "(" + DocUtil.PLACEHOLDER_CARET + ")");
                     AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
                     DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
                     act.actionPerformed(new AnActionEvent(null, dataContext, "", act.getTemplatePresentation(), ActionManager.getInstance(), 0));
