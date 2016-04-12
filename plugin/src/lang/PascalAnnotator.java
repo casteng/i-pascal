@@ -76,8 +76,10 @@ public class PascalAnnotator implements Annotator {
                     fixes = EnumSet.of(AddFixType.TYPE);
                 } else if (PsiTreeUtil.getParentOfType(namedElement, PasConstExpression.class) != null) {   // [part of const expr] => -* +const +enum
                     fixes = EnumSet.of(AddFixType.CONST);
-                } else if ((context == PsiContext.EXPORT) || (context == PsiContext.CALL)) {
+                } else if (context == PsiContext.EXPORT) {
                     fixes = EnumSet.of(AddFixType.ROUTINE);
+                } else if (context == PsiContext.CALL) {
+                    fixes = EnumSet.of(AddFixType.ROUTINE, AddFixType.VAR);
                 } else if (context == PsiContext.PROPERTY_SPEC) {
                     fixes = EnumSet.of(AddFixType.VAR, AddFixType.ROUTINE);
                 } else if (context == PsiContext.FOR) {
@@ -88,20 +90,21 @@ public class PascalAnnotator implements Annotator {
                 for (AddFixType fix : fixes) {
                     switch (fix) {
                         case VAR: {
+                            boolean priority = context != PsiContext.CALL;
                             if (!(scope instanceof PascalStructType)) {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.create.var"), namedElement, null, context != PsiContext.FOR ? "T" : "Integer"));
+                                ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.var"), namedElement, null, priority, context != PsiContext.FOR ? "T" : "Integer"));
                             }
                             PsiElement adjustedScope = adjustScope(scope);
                             if (adjustedScope instanceof PascalStructType) {
                                 if (StrUtil.PATTERN_FIELD.matcher(name).matches()) {
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateVarHP(message("action.create.field"), namedElement, adjustedScope, "T"));
+                                    ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.field"), namedElement, adjustedScope, priority, "T"));
                                     if (context != PsiContext.PROPERTY_SPEC) {
-                                        ann.registerFix(new PascalActionDeclare.ActionCreateProperty(message("action.create.property"), namedElement, adjustedScope));
+                                        ann.registerFix(PascalActionDeclare.newActionCreateProperty(message("action.create.property"), namedElement, adjustedScope, false));
                                     }
                                 } else {
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateVar(message("action.create.field"), namedElement, adjustedScope, "T"));
+                                    ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.field"), namedElement, adjustedScope, false, "T"));
                                     if (context != PsiContext.PROPERTY_SPEC) {
-                                        ann.registerFix(new PascalActionDeclare.ActionCreatePropertyHP(message("action.create.property"), namedElement, adjustedScope));
+                                        ann.registerFix(PascalActionDeclare.newActionCreateProperty(message("action.create.property"), namedElement, adjustedScope, priority));
                                     }
                                 }
                             }
@@ -111,26 +114,31 @@ public class PascalAnnotator implements Annotator {
                             boolean priority = name.startsWith("T");
                             if (!(scope instanceof PascalStructType) || (context != PsiContext.FQN_NEXT)) {
                                 ann.registerFix(PascalActionDeclare.newActionCreateType(namedElement, null, priority));
+                                priority = false;             // lower priority for nested
                             }
                             ann.registerFix(PascalActionDeclare.newActionCreateType(namedElement, adjustScope(scope), priority));
                             break;
                         }
                         case CONST: {
                             boolean priority = !StrUtil.hasLowerCaseChar(name);
-                            if (!(scope instanceof PascalStructType)) {
+                            if ((scope instanceof PascalStructType)) {
+                                ann.registerFix(PascalActionDeclare.newActionCreateConst(namedElement, null, priority));
+                                priority = false;             // lower priority for nested
+                            } else {
                                 ann.registerFix(PascalActionDeclare.newActionCreateConst(namedElement, scope, priority));
                             }
                             ann.registerFix(PascalActionDeclare.newActionCreateConst(namedElement, adjustScope(scope), priority));
                             break;
                         }
                         case ROUTINE: {
+                            boolean priority = context == PsiContext.CALL;
                             if (scope instanceof PascalStructType) {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.method"), namedElement, scope, null, null));
+                                ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.method"), namedElement, scope, null, null, priority));
                             } else {
-                                ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.routine"), namedElement, scope, null, null));
+                                ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.routine"), namedElement, scope, null, null, priority));
                                 PsiElement adjustedScope = adjustScope(scope);
                                 if (adjustedScope instanceof PascalStructType) {
-                                    ann.registerFix(new PascalActionDeclare.ActionCreateRoutine(message("action.create.method"), namedElement, adjustedScope, scope, null));
+                                    ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.method"), namedElement, adjustedScope, scope, null, priority));
                                 }
                             }
                             break;

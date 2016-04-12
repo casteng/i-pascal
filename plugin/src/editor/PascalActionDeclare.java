@@ -317,6 +317,14 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
+    public static IntentionAction newActionCreateVar(String message, PascalNamedElement namedElement, PsiElement scope, boolean priority, String defaultType) {
+        if (priority) {
+            return new PascalActionDeclare.ActionCreateVarHP(message, namedElement, scope, defaultType);
+        } else {
+            return new PascalActionDeclare.ActionCreateVar(message, namedElement, scope, defaultType);
+        }
+    }
+
     public static class ActionCreateProperty extends PascalActionDeclare {
 
         private FixActionData varData;
@@ -346,6 +354,14 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     public static class ActionCreatePropertyHP extends ActionCreateProperty implements HighPriorityAction {
         public ActionCreatePropertyHP(String name, PascalNamedElement element, @NotNull PsiElement scope) {
             super(name, element, scope);
+        }
+    }
+
+    public static IntentionAction newActionCreateProperty(String message, PascalNamedElement namedElement, PsiElement scope, boolean priority) {
+        if (priority) {
+            return new PascalActionDeclare.ActionCreatePropertyHP(message, namedElement, scope);
+        } else {
+            return new PascalActionDeclare.ActionCreateProperty(message, namedElement, scope);
         }
     }
 
@@ -522,6 +538,20 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             } catch (Exception e) {
                 LOG.info("Error in PascalActionDeclare.afterExecution()", e);
             }
+        }
+    }
+
+    public static class ActionCreateRoutineHP extends ActionCreateRoutine implements HighPriorityAction {
+        public ActionCreateRoutineHP(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, String returnType) {
+            super(name, element, scope, callScope, returnType);
+        }
+    }
+
+    public static IntentionAction newActionCreateRoutine(String message, PascalNamedElement namedElement, PsiElement scope, PsiElement callScope, String returnType, boolean priority) {
+        if (priority) {
+            return new PascalActionDeclare.ActionCreateRoutineHP(message, namedElement, scope, callScope, returnType);
+        } else {
+            return new PascalActionDeclare.ActionCreateRoutine(message, namedElement, scope, callScope, returnType);
         }
     }
 
