@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
@@ -54,6 +55,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
 
         foldCommon(root, descriptors);
         foldCase(root, descriptors);
+        foldUses(root, descriptors);
         foldEnums(root, descriptors);
 
         if (!quick) {
@@ -66,19 +68,23 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
     private void foldCommon(PsiElement root, List<FoldingDescriptor> descriptors) {
         @SuppressWarnings("unchecked")
         Collection<PascalPsiElement> blocks = PsiUtil.findChildrenOfAnyType(root,
-                PasUnitInterface.class, PasUnitImplementation.class, PasUsesClause.class, PasUnitInitialization.class, PasUnitFinalization.class,
+                PasUnitInterface.class, PasUnitImplementation.class, PasUnitInitialization.class, PasUnitFinalization.class,
                 PasVarSection.class, PasTypeSection.class, PasConstSection.class,
                 PasClassTypeTypeDecl.class, PasClassHelperDecl.class, PasClassTypeDecl.class,
                 PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordHelperDecl.class, PasRecordDecl.class,
                 PasCompoundStatement.class, PasHandler.class, PasRepeatStatement.class);
 
         for (final PsiElement block : blocks) {
-            int foldStart = block.getFirstChild() != null ? block.getFirstChild().getTextRange().getEndOffset() : block.getTextRange().getStartOffset();
+            int foldStart = getStartOffset(block);
             TextRange range = getRange(foldStart, block.getTextRange().getEndOffset());
             if (range.getLength() > 1) {
                 descriptors.add(new FoldingDescriptor(block.getNode(), range, null));
             }
         }
+    }
+
+    private int getStartOffset(PsiElement block) {
+        return block.getFirstChild() != null ? block.getFirstChild().getTextRange().getEndOffset() : block.getTextRange().getStartOffset();
     }
 
     private TextRange getRange(int start, int end) {
@@ -96,6 +102,35 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
             TextRange range = getRange(foldStart, caseStatement.getTextRange().getEndOffset());
             if (range.getLength() > 0) {
                 descriptors.add(new FoldingDescriptor(caseStatement.getNode(), range, null));
+            }
+        }
+    }
+
+    private void foldUses(PsiElement root, List<FoldingDescriptor> descriptors) {
+        @SuppressWarnings("unchecked")
+        Collection<PasUsesClause> usesList = PsiUtil.findChildrenOfAnyType(root, PasUsesClause.class);
+        for (final PasUsesClause uses : usesList) {
+            int foldStart = getStartOffset(uses);
+            TextRange range = getRange(foldStart, uses.getTextRange().getEndOffset());
+            if (range.getLength() > 1) {
+                descriptors.add(new FoldingDescriptor(uses.getNode(), range, null) {
+                    @Nullable
+                    @Override
+                    public String getPlaceholderText() {
+                        StringBuilder sb = new StringBuilder(" ");
+                        boolean first = true;
+                        for (PasNamespaceIdent ident : uses.getNamespaceIdentList()) {
+                            if (!first) {
+                                sb.append(", ").append(ident.getName());
+                            } else {
+                                sb.append(ident.getName());
+                                first = false;
+                            }
+                        }
+                        sb.append(";");
+                        return sb.toString();
+                    }
+                });
             }
         }
     }
