@@ -13,6 +13,8 @@
         <ul>
           <li>ability to inject other languages in Pascal string literals</li>
           <li>fixed spurious undeclared identifiers highlight bug</li>
+          <li>improved completion</li>
+          <li>improved folding</li>
         </ul>
         <p>1.0</p>
         <ul>

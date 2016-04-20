@@ -3,10 +3,12 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilderEx;
 import com.intellij.lang.folding.FoldingDescriptor;
+import com.intellij.lang.folding.NamedFoldingDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasCaseStatement;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
@@ -33,6 +35,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +51,8 @@ import java.util.List;
  */
 public class PascalFoldingBuilder extends FoldingBuilderEx {
 
+    private static final TokenSet TOKENS_COLLAPSED = TokenSet.create(PasTypes.COMMENT, PasTypes.USES_CLAUSE);
+
     @NotNull
     @Override
     public FoldingDescriptor[] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
@@ -57,12 +62,26 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         foldCase(root, descriptors);
         foldUses(root, descriptors);
         foldEnums(root, descriptors);
+        foldRoutines(root, descriptors);
 
         if (!quick) {
             foldComments(root, descriptors);
         }
 
         return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
+    }
+
+    private void foldRoutines(PsiElement root, List<FoldingDescriptor> descriptors) {
+        @SuppressWarnings("unchecked")
+        Collection<PasRoutineImplDeclImpl> routineList = PsiUtil.findChildrenOfAnyType(root, PasRoutineImplDeclImpl.class);
+        for (PasRoutineImplDeclImpl routine : routineList) {
+            int foldStart = getStartOffset(routine);
+            TextRange range = getRange(foldStart, routine.getTextRange().getEndOffset());
+            if (range.getLength() > 1) {
+                descriptors.add(new NamedFoldingDescriptor(routine.getNode(), range, null,
+                        " " + PsiUtil.normalizeRoutineName(routine) + ";"));
+            }
+        }
     }
 
     private void foldCommon(PsiElement root, List<FoldingDescriptor> descriptors) {
@@ -218,6 +237,6 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
 
     @Override
     public boolean isCollapsedByDefault(@NotNull ASTNode node) {
-        return node.getElementType() == PasTypes.COMMENT;
+        return TOKENS_COLLAPSED.contains(node.getElementType());
     }
 }
