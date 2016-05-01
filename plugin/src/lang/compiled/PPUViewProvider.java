@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.compiled;
 
+import com.intellij.ide.highlighter.JavaClassFileType;
 import com.intellij.lang.Language;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.fileTypes.FileType;
@@ -33,8 +34,9 @@ public class PPUViewProvider extends ClassFileViewProvider implements FileViewPr
     @Override
     protected PsiFile createFile(@NotNull final Project project, @NotNull final VirtualFile vFile, @NotNull final FileType fileType) {
         final FileIndexFacade fileIndex = ServiceManager.getService(project, FileIndexFacade.class);
+        FileType fType = fileType instanceof JavaClassFileType ? vFile.getFileType() : fileType;
         if (fileIndex.isInLibraryClasses(vFile) || !fileIndex.isInSource(vFile)) {
-            if (fileType instanceof DCUFileType) {
+            if (fType instanceof DCUFileType) {
                 return new DCUFileImpl(getManager(), this);
             } else {
                 return new PPUFileImpl(getManager(), this);

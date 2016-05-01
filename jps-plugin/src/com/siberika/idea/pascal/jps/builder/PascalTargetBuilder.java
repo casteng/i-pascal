@@ -101,7 +101,8 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                         files.get(target), ParamMap.getJpsParams(module.getProperties()),
                         isRebuild,
                         ParamMap.getJpsParams(sdk.getSdkProperties()));
-                int exitCode = launchCompiler(compiler, messager, cmdLine);
+                File mainFile = PascalBackendCompiler.getMainFile(ParamMap.getJpsParams(module.getProperties()));
+                int exitCode = launchCompiler(compiler, messager, cmdLine, mainFile != null ? mainFile.getParentFile() : null);
                 if (exitCode != 0) {
                     messager.error("Error. Compiler exit code: " + exitCode, null, -1L, -1L);
                 }
@@ -125,12 +126,12 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
         return null;
     }
 
-    private int launchCompiler(PascalBackendCompiler compiler, CompilerMessager messager, String[] cmdLine) throws IOException {
+    private int launchCompiler(PascalBackendCompiler compiler, CompilerMessager messager, String[] cmdLine, File workingDir) throws IOException {
         messager.info("Command line: ", null, -1L, -1L);
         for (String s : cmdLine) {
             messager.info(s, null, -1L, -1L);
         }
-        Process process = Runtime.getRuntime().exec(cmdLine);
+        Process process = Runtime.getRuntime().exec(cmdLine, null, workingDir);
         BaseOSProcessHandler handler = new BaseOSProcessHandler(process, "", Charset.defaultCharset());
         ProcessAdapter adapter = compiler.getCompilerProcessAdapter(messager);
         handler.addProcessListener(adapter);

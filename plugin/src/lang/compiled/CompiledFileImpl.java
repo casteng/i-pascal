@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.lang.compiled;
 
 import com.intellij.extapi.psi.LightPsiFileBase;
-import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiCompiledFile;
@@ -17,7 +16,6 @@ import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.impl.source.SourceTreeToPsiMap;
 import com.intellij.psi.impl.source.tree.TreeElement;
 import com.intellij.util.IncorrectOperationException;
-import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalLanguage;
 import org.jetbrains.annotations.NotNull;
@@ -98,12 +96,6 @@ abstract class CompiledFileImpl extends LightPsiFileBase implements PsiFileEx, P
 
             return myMirrorFileElement.getPsi();
         }
-    }
-
-    @NotNull
-    @Override
-    public FileType getFileType() {
-        return PPUFileType.INSTANCE;
     }
 
     public abstract String decompile(PsiManager manager, VirtualFile file);

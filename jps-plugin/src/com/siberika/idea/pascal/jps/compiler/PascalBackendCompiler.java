@@ -67,7 +67,7 @@ public abstract class PascalBackendCompiler {
         return commandLine.toArray(new String[commandLine.size()]);
     }
 
-    static File getMainFile(ParamMap moduleData) {
+    public static File getMainFile(ParamMap moduleData) {
         String fileName = moduleData != null ? moduleData.get(JpsPascalModuleType.USERDATA_KEY_MAIN_FILE.toString()) : null;
         return fileName != null ? new File(fileName) : null;
     }
