@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.02</p>
+        <ul>
+          <li>fixed parsing routines with constrained generics</li>
+        </ul>
         <p>1.01</p>
         <ul>
           <li>ability to inject other languages in Pascal string literals</li>

@@ -63,10 +63,13 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
         names.put("test7", "test7(): type4");
         names.put("test8", "test8(type5): type6");
         names.put("test9", String.format("test9(%1$s,%1$s,%1$s): type7", PsiUtil.TYPE_UNTYPED_NAME));
+        names.put("testA", "testA(typeA1<T>,typeA2): typeA3");
         myFixture.configureByFiles("normalizeRoutineName.pas");
-        Collection<PascalNamedElement> symbols = PascalParserUtil.findSymbols(myFixture.getProject(), "test");
+        Collection<PascalRoutineImpl> symbols = PascalParserUtil.findSymbols(myFixture.getProject(), "test", PascalRoutineImpl.class);
+        assertEquals("Wrong number of routines", names.size(), symbols.size());
         for (PascalNamedElement symbol : symbols) {
             if (symbol instanceof PascalRoutineImpl) {
+                System.out.println(String.format("%s = %s", symbol.getName(), PsiUtil.normalizeRoutineName((PascalRoutineImpl) symbol)));
                 assertEquals(names.get(symbol.getName()), PsiUtil.normalizeRoutineName((PascalRoutineImpl) symbol));
             }
         }

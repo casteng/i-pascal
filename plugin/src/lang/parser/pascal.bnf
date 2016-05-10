@@ -373,10 +373,10 @@ private typeForwardDecl     ::= classForwardDecl ";"
 
 GenericTypeIdent    ::= identifier [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
-private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {pin=1}                     //TODO use meta rule
+private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {}                     //TODO use meta rule
 private identsRest          ::= "," NamedIdent {pin=1}
-private constrainedGenericDefinition ::= "<" constrainedGeneric constrainedGenericsRest ">" {pin=1}
-private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstraintsRest ]
+private constrainedGenericDefinition ::= "<" constrainedGeneric constrainedGenericsRest* ">" {pin=1}
+private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstraintsRest* ]
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
 private genericConstraintsRest ::= "," GenericConstraint {pin=1}
 private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
