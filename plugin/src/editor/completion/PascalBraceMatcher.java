@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,16 +20,12 @@ public class PascalBraceMatcher implements BraceMatcher {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    /*
-    LPAREN="("
-        RPAREN=")"
-        LBRACK="["
-        RBRACK="]"
-     */
+    private static final TokenSet END_PAIRS = TokenSet.create(PasTypes.BEGIN, PasTypes.TRY, PasTypes.CASE, PasTypes.ASM,
+            PasTypes.CLASS, PasTypes.INTERFACE, PasTypes.DISPINTERFACE, PasTypes.OBJECT, PasTypes.RECORD);
 
     @Override
     public boolean isLBraceToken(HighlighterIterator iterator, CharSequence fileText, FileType fileType) {
-        return (iterator.getTokenType() == PasTypes.BEGIN) || (iterator.getTokenType() == PasTypes.LBRACK) || (iterator.getTokenType() == PasTypes.LPAREN);
+        return END_PAIRS.contains(iterator.getTokenType()) || (iterator.getTokenType() == PasTypes.LBRACK) || (iterator.getTokenType() == PasTypes.LPAREN);
     }
 
     @Override
@@ -42,20 +39,20 @@ public class PascalBraceMatcher implements BraceMatcher {
     }
 
     private boolean isPairBracesInternal(IElementType tokenType, IElementType tokenType2) {
-        return ((tokenType == PasTypes.BEGIN)  && (tokenType2 == PasTypes.END))
+        return (END_PAIRS.contains(tokenType) && (tokenType2 == PasTypes.END))
             || ((tokenType == PasTypes.LBRACK) && (tokenType2 == PasTypes.RBRACK))
             || ((tokenType == PasTypes.LPAREN) && (tokenType2 == PasTypes.RPAREN));
     }
 
     @Override
     public boolean isStructuralBrace(HighlighterIterator iterator, CharSequence text, FileType fileType) {
-        return (iterator.getTokenType() == PasTypes.BEGIN) || (iterator.getTokenType() == PasTypes.END);
+        return END_PAIRS.contains(iterator.getTokenType()) || (iterator.getTokenType() == PasTypes.END);
     }
 
     @Nullable
     @Override
     public IElementType getOppositeBraceTokenType(@NotNull IElementType type) {
-        if (type == PasTypes.BEGIN)  { return PasTypes.END; }
+        if (END_PAIRS.contains(type)) { return PasTypes.END; }
         if (type == PasTypes.END)    { return PasTypes.BEGIN; }
         if (type == PasTypes.LBRACK) { return PasTypes.RBRACK; }
         if (type == PasTypes.RBRACK) { return PasTypes.LBRACK; }

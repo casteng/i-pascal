@@ -12,6 +12,8 @@
         <p>1.02</p>
         <ul>
           <li>fixed parsing routines with constrained generics</li>
+          <li>complete statements</li>
+          <li>fix brace matcher (try/case/structured type)</li>
         </ul>
         <p>1.01</p>
         <ul>
