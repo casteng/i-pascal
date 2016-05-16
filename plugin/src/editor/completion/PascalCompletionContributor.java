@@ -109,7 +109,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     private static final TokenSet DECLARATIONS_LOCAL = TokenSet.create(
             PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.PROCEDURE, PasTypes.FUNCTION
     );
-    public static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
+    private static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
             PasTypes.TYPE, PasTypes.CLASS, PasTypes.DISPINTERFACE, PasTypes.RECORD, PasTypes.OBJECT,
             PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.HELPER, PasTypes.ARRAY
     );
@@ -215,11 +215,11 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     }
 
-    TokenSet TS_BEGIN = TokenSet.create(PasTypes.BEGIN);
-    TokenSet TS_UNTIL = TokenSet.create(PasTypes.UNTIL);
-    TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF);
-    TokenSet TS_ELSE = TokenSet.create(PasTypes.ELSE);
-    TokenSet TS_CLASS = TokenSet.create(PasTypes.CLASS);
+    private TokenSet TS_BEGIN = TokenSet.create(PasTypes.BEGIN);
+    private TokenSet TS_UNTIL = TokenSet.create(PasTypes.UNTIL);
+    private TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF);
+    private TokenSet TS_ELSE = TokenSet.create(PasTypes.ELSE);
+    private TokenSet TS_CLASS = TokenSet.create(PasTypes.CLASS);
 
     private void handleInsideStatement(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
         if ((pos instanceof PasStatement) && (parameters.getOriginalPosition() != null)) {
@@ -266,7 +266,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT);
+    private TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT);
     private boolean isControlStatement(PsiElement pos) {
         return TS_CONTROL_STATEMENT.contains(pos.getNode().getElementType());
     }

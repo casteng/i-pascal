@@ -3,10 +3,15 @@ package com.siberika.idea.pascal.util;
 import com.intellij.codeInsight.daemon.impl.PsiElementListNavigator;
 import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.hint.HintUtil;
+import com.intellij.ide.DataManager;
 import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.ide.util.PsiElementModuleRenderer;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
+import com.intellij.openapi.editor.actionSystem.EditorActionManager;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
@@ -54,6 +59,14 @@ public class EditorUtil {
 
     public static RelativePoint getHintPos(Editor editor) {
         return new RelativePoint(editor.getComponent(), new Point(0, 0));
+    }
+
+    public static void moveToLineEnd(Editor editor) {
+        EditorActionHandler actionHandler = EditorActionManager.getInstance().getActionHandler(IdeActions.ACTION_EDITOR_MOVE_LINE_END);
+        final DataContext dataContext = DataManager.getInstance().getDataContext(editor.getComponent());
+        if (dataContext != null) {
+            actionHandler.execute(editor, editor.getCaretModel().getCurrentCaret(), dataContext);
+        }
     }
 
     private static class MyPsiElementCellRenderer extends DefaultPsiElementCellRenderer {
