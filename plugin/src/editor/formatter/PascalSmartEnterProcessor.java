@@ -6,6 +6,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -62,6 +63,8 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
             completeIf(editor, (PasIfStatement) statement);
         } else if (statement instanceof PasIfStatement) {
             completeIf(editor, (PasIfStatement) statement);
+        } else if (statement.getParent() instanceof PasStatement) {
+            completeStatement(editor, statement.getParent());
         }
         CodeStyleManager.getInstance(statement.getManager()).reformat(statement, true);
     }
@@ -116,15 +119,52 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
     }
 
     /* IF
-     . if => if _ then
-     . if expr [then] => if expr then \n _;
-     . if expr then _ => if expr then \n begin \n _ \n end;
-     . if expr then stmt _ => if expr then stmt else _
-     . if expr then [begin] stmts [end] _ => if expr then [begin] stmts [end] ?\n else _
-     . if expr then [begin] stmts [end] else _ => if expr then begin stmts end else \n begin \n _ \n end;
+     * if => if _ then
+     * if expr [then] => if expr then \n _;
+     * if expr then _ => if expr then \n begin \n _ \n end;
+     * if expr then stmt _ => if expr then stmt else _
+     * if expr then [begin] stmts [end] _ => if expr then [begin] stmts [end] ?\n else _
+     * if expr then [begin] stmts [end] else _ => if expr then begin stmts end else \n begin \n _ \n end;
      */
-    private void completeIf(Editor editor, PasIfStatement statement) {
+    private static final int LENGTH_IF = "if".length();
 
+    private void completeIf(Editor editor, PasIfStatement statement) {
+        int thenEnd = getChildEndOffset(statement, PasTypes.THEN);
+        final PasExpression expr = statement.getExpression();
+        boolean hasExpr = (expr != null) && atTheSameLine(editor.getDocument(), statement, expr);
+        if (hasExpr) {
+            if (thenEnd >= 0) {
+                int caretPos = editor.getCaretModel().getCurrentCaret().getOffset();
+                int lineEndPos = editor.getCaretModel().getCurrentCaret().getVisualLineEnd() - 1;
+                int elseEnd = getChildEndOffset(statement, PasTypes.ELSE);
+                TextRange thenStmtRange = getElementRange(statement.getThenStatement());
+                TextRange elseStmtRange = getElementRange(statement.getElseStatement());
+                if ((thenStmtRange.getLength() > 0) && (elseEnd < 0)
+                        && ((caretPos == thenStmtRange.getEndOffset()) || (caretPos == lineEndPos))) {
+                    DocUtil.adjustDocument(editor, caretPos, String.format("\nelse\n%s", DocUtil.PLACEHOLDER_CARET));
+                } else if ((caretPos == thenEnd) && (thenStmtRange.getLength() == 0)) {
+                    DocUtil.adjustDocument(editor, caretPos, String.format("\nbegin\n%s\nend", DocUtil.PLACEHOLDER_CARET));
+                } else if ((caretPos == elseEnd) && (elseStmtRange.getLength() == 0)) {
+                    DocUtil.adjustDocument(editor, caretPos, String.format("\nbegin\n%s\nend", DocUtil.PLACEHOLDER_CARET));
+                } else if (caretPos < thenEnd) {
+                    DocUtil.adjustDocument(editor, thenEnd, String.format("\n%s", DocUtil.PLACEHOLDER_CARET));
+                } else if (caretPos < elseEnd) {
+                    DocUtil.adjustDocument(editor, elseEnd, String.format("\n%s", DocUtil.PLACEHOLDER_CARET));
+                }
+            } else {
+                int offs = expr.getTextRange().getEndOffset();
+                DocUtil.adjustDocument(editor, offs, String.format(" then \n%s", DocUtil.PLACEHOLDER_CARET));
+            }
+            EditorUtil.moveToLineEnd(editor);
+        } else {
+            int offs = statement.getTextRange().getStartOffset() + LENGTH_IF;
+            DocUtil.adjustDocument(editor, offs, " " + DocUtil.PLACEHOLDER_CARET + (thenEnd >= 0 ? "" : " then"));
+        }
+        PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
+    }
+
+    private static TextRange getElementRange(PsiElement element) {
+        return element != null ? element.getTextRange() : TextRange.EMPTY_RANGE;
     }
 
     /* FOR
