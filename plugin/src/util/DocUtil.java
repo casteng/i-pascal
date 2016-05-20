@@ -86,7 +86,7 @@ public class DocUtil {
         return content;
     }
 
-    public static void reformatInSeparateCommand(final Project project, final PsiFile file, final Editor editor) {
+    public static void reformatInSeparateCommand(@NotNull final Project project, @NotNull final PsiFile file, @NotNull final Editor editor) {
         runCommandLaterInWriteAction(project, PascalBundle.message("action.reformat"), new Runnable() {
             @Override
             public void run() {
@@ -100,7 +100,7 @@ public class DocUtil {
         });
     }
 
-    public static void reformat(final PsiElement block, boolean inSeparateCommand) {
+    public static void reformat(@NotNull final PsiElement block, boolean inSeparateCommand) {
         Runnable r = getReformatCode(block);
         if (inSeparateCommand) {
             runCommandLaterInWriteAction(block.getProject(), PascalBundle.message("action.reformat"), r);

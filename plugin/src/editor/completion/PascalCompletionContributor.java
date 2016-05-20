@@ -588,9 +588,18 @@ public class PascalCompletionContributor extends CompletionContributor {
             String content = INSERT_MAP.get(item.getLookupString());
             if (null != content) {
                 content = content.replaceAll(PLACEHOLDER_FILENAME, FileUtilRt.getNameWithoutExtension(context.getFile().getName()));
-                DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), content);
+                int caretPos = context.getEditor().getCaretModel().getOffset();
+                DocUtil.adjustDocument(context.getEditor(), caretPos, content);
                 context.commitDocument();
-                DocUtil.reformatInSeparateCommand(context.getProject(), context.getFile(), context.getEditor());
+                if (PasTypes.END.toString().equals(item.getLookupString())) {
+                    PsiElement el = context.getFile().findElementAt(caretPos-1);
+                    PsiElement block = PsiTreeUtil.getParentOfType(el, PasCompoundStatement.class);
+                    if (block != null)  {
+                        DocUtil.reformat(block, true);
+                    }
+                } else {
+                    DocUtil.reformatInSeparateCommand(context.getProject(), context.getFile(), context.getEditor());
+                }
             }
         }
     };
