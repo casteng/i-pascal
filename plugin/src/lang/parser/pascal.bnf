@@ -494,7 +494,8 @@ stmtEmpty           ::= //empty
 RepeatStatement     ::= REPEAT [statementList] UNTIL Expression {pin=1}
 WhileStatement      ::= WHILE Expression DO Statement {pin=1}
 ForStatement        ::= FOR FullyQualifiedIdent (forCycle | IN) Expression DO Statement {pin=1}
-private forCycle    ::= ":=" Expression (TO | DOWNTO)
+private forCycle    ::= ":=" FromExpression (TO | DOWNTO) {pin=1}
+FromExpression      ::= Expression
 
 IfStatement         ::= IF Expression THEN IfThenStatement [ELSE IfElseStatement] {pin=1}
 IfThenStatement     ::= Statement

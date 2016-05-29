@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.tree.IElementType;
@@ -16,6 +17,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasForStatement;
+import com.siberika.idea.pascal.lang.psi.PasFromExpression;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasIfStatement;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
@@ -59,10 +62,6 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
             completeIf(editor, (PasIfStatement) statement);
         } else if (statement instanceof PasRepeatStatement) {
             completeRepeat(editor, (PasRepeatStatement) statement);
-        } else if (statement instanceof PasIfStatement) {
-            completeIf(editor, (PasIfStatement) statement);
-        } else if (statement instanceof PasIfStatement) {
-            completeIf(editor, (PasIfStatement) statement);
         } else if (statement.getParent() instanceof PasStatement) {
             completeStatement(editor, statement.getParent());
         }
@@ -137,8 +136,8 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
                 int caretPos = editor.getCaretModel().getCurrentCaret().getOffset();
                 int lineEndPos = editor.getCaretModel().getCurrentCaret().getVisualLineEnd() - 1;
                 int elseEnd = getChildEndOffset(statement, PasTypes.ELSE);
-                TextRange thenStmtRange = getElementRange(statement.getThenStatement());
-                TextRange elseStmtRange = getElementRange(statement.getElseStatement());
+                TextRange thenStmtRange = getElementRange(statement.getIfThenStatement());
+                TextRange elseStmtRange = getElementRange(statement.getIfElseStatement());
                 if ((thenStmtRange.getLength() > 0) && (elseEnd < 0)
                         && ((caretPos == thenStmtRange.getEndOffset()) || (caretPos == lineEndPos))) {
                     DocUtil.adjustDocument(editor, caretPos, String.format("\nelse\n%s", DocUtil.PLACEHOLDER_CARET));
@@ -168,24 +167,82 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
     }
 
     /* FOR
-     . for => for _ do
-     . for i [to] [do] => for i := _ to do // if i is 1-letter in length
-     . for [i] to [do] => for i := _ to do
-     . for i := [to] [do] => for i := _ to do
-     . for i := 0 [to] [do] => for i := 0 to _ do
-     . for i := 0 to 1 [do] => for i := 0 to 1 do \n _
-     . for in [do] => for _ in do
-     . for i in [do] => for i in _ do
-     . for i in x [do] => for i in x do \n _
+     * for => for _ do
+     * for i [to] [do] => for i := _ [to] [do] // if i is 1-letter in length
+     * for [i] to [do] => for i := _ to [do]
+     * for i := [to] [do] => for i := _ to do
+     * for i := 0 [to] [do] => for i := 0 to _ do
+     * for i := 0 to 1 [do] => for i := 0 to 1 do \n _
+     * for in [do] => for _ in [do]
+     * for i in [do] => for i in _ do
+     * for i in x [do] => for i in x do \n _
      ? for x [do] => for i in x do \n _ // for enumerable types of x
      */
-    private void completeFor(Editor editor, PasForStatement statement) {
+    private static final int LENGTH_FOR = "for".length();
 
+    private void completeFor(Editor editor, PasForStatement statement) {
+        int assignEnd = getChildEndOffset(PasTypes.ASSIGN, statement, statement.getStatement());
+        int inEnd = getChildEndOffset(PasTypes.IN, statement, statement.getStatement());
+        PsiElement errorEl = PsiTreeUtil.findChildOfType(statement.getStatement(), PsiErrorElement.class);
+        int toEnd = getChildEndOffset(PasTypes.TO, statement, statement.getStatement(), errorEl);
+        toEnd = toEnd < 0 ? getChildEndOffset(PasTypes.DOWNTO, statement, statement.getStatement(), errorEl) : toEnd;
+        int doEnd = getChildEndOffset(PasTypes.DO, statement, statement.getStatement());
+        final PasFullyQualifiedIdent ident = statement.getFullyQualifiedIdent();
+        boolean hasIdent = (ident != null) && atTheSameLine(editor.getDocument(), statement, ident);
+        final PasFromExpression fromExpr = statement.getFromExpression();
+        final PasExpression expr = statement.getExpression();
+        boolean hasExpr = (expr != null) && atTheSameLine(editor.getDocument(), statement, expr);
+        String doStr = doEnd >= 0 ? "" : " do";
+        if (hasIdent) {
+            String toStr = toEnd >= 0 ? "" : " to";
+            if (assignEnd < 0) {
+                if (inEnd < 0) {
+                    if ((ident.getTextLength() == 1) || (toEnd >= 0)) {
+                        DocUtil.adjustDocument(editor, ident.getTextRange().getEndOffset(), " := " + DocUtil.PLACEHOLDER_CARET + toStr + doStr);
+                    }
+                } else if (!hasExpr) {
+                    DocUtil.adjustDocument(editor, inEnd, " " + DocUtil.PLACEHOLDER_CARET + doStr);
+                } else {
+                    insertNewLine(editor, doStr, doEnd >= 0 ? doEnd : expr.getTextRange().getEndOffset());
+                }
+            } else if (null == fromExpr) {
+                DocUtil.adjustDocument(editor, assignEnd, " " + DocUtil.PLACEHOLDER_CARET + toStr + doStr);
+            } else if (toEnd < 0) {
+                DocUtil.adjustDocument(editor, fromExpr.getTextRange().getEndOffset(), " to " + DocUtil.PLACEHOLDER_CARET + doStr);
+            } else if (!hasExpr) {
+                DocUtil.adjustDocument(editor, toEnd, " " + DocUtil.PLACEHOLDER_CARET + doStr);
+            } else {
+                insertNewLine(editor, doStr, doEnd >= 0 ? doEnd : expr.getTextRange().getEndOffset());
+            }
+        } else {
+            int offs = statement.getTextRange().getStartOffset() + LENGTH_FOR;
+            DocUtil.adjustDocument(editor, offs, " " + DocUtil.PLACEHOLDER_CARET + (inEnd < 0 ? doStr : ""));
+        }
+        PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
+    }
+
+    private static void insertNewLine(Editor editor, String doStr, int offset) {
+        DocUtil.adjustDocument(editor, offset, doStr + "\n" + DocUtil.PLACEHOLDER_CARET);
+        int caretPos = editor.getCaretModel().getCurrentCaret().getOffset();
+        int lineEndPos = editor.getCaretModel().getCurrentCaret().getVisualLineEnd() - 1;
+        if (caretPos >= lineEndPos) {
+            EditorUtil.moveToLineEnd(editor);
+        }
     }
 
     private static int getChildEndOffset(PsiElement element, IElementType type) {
         ASTNode child = element.getNode().findChildByType(type);
         return child != null ? child.getTextRange().getEndOffset() : -1;
+    }
+
+    private static int getChildEndOffset(IElementType type, PsiElement...elements) {
+        for (PsiElement element : elements) if (element != null) {
+            ASTNode child = element.getNode().findChildByType(type);
+            if (child != null) {
+                return child.getTextRange().getEndOffset();
+            }
+        }
+        return -1;
     }
 
     private static boolean atTheSameLine(Document doc, PsiElement first, PsiElement second) {

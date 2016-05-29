@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.01</version>
+    <version>1.02</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -12,7 +12,10 @@
         <p>1.02</p>
         <ul>
           <li>fixed parsing routines with constrained generics</li>
+          <li>complete if statement</li>
+          <li>complete for statement</li>
           <li>complete while statement</li>
+          <li>complete repeat statement</li>
           <li>fix brace matcher (try/case/structured type)</li>
         </ul>
         <p>1.01</p>
