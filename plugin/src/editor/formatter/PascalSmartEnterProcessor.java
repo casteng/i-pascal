@@ -14,16 +14,20 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasFromExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasIfStatement;
+import com.siberika.idea.pascal.lang.psi.PasParenExpr;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
+import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
 import org.jetbrains.annotations.NotNull;
@@ -38,8 +42,8 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
     public boolean process(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile psiFile) {
         FeatureUsageTracker.getInstance().triggerFeatureUsed("codeassists.complete.statement");
         PsiElement el = getStatementAtCaret(editor, psiFile);
-        el = PsiTreeUtil.getParentOfType(el, PasStatement.class, PasEntityScope.class);
-        if (el instanceof PasStatement) {
+        el = PsiTreeUtil.getParentOfType(el, PasStatement.class, PasEntityScope.class, PascalExpression.class);
+        if ((el instanceof PasStatement) || (el instanceof PascalExpression)) {
             completeStatement(editor, el);
         }
         return true;
@@ -62,8 +66,13 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
             completeIf(editor, (PasIfStatement) statement);
         } else if (statement instanceof PasRepeatStatement) {
             completeRepeat(editor, (PasRepeatStatement) statement);
-        } else if (statement.getParent() instanceof PasStatement) {
-            completeStatement(editor, statement.getParent());
+        } else if ((statement instanceof PasCallExpr) || (statement instanceof PasParenExpr)) {
+            completeParen(editor, (PascalExpression) statement);
+        } else {
+            PascalPsiElement parent = PsiTreeUtil.getParentOfType(statement, PasStatement.class, PascalExpression.class);
+            if (parent != null) {
+                completeStatement(editor, parent);
+            }
         }
         CodeStyleManager.getInstance(statement.getManager()).reformat(statement, true);
     }
@@ -95,24 +104,6 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
         } else {
             int offs = statement.getTextRange().getStartOffset() + LENGTH_WHILE;
             DocUtil.adjustDocument(editor, offs, " " + DocUtil.PLACEHOLDER_CARET + (doEnd >= 0 ? "" : " do"));
-        }
-        PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
-    }
-
-    /* REPEAT
-     . repeat => repeat \n _ \n until
-     . repeat until [;] => repeat \n until _;
-     */
-    private static final int LENGTH_REPEAT = "repeat".length();
-
-    private void completeRepeat(Editor editor, PasRepeatStatement statement) {
-        int untilEnd = getChildEndOffset(statement, PasTypes.UNTIL);
-        if (untilEnd < 0) {
-            DocUtil.adjustDocument(editor, statement.getTextRange().getStartOffset() + LENGTH_REPEAT,
-                    String.format("\n%s\nuntil;", DocUtil.PLACEHOLDER_CARET));
-            EditorUtil.moveToLineEnd(editor);
-        } else if (statement.getExpression() == null) {
-            DocUtil.adjustDocument(editor, untilEnd, String.format(" %s;", DocUtil.PLACEHOLDER_CARET));
         }
         PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
     }
@@ -158,6 +149,24 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
         } else {
             int offs = statement.getTextRange().getStartOffset() + LENGTH_IF;
             DocUtil.adjustDocument(editor, offs, " " + DocUtil.PLACEHOLDER_CARET + (thenEnd >= 0 ? "" : " then"));
+        }
+        PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
+    }
+
+    /* REPEAT
+     * repeat => repeat \n _ \n until
+     * repeat until [;] => repeat \n until _;
+     */
+    private static final int LENGTH_REPEAT = "repeat".length();
+
+    private void completeRepeat(Editor editor, PasRepeatStatement statement) {
+        int untilEnd = getChildEndOffset(statement, PasTypes.UNTIL);
+        if (untilEnd < 0) {
+            DocUtil.adjustDocument(editor, statement.getTextRange().getStartOffset() + LENGTH_REPEAT,
+                    String.format("\n%s\nuntil;", DocUtil.PLACEHOLDER_CARET));
+            EditorUtil.moveToLineEnd(editor);
+        } else if (statement.getExpression() == null) {
+            DocUtil.adjustDocument(editor, untilEnd, String.format(" %s;", DocUtil.PLACEHOLDER_CARET));
         }
         PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
     }
@@ -219,6 +228,18 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
             DocUtil.adjustDocument(editor, offs, " " + DocUtil.PLACEHOLDER_CARET + (inEnd < 0 ? doStr : ""));
         }
         PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
+    }
+
+    /* EXPRESSION
+     * ([x] => ([x]_)
+     * func([x] => func([x]_)
+     */
+    private void completeParen(Editor editor, PascalExpression statement) {
+        int parenPos = getChildEndOffset(PasTypes.RPAREN, statement, statement.getLastChild());
+        if (parenPos < 0) {
+            DocUtil.adjustDocument(editor, statement.getTextRange().getEndOffset(), DocUtil.PLACEHOLDER_CARET + ")");
+            PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
+        }
     }
 
     private static void insertNewLine(Editor editor, String doStr, int offset) {

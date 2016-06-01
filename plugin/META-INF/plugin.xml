@@ -16,6 +16,7 @@
           <li>complete for statement</li>
           <li>complete while statement</li>
           <li>complete repeat statement</li>
+          <li>complete ")" in expressions</li>
           <li>fix brace matcher (try/case/structured type)</li>
         </ul>
         <p>1.01</p>
