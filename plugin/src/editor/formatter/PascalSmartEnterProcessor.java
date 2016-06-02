@@ -125,12 +125,10 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
         if (hasExpr) {
             if (thenEnd >= 0) {
                 int caretPos = editor.getCaretModel().getCurrentCaret().getOffset();
-                int lineEndPos = editor.getCaretModel().getCurrentCaret().getVisualLineEnd() - 1;
                 int elseEnd = getChildEndOffset(statement, PasTypes.ELSE);
                 TextRange thenStmtRange = getElementRange(statement.getIfThenStatement());
                 TextRange elseStmtRange = getElementRange(statement.getIfElseStatement());
-                if ((thenStmtRange.getLength() > 0) && (elseEnd < 0)
-                        && ((caretPos == thenStmtRange.getEndOffset()) || (caretPos == lineEndPos))) {
+                if ((thenStmtRange.getLength() > 0) && (elseEnd < 0) && (caretPos == thenStmtRange.getEndOffset())) {
                     DocUtil.adjustDocument(editor, caretPos, String.format("\nelse\n%s", DocUtil.PLACEHOLDER_CARET));
                 } else if ((caretPos == thenEnd) && (thenStmtRange.getLength() == 0)) {
                     DocUtil.adjustDocument(editor, caretPos, String.format("\nbegin\n%s\nend", DocUtil.PLACEHOLDER_CARET));
