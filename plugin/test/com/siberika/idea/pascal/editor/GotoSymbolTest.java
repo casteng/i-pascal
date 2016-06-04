@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
+
     @Override
     protected String getTestDataPath() {
         return "testData/gotoSymbol";
@@ -76,6 +77,9 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
 
     }
 
+    private static final String ACT_VAR = "Declare variable";
+    private static final String ACT_TYPE = "Declare type";
+
     public void testAddActions() throws Exception {
         myFixture.configureByFiles("addActions.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
@@ -85,7 +89,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
         int i = 1;
         String text = myFixture.getDocument(mod.getContainingFile()).getText();
         boolean pass = true;
-        for (String s : Arrays.asList("global", "T", "b", "t1")) {
+        for (String s : Arrays.asList("global." + ACT_VAR, "T." + ACT_TYPE, "b." + ACT_VAR, "t1." + ACT_TYPE)) {
             int offs = text.indexOf(String.format("{%d<}", i));
             if (offs < 0) {
                 offs = text.indexOf(String.format("{%d>}", i)) + 4;
@@ -111,7 +115,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
         for (IntentionAction fix : fixes) {
             if (fix instanceof PascalActionDeclare) {
                 PascalActionDeclare ad = (PascalActionDeclare) fix;
-                map.put(getData(ad).element.getName(), ad);
+                map.put(getData(ad).element.getName() + "." + ad.getText(), ad);
             }
         }
         System.out.println("Idents: " + map.keySet().toString());

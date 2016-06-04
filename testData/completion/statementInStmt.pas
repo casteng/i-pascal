@@ -7,7 +7,7 @@ begin
     for <caret> do ;
     if <caret> then ;
     while <caret> do ;
-    case <caret> of
+    case <caret>
 
     end;
     s1 := [1, 2..5];

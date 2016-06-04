@@ -56,6 +56,7 @@ import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasIfStatement;
+import com.siberika.idea.pascal.lang.psi.PasIfThenStatement;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -226,7 +227,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             if (!isPartOfExpression(parameters.getPosition()) && !isQualified(parameters.getPosition())) {
                 appendTokenSet(result, PascalLexer.STATEMENTS);
             }
-            if ((pos.getParent() instanceof PasIfStatement) || (originalPos instanceof PasCaseStatement)) {
+            if ((pos.getParent() instanceof PasIfThenStatement) || (originalPos instanceof PasCaseStatement)) {
                 appendTokenSet(result, TS_ELSE);
             }
 
@@ -266,7 +267,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT);
+    private TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.IF_THEN_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT);
     private boolean isControlStatement(PsiElement pos) {
         return TS_CONTROL_STATEMENT.contains(pos.getNode().getElementType());
     }
