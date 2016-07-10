@@ -32,7 +32,9 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,10 +53,11 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     private String parameters;
     private String workingDirectory;
+    private String programFileName;
 
     public PascalRunConfiguration(String name, RunConfigurationModule configurationModule, ConfigurationFactory factory) {
         super(name, configurationModule, factory);
-        workingDirectory = getProject() != null ? getProject().getBasePath() : null;
+        workingDirectory = getProject().getBasePath();
     }
 
     @Override
@@ -64,7 +67,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     @Override
     protected ModuleBasedConfiguration createInstance() {
-        workingDirectory = getProject() != null ? getProject().getBasePath() : null;
+        workingDirectory = getProject().getBasePath();
         return new PascalRunConfiguration(getName(),  getConfigurationModule(),  getFactory());
     }
 
@@ -103,7 +106,15 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
             protected ProcessHandler startProcess() throws ExecutionException {
                 Module module = findModule(env);
                 GeneralCommandLine commandLine = new GeneralCommandLine();
-                String executable = PascalRunner.getExecutable(module);
+
+                String fileName;
+                if (programFileName != null) {
+                    fileName = FileUtil.getFilename(programFileName);
+                } else {
+                    VirtualFile mainFile = PascalModuleType.getMainFile(module);
+                    fileName = mainFile != null ? mainFile.getNameWithoutExtension() : null;
+                }
+                String executable = PascalRunner.getExecutable(module, fileName);
                 if (executable != null) {
                     commandLine.setExePath(executable);
                 } else {
@@ -141,5 +152,13 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     @Override
     public void setWorkingDirectory(String workingDirectory) {
         this.workingDirectory = workingDirectory;
+    }
+
+    public String getProgramFileName() {
+        return programFileName;
+    }
+
+    public void setProgramFileName(String programFileName) {
+        this.programFileName = programFileName;
     }
 }

@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.02</version>
+    <version>1.05</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.05</p>
+        <ul>
+          <li>run programs with button at left gutter</li>
+        </ul>
         <p>1.02</p>
         <ul>
           <li>fixed parsing routines with constrained generics</li>
@@ -225,7 +229,7 @@
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
         <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.PascalConfigurationType"/>
-        <configurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.PascalRunConfigurationProducer" />
+        <runConfigurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.PascalRunContextConfigurationProducer" />
         <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
 
         <!--<psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>-->
@@ -266,6 +270,8 @@
         <lang.importOptimizer language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalImportOptimizer"/>
 
         <compiler.task implementation="com.siberika.idea.pascal.compiler.Task"/>
+
+        <runLineMarkerContributor language="Pascal" implementationClass="com.siberika.idea.pascal.run.PascalRunLineMarkerContributor"/>
 
         <internalFileTemplate name="PascalUnit"/>
         <internalFileTemplate name="PascalProgram"/>

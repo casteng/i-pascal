@@ -15,6 +15,7 @@ import com.siberika.idea.pascal.PascalFileType;
  * Author: George Bakhtadze
  * Date: 12/5/12
  */
+@Deprecated
 public class PascalRunConfigurationProducer extends RuntimeConfigurationProducer implements Cloneable {
     private PsiFile sourceFile = null;
 

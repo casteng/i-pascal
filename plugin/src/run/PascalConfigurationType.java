@@ -21,8 +21,9 @@ public class PascalConfigurationType implements ConfigurationType {
 
     public PascalConfigurationType() {
         myFactory = new ConfigurationFactory(this) {
+            @NotNull
             @Override
-            public RunConfiguration createTemplateConfiguration(Project project) {
+            public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
                 return new PascalRunConfiguration("", new RunConfigurationModule(project), this);
             }
         };

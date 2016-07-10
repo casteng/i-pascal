@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.jps.builder;
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
 import com.siberika.idea.pascal.jps.compiler.DelphiBackendCompiler;
 import com.siberika.idea.pascal.jps.compiler.FPCBackendCompiler;
@@ -70,8 +71,15 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
     @Override
     public void build(@NotNull PascalTarget target, @NotNull DirtyFilesHolder<PascalSourceRootDescriptor, PascalTarget> holder,
                       @NotNull BuildOutputConsumer outputConsumer, @NotNull CompileContext context) throws ProjectBuildException, IOException {
-        if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) return;
-        final Map<PascalTarget, List<File>> files = collectChangedFiles(holder);
+
+        JpsModule module = target.getModule();
+        File mainFile = PascalBackendCompiler.getMainFile(ParamMap.getJpsParams(module.getProperties()));
+
+        // Force main file to compile. TODO: force only for context-based (line marker?) run configurations
+//        if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) return;
+        final Map<PascalTarget, List<File>> files = new HashMap<PascalTarget, List<File>>();
+        files.put(target, new SmartList<File>(mainFile));
+        collectChangedFiles(files, holder);
         boolean isRebuild = JavaBuilderUtil.isForcedRecompilationAllJavaModules(context) || (!JavaBuilderUtil.isCompileJavaIncrementally(context));
         if (files.isEmpty() && !isRebuild) {
             context.processMessage(new CompilerMessage(getPresentableName(), BuildMessage.Kind.INFO, "No changes detected"));
@@ -80,7 +88,6 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
 
         CompilerMessager messager = new PascalCompilerMessager(getPresentableName(), context);
 
-        JpsModule module = target.getModule();
         JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
         if (sdk != null) {
             PascalBackendCompiler compiler = getCompiler(sdk, messager);
@@ -101,7 +108,6 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                         files.get(target), ParamMap.getJpsParams(module.getProperties()),
                         isRebuild,
                         ParamMap.getJpsParams(sdk.getSdkProperties()));
-                File mainFile = PascalBackendCompiler.getMainFile(ParamMap.getJpsParams(module.getProperties()));
                 int exitCode = launchCompiler(compiler, messager, cmdLine, mainFile != null ? mainFile.getParentFile() : null);
                 if (exitCode != 0) {
                     messager.error("Error. Compiler exit code: " + exitCode, null, -1L, -1L);
@@ -166,8 +172,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
         return outputDirectory;
     }
 
-    private static Map<PascalTarget, List<File>> collectChangedFiles(DirtyFilesHolder<PascalSourceRootDescriptor, PascalTarget> dirtyFilesHolder) throws IOException {
-        final Map<PascalTarget, List<File>> result = new HashMap<PascalTarget, List<File>>();
+    private static void collectChangedFiles(final Map<PascalTarget, List<File>> result, DirtyFilesHolder<PascalSourceRootDescriptor, PascalTarget> dirtyFilesHolder) throws IOException {
         dirtyFilesHolder.processDirtyFiles(new FileProcessor<PascalSourceRootDescriptor, PascalTarget>() {
             public boolean apply(PascalTarget target, File file, PascalSourceRootDescriptor sourceRoot) throws IOException {
                 final String path = file.getPath();
@@ -182,7 +187,6 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                 return true;
             }
         });
-        return result;
     }
 
     private static boolean isPascalFile(String path) {

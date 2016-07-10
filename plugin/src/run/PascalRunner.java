@@ -7,10 +7,8 @@ import com.intellij.execution.runners.DefaultProgramRunner;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.util.FileUtil;
-import com.siberika.idea.pascal.module.PascalModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,9 +30,8 @@ public class PascalRunner extends DefaultProgramRunner {
     }
 
     @Nullable
-    public static String getExecutable(@NotNull Module module) {
-        VirtualFile mainFile = PascalModuleType.getMainFile(module);
-        if (null == mainFile) {
+    public static String getExecutable(@NotNull Module module, String programFileName) {
+        if (null == programFileName) {
             return null;
         }
         String path = module.getOptionValue(JpsPascalModuleType.USERDATA_KEY_EXE_OUTPUT_PATH.toString());
@@ -44,6 +41,6 @@ public class PascalRunner extends DefaultProgramRunner {
                 path = compilerModuleExtension.getCompilerOutputPath().getPath();
             }
         }
-        return FileUtil.getExecutable(new File(path != null ? path : ""), mainFile.getNameWithoutExtension()).getPath();
+        return FileUtil.getExecutable(new File(path != null ? path : ""), programFileName).getPath();
     }
 }
