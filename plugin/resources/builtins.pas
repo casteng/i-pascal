@@ -438,6 +438,99 @@ type
         function Next(): _HashMapKeyType;
     end;
 
+    _LinkedListNodePTR = ^_LinkedListNode;
+    _LinkedListNode = record
+        // List value
+        V: _LinkedListValueType;
+        // Pointer to next node
+        Next: _LinkedListNodePTR;
+    end;
+
+    _GenLinkedList = class(__Parent)
+    protected
+        FFirst, FLast: _LinkedListNodePTR;
+        FCount: __CollectionIndexType;
+
+        // Returns list value at the specified position
+        procedure SetValue(Index: __CollectionIndexType; const e: _LinkedListValueType); // inline
+        // Returns the value assotiated with node p
+        function GetNodeValue(p: _LinkedListNodePTR): _LinkedListValueType; // inline
+    public
+        // Constructs a new empty list
+        constructor Create();
+        // Frees all nodes and destroys the list
+        destructor Destroy(); override;
+
+        { Collection interface }
+
+        // Returns the number of elements in the collection
+        function GetCount(): __CollectionIndexType; // inline
+        // Returns True if the collection contains no elements
+        function IsEmpty(): Boolean; // inline
+        // Returns True if the collection contains the specified element
+        function Contains(const e: _LinkedListValueType): Boolean;
+        // Calls the delegate for each element in the collection
+        procedure ForEach(Delegate: _LinkedListDelegate; Data: Pointer);
+        {/ Ensures that the collection contains the specified element.
+           Returns True if the element was successfully added or False if the collection
+           already contains the element and duplicates are not allowed.
+           Otherwise the method should raise an error. /}
+        function Add(const e: _LinkedListValueType): Boolean; // inline
+        {/ Removes the specified element from the collection.
+           Returns True if the collection contained the element./}
+        function Remove(const e: _LinkedListValueType): Boolean;
+        // Frees all nodes makes the list empty
+        procedure Clear(); // inline
+        // Number of elements
+        property Count: __CollectionIndexType read FCount;
+
+        { List interface }
+
+        {/ Returns the element at the specified position in the list.
+           Throws an error on invalid index if dsRangeCheck was included in the list options before instantiation. }
+        function Get(Index: __CollectionIndexType): _LinkedListValueType; // inline
+        {/ Replaces the element at the specified position in the list with the specified element.
+           Returns the element previously at the specified position.
+           Throws an error on invalid index if dsRangeCheck was included in the list options when instantiation. }
+        function Put(Index: __CollectionIndexType; const e: _LinkedListValueType): _LinkedListValueType; // inline
+        {/ Inserts the element at the specified position in the list
+           Throws an error on invalid index if dsRangeCheck was included in the list options when instantiation. }
+        procedure Insert(Index: __CollectionIndexType; const e: _LinkedListValueType);
+        {/ Removes the element at the specified position in the list
+           Returns the element that was removed from the list. }
+        function RemoveBy(Index: __CollectionIndexType): _LinkedListValueType;  // inline
+        {/ Returns the index of the first occurrence of the specified element in the list,
+           or -1 if the list does not contain the element. }
+        function IndexOf(const e: _LinkedListValueType): __CollectionIndexType; // inline
+        {/ Returns the index of the last occurrence of the specified element in the list,
+           or -1 if the list does not contain the element. }
+        function LastIndexOf(const e: _LinkedListValueType): __CollectionIndexType; // inline
+        // Values retrieved by index
+        property Values[Index: __CollectionIndexType]: _LinkedListValueType read Get write SetValue; default;
+
+        { Linked List interface }
+
+        // Creates and returns a new stand alone node with the same value as p
+        function NewNode(const e: _LinkedListValueType): _LinkedListNodePTR; // inline
+        // Adds a new node p to the end of the list
+        procedure AddNode(p: _LinkedListNodePTR); // inline
+        // Inserts a new element e to the beginning of the list
+        procedure InsertNodeFirst(const e: _LinkedListValueType); // inline
+        // Adds a new element e after the specified node
+        procedure InsertNode(Node: _LinkedListNodePTR; const e: _LinkedListValueType); // inline
+        // Returns first occured node containing the element
+        function GetNode(const e: _LinkedListValueType): _LinkedListNodePTR; // inline
+        // Returns note at the specified index
+        function GetNodeBy(Index: __CollectionIndexType): _LinkedListNodePTR; // inline
+
+        // Returns a node next to p or nil if p is the last node
+        function GetNextNode(p: _LinkedListNodePTR): _LinkedListNodePTR; // inline
+        // Returns a node next to p or first node if p is the last node
+        function GetNextNodeCyclic(p: _LinkedListNodePTR): _LinkedListNodePTR; // inline
+
+        // Removes p and returns next node
+        function RemoveNode(p: _LinkedListNodePTR): _LinkedListNodePTR;
+    end;
 implementation
 
 end.

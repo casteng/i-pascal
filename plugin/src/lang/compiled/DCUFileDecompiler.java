@@ -58,7 +58,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     }
 
     static String decompileText(Project project, VirtualFile file) {
-        Module module = ModuleUtil.getModuleForFile(project, file);
+        Module module = ModuleUtil.getModuleForLibraryFile(project, file);
         if (null == module) {
             return PascalBundle.message("decompile.no.module", file.getPath());
         }

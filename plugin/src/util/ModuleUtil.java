@@ -63,12 +63,12 @@ public class ModuleUtil {
     }
 
     /**
-     * Returns module for the specified file including library
+     * Returns module for the specified library file
      * @param project - project which the file belongs to
-     * @param file    - file to check
+     * @param file    - library file to check
      * @return module for the file or null if not found
      */
-    public static Module getModuleForFile(Project project, VirtualFile file) {
+    public static Module getModuleForLibraryFile(Project project, VirtualFile file) {
         for (Module module : ModuleManager.getInstance(project).getModules()) {
             if (ModuleUtilCore.moduleContainsFile(module, file, true)) {
                 return module;
