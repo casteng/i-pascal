@@ -270,7 +270,7 @@ private rec_name            ::= !(identifier | END) & rec_section
 private rec_case            ::= !(ELSE | Expression) & rec_name
 private rec_classparent     ::= !(CASE) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
-private rec_formal_param    ::= !(")" | ";" | ":" | "]")
+private rec_formal_param    ::= !(")" | ";" | "]") & rec_section
 private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
 
 
@@ -620,7 +620,7 @@ literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_O
 // **********************************************************************
 FormalParameterSection      ::= "(" [ formalParameterList ] ")" {pin=1}
 private formalParameterList ::= FormalParameter (";" FormalParameter)*
-FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" TypeDecl ] [ "=" Expression ] {recoverWhile=rec_formal_param}
+FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" TypeDecl ] [ "=" ConstExpression ] {pin=3 recoverWhile=rec_formal_param}
 ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 
 AttributeParamList	        ::= Expression (COMMA Expression)*

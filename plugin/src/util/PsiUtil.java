@@ -60,11 +60,11 @@ import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -464,7 +464,7 @@ public class PsiUtil {
      * @return true if the entityDecl is a declaration of variable or formal parameter
      */
     public static boolean isVariableDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasVarDeclaration) || (entityDecl.getParent() instanceof PasFormalParameter);
+        return (entityDecl.getParent() instanceof PascalVariableDeclaration);
     }
 
     // Checks if the entityDecl is a declaration of constant
