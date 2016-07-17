@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
@@ -41,15 +42,20 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
     @Override
     public boolean process(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile psiFile) {
         FeatureUsageTracker.getInstance().triggerFeatureUsed("codeassists.complete.statement");
-        PsiElement el = getStatementAtCaret(editor, psiFile);
-        el = PsiTreeUtil.getParentOfType(el, PasStatement.class, PasEntityScope.class, PascalExpression.class);
+        PsiElement atCursor = getStatementAtCaret(editor, psiFile);
+        PascalPsiElement el = PsiTreeUtil.getParentOfType(atCursor, PasStatement.class, PasEntityScope.class, PascalExpression.class);
         if ((el instanceof PasStatement) || (el instanceof PascalExpression)) {
             completeStatement(editor, el);
+        } else {
+            el = PsiTreeUtil.getParentOfType(atCursor, PascalVariableDeclaration.class);
+            if (el != null) {
+                PascalCompleteIdent.completeIdent(editor, (PascalVariableDeclaration) el);
+            }
         }
         return true;
     }
 
-    private void completeStatement(Editor editor, PsiElement statement) {
+    private static void completeStatement(Editor editor, PsiElement statement) {
         /** complete if, for, while, repeat, try, with
          *  complete ";" to EOL if needed
          *  complete ")" in calls where needed
@@ -85,7 +91,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
      */
     private static final int LENGTH_WHILE = "while".length();
 
-    private void completeWhile(Editor editor, PasWhileStatement statement) {
+    private static void completeWhile(Editor editor, PasWhileStatement statement) {
         int doEnd = getChildEndOffset(statement, PasTypes.DO);
         final PasExpression expr = statement.getExpression();
         boolean hasExpr = (expr != null) && atTheSameLine(editor.getDocument(), statement, expr);
@@ -118,7 +124,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
      */
     private static final int LENGTH_IF = "if".length();
 
-    private void completeIf(Editor editor, PasIfStatement statement) {
+    private static void completeIf(Editor editor, PasIfStatement statement) {
         int thenEnd = getChildEndOffset(statement, PasTypes.THEN);
         final PasExpression expr = statement.getExpression();
         boolean hasExpr = (expr != null) && atTheSameLine(editor.getDocument(), statement, expr);
@@ -157,7 +163,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
      */
     private static final int LENGTH_REPEAT = "repeat".length();
 
-    private void completeRepeat(Editor editor, PasRepeatStatement statement) {
+    private static void completeRepeat(Editor editor, PasRepeatStatement statement) {
         int untilEnd = getChildEndOffset(statement, PasTypes.UNTIL);
         if (untilEnd < 0) {
             DocUtil.adjustDocument(editor, statement.getTextRange().getStartOffset() + LENGTH_REPEAT,
@@ -187,7 +193,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
      */
     private static final int LENGTH_FOR = "for".length();
 
-    private void completeFor(Editor editor, PasForStatement statement) {
+    private static void completeFor(Editor editor, PasForStatement statement) {
         int assignEnd = getChildEndOffset(PasTypes.ASSIGN, statement, statement.getStatement());
         int inEnd = getChildEndOffset(PasTypes.IN, statement, statement.getStatement());
         PsiElement errorEl = PsiTreeUtil.findChildOfType(statement.getStatement(), PsiErrorElement.class);
@@ -232,7 +238,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
      * ([x] => ([x]_)
      * func([x] => func([x]_)
      */
-    private void completeParen(Editor editor, PascalExpression statement) {
+    private static void completeParen(Editor editor, PascalExpression statement) {
         int parenPos = getChildEndOffset(PasTypes.RPAREN, statement, statement.getLastChild());
         if (parenPos < 0) {
             DocUtil.adjustDocument(editor, statement.getTextRange().getEndOffset(), DocUtil.PLACEHOLDER_CARET + ")");
@@ -254,7 +260,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
         return child != null ? child.getTextRange().getEndOffset() : -1;
     }
 
-    private static int getChildEndOffset(IElementType type, PsiElement...elements) {
+    static int getChildEndOffset(IElementType type, PsiElement...elements) {
         for (PsiElement element : elements) if (element != null) {
             ASTNode child = element.getNode().findChildByType(type);
             if (child != null) {
