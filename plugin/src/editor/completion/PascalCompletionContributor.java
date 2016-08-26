@@ -67,6 +67,7 @@ import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
+import com.siberika.idea.pascal.lang.psi.PasTryStatement;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
@@ -92,6 +93,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -163,6 +165,9 @@ public class PascalCompletionContributor extends CompletionContributor {
         res.put(PasTypes.PROPERTY.toString(), String.format(" %s: read ;", DocUtil.PLACEHOLDER_CARET));
 
         res.put(PasTypes.PACKED.toString(), " ");
+
+        res.put(PasTypes.UNTIL.toString(), String.format(" %s;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.EXCEPT.toString(), "\n");
         return res;
     }
 
@@ -229,6 +234,12 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
             if ((pos.getParent() instanceof PasIfThenStatement) || (originalPos instanceof PasCaseStatement)) {
                 appendTokenSet(result, TS_ELSE);
+            }
+            if (pos.getParent() instanceof PasTryStatement) {
+                appendTokenSetUnique(result, PasTypes.EXCEPT, pos.getParent());
+            }
+            if (pos.getParent() instanceof PasRepeatStatement) {
+                appendTokenSetUnique(result, PasTypes.UNTIL, pos.getParent());
             }
 
             if (!isControlStatement(pos)) {
@@ -583,6 +594,8 @@ public class PascalCompletionContributor extends CompletionContributor {
         context.setDummyIdentifier(PasField.DUMMY_IDENTIFIER);
     }
 
+    private static final Collection<String> CLOSING_STATEMENTS = Arrays.asList(PasTypes.END.toString(), PasTypes.EXCEPT.toString(), PasTypes.UNTIL.toString());
+
     private static final InsertHandler<LookupElement> INSERT_HANDLER = new InsertHandler<LookupElement>() {
         @Override
         public void handleInsert(final InsertionContext context, LookupElement item) {
@@ -592,9 +605,9 @@ public class PascalCompletionContributor extends CompletionContributor {
                 int caretPos = context.getEditor().getCaretModel().getOffset();
                 DocUtil.adjustDocument(context.getEditor(), caretPos, content);
                 context.commitDocument();
-                if (PasTypes.END.toString().equals(item.getLookupString())) {
+                if (CLOSING_STATEMENTS.contains(item.getLookupString())) {
                     PsiElement el = context.getFile().findElementAt(caretPos-1);
-                    PsiElement block = PsiTreeUtil.getParentOfType(el, PasCompoundStatement.class);
+                    PsiElement block = PsiTreeUtil.getParentOfType(el, PasCompoundStatement.class, PasTryStatement.class, PasRepeatStatement.class);
                     if (block != null)  {
                         DocUtil.reformat(block, true);
                     }
