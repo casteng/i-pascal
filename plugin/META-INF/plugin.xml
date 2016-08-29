@@ -13,6 +13,8 @@
         <ul>
           <li>run programs with button at left gutter</li>
           <li>EXCEPT and UNTIL completion with formatting</li>
+          <li>fixed compiler error reporting</li>
+          <li>complete variable declaration</li>
         </ul>
         <p>1.02</p>
         <ul>
