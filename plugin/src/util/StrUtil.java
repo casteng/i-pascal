@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.util;
 
 import com.intellij.codeInspection.SmartHashMap;
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.TextRange;
 
 import java.util.HashMap;
 import java.util.List;
@@ -53,5 +54,24 @@ public class StrUtil {
         } else {
             return xml;
         }
+    }
+
+    public static TextRange getIncludeNameRange(String text) {
+        if ((null == text) || !text.startsWith("{$") || !text.endsWith("}")) {
+            return null;
+        }
+        String str = text.substring(2, text.length()-1).toUpperCase();
+        if (str.startsWith("I ")) {
+            return TextRange.from(4, str.length()-2);
+        }
+        if (str.startsWith("INCLUDE ")) {
+            return TextRange.from(10, str.length()-8);
+        }
+        return null;
+    }
+
+    public static String getIncludeName(String text) {
+        TextRange r = getIncludeNameRange(text);
+        return r != null ? r.substring(text) : null;
     }
 }

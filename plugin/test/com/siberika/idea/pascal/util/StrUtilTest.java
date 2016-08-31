@@ -21,4 +21,13 @@ public class StrUtilTest {
         Assert.assertEquals("Method(param: System.Integer): System.Integer", StrUtil.getFieldName("Class.SubClass.Method(param: System.Integer): System.Integer"));
         Assert.assertEquals("Method(System.Integer, Word): System.Integer", StrUtil.getFieldName("Class.SubClass.Method(System.Integer, Word): System.Integer"));
     }
+
+    @Test
+    public void testGetIncludeName() throws Exception {
+        Assert.assertEquals(null, StrUtil.getIncludeName("bad name"));
+        Assert.assertEquals("file", StrUtil.getIncludeName("{$I file}"));
+        Assert.assertEquals("filename", StrUtil.getIncludeName("{$i filename}"));
+        Assert.assertEquals("file", StrUtil.getIncludeName("{$Include file}"));
+        Assert.assertEquals("filename", StrUtil.getIncludeName("{$inCluDe filename}"));
+    }
 }

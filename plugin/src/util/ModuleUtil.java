@@ -14,11 +14,17 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.indexing.FileBasedIndex;
+import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.jps.util.FileUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -26,6 +32,8 @@ import java.util.Set;
  * Date: 26/11/2013
  */
 public class ModuleUtil {
+    private static final List<String> INCLUDE_EXTENSIONS = Arrays.asList(null, "pas", "pp", "Pas", "Pp", "PAS", "PP");
+
     public static Collection<VirtualFile> getAllModuleFilesByExt(@Nullable Module module, @NotNull String extension) {
         if (module != null) {
             return FilenameIndex.getAllFilesByExt(module.getProject(), extension,
@@ -92,5 +100,70 @@ public class ModuleUtil {
                 return res;
             }
         });
+    }
+
+    /**
+     * Locates file specified in include directive and its full file name trying the following:
+     *   1. if name specifies an absolute path return it
+     *   2. search in the directory where the current source file is located
+     *   3. search in all paths in search path
+     *   if name doesn't include file extension and file doesn't exists ".pas" and ".pp" are tried sequentially
+     * @param project - used to retrieve list of search paths project
+     * @param referencing - file which references to the include
+     * @param name - name found in include directive
+     * @return file name or null if not found
+     */
+    public static VirtualFile getIncludedFile(Project project, VirtualFile referencing, String name) throws IOException {
+        File file = new File(name);
+        if (file.isAbsolute()) {
+            return tryExtensions(file);
+        }
+
+        if (referencing != null) {                                                             // if referencing virtual file is known
+            if (referencing.getParent() != null) {
+                String path = referencing.getParent().getPath();
+                VirtualFile res = tryExtensions(new File(path, name));
+                if (res != null) {
+                    return res;
+                }
+            } else {
+                //System.out.println(String.format("*** Parent of file %s is null", referencing.getName()));
+            }
+
+            Module module = com.intellij.openapi.module.ModuleUtil.findModuleForFile(referencing, project);
+
+            return module != null ? trySearchPath(name, GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false)) : null;
+        } else {                                                                               // often lexer can't determine which virtual file is referencing the include
+            return trySearchPath(name, GlobalSearchScope.projectScope(project));
+        }
+    }
+
+    private static VirtualFile trySearchPath(String name, GlobalSearchScope filter) {
+        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
+                filter);
+        for (VirtualFile virtualFile : virtualFiles) {
+            String ext = FileUtil.getExtension(name);
+            if (ext != null) {
+                if (name.equalsIgnoreCase(virtualFile.getName())) {
+                    return virtualFile;
+                }
+            } else if (name.equalsIgnoreCase(virtualFile.getNameWithoutExtension())) {
+                if (INCLUDE_EXTENSIONS.contains(virtualFile.getExtension())) {
+                    return virtualFile;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static VirtualFile tryExtensions(File file) throws IOException {
+        if (!file.isFile() && (FileUtil.getExtension(file.getName()) == null)) {
+            String filename = file.getCanonicalPath();
+            file = new File(filename + "." + INCLUDE_EXTENSIONS.get(1));
+            if (!file.isFile()) {
+                file = new File(filename + "." + INCLUDE_EXTENSIONS.get(2));
+            }
+        }
+        return FileUtil.getVirtualFile(file.getCanonicalPath());
     }
 }
