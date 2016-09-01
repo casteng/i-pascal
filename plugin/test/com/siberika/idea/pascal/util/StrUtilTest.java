@@ -28,6 +28,12 @@ public class StrUtilTest {
         Assert.assertEquals("file", StrUtil.getIncludeName("{$I file}"));
         Assert.assertEquals("filename", StrUtil.getIncludeName("{$i filename}"));
         Assert.assertEquals("file", StrUtil.getIncludeName("{$Include file}"));
+        Assert.assertEquals("file", StrUtil.getIncludeName("{$Include  file}"));
+        Assert.assertEquals("file", StrUtil.getIncludeName("{$i    file   }"));
         Assert.assertEquals("filename", StrUtil.getIncludeName("{$inCluDe filename}"));
+        Assert.assertEquals("filename", StrUtil.getIncludeName("{$inCluDe 'filename'}"));
+        Assert.assertEquals("file name", StrUtil.getIncludeName("{$inCluDe 'file name'}"));
+        Assert.assertEquals(" file name ", StrUtil.getIncludeName("{$inCluDe  ' file name ' }"));
+        Assert.assertEquals(null, StrUtil.getIncludeName("{$inCluDe ''}"));
     }
 }

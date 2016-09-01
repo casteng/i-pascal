@@ -60,14 +60,27 @@ public class StrUtil {
         if ((null == text) || !text.startsWith("{$") || !text.endsWith("}")) {
             return null;
         }
-        String str = text.substring(2, text.length()-1).toUpperCase();
+        int end = text.length() - 1;
+        String str = text.substring(2, end).toUpperCase();
+        int start = end;
+
         if (str.startsWith("I ")) {
-            return TextRange.from(4, str.length()-2);
+            start = 4;
         }
         if (str.startsWith("INCLUDE ")) {
-            return TextRange.from(10, str.length()-8);
+            start = 10;
         }
-        return null;
+        while ((start < end) && (text.charAt(start) <= ' ')) {
+            start++;
+        }
+        while ((start < end) && (text.charAt(end - 1) <= ' ')) {
+            end--;
+        }
+        if (text.charAt(start) == '\'') {
+            start++;
+            end--;
+        }
+        return start < end ? TextRange.create(start, end) : null;
     }
 
     public static String getIncludeName(String text) {
