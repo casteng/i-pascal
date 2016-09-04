@@ -12,7 +12,6 @@ import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectLocator;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.projectRoots.SdkAdditionalData;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.AsyncResult;
@@ -20,13 +19,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.text.CharArrayCharSequence;
-import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
-import com.siberika.idea.pascal.sdk.DefinesParser;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -172,30 +168,10 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         defines = new HashSet<String>();
         if ((project != null)) {
             final Sdk sdk = getSdk(project, virtualFile);
-            if ((null != sdk) && (sdk.getSdkType() instanceof BasePascalSdkType)) {
-                SdkAdditionalData data = sdk.getSdkAdditionalData();
-                if (data instanceof PascalSdkData) {
-                    String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
-                    getDefinesFromCmdLine(options);
-                    String family = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY);
-                    defines.addAll(DefinesParser.getDefaultDefines(family, sdk.getVersionString()));
-                }
-            }
+            defines.addAll(BasePascalSdkType.getDefaultDefines(sdk));
 /*            for (String define : defines) {
                 LOG.info("===*** def: " + define);
             }*/
-        }
-    }
-
-    private void getDefinesFromCmdLine(@Nullable String options) {
-        if (null == options) {
-            return;
-        }
-        String[] compilerOptions = options.split("\\s+");
-        for (String opt : compilerOptions) {
-            if (opt.startsWith("-d")) {
-                defines.add(opt.substring(2));
-            }
         }
     }
 

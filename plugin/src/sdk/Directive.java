@@ -2,6 +2,8 @@ package com.siberika.idea.pascal.sdk;
 
 import com.intellij.util.SmartList;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -9,6 +11,7 @@ import java.util.List;
  * Date: 04/09/2016
  */
 public class Directive {
+    private static final Collection<String> DEFINES = Arrays.asList("$IFDEF", "$IFNDEF");
     // description
     public String desc;
     // possible values
@@ -22,7 +25,11 @@ public class Directive {
         }
     }
 
-    public boolean hasParameters() {
-        return values != null;
+    public boolean hasParameters(String id) {
+        return (values != null) || isDefine(id);
+    }
+
+    public static boolean isDefine(String id) {
+        return DEFINES.contains(id.toUpperCase());
     }
 }

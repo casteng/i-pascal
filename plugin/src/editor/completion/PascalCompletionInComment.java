@@ -17,6 +17,7 @@ import com.siberika.idea.pascal.util.DocUtil;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,7 +27,7 @@ import java.util.regex.Pattern;
  */
 class PascalCompletionInComment {
     private static final Pattern DIRECTIVE = Pattern.compile("\\{\\$?\\w*");
-    private static final Pattern DIRECTIVE_PARAM = Pattern.compile("\\{(\\$\\w+)\\s+\\w*");
+    private static final Pattern DIRECTIVE_PARAM = Pattern.compile("\\{(\\$\\w+)\\s+(\\w*)");
     private static final InsertHandler<LookupElement> INSERT_HANDLER_COMMENT = new InsertHandler<LookupElement>() {
         @Override
         public void handleInsert(final InsertionContext context, LookupElement item) {
@@ -44,16 +45,24 @@ class PascalCompletionInComment {
         String text = comment.getText().substring(0, ofs);
         if (DIRECTIVE.matcher(text).matches()) {
             for (Map.Entry<String, Directive> entry : retrieveDirectives(comment).entrySet()) {
-                result.addElement(LookupElementBuilder.create(entry.getKey() + (entry.getValue().hasParameters() ? " " : ""))
+                result.addElement(LookupElementBuilder.create(entry.getKey() + (entry.getValue().hasParameters(entry.getKey()) ? " " : ""))
                         .withTypeText(entry.getValue().desc, true).withInsertHandler(INSERT_HANDLER_COMMENT));
             }
         } else {
             Matcher m = DIRECTIVE_PARAM.matcher(text);
             if (m.matches()) {
-                Directive dir = retrieveDirectives(comment).get(m.group(1));
-                if (dir != null) {
-                    for (String value : dir.values) {
-                        result.addElement(LookupElementBuilder.create(value + (needClose ? "}" : "")).withPresentableText(value));
+                String id = m.group(1);
+                result = result.withPrefixMatcher(m.group(2));
+                if (Directive.isDefine(id)) {
+                    for (String define : retrieveDefines(comment)) {
+                        result.addElement(LookupElementBuilder.create(define).withCaseSensitivity(false));
+                    }
+                } else {
+                    Directive dir = retrieveDirectives(comment).get(id);
+                    if ((dir != null) && (dir.values != null)) {
+                        for (String value : dir.values) {
+                            result.addElement(LookupElementBuilder.create(value + (needClose ? "}" : "")).withPresentableText(value));
+                        }
                     }
                 }
             }
@@ -65,4 +74,11 @@ class PascalCompletionInComment {
         Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
         return sdk != null ? BasePascalSdkType.getDirectives(sdk, sdk.getVersionString()) : Collections.<String, Directive>emptyMap();
     }
+
+    private static Set<String> retrieveDefines(PsiElement comment) {
+        Module module = ModuleUtilCore.findModuleForPsiElement(comment);
+        Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
+        return sdk != null ? BasePascalSdkType.getDefaultDefines(sdk) : Collections.<String>emptySet();
+    }
+
 }

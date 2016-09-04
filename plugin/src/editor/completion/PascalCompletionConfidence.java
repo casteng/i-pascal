@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.ThreeState;
+import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +25,7 @@ public class PascalCompletionConfidence extends CompletionConfidence {
             if (!isName(type)) {
                 type = contextElement.getNode().getElementType();
             }
-            if (!isName(type) && !(PasTypes.COMP_OPTION == type) && !(PasTypes.COMMENT == type)) {
+            if (!isName(type) && !PascalLexer.COMPILER_DIRECTIVES.contains(type)) {
                 return ThreeState.YES;
             }
         }

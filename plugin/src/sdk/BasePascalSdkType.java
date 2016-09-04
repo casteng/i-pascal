@@ -21,7 +21,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -72,6 +74,37 @@ public abstract class BasePascalSdkType extends SdkType {
             return EMPTY_ARGS;
         }
         return command.substring(command.indexOf(" ")+1).split(" ");*/
+    }
+
+    /**
+     * Retrieves compiler defines from compiler command line parameters specified in SDK options
+     * @param defines    collection of defines to append defines to
+     * @param options    command line specified in SDK
+     */
+    public static void getDefinesFromCmdLine(Set<String> defines, @Nullable String options) {
+        if (null == options) {
+            return;
+        }
+        String[] compilerOptions = options.split("\\s+");
+        for (String opt : compilerOptions) {
+            if (opt.startsWith("-d")) {
+                defines.add(opt.substring(2));
+            }
+        }
+    }
+
+    public static Set<String> getDefaultDefines(Sdk sdk) {
+        Set<String> defines = new HashSet<String>();
+        if ((null != sdk) && (sdk.getSdkType() instanceof BasePascalSdkType)) {
+            SdkAdditionalData data = sdk.getSdkAdditionalData();
+            if (data instanceof PascalSdkData) {
+                String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
+                getDefinesFromCmdLine(defines, options);
+                String family = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY);
+                defines.addAll(DefinesParser.getDefaultDefines(family, sdk.getVersionString()));
+            }
+        }
+        return defines;
     }
 
     protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {

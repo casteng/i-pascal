@@ -116,6 +116,7 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
     public static final TokenSet PARENS = TokenSet.create(LBRACK, LPAREN, RPAREN, RBRACK);
 
     public static final TokenSet COMMENTS = TokenSet.create(COMMENT, INCLUDE, CT_DEFINE, CT_UNDEFINE, COMP_OPTION);
+    public static final TokenSet COMPILER_DIRECTIVES = COMMENTS;
 
     public FlexLexer getFlexLexer() {
         return myDelegate instanceof FlexAdapter ? ((FlexAdapter) myDelegate).getFlex() : null;
