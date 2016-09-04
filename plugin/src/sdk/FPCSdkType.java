@@ -25,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.File;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -45,10 +44,7 @@ public class FPCSdkType extends BasePascalSdkType {
 
     public FPCSdkType() {
         super(JpsPascalModelSerializerExtension.FPC_SDK_TYPE_ID, PascalCompilerFamily.FPC);
-        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/fpcDefines.xml");
-        if (definesStream != null) {
-            DefinesParser.parse(definesStream);
-        }
+        loadResources("fpc");
     }
 
     @Nullable

@@ -5,9 +5,12 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkAdditionalData;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.SdkType;
+import com.intellij.openapi.projectRoots.SdkTypeId;
 import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
+import com.siberika.idea.pascal.util.StrUtil;
+import com.siberika.idea.pascal.util.SysUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
@@ -15,6 +18,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Author: George Bakhtadze
@@ -25,6 +32,8 @@ public abstract class BasePascalSdkType extends SdkType {
     public static final Logger LOG = Logger.getInstance(BasePascalSdkType.class.getName());
     private static final String[] EMPTY_ARGS = new String[0];
     private final String compilerFamily;
+
+    protected Map<String, Map<String, Directive>> directives;
 
     protected BasePascalSdkType(@NonNls String name, @NonNls PascalCompilerFamily compilerFamily) {
         super(name);
@@ -94,6 +103,39 @@ public abstract class BasePascalSdkType extends SdkType {
             result.setValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY, compilerFamily);
         }
         return result;
+    }
+
+    void loadResources(String resourcePrefix) {
+        InputStream definesStream = null;
+        InputStream directivesStream = null;
+        try {
+            definesStream = getClass().getClassLoader().getResourceAsStream("/" + resourcePrefix + "Defines.xml");
+            if (definesStream != null) {
+                DefinesParser.parse(definesStream);
+            }
+            directivesStream = getClass().getClassLoader().getResourceAsStream("/" + resourcePrefix + "Directives.xml");
+            if (directivesStream != null) {
+                directives = DirectivesParser.parse(directivesStream);
+            }
+        } finally {
+            SysUtils.close(definesStream);
+            SysUtils.close(directivesStream);
+        }
+    }
+
+    public static Map<String, Directive> getDirectives(@NotNull Sdk sdk, String version) {
+        SdkTypeId id = sdk.getSdkType();
+        if (id instanceof BasePascalSdkType) {
+            Map<String, Map<String, Directive>> directives = ((BasePascalSdkType) id).directives;
+            Map<String, Directive> result = new HashMap<String, Directive>();
+            for (Map.Entry<String, Map<String, Directive>> entry : directives.entrySet()) {
+                if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
+                    result.putAll(entry.getValue());
+                }
+            }
+            return result;
+        }
+        return Collections.emptyMap();
     }
 
 }

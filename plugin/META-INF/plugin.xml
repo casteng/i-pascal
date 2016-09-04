@@ -12,6 +12,7 @@
         <p>1.06</p>
         <ul>
           <li>find declaration and find usages for include files</li>
+          <li>compiler directives completion</li>
         </ul>
         <p>1.05</p>
         <ul>

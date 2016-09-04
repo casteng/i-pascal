@@ -10,7 +10,9 @@ import com.siberika.idea.pascal.PascalException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Author: George Bakhtadze
@@ -74,5 +76,15 @@ public class SysUtils {
         }
         if (stdout.isEmpty()) return null;
         return stdout;
+    }
+
+    public static void close(Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (IOException e) {
+            LOG.warn("Error closing resource", e);
+        }
     }
 }

@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.File;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -46,10 +45,7 @@ public class DelphiSdkType extends BasePascalSdkType {
 
     public DelphiSdkType() {
         super(JpsPascalModelSerializerExtension.DELPHI_SDK_TYPE_ID, PascalCompilerFamily.DELPHI);
-        InputStream definesStream = getClass().getClassLoader().getResourceAsStream("/delphiDefines.xml");
-        if (definesStream != null) {
-            DefinesParser.parse(definesStream);
-        }
+        loadResources("delphi");
     }
 
     @Nullable

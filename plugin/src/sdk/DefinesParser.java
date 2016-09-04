@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.sdk;
 
+import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -81,15 +82,11 @@ public class DefinesParser {
         }
         Set<String> result = new HashSet<String>();
         for (Map.Entry<String, Set<String>> entry : compilerDefines.entrySet()) {
-            if (isVersionLessOrEqual(entry.getKey(), version)) {
+            if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
                 result.addAll(entry.getValue());
             }
         }
         return result;
-    }
-
-    private static boolean isVersionLessOrEqual(String version1, String version2) {
-        return version1.compareTo(version2) <= 0;
     }
 
 }

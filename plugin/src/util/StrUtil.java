@@ -87,4 +87,8 @@ public class StrUtil {
         TextRange r = getIncludeNameRange(text);
         return r != null ? r.substring(text) : null;
     }
+
+    public static boolean isVersionLessOrEqual(String version1, String version2) {
+        return version1.compareTo(version2) <= 0;
+    }
 }
