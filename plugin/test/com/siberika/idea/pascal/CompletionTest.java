@@ -156,23 +156,38 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "function", "resourcestring", "begin  ");
     }
 
-    public void testLocalDeclSection() {
-        myFixture.configureByFiles("localDecl.pas");
-        checkCompletion(myFixture, "const", "type", "var", "procedure", "function",
-                "abstract", "assembler", "cdecl", "deprecated", "dispid", "dynamic", "experimental",
+    public void testMethodDirectivesIntf() {
+        myFixture.configureByFiles("methodDirectivesIntf.pas");
+        checkCompletion(myFixture, "abstract", "assembler", "cdecl", "deprecated", "dispid", "dynamic", "experimental",
                 "export", "final", "inline", "library", "message", "overload", "override", "pascal", "platform",
-                "register", "reintroduce", "safecall", "static", "stdcall", "virtual", "begin");
-        myFixture.type('c');
-        checkCompletionContains(myFixture, "const", "procedure", "function");
+                "register", "reintroduce", "safecall", "static", "stdcall", "virtual");
+        myFixture.type('v');
+        checkCompletionContains(myFixture, "virtual", "overload", "override");
+    }
+
+    public void testStructIntf() {
+        myFixture.configureByFiles("structIntf.pas");
+        checkCompletion(myFixture, "const", "type", "var", "procedure", "function", "constructor", "destructor",
+                "strict", "private", "protected", "public", "published", "automated",
+                "class ", "operator", "property", "end");
+        myFixture.type('v');
+        checkCompletion(myFixture, "var", "private");
+    }
+
+    public void testMethodDeclImpl() {
+        myFixture.configureByFiles("methodImpl.pas");
+        checkCompletion(myFixture, "const", "type", "var", "procedure", "function", "begin");
+        myFixture.type('t');
+        checkCompletion(myFixture, "type", "const", "function");
     }
 
     public void testStructured() {
         myFixture.configureByFiles("structured.pas");
         checkCompletion(myFixture, "strict", "private", "protected", "public", "published", "automated",
-                "procedure", "function", "constructor", "destructor",
+                "const", "type", "var", "procedure", "function", "constructor", "destructor",
                 "class ", "operator", "property", "end");
         myFixture.type('a');
-        checkCompletion(myFixture, "automated", "private", "class ", "operator");
+        checkCompletion(myFixture, "automated", "private", "class ", "operator", "var");
     }
 
     public void testTypeId() {

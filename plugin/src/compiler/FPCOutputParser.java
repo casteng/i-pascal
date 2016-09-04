@@ -85,8 +85,4 @@ class FPCOutputParser extends OutputParser {
         callback.message(category, message, url, lineNum, colNum);
     }
 
-    public boolean isTrimLines() {
-        return false;
-    }
-
 }
