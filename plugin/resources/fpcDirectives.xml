@@ -1,8 +1,8 @@
 <compilers>
     <compiler name="FPC" version="2.2.0">
         <directive>
-            <id>$A </id>
-            <id>$ALIGN </id>
+            <id>$A</id>
+            <id>$ALIGN</id>
             <desc>data alignment strategy</desc>
             <value>1</value>
             <value>2</value>
@@ -29,7 +29,7 @@
         </directive>
 
         <directive>
-            <id>$IFDEF </id>
+            <id>$IFDEF</id>
             <desc>start conditional compilation</desc>
         </directive>
     </compiler>

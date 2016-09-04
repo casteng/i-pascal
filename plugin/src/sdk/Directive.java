@@ -21,4 +21,8 @@ public class Directive {
             values = new SmartList<String>(value);
         }
     }
+
+    public boolean hasParameters() {
+        return values != null;
+    }
 }

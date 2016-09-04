@@ -44,7 +44,8 @@ class PascalCompletionInComment {
         String text = comment.getText().substring(0, ofs);
         if (DIRECTIVE.matcher(text).matches()) {
             for (Map.Entry<String, Directive> entry : retrieveDirectives(comment).entrySet()) {
-                result.addElement(LookupElementBuilder.create(entry.getKey()).withTypeText(entry.getValue().desc, true).withInsertHandler(INSERT_HANDLER_COMMENT));
+                result.addElement(LookupElementBuilder.create(entry.getKey() + (entry.getValue().hasParameters() ? " " : ""))
+                        .withTypeText(entry.getValue().desc, true).withInsertHandler(INSERT_HANDLER_COMMENT));
             }
         } else {
             Matcher m = DIRECTIVE_PARAM.matcher(text);
