@@ -17,10 +17,6 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -93,8 +89,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import com.siberika.idea.pascal.sdk.BasePascalSdkType;
-import com.siberika.idea.pascal.sdk.Directive;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
@@ -103,13 +97,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -207,7 +198,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
                 if (parameters.getOriginalPosition() instanceof PsiComment) {
-                    handleComments(result, parameters);
+                    PascalCompletionInComment.handleComments(result, parameters);
                     result.stopHere();
                     return;
                 }
@@ -240,38 +231,6 @@ public class PascalCompletionContributor extends CompletionContributor {
                 result.restartCompletionWhenNothingMatches();
             }
         });
-    }
-
-    private static final Pattern DIRECTIVE = Pattern.compile("\\{\\$?\\w*");
-    private static final Pattern DIRECTIVE_PARAM = Pattern.compile("\\{(\\$\\w+)\\s+\\w*");
-    private static void handleComments(CompletionResultSet result, CompletionParameters parameters) {
-        PsiElement comment = parameters.getOriginalPosition();
-        int ofs = parameters.getOffset() - comment.getTextOffset();
-        if (ofs <= 0) {
-            return;
-        }
-        String text = comment.getText().substring(0, ofs);
-        if (DIRECTIVE.matcher(text).matches()) {
-            for (Map.Entry<String, Directive> entry : retrieveDirectives(comment).entrySet()) {
-                result.addElement(LookupElementBuilder.create(entry.getKey()).withTypeText(entry.getValue().desc, true));//.withInsertHandler(INSERT_HANDLER));
-            }
-        } else {
-            Matcher m = DIRECTIVE_PARAM.matcher(text);
-            if (m.matches()) {
-                Directive dir = retrieveDirectives(comment).get(m.group(1));
-                if (dir != null) {
-                    for (String value : dir.values) {
-                        result.addElement(LookupElementBuilder.create(value));
-                    }
-                }
-            }
-        }
-    }
-
-    private static Map<String, Directive> retrieveDirectives(PsiElement comment) {
-        Module module = ModuleUtilCore.findModuleForPsiElement(comment);
-        Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
-        return sdk != null ? BasePascalSdkType.getDirectives(sdk, sdk.getVersionString()) : Collections.<String, Directive>emptyMap();
     }
 
     private TokenSet TS_BEGIN = TokenSet.create(PasTypes.BEGIN);
@@ -447,7 +406,9 @@ public class PascalCompletionContributor extends CompletionContributor {
                 appendTokenSetUnique(result, PascalLexer.UNIT_SECTIONS, scope.getParent());
             }
             if (scope instanceof PascalRoutineImpl) {
-                appendTokenSet(result, DECLARATIONS_LOCAL);
+                if (DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition())) {
+                    appendTokenSet(result, DECLARATIONS_LOCAL);
+                }
             } else {
                 appendTokenSet(result, PascalLexer.DECLARATIONS);
                 appendTokenSetUnique(result, PascalLexer.USES, scope);

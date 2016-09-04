@@ -227,4 +227,8 @@ public class DocUtil {
         String text = d.getText(TextRange.create(lineStart, offs));
         return EMPTY_TEXT.matcher(text).matches();
     }
+
+    public static boolean isSingleLine(@NotNull Document document, @NotNull PsiElement element) {
+        return document.getLineNumber(element.getTextRange().getStartOffset()) != document.getLineNumber(element.getTextRange().getEndOffset());
+    }
 }
