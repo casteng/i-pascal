@@ -24,7 +24,7 @@ public class PascalCompletionConfidence extends CompletionConfidence {
             if (!isName(type)) {
                 type = contextElement.getNode().getElementType();
             }
-            if (!isName(type) && !(PasTypes.COMP_OPTION == type)) {
+            if (!isName(type) && !(PasTypes.COMP_OPTION == type) && !(PasTypes.COMMENT == type)) {
                 return ThreeState.YES;
             }
         }

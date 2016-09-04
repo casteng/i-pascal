@@ -156,11 +156,24 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "function", "resourcestring", "begin  ");
     }
 
+    public void testRoutineHead() {
+        myFixture.configureByFiles("routineHead.pas");
+        checkCompletion(myFixture, "assembler", "cdecl", "deprecated", "experimental",
+                "export", "inline", "library", "overload", "pascal", "platform",
+                "register", "safecall", "stdcall", "begin");
+    }
+
+    public void testRoutineBlock() {
+        myFixture.configureByFiles("routineBlock.pas");
+        checkCompletion(myFixture, "const", "type", "var", "procedure", "function", "begin");
+    }
+
     public void testMethodDirectivesIntf() {
         myFixture.configureByFiles("methodDirectivesIntf.pas");
-        checkCompletion(myFixture, "abstract", "assembler", "cdecl", "deprecated", "dispid", "dynamic", "experimental",
-                "export", "final", "inline", "library", "message", "overload", "override", "pascal", "platform",
-                "register", "reintroduce", "safecall", "static", "stdcall", "virtual");
+        checkCompletion(myFixture, "assembler", "cdecl", "deprecated", "dispid", "experimental",
+                "export", "final", "inline", "library", "message", "overload", "pascal", "platform",
+                "register", "safecall", "static", "stdcall",
+                "abstract", "dynamic", "override", "reintroduce", "virtual");
         myFixture.type('v');
         checkCompletionContains(myFixture, "virtual", "overload", "override");
     }
@@ -172,6 +185,11 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
                 "class ", "operator", "property", "end");
         myFixture.type('v');
         checkCompletion(myFixture, "var", "private");
+    }
+
+    public void testMethodDeclImplHead() {
+        myFixture.configureByFiles("methodImplHead.pas");
+        checkCompletion(myFixture, "begin");
     }
 
     public void testMethodDeclImpl() {
@@ -233,11 +251,6 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
                 "goto", "exit", "try", "raise", "end");
     }
 
-    public void testRoutineHead() {
-        myFixture.configureByFiles("routineHead.pas");
-        checkCompletion(myFixture, "unit", "program", "library", "package", "begin");
-    }
-
     public void testDcu() {
         myFixture.configureByFiles("dcu.pas");
         checkCompletionContains(myFixture, "spec", "v", "test", "proc");
@@ -249,6 +262,11 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     public void testElse() {
+        myFixture.configureByFiles("else.pas");
+        checkCompletionContains(myFixture, "else");
+    }
+
+    public void testDirective() {
         myFixture.configureByFiles("else.pas");
         checkCompletionContains(myFixture, "else");
     }

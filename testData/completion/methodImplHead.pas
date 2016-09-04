@@ -10,8 +10,7 @@ implementation
 
 { TTest }
 
-function TTest.test(param: int): int;
-<caret>
+function TTest.test(param: int): int; <caret>
 begin
 
 end;

@@ -1,4 +1,6 @@
-procedure test();
-<caret>
+procedure test();<caret>
+begin
+end;
+
 begin
 end.

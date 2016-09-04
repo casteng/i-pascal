@@ -1,9 +1,9 @@
 <compilers>
     <compiler name="FPC" version="2.2.0">
         <directive>
-            <id>$A</id>
-            <id>$ALIGN</id>
-            <desc>data alignment strategy of the compiler for records</desc>
+            <id>$A </id>
+            <id>$ALIGN </id>
+            <desc>data alignment strategy</desc>
             <value>1</value>
             <value>2</value>
             <value>4</value>
@@ -26,6 +26,11 @@
         <directive>
             <id>$A8</id>
             <desc>align to 8 bytes</desc>
+        </directive>
+
+        <directive>
+            <id>$IFDEF </id>
+            <desc>start conditional compilation</desc>
         </directive>
     </compiler>
 </compilers>
