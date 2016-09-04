@@ -74,7 +74,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     }
 
     protected String calcKey() {
-        return String.format("%s.%s", getContainingFile() != null ? getContainingFile().getName() : "", PsiUtil.getFieldName(this));
+        return String.format("%s.%s", PsiUtil.getFieldName(this), PsiUtil.getContainingFilePath(this));
     }
 
     protected <T extends Cached> void ensureChache(Cache<String, T> cache) {

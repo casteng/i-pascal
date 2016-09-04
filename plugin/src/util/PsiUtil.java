@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.util;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
@@ -646,6 +647,13 @@ public class PsiUtil {
         } else {
             return element.getName();
         }
+    }
+
+    @NotNull
+    public static String getContainingFilePath(@Nullable PsiElement element) {
+        PsiFile file = element != null ? element.getContainingFile() : null;
+        VirtualFile vFile = file != null ? file.getVirtualFile() : null;
+        return vFile != null ? vFile.getPath() : "";
     }
 
     public static String normalizeRoutineName(PascalRoutineImpl routine) {

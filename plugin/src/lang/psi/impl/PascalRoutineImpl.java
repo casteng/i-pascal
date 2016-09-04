@@ -52,20 +52,21 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     @Override
     protected String calcKey() {
-        StringBuilder sb = new StringBuilder(PsiUtil.isForwardProc(this) ? "forward:" : "");
         PasEntityScope scope = this;
+        StringBuilder sb = new StringBuilder(PsiUtil.getFieldName(scope));
+        scope = scope.getContainingScope();
         while (scope != null) {
             sb.append(".").append(PsiUtil.getFieldName(scope));
             PsiElement section = PsiUtil.getNearestSection(scope);
             if (section instanceof PasUnitInterface) {
-                sb.append(".interface");
+                sb.append(".intf");
             } else if (section instanceof PasUnitImplementation) {
-                sb.append(".implementation");
+                sb.append(".impl");
             }
             scope = scope.getContainingScope();
         }
-        //sb.append(".").append(getContainingFile() != null ? getContainingFile().getName() : "");
-        //System.out.println(String.format("%s for %s", sb.toString(), this));
+        sb.append(".").append(PsiUtil.isForwardProc(this) ? "forward:" : "");
+        sb.append(".").append(PsiUtil.getContainingFilePath(this));
         return sb.toString();
     }
 
