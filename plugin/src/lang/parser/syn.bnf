@@ -260,7 +260,7 @@ private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | P
 private rec_section         ::= !rec__routine_key & rec_section_nested
 private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
-private rec_routine         ::= !(EXTERNAL | FORWARD | END) & rec_name & rec_interface
+private rec_routine         ::= !(EXTERNAL | FORWARD | END) & rec_section & rec_interface
 private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";")
 private rec_struct_field    ::= !(";" | ")" | END | CASE)

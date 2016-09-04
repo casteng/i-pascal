@@ -49,6 +49,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
+import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstExpressionOrd;
@@ -86,6 +87,7 @@ import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
@@ -418,11 +420,14 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private void handleStructured(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
-        //if (originalPos instanceof PascalStructType) {
-        if (pos instanceof PasClassField) {
-            appendTokenSet(result, PascalLexer.VISIBILITY);
-            appendTokenSet(result, TokenSet.andNot(PascalLexer.STRUCT_DECLARATIONS, TS_CLASS));
-            appendText(result, "class ");
+        if (pos instanceof PasClassField || originalPos instanceof PasClassTypeDecl
+         || (pos instanceof PasExportedRoutine && isMethod((PascalRoutineImpl) pos))) {
+            if (DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition())) {
+                appendTokenSet(result, PascalLexer.VISIBILITY);
+                appendTokenSet(result, TokenSet.andNot(PascalLexer.STRUCT_DECLARATIONS, TS_CLASS));
+                appendText(result, "class ");
+                appendTokenSet(result, DECLARATIONS_LOCAL);
+            }
         }
     }
 
@@ -583,9 +588,22 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
-        if (PsiUtil.isInstanceOfAny(pos, PasExportedRoutine.class, PasRoutineImplDecl.class, PasBlockLocal.class)) {
-            appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
+        if (DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition())) {
+            return;
         }
+        if (pos instanceof PascalRoutineImpl) {
+            if (isMethod((PascalRoutineImpl) pos)) {
+                if (pos instanceof PasExportedRoutine) {                   // Directives should appear in the class declaration only, not in the defining declaration
+                    appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
+                }
+            } else {
+                appendTokenSet(result, PascalLexer.DIRECTIVE_ROUTINE);
+            }
+        }
+    }
+
+    private static boolean isMethod(PascalRoutineImpl routine) {
+        return routine.getContainingScope() instanceof PascalStructType;
     }
 
     private static void appendTokenSet(CompletionResultSet result, TokenSet tokenSet) {

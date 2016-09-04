@@ -217,4 +217,14 @@ public class DocUtil {
             offs -= len;
         }
     }
+
+    private static final Pattern EMPTY_TEXT = Pattern.compile("(\\s*(\\{.*}|\\(\\*.*\\*\\)))*\\s*");
+    public static boolean isFirstOnLine(Editor editor, PsiElement element) {
+        Document d = editor.getDocument();
+        int offs = element.getTextRange().getStartOffset();
+        int line = d.getLineNumber(offs);
+        int lineStart = d.getLineStartOffset(line);
+        String text = d.getText(TextRange.create(lineStart, offs));
+        return EMPTY_TEXT.matcher(text).matches();
+    }
 }
