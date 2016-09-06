@@ -256,8 +256,8 @@ NUM_OCT         = \&[0-7]+
     "(."            { return getElement(LBRACK); }
     ".)"            { return getElement(RBRACK); }
 
-    {CT_DEFINE}     { define(yytext()); return CT_DEFINE; }
-    {CT_UNDEFINE}   { unDefine(yytext()); return CT_UNDEFINE; }
+    {CT_DEFINE}     { define(zzCurrentPos, yytext()); return CT_DEFINE; }
+    {CT_UNDEFINE}   { unDefine(zzCurrentPos, yytext()); return CT_UNDEFINE; }
 
     {CT_IF}         { return handleIf(yytext()); }
     {CT_IFDEF}      { return handleIfDef(yytext()); }

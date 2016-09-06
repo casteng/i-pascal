@@ -7,8 +7,8 @@ import com.intellij.psi.tree.IElementType;
  * Date: 27/08/2013
  */
 public interface PascalFlexLexer {
-    void define(CharSequence sequence);
-    void unDefine(CharSequence sequence);
+    void define(int pos, CharSequence sequence);
+    void unDefine(int pos, CharSequence sequence);
 
     IElementType handleIf(CharSequence sequence);
     IElementType handleIfDef(CharSequence sequence);

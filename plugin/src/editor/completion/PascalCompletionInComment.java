@@ -6,18 +6,30 @@ import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.lexer.FlexAdapter;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
+import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.lang.lexer.PascalFlexLexerImpl;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
+import com.siberika.idea.pascal.sdk.Define;
 import com.siberika.idea.pascal.sdk.Directive;
 import com.siberika.idea.pascal.util.DocUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,8 +66,9 @@ class PascalCompletionInComment {
                 String id = m.group(1);
                 result = result.withPrefixMatcher(m.group(2));
                 if (Directive.isDefine(id)) {
-                    for (String define : retrieveDefines(comment)) {
-                        result.addElement(LookupElementBuilder.create(define).withCaseSensitivity(false));
+                    Map<String, Define> defines = retrieveDefines(comment.getContainingFile() != null ? comment.getContainingFile().getVirtualFile() : null, comment.getProject());
+                    for (Define define : defines.values()) {
+                        result.addElement(LookupElementBuilder.create(define.name).withCaseSensitivity(false).withTypeText(getDesc(define), true));
                     }
                 } else {
                     Directive dir = retrieveDirectives(comment).get(id);
@@ -69,16 +82,50 @@ class PascalCompletionInComment {
         }
     }
 
+    private static String getDesc(Define define) {
+        if (define.virtualFile != null) {
+            Document doc = FileDocumentManager.getInstance().getDocument(define.virtualFile);
+            return define.virtualFile.getPath() + (doc != null ? ":" + doc.getLineNumber(define.offset) : "");
+        }
+        return define.offset < 0 ? PascalBundle.message("completion.defines.source.builtin") : PascalBundle.message("completion.defines.source.commandLine");
+    }
+
+    private static Map<String, Define> retrieveDefines(@Nullable VirtualFile file, @NotNull Project project) {
+        if (null == file) {
+            return Collections.emptyMap();
+        }
+        Reader reader = null;
+        try {
+            reader = new FileReader(file.getPath());
+            PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, file);
+            Document doc = FileDocumentManager.getInstance().getDocument(file);
+            if (doc != null) {
+                lexer.reset(doc.getCharsSequence(), 0);
+                lexer.setVirtualFile(file);
+                FlexAdapter flexAdapter = new FlexAdapter(lexer);
+                while (flexAdapter.getTokenType() != null) {
+                    flexAdapter.advance();
+                }
+                return lexer.getAllDefines();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return Collections.emptyMap();
+    }
+
     private static Map<String, Directive> retrieveDirectives(PsiElement comment) {
         Module module = ModuleUtilCore.findModuleForPsiElement(comment);
         Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
         return sdk != null ? BasePascalSdkType.getDirectives(sdk, sdk.getVersionString()) : Collections.<String, Directive>emptyMap();
-    }
-
-    private static Set<String> retrieveDefines(PsiElement comment) {
-        Module module = ModuleUtilCore.findModuleForPsiElement(comment);
-        Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
-        return sdk != null ? BasePascalSdkType.getDefaultDefines(sdk) : Collections.<String>emptySet();
     }
 
 }

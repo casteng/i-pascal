@@ -22,9 +22,9 @@ class DirectivesParser {
 
     static Map<String, Map<String, Directive>> parse(@NotNull InputStream stream) {
         try {
-            final Map<String, Map<String, Directive>> directives = new TreeMap<String, Map<String, Directive>>();
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
+            final Map<String, Map<String, Directive>> directives = new TreeMap<String, Map<String, Directive>>();
 
             DefaultHandler handler = new DefaultHandler() {
                 private String version = null;

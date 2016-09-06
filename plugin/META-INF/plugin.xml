@@ -13,6 +13,7 @@
         <ul>
           <li>find declaration and find usages for include files</li>
           <li>compiler directives completion</li>
+          <li>conditional defines completion</li>
           <li>fix spurious incorrect "undeclared identifier" errors
           <li>improved classes and methods completion</li>
         </ul>

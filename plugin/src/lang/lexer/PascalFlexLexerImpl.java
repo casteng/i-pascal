@@ -20,6 +20,7 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.text.CharArrayCharSequence;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
+import com.siberika.idea.pascal.sdk.Define;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +28,9 @@ import org.jetbrains.annotations.NotNull;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,7 +46,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private int curLevel = -1;
     private int inactiveLevel = -1;
 
-    private Set<String> defines;
+    private Set<String> actualDefines;
+    private Map<String, Define> allDefines;
 
     private VirtualFile virtualFile;
     private Project project;
@@ -58,7 +62,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         this.project = project;
     }
 
-    PascalFlexLexerImpl(Reader in, Project project, VirtualFile virtualFile) {
+    public PascalFlexLexerImpl(Reader in, Project project, VirtualFile virtualFile) {
         super(in);
         this.virtualFile = virtualFile;
         this.project = project;
@@ -72,7 +76,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     @Override
     public void reset(CharSequence buffer, int start, int end, int initialState) {
         super.reset(buffer, 0, end, YYINITIAL);
-        defines = null;
+        actualDefines = null;
+        allDefines = null;
         curLevel = -1;
         inactiveLevel = -1;
     }
@@ -100,11 +105,18 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return null;
     }
 
-    private Set<String> getDefines() {
-        if ((null == defines) || (defines.isEmpty())) {
+    private Set<String> getActualDefines() {
+        if ((null == actualDefines) || (actualDefines.isEmpty())) {
             initDefines(getProject(), getVirtualFile());
         }
-        return defines;
+        return actualDefines;
+    }
+
+    public Map<String, Define> getAllDefines() {
+        if ((null == allDefines) || (allDefines.isEmpty())) {
+            initDefines(getProject(), getVirtualFile());
+        }
+        return allDefines;
     }
 
     private Project getProject() {
@@ -153,32 +165,43 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     @Override
-    public void define(CharSequence sequence) {
+    public void define(int pos, CharSequence sequence) {
         String name = extractDefineName(sequence);
-        getDefines().add(name);
+        if (StringUtils.isNotEmpty(name)) {
+            String key = name.toUpperCase();
+            getActualDefines().add(key);
+            getAllDefines().put(key, new Define(name, virtualFile, pos));
+        }
     }
 
     @Override
-    public void unDefine(CharSequence sequence) {
+    public void unDefine(int pos, CharSequence sequence) {
         String name = extractDefineName(sequence);
-        getDefines().remove(name);
+        if (StringUtils.isNotEmpty(name)) {
+            String key = name.toUpperCase();
+            getActualDefines().remove(key);
+            getAllDefines().put(key, new Define(name, virtualFile, pos));
+        }
     }
 
     synchronized private void initDefines(Project project, VirtualFile virtualFile) {
-        defines = new HashSet<String>();
+        actualDefines = Collections.emptySet();
+        allDefines = Collections.emptyMap();
         if ((project != null)) {
+            actualDefines = new HashSet<String>();
             final Sdk sdk = getSdk(project, virtualFile);
-            defines.addAll(BasePascalSdkType.getDefaultDefines(sdk));
-/*            for (String define : defines) {
-                LOG.info("===*** def: " + define);
-            }*/
+            allDefines = BasePascalSdkType.getDefaultDefines(sdk, sdk.getVersionString());
+            for (Map.Entry<String, Define> entry : allDefines.entrySet()) {
+                actualDefines.add(entry.getKey());
+                allDefines.put(entry.getKey(), entry.getValue());
+            }
         }
     }
 
     private IElementType doHandleIfDef(CharSequence sequence, boolean negate) {
         String name = extractDefineName(sequence);
         curLevel++;
-        if ((!getDefines().contains(name) ^ negate) && (!isInactive())) {
+        if (StringUtils.isNotEmpty(name) && (!getActualDefines().contains(name.toUpperCase()) ^ negate) && (!isInactive())) {
             inactiveLevel = curLevel;
             yybegin(INACTIVE_BRANCH);
         }
@@ -249,7 +272,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                         while (flexAdapter.getTokenType() != null) {
                             flexAdapter.advance();
                         }
-                        getDefines().addAll(lexer.getDefines());
+                        getActualDefines().addAll(lexer.getActualDefines());
+                        getAllDefines().putAll(lexer.getAllDefines());
                     }
                 } else {
                     LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
@@ -286,7 +310,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private static final Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\}");
     private static String extractDefineName(CharSequence sequence) {
         Matcher m = PATTERN_DEFINE.matcher(sequence);
-        return m.matches() ? m.group(1).toUpperCase() : null;
+        return m.matches() ? m.group(1) : null;
     }
 
     private static String extractIncludeName(CharSequence sequence) {

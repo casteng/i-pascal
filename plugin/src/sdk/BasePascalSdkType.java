@@ -21,9 +21,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -35,7 +33,8 @@ public abstract class BasePascalSdkType extends SdkType {
     private static final String[] EMPTY_ARGS = new String[0];
     private final String compilerFamily;
 
-    protected Map<String, Map<String, Directive>> directives;
+    private Map<String, Map<String, Directive>> directives;
+    private Map<String, Map<String, Define>> defines;
 
     protected BasePascalSdkType(@NonNls String name, @NonNls PascalCompilerFamily compilerFamily) {
         super(name);
@@ -81,30 +80,51 @@ public abstract class BasePascalSdkType extends SdkType {
      * @param defines    collection of defines to append defines to
      * @param options    command line specified in SDK
      */
-    public static void getDefinesFromCmdLine(Set<String> defines, @Nullable String options) {
+    public static void getDefinesFromCmdLine(Map<String, Define> defines, @Nullable String options) {
         if (null == options) {
             return;
         }
         String[] compilerOptions = options.split("\\s+");
         for (String opt : compilerOptions) {
             if (opt.startsWith("-d")) {
-                defines.add(opt.substring(2));
+                defines.put(opt.substring(2).toUpperCase(), new Define(opt.substring(2), null, 0));
             }
         }
     }
 
-    public static Set<String> getDefaultDefines(Sdk sdk) {
-        Set<String> defines = new HashSet<String>();
-        if ((null != sdk) && (sdk.getSdkType() instanceof BasePascalSdkType)) {
+    public static Map<String, Define> getDefaultDefines(@NotNull Sdk sdk, String version) {
+        SdkTypeId id = sdk.getSdkType();
+        if (id instanceof BasePascalSdkType) {
             SdkAdditionalData data = sdk.getSdkAdditionalData();
+            Map<String, Define> result = new HashMap<String, Define>();
             if (data instanceof PascalSdkData) {
                 String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
-                getDefinesFromCmdLine(defines, options);
-                String family = (String) ((PascalSdkData) data).getValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY);
-                defines.addAll(DefinesParser.getDefaultDefines(family, sdk.getVersionString()));
+                getDefinesFromCmdLine(result, options);
             }
+            Map<String, Map<String, Define>> compilerDefines = ((BasePascalSdkType) id).defines;
+            for (Map.Entry<String, Map<String, Define>> entry : compilerDefines.entrySet()) {
+                if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
+                    result.putAll(entry.getValue());
+                }
+            }
+            return result;
         }
-        return defines;
+        return Collections.emptyMap();
+    }
+
+    public static Map<String, Directive> getDirectives(@NotNull Sdk sdk, String version) {
+        SdkTypeId id = sdk.getSdkType();
+        if (id instanceof BasePascalSdkType) {
+            Map<String, Map<String, Directive>> directives = ((BasePascalSdkType) id).directives;
+            Map<String, Directive> result = new HashMap<String, Directive>();
+            for (Map.Entry<String, Map<String, Directive>> entry : directives.entrySet()) {
+                if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
+                    result.putAll(entry.getValue());
+                }
+            }
+            return result;
+        }
+        return Collections.emptyMap();
     }
 
     protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {
@@ -144,7 +164,7 @@ public abstract class BasePascalSdkType extends SdkType {
         try {
             definesStream = getClass().getClassLoader().getResourceAsStream("/" + resourcePrefix + "Defines.xml");
             if (definesStream != null) {
-                DefinesParser.parse(definesStream);
+                defines = DefinesParser.parse(definesStream);
             }
             directivesStream = getClass().getClassLoader().getResourceAsStream("/" + resourcePrefix + "Directives.xml");
             if (directivesStream != null) {
@@ -154,21 +174,6 @@ public abstract class BasePascalSdkType extends SdkType {
             SysUtils.close(definesStream);
             SysUtils.close(directivesStream);
         }
-    }
-
-    public static Map<String, Directive> getDirectives(@NotNull Sdk sdk, String version) {
-        SdkTypeId id = sdk.getSdkType();
-        if (id instanceof BasePascalSdkType) {
-            Map<String, Map<String, Directive>> directives = ((BasePascalSdkType) id).directives;
-            Map<String, Directive> result = new HashMap<String, Directive>();
-            for (Map.Entry<String, Map<String, Directive>> entry : directives.entrySet()) {
-                if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
-                    result.putAll(entry.getValue());
-                }
-            }
-            return result;
-        }
-        return Collections.emptyMap();
     }
 
 }

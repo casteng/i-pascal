@@ -1,6 +1,6 @@
 package com.siberika.idea.pascal.sdk;
 
-import com.siberika.idea.pascal.util.StrUtil;
+import com.intellij.util.containers.HashMap;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -9,10 +9,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -21,22 +18,19 @@ import java.util.TreeMap;
 */
 public class DefinesParser {
 
-    private static Map<String, Map<String, Set<String>>> defaultDefines = new TreeMap<String, Map<String, Set<String>>>();
-
-    static void parse(@NotNull InputStream stream) {
+    static Map<String, Map<String, Define>> parse(@NotNull InputStream stream) {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
 
+            final Map<String, Map<String, Define>> defines = new TreeMap<String, Map<String, Define>>();
 
             DefaultHandler handler = new DefaultHandler() {
-                private String compiler = null;
                 private String version = null;
                 private StringBuilder sb = new StringBuilder();
 
                 public void startElement(String uri, String localName,String qName, Attributes attributes) throws SAXException {
                     if (qName.equalsIgnoreCase("compiler")) {
-                        compiler = attributes.getValue("name");
                         version = attributes.getValue("version");
                     }
                     sb = new StringBuilder();
@@ -44,7 +38,7 @@ public class DefinesParser {
 
                 public void endElement(String uri, String localName, String qName) throws SAXException {
                     if (qName.equalsIgnoreCase("define")) {
-                        addDefine(compiler, version, sb.toString());
+                        addDefine(defines, version, sb.toString());
                     }
                 }
 
@@ -55,38 +49,20 @@ public class DefinesParser {
             };
 
             saxParser.parse(stream, handler);
-
+            return defines;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
 
-    private static void addDefine(String compiler, String version, String name) {
-        Map<String, Set<String>> compilerDefines = defaultDefines.get(compiler);
-        if (null == compilerDefines) {
-            compilerDefines = new TreeMap<String, Set<String>>();
-            defaultDefines.put(compiler, compilerDefines);
-        }
-        Set<String> defines = compilerDefines.get(version);
+    private static void addDefine(Map<String, Map<String, Define>> compilerDefines, String version, String name) {
+        Map<String, Define> defines = compilerDefines.get(version);
         if (null == defines) {
-            defines = new HashSet<String>();
+            defines = new HashMap<String, Define>();
         }
-        defines.add(name);
+        defines.put(name.toUpperCase(), new Define(name, null, -1));
         compilerDefines.put(version, defines);
-    }
-
-    public static Set<String> getDefaultDefines(String compiler, String version) {
-        Map<String, Set<String>> compilerDefines = defaultDefines.get(compiler);
-        if (null == compilerDefines) {
-            return Collections.emptySet();
-        }
-        Set<String> result = new HashSet<String>();
-        for (Map.Entry<String, Set<String>> entry : compilerDefines.entrySet()) {
-            if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
-                result.addAll(entry.getValue());
-            }
-        }
-        return result;
     }
 
 }
