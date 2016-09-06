@@ -1,0 +1,36 @@
+<compilers>
+    <compiler name="Delphi" version="15.0">
+        <directive>
+            <id>$A</id>
+            <id>$ALIGN</id>
+            <desc>data alignment strategy</desc>
+            <value>1</value>
+            <value>2</value>
+            <value>4</value>
+            <value>8</value>
+            <value>16</value>
+            <value>32</value>
+        </directive>
+        <directive>
+            <id>$A1</id>
+            <desc>align to 1 byte</desc>
+        </directive>
+        <directive>
+            <id>$A2</id>
+            <desc>align to 2 bytes</desc>
+        </directive>
+        <directive>
+            <id>$A4</id>
+            <desc>align to 4 bytes</desc>
+        </directive>
+        <directive>
+            <id>$A8</id>
+            <desc>align to 8 bytes</desc>
+        </directive>
+
+        <directive>
+            <id>$IFDEF</id>
+            <desc>start conditional compilation</desc>
+        </directive>
+    </compiler>
+</compilers>

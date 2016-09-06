@@ -27,10 +27,130 @@
             <id>$A8</id>
             <desc>align to 8 bytes</desc>
         </directive>
+        <directive>
+            <id>$ASMMODE</id>
+            <desc>set assembler mode</desc>
+            <value>att</value>
+            <value>intel</value>
+            <value>direct</value>
+        </directive>
+
+        <directive>
+            <id>$B</id>
+            <id>$BOOLEVAL</id>
+            <desc>Complete boolean evaluation</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$C</id>
+            <id>$ASSERTIONS</id>
+            <desc>Assertion support</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$BITPACKING</id>
+            <desc>Enable bitsize packing</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$CALLING</id>
+            <desc>Specify calling convention</desc>
+            <value>default</value>
+            <value>register</value>
+            <value>cdecl</value>
+            <value>pascal</value>
+            <value>safecall</value>
+            <value>stdcall</value>
+            <value>oldfpccall</value>
+        </directive>
+
+        <directive>
+            <id>$CHECKPOINTER</id>
+            <desc>Check pointer values</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$CODEALIGN</id>
+            <desc>Set the code alignment in bytes</desc>
+            <value><![CDATA[<value>]]></value>
+            <value>PROC=</value>
+            <value>JUMP=</value>
+            <value>LOOP=</value>
+            <value>CONSTMIN=</value>
+            <value>CONSTMAX=</value>
+            <value>VARMIN=</value>
+            <value>VARMAX=</value>
+            <value>LOCALMIN=</value>
+            <value>LOCALMAX=</value>
+            <value>RECORDMIN=</value>
+            <value>RECORDMAX=</value>
+        </directive>
+
+        <directive>
+            <id>$COPERATORS</id>
+            <desc>Allow C like operators</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$DEFINE</id>
+            <desc>Define a symbol</desc>
+        </directive>
+
+        <directive>
+            <id>$DEFINEC</id>
+            <desc>Define a symbol (Mac Pascal compatibility)</desc>
+        </directive>
+
+        <directive>
+            <id>$ELSE</id>
+            <desc>Switch conditional compilation</desc>
+        </directive>
+
+        <directive>
+            <id>$ELSEC</id>
+            <desc>Switch conditional compilation (Mac Pascal compatibility)</desc>
+        </directive>
+
+        <directive>
+            <id>$ELSEIF</id>
+            <desc>Switch conditional compilation</desc>
+        </directive>
+
+        <directive>
+            <id>$ELIFC</id>
+            <desc>Switch conditional compilation (Mac Pascal compatibility)</desc>
+        </directive>
+
+        <directive>
+            <id>$ENDC</id>
+            <desc>End conditional compilation (Mac Pascal compatibility)</desc>
+        </directive>
+
+        <directive>
+            <id>$ENDIF</id>
+            <desc>End conditional compilation</desc>
+        </directive>
 
         <directive>
             <id>$IFDEF</id>
             <desc>start conditional compilation</desc>
         </directive>
+        <directive>
+            <id>$IFNDEF</id>
+            <desc>start conditional compilation</desc>
+        </directive>
     </compiler>
 </compilers>
+
+        <!--.*?(\$\w+( or \$\w+)?) : ((\w+\s)*\w+)-->
+<!--<directive>\n<id>$1</id>\n<desc>$3</desc>\n</directive>\n-->
