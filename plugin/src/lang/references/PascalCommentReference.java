@@ -10,8 +10,6 @@ import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-
 /**
  * Date: 3/13/13
  * Author: George Bakhtadze
@@ -28,13 +26,8 @@ class PascalCommentReference extends PsiReferenceBase<PsiComment> {
     @Nullable
     @Override
     public PsiElement resolve() {
-        try {
-            VirtualFile file = ModuleUtil.getIncludedFile(myElement.getProject(), myElement.getContainingFile().getVirtualFile(), key);
-            return file != null ? com.intellij.psi.util.PsiUtil.getPsiFile(myElement.getProject(), file) : null;
-        } catch (IOException e) {
-            LOG.warn("Error resolving reference in comment", e);
-            return null;
-        }
+        VirtualFile file = ModuleUtil.getIncludedFile(myElement.getProject(), myElement.getContainingFile().getVirtualFile(), key);
+        return file != null ? com.intellij.psi.util.PsiUtil.getPsiFile(myElement.getProject(), file) : null;
     }
 
     @NotNull

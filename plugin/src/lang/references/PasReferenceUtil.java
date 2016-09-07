@@ -392,7 +392,7 @@ public class PasReferenceUtil {
             if (!fqn.isComplete() && (namespaces != null)) {
                 for (PasEntityScope namespace : namespaces) {
                     if (null == namespace) {
-                        LOG.warn(String.format("===*** null namespace! %s", fqn));
+                        LOG.info(String.format("===*** null namespace! %s", fqn));
                         continue;
                     }
                     for (PasField pasField : namespace.getAllFields()) {

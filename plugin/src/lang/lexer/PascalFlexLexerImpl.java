@@ -22,6 +22,7 @@ import com.intellij.util.text.CharArrayCharSequence;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.Define;
 import com.siberika.idea.pascal.util.StrUtil;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -258,39 +259,48 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         Project project = getProject();
         VirtualFile virtualFile = getVirtualFile();
         if ((!StringUtils.isEmpty(name)) && (project != null)) {
-            Reader reader = null;
-            try {
-                VirtualFile incFile = com.siberika.idea.pascal.util.ModuleUtil.getIncludedFile(project, virtualFile, name);
-                if ((incFile != null) && (incFile.getCanonicalPath() != null)) {
-                    reader = new FileReader(incFile.getCanonicalPath());
-                    PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, incFile);
-                    Document doc = FileDocumentManager.getInstance().getDocument(incFile);
-                    if (doc != null) {
-                        lexer.reset(doc.getCharsSequence(), 0);
-                        lexer.setVirtualFile(incFile);
-                        FlexAdapter flexAdapter = new FlexAdapter(lexer);
-                        while (flexAdapter.getTokenType() != null) {
-                            flexAdapter.advance();
-                        }
-                        getActualDefines().addAll(lexer.getActualDefines());
-                        getAllDefines().putAll(lexer.getAllDefines());
-                    }
-                } else {
-                    LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            VirtualFile file = com.siberika.idea.pascal.util.ModuleUtil.getIncludedFile(project, virtualFile, name);
+            PascalFlexLexerImpl lexer = !ObjectUtils.equals(virtualFile, file) ? processFile(project, file) : null;
+            if (lexer != null) {
+                getActualDefines().addAll(lexer.getActualDefines());
+                getAllDefines().putAll(lexer.getAllDefines());
+            } else {
+                LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
             }
         }
         return CT_DEFINE;
+    }
+
+    // Process the file and return the new instance of lexer which processed it
+    public static PascalFlexLexerImpl processFile(Project project, VirtualFile file) {
+        Reader reader = null;
+        try {
+            if ((file != null) && (file.getCanonicalPath() != null)) {
+                reader = new FileReader(file.getCanonicalPath());
+                PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, file);
+                Document doc = FileDocumentManager.getInstance().getDocument(file);
+                if (doc != null) {
+                    lexer.reset(doc.getCharsSequence(), 0);
+                    lexer.setVirtualFile(file);
+                    FlexAdapter flexAdapter = new FlexAdapter(lexer);
+                    while (flexAdapter.getTokenType() != null) {
+                        flexAdapter.advance();
+                    }
+                    return lexer;
+                }
+            }
+        } catch (IOException e) {
+            LOG.info("Error processing file", e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
     }
 
     @NotNull

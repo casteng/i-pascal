@@ -6,7 +6,6 @@ import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.lexer.FlexAdapter;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
@@ -25,9 +24,6 @@ import com.siberika.idea.pascal.util.DocUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
 import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -91,35 +87,8 @@ class PascalCompletionInComment {
     }
 
     private static Map<String, Define> retrieveDefines(@Nullable VirtualFile file, @NotNull Project project) {
-        if (null == file) {
-            return Collections.emptyMap();
-        }
-        Reader reader = null;
-        try {
-            reader = new FileReader(file.getPath());
-            PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, file);
-            Document doc = FileDocumentManager.getInstance().getDocument(file);
-            if (doc != null) {
-                lexer.reset(doc.getCharsSequence(), 0);
-                lexer.setVirtualFile(file);
-                FlexAdapter flexAdapter = new FlexAdapter(lexer);
-                while (flexAdapter.getTokenType() != null) {
-                    flexAdapter.advance();
-                }
-                return lexer.getAllDefines();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return Collections.emptyMap();
+        PascalFlexLexerImpl lexer = PascalFlexLexerImpl.processFile(project, file);
+        return lexer != null ? lexer.getAllDefines() : Collections.<String, Define>emptyMap();
     }
 
     private static Map<String, Directive> retrieveDirectives(PsiElement comment) {

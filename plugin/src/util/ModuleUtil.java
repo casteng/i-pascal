@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -113,7 +112,7 @@ public class ModuleUtil {
      * @param name - name found in include directive
      * @return file name or null if not found
      */
-    public static VirtualFile getIncludedFile(Project project, VirtualFile referencing, String name) throws IOException {
+    public static VirtualFile getIncludedFile(Project project, VirtualFile referencing, String name) {
         File file = new File(name);
         if (file.isAbsolute()) {
             return tryExtensions(file);
@@ -156,14 +155,14 @@ public class ModuleUtil {
         return null;
     }
 
-    private static VirtualFile tryExtensions(File file) throws IOException {
+    private static VirtualFile tryExtensions(File file) {
         if (!file.isFile() && (FileUtil.getExtension(file.getName()) == null)) {
-            String filename = file.getCanonicalPath();
+            String filename = file.getPath();
             file = new File(filename + "." + INCLUDE_EXTENSIONS.get(1));
             if (!file.isFile()) {
                 file = new File(filename + "." + INCLUDE_EXTENSIONS.get(2));
             }
         }
-        return FileUtil.getVirtualFile(file.getCanonicalPath());
+        return FileUtil.getVirtualFile(file.getPath());
     }
 }
