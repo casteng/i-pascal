@@ -25,7 +25,7 @@ public class PascalFindUsagesProvider implements FindUsagesProvider {
 
     @Override
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
-        return psiElement instanceof PsiNamedElement;
+        return (psiElement instanceof PsiNamedElement) || (PascalReferenceContributor.COMMENT_REFERENCE_TOKENS.contains(psiElement.getNode().getElementType()));
     }
 
     @Nullable

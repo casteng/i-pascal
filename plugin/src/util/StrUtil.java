@@ -7,6 +7,7 @@ import com.intellij.openapi.util.TextRange;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -90,5 +91,14 @@ public class StrUtil {
 
     public static boolean isVersionLessOrEqual(String version1, String version2) {
         return version1.compareTo(version2) <= 0;
+    }
+
+    private static final Pattern DIR_PAT = Pattern.compile("\\{(\\$\\w+)\\s+([\\w.]+)}");
+    public static Pair<String, String> getDirectivePair(String text) {
+        Matcher m = DIR_PAT.matcher(text);
+        if (m.matches()) {
+            return Pair.create(m.group(1), m.group(2));
+        }
+        return null;
     }
 }

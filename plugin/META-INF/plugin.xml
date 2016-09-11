@@ -12,6 +12,7 @@
         <p>1.06</p>
         <ul>
           <li>find declaration and find usages for include files</li>
+          <li>find declaration and find usages for conditional defines</li>
           <li>compiler directives completion</li>
           <li>conditional defines completion</li>
           <li>fix spurious incorrect "undeclared identifier" errors
@@ -245,7 +246,7 @@
 
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
         <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
-        <!--<referencesSearch implementation="com.siberika.idea.pascal.lang.references.PascalReferencesSearcher"/>-->
+        <referencesSearch implementation="com.siberika.idea.pascal.lang.references.PascalReferencesSearcher"/>
 
         <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
         <gotoClassContributor implementation="com.siberika.idea.pascal.lang.references.PascalClassByNameContributor"/>

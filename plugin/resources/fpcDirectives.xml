@@ -13,23 +13,23 @@
         </directive>
         <directive>
             <id>$A1</id>
-            <desc>align to 1 byte</desc>
+            <desc>Align to 1 byte</desc>
         </directive>
         <directive>
             <id>$A2</id>
-            <desc>align to 2 bytes</desc>
+            <desc>Align to 2 bytes</desc>
         </directive>
         <directive>
             <id>$A4</id>
-            <desc>align to 4 bytes</desc>
+            <desc>Align to 4 bytes</desc>
         </directive>
         <directive>
             <id>$A8</id>
-            <desc>align to 8 bytes</desc>
+            <desc>Align to 8 bytes</desc>
         </directive>
         <directive>
             <id>$ASMMODE</id>
-            <desc>set assembler mode</desc>
+            <desc>Set assembler mode</desc>
             <value>att</value>
             <value>intel</value>
             <value>direct</value>
@@ -142,13 +142,134 @@
         </directive>
 
         <directive>
-            <id>$IFDEF</id>
-            <desc>start conditional compilation</desc>
+            <id>$ERROR</id>
+            <desc>Generate error message</desc>
+            <value></value>
         </directive>
         <directive>
-            <id>$IFNDEF</id>
-            <desc>start conditional compilation</desc>
+            <id>$ERRORC</id>
+            <desc>Generate error message (Mac Pascal compatibility)</desc>
         </directive>
+
+        <directive>
+            <id>$ENDREGION</id>
+            <desc>End of a collapsible region</desc>
+        </directive>
+
+        <directive>
+            <id>$EXTENDEDSYM</id>
+            <desc>Ignored (Delphi compatibility)</desc>
+        </directive>
+
+        <directive>
+            <id>$EXTERNALSYM</id>
+            <desc>Ignored (Delphi compatibility)</desc>
+        </directive>
+
+        <directive>
+            <id>$F-</id>
+            <id>$F+</id>
+            <desc>Far or near functions (Turbo Pascal compatibility)</desc>
+        </directive>
+
+        <directive>
+            <id>$FATAL</id>
+            <desc>Generate fatal error message</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$FPUTYPE</id>
+            <desc>Select coprocessor type</desc>
+            SOFT
+            X87, SSE, SSE2
+            SSE64
+            STANDARD
+            LIBGCC, FPA, FPA10, FPA11,VFP
+        </directive>
+
+        <directive>
+            <id>$GOTO</id>
+            <desc>Support Goto and Label</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$H+</id>
+            <id>$H-</id>
+            <desc>Use AnsiStrings</desc>
+        </directive>
+        <directive>
+            <id>$LONGSTRINGS</id>
+            <desc>Use AnsiStrings</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$HINT</id>
+            <value></value>
+            <desc>Generate hint message</desc>
+        </directive>
+
+        <directive>
+            <id>$HINTS</id>
+            <desc>Emit hints</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$HPPEMIT</id>
+            <desc>Ignored (Delphi compatibility)</desc>
+        </directive>
+
+        <directive>
+            <id>$IF</id>
+            <desc>Start conditional compilation</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IFC</id>
+            <desc>Start conditional compilation (Mac Pascal compatibility)</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IFDEF</id>
+            <desc>Start conditional compilation</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IFNDEF</id>
+            <desc>Start conditional compilation</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IFOPT</id>
+            <desc>Start conditional compilation</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IMPLICITEXCEPTIONS</id>
+            <desc>Implicit finalization code generation</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$INFO</id>
+            <desc>Generate info message</desc>
+            <value></value>
+        </directive>
+
+
+
     </compiler>
 </compilers>
 

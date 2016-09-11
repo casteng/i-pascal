@@ -268,7 +268,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                 LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
             }
         }
-        return CT_DEFINE;
+        return INCLUDE;
     }
 
     // Process the file and return the new instance of lexer which processed it
