@@ -162,7 +162,7 @@
 
         POWER="**"
         MULT="*"
-        PLUS='+'
+        PLUS="+"
         MINUS="-"
         DIV="/"
         SEMI=";"
@@ -174,11 +174,13 @@
         EQ="="
         LT="<"
         GT=">"
-        GE=">="
-        LE="<="
         NE="<>"
         COLON=":"
         ASSIGN=":="
+        PLUS_ASSIGN="+="
+        MINUS_ASSIGN="-="
+        MULT_ASSIGN="*="
+        DIV_ASSIGN="/="
         DOT="."
         DEREF="^"
         AT="@"
@@ -189,8 +191,10 @@
         INCLUDE="include"
         CT_DEFINE="ct_define"
         CT_UNDEFINE="ct_undefine"
+        CT_IF="ct_if"
         CT_IFDEF="ct_ifdef"
         CT_IFNDEF="ct_ifndef"
+        CT_IFOPT="ct_ifopt"
         CT_ELSE="ct_else"
         CT_ENDIF="ct_endif"
         COMP_OPTION="comp_option"
@@ -271,7 +275,8 @@ private rec_case            ::= !(ELSE | Expression) & rec_name
 private rec_classparent     ::= !(CASE) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | "]") & rec_section
-private rec_propspec    ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
+private rec_propspec        ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
+private rec_generic_def     ::= !(">") & rec_section
 
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
@@ -279,7 +284,7 @@ private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=
 ExportsSection              ::= EXPORTS RefNamedIdent exportItem ("," RefNamedIdent exportItem)* ";" {pin=1}
 private exportItem          ::= [FormalParameterSection] [INDEX Expression] ["name" Expression] ["resident"]
 
-private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | LE | GT | GE | "<>" | IN | "explicit"
+private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | (LT EQ) | GT | (GT EQ) | "<>" | IN | "explicit"
 private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
@@ -377,8 +382,8 @@ private typeForwardDecl     ::= classForwardDecl ";"
 
 GenericTypeIdent    ::= identifier [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
-private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {}                     //TODO use meta rule
-private identsRest          ::= "," NamedIdent {pin=1}
+private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {pin=1}             //TODO use meta rule
+private identsRest          ::= "," NamedIdent {recoverWhile=rec_generic_def}
 private constrainedGenericDefinition ::= "<" constrainedGeneric constrainedGenericsRest* ">" {pin=1}
 private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstraintsRest* ]
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
@@ -589,7 +594,7 @@ private expr_relOrd ::= expr_sumOrd (relOp expr_sumOrd)*
 private expr_sumOrd ::= expr_productOrd (addOp expr_productOrd)*
 private expr_productOrd ::= primaryOrd (mulOp primaryOrd)* */
 // **********************************************************************
-relOp                       ::= "<" | ">" | "<=" | ">=" | "<>" | "=" | IN | IS
+relOp                       ::= LT EQ | GT EQ | LT | GT | NE | EQ | IN | IS
 addOp                       ::=	PLUS | MINUS | OR | XOR
 mulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
 unaryOp                     ::= "+" | "-" | "@" | NOT

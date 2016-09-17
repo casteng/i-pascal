@@ -17,6 +17,7 @@
           <li>conditional defines completion</li>
           <li>fix spurious incorrect "undeclared identifier" errors
           <li>improved classes and methods completion</li>
+          <li>fixed parsing of generic classes</li>
         </ul>
         <p>1.05</p>
         <ul>
@@ -229,7 +230,7 @@
         <moduleType id="PASCAL_MODULE" implementationClass="com.siberika.idea.pascal.module.PascalModuleType"/>
         <moduleConfigurationEditorProvider implementation="com.siberika.idea.pascal.module.PascalModuleConfigEditorProvider" />
         <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.PascalParserDefinition"/>
-        <lang.syntaxHighlighterFactory key="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
+        <lang.syntaxHighlighterFactory key="Pascal" language="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
         <syntaxHighlighter key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <syntaxHighlighter key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />

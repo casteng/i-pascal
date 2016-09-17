@@ -234,8 +234,6 @@ NUM_OCT         = \&[0-7]+
     "="             { return getElement(EQ); }
     ">"             { return getElement(GT); }
     "<"             { return getElement(LT); }
-    ">="            { return getElement(GE); }
-    "<="            { return getElement(LE); }
     "<>"            { return getElement(NE); }
 
     ":"             { return getElement(COLON); }

@@ -42,7 +42,7 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
     public static final TokenSet SYMBOLS = TokenSet.create(
             ASSIGN, RANGE,
             MULT, DIV, PLUS, MINUS,
-            EQ, GT, LT, GE, LE, NE,
+            EQ, GT, LT, NE,
             COLON, COMMA, DOT, DEREF, AT,
             HEXNUM, CHARNUM, KEYWORDESCAPE
     );

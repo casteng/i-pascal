@@ -10,6 +10,8 @@ type
         procedure SetItem(const Value: T);
         property Items[Index: Integer]: T read GetItem write SetItem; default;
     end;
+    TList2<T>=class
+    end;
 implementation
 
 var
