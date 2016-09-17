@@ -191,7 +191,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if ((project != null)) {
             actualDefines = new HashSet<String>();
             final Sdk sdk = getSdk(project, virtualFile);
-            allDefines = BasePascalSdkType.getDefaultDefines(sdk, sdk.getVersionString());
+            allDefines = sdk != null ? BasePascalSdkType.getDefaultDefines(sdk, sdk.getVersionString()) : Collections.<String, Define>emptyMap();
             for (Map.Entry<String, Define> entry : allDefines.entrySet()) {
                 actualDefines.add(entry.getKey());
                 allDefines.put(entry.getKey(), entry.getValue());
