@@ -4,19 +4,17 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.progress.ProcessCanceledException;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
-import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -52,21 +50,18 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     @Override
     protected String calcKey() {
-        PasEntityScope scope = this;
-        StringBuilder sb = new StringBuilder(PsiUtil.getFieldName(scope));
-        scope = scope.getContainingScope();
-        while (scope != null) {
-            sb.append(".").append(PsiUtil.getFieldName(scope));
-            PsiElement section = PsiUtil.getNearestSection(scope);
-            if (section instanceof PasUnitInterface) {
-                sb.append(".intf");
-            } else if (section instanceof PasUnitImplementation) {
-                sb.append(".impl");
-            }
-            scope = scope.getContainingScope();
+        StringBuilder sb = new StringBuilder(PsiUtil.getFieldName(this));
+        sb.append(PsiUtil.isForwardProc(this) ? "-fwd" : "");
+        if (this instanceof PasExportedRoutine) {
+            sb.append("^intf");
+        } else {
+            sb.append("^impl");
         }
-        sb.append(".").append(PsiUtil.isForwardProc(this) ? "forward:" : "");
-        sb.append(".").append(PsiUtil.getContainingFilePath(this));
+
+        PasEntityScope scope = this.getContainingScope();
+        sb.append(scope != null ? "." + scope.getKey() : "");
+
+//        System.out.println(String.format("%s:%d - %s", PsiUtil.getFieldName(this), this.getTextOffset(), sb.toString()));
         return sb.toString();
     }
 
@@ -133,7 +128,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
                 addPseudoFields(res);
 
-                LOG.debug(getName() + ": buildMembers: " + res.all.size() + " members");
+                LOG.debug(PsiUtil.getFieldName(PascalRoutineImpl.this) + ": buildMembers: " + res.all.size() + " members");
+//                    System.out.println(PsiUtil.getFieldName(PascalRoutineImpl.this) + ": buildMembers: " + res.all.size() + " members");
                 return res;
             } finally {
                 building = false;

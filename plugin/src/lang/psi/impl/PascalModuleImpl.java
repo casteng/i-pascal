@@ -50,6 +50,11 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
     }
 
     @Override
+    protected String calcKey() {
+        return PsiUtil.getContainingFilePath(this);
+    }
+
+    @Override
     public ModuleType getModuleType() {
         PasModule pm = (PasModule) this;
         if (pm.getUnitModuleHead() != null) {

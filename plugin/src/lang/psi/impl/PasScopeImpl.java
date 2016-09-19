@@ -64,7 +64,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         return file.getModificationStamp();
     }
 
-    public String getKey() {
+    public final String getKey() {
         String key = cachedKey;
         if (null == key) {
             key = calcKey();
@@ -74,7 +74,8 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     }
 
     protected String calcKey() {
-        return String.format("%s.%s", PsiUtil.getFieldName(this), PsiUtil.getContainingFilePath(this));
+        PasEntityScope scope = this.getContainingScope();
+        return String.format("%s%s", PsiUtil.getFieldName(this), scope != null ? "." + scope.getKey() : "");
     }
 
     protected <T extends Cached> void ensureChache(Cache<String, T> cache) {

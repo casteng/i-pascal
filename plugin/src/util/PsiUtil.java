@@ -681,7 +681,7 @@ public class PsiUtil {
         }
         PasTypeID type = routine.getFunctionTypeIdent();
         if (type != null) {
-            res.append(": ").append(type.getFullyQualifiedIdent().getName());
+            res.append(":").append(type.getFullyQualifiedIdent().getName());
         }
         return res.toString();
     }
