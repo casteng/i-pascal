@@ -36,16 +36,26 @@ import java.util.regex.Pattern;
 class PascalCompletionInComment {
     private static final Pattern DIRECTIVE = Pattern.compile("\\{\\$?\\w*");
     private static final Pattern DIRECTIVE_PARAM = Pattern.compile("\\{(\\$\\w+)\\s+(\\w*)");
-    private static final InsertHandler<LookupElement> INSERT_HANDLER_COMMENT = new InsertHandler<LookupElement>() {
+    private static final InsertHandler<LookupElement> INSERT_HANDLER_COMMENT = new CommentInsertHandler();
+    private static final InsertHandler<LookupElement> INSERT_HANDLER_COMMENT_CLOSED = new CommentInsertHandlerClosed();
+
+    private static class CommentInsertHandler implements InsertHandler<LookupElement> {
+        @Override
+        public void handleInsert(final InsertionContext context, LookupElement item) {
+            DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), DocUtil.PLACEHOLDER_CARET);
+        }
+    }
+
+    private static class CommentInsertHandlerClosed implements InsertHandler<LookupElement> {
         @Override
         public void handleInsert(final InsertionContext context, LookupElement item) {
             DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), DocUtil.PLACEHOLDER_CARET + "}");
         }
-    };
+    }
 
     static void handleComments(CompletionResultSet result, CompletionParameters parameters) {
         PsiElement comment = parameters.getOriginalPosition();
-        final boolean needClose = DocUtil.isSingleLine(parameters.getEditor().getDocument(), comment);
+        final boolean needClose = !DocUtil.isSingleLine(parameters.getEditor().getDocument(), comment);
         int ofs = parameters.getOffset() - comment.getTextOffset();
         if (ofs <= 0) {
             return;
@@ -54,7 +64,7 @@ class PascalCompletionInComment {
         if (DIRECTIVE.matcher(text).matches()) {
             for (Map.Entry<String, Directive> entry : retrieveDirectives(comment).entrySet()) {
                 result.addElement(LookupElementBuilder.create(entry.getKey() + (entry.getValue().hasParameters(entry.getKey()) ? " " : ""))
-                        .withTypeText(entry.getValue().desc, true).withInsertHandler(INSERT_HANDLER_COMMENT));
+                        .withTypeText(entry.getValue().desc, true).withInsertHandler(needClose ? INSERT_HANDLER_COMMENT_CLOSED : INSERT_HANDLER_COMMENT));
             }
         } else {
             Matcher m = DIRECTIVE_PARAM.matcher(text);
@@ -64,7 +74,8 @@ class PascalCompletionInComment {
                 if (Directive.isDefine(id)) {
                     Map<String, Define> defines = retrieveDefines(comment.getContainingFile() != null ? comment.getContainingFile().getVirtualFile() : null, comment.getProject());
                     for (Define define : defines.values()) {
-                        result.addElement(LookupElementBuilder.create(define.name).withCaseSensitivity(false).withTypeText(getDesc(define), true));
+                        result.addElement(LookupElementBuilder.create(define.name + (needClose ? "}" : "")).withPresentableText(define.name)
+                                .withCaseSensitivity(false).withTypeText(getDesc(define), true));
                     }
                 } else {
                     Directive dir = retrieveDirectives(comment).get(id);

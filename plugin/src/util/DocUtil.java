@@ -229,6 +229,6 @@ public class DocUtil {
     }
 
     public static boolean isSingleLine(@NotNull Document document, @NotNull PsiElement element) {
-        return document.getLineNumber(element.getTextRange().getStartOffset()) != document.getLineNumber(element.getTextRange().getEndOffset());
+        return document.getLineNumber(element.getTextRange().getStartOffset()) == document.getLineNumber(element.getTextRange().getEndOffset());
     }
 }
