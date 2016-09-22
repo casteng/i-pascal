@@ -740,5 +740,12 @@
             <value>ON</value>
             <value>OFF</value>
         </directive>
+
+        <directive>
+            <id>$ZEROBASEDSTRINGS</id>
+            <desc>Zero-based strings</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
     </compiler>
 </compilers>
