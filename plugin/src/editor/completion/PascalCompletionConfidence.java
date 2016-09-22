@@ -9,6 +9,8 @@ import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.regex.Pattern;
+
 /**
  * Author: George Bakhtadze
  * Date: 01/10/2013
@@ -25,11 +27,18 @@ public class PascalCompletionConfidence extends CompletionConfidence {
             if (!isName(type)) {
                 type = contextElement.getNode().getElementType();
             }
-            if (!isName(type) && !PascalLexer.COMPILER_DIRECTIVES.contains(type)) {
+            if (!isName(type) && !PascalLexer.COMPILER_DIRECTIVES.contains(type) && shouldSkipInComment(contextElement, offset)) {
                 return ThreeState.YES;
             }
         }
         return super.shouldSkipAutopopup(contextElement, psiFile, offset);
+    }
+
+    private static final Pattern COMMENT_BEGIN = Pattern.compile("\\{\\$?\\w+");
+    private boolean shouldSkipInComment(PsiElement contextElement, int offset) {
+        int len = offset - contextElement.getTextRange().getStartOffset();
+        String text = contextElement.getText().substring(0, len);
+        return !COMMENT_BEGIN.matcher(text).matches();
     }
 
     private boolean isName(IElementType type) {
