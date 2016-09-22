@@ -15,7 +15,7 @@
           <li>find declaration and find usages for conditional defines</li>
           <li>compiler directives completion</li>
           <li>conditional defines completion</li>
-          <li>fix spurious incorrect "undeclared identifier" errors
+          <li>fix spurious incorrect "undeclared identifier" errors</li>
           <li>improved classes and methods completion</li>
           <li>fixed parsing of generic classes</li>
         </ul>
