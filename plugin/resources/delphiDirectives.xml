@@ -1,7 +1,6 @@
 <compilers>
     <compiler name="Delphi" version="15.0">
         <directive>
-            <id>$A</id>
             <id>$ALIGN</id>
             <desc>data alignment strategy</desc>
             <value>1</value>
@@ -9,28 +8,737 @@
             <value>4</value>
             <value>8</value>
             <value>16</value>
-            <value>32</value>
+            <value>OFF</value>
+        </directive>
+        <directive>
+            <id>$A-</id>
+            <id>$A+</id>
+            <desc>data alignment strategy</desc>
         </directive>
         <directive>
             <id>$A1</id>
-            <desc>align to 1 byte</desc>
+            <desc>Align to 1 byte</desc>
         </directive>
         <directive>
             <id>$A2</id>
-            <desc>align to 2 bytes</desc>
+            <desc>Align to 2 bytes</desc>
         </directive>
         <directive>
             <id>$A4</id>
-            <desc>align to 4 bytes</desc>
+            <desc>Align to 4 bytes</desc>
         </directive>
         <directive>
             <id>$A8</id>
-            <desc>align to 8 bytes</desc>
+            <desc>Align to 8 bytes</desc>
+        </directive>
+        <directive>
+            <id>$A16</id>
+            <desc>Align to 16 bytes</desc>
+        </directive>
+
+        <directive>
+            <id>$APPTYPE</id>
+            <desc>Application type (Delphi)</desc>
+            <value>GUI</value>
+            <value>CONSOLE</value>
+        </directive>
+
+        <directive>
+            <id>$C-</id>
+            <id>$C+</id>
+            <desc>Generate code for assertions</desc>
+        </directive>
+        <directive>
+            <id>$ASSERTIONS</id>
+            <desc>Generate code for assertions</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$BOOLEVAL</id>
+            <desc>Complete boolean evaluation</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+        <directive>
+            <id>$B-</id>
+            <id>$B+</id>
+            <desc>Complete boolean evaluation</desc>
+        </directive>
+
+        <directive>
+            <id>$CODEALIGN</id>
+            <desc>Set the code alignment in bytes</desc>
+            <value>0</value>
+            <value>1</value>
+            <value>2</value>
+            <value>4</value>
+            <value>8</value>
+            <value>16</value>
+        </directive>
+
+        <directive>
+            <id>$DEFINE</id>
+            <desc>Define a symbol</desc>
+        </directive>
+
+        <directive>
+            <id>$DEBUGINFO</id>
+            <desc>Debug information</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+        <directive>
+            <id>$D-</id>
+            <id>$D+</id>
+            <desc>Debug information</desc>
+        </directive>
+
+        <directive>
+            <id>$DENYPACKAGEUNIT</id>
+            <desc>Prevent placing into a package</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$DESCRIPTION</id>
+            <desc>Description of the compiled unit</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$DESIGNONLY</id>
+            <desc>Compile for installation in the IDE</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$ELSE</id>
+            <desc>Switch conditional compilation</desc>
+        </directive>
+
+        <directive>
+            <id>$ELSEIF</id>
+            <desc>Switch conditional compilation</desc>
+        </directive>
+
+        <directive>
+            <id>$ENDIF</id>
+            <desc>End conditional compilation</desc>
+        </directive>
+
+        <directive>
+            <id>$ENDREGION</id>
+            <desc>End of a collapsible region</desc>
+        </directive>
+
+        <directive>
+            <id>$E</id>
+            <id>$EXTENSION</id>
+            <desc>Executable extension</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$ObjExportAll</id>
+            <desc>Export all symbols in the unit file</desc>
+        </directive>
+
+        <directive>
+            <id>$EXTENDEDSYNTAX</id>
+            <desc>Extended syntax</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+        <directive>
+            <id>$X-</id>
+            <id>$X+</id>
+            <desc>Extended syntax</desc>
+        </directive>
+
+        <directive>
+            <id>$EXTENDEDCOMPATIBILITY</id>
+            <desc>Extended type compatibility</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$EXTERNALSYM</id>
+            <desc>Ignored (C++Builder compatibility)</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$EXCESSPRECISION</id>
+            <desc>Floating point precision control (x64 only)</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$HIGHCHARUNICODE</id>
+            <desc>Parse characters #$80..#$FF as unicode</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$FATAL</id>
+            <desc>Generate fatal error message</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$H+</id>
+            <id>$H-</id>
+            <desc>Use AnsiStrings</desc>
+        </directive>
+        <directive>
+            <id>$LONGSTRINGS</id>
+            <desc>Use AnsiStrings</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$HINTS</id>
+            <desc>Emit hints</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$HPPEMIT</id>
+            <id>$NODEFINE</id>
+            <id>$NOINCLUDE</id>
+            <desc>HPP emit control (C++ Builder compatibility)</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IF</id>
+            <desc>Start conditional compilation</desc>
+            <value></value>
         </directive>
 
         <directive>
             <id>$IFDEF</id>
-            <desc>start conditional compilation</desc>
+            <desc>Start conditional compilation</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IFNDEF</id>
+            <desc>Start conditional compilation</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IFOPT</id>
+            <desc>Start conditional compilation</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IMAGEBASE</id>
+            <desc>Image base address</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IMPLICITBUILD</id>
+            <desc>Implicit Build</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$IMPORTEDDATA</id>
+            <desc>Imported data</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$G+</id>
+            <id>$G-</id>
+            <desc>Imported data</desc>
+        </directive>
+
+        <directive>
+            <id>$IOCHECKS</id>
+            <desc>Input/Output checking</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+        <directive>
+            <id>$I-</id>
+            <id>$I+</id>
+            <desc>Input/Output checking</desc>
+        </directive>
+
+        <directive>
+            <id>$I</id>
+            <id>$INCLUDE</id>
+            <desc>Include file or compiler info</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$WRITEABLECONST</id>
+            <desc>Allow assignments to typed consts</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$J-</id>
+            <id>$J+</id>
+            <desc>Allow assignments to typed consts</desc>
+        </directive>
+
+        <directive>
+            <id>$LIBPREFIX</id>
+            <id>$LIBSUFFIX</id>
+            <id>$LIBVERSION</id>
+            <desc>Compiler directives for libraries or shared objects</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$LEGACYIFEND</id>
+            <desc>Require $IF to be terminated by $IFEND</desc>
+        </directive>
+
+        <directive>
+            <id>$L</id>
+            <id>$LINK</id>
+            <desc>Link object file</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$LOCALSYMBOLS</id>
+            <desc>Local symbol information</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$L-</id>
+            <id>$L+</id>
+            <desc>Local symbol information</desc>
+        </directive>
+
+        <directive>
+            <id>$M-</id>
+            <id>$M+</id>
+            <desc>Generate type info</desc>
+        </directive>
+        <directive>
+            <id>$TYPEINFO</id>
+            <desc>Generate type info</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$M</id>
+            <id>$MINSTACKSIZE</id>
+            <id>$MAXSTACKSIZE</id>
+            <desc>Memory allocation sizes</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$MESSAGE</id>
+            <desc>Generate hint, warning, error or fatal message</desc>
+            <value>''</value>
+            <value>Hint ''</value>
+            <value>Warn ''</value>
+            <value>Error ''</value>
+            <value>Fatal ''</value>
+        </directive>
+
+        <directive>
+            <id>$METHODINFO</id>
+            <desc>Generate method info</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$MINENUMSIZE</id>
+            <desc>Specify minimum enumeration size</desc>
+            <value>0</value>
+            <value>1</value>
+            <value>2</value>
+            <value>4</value>
+        </directive>
+        <directive>
+            <id>$Z1</id>
+            <id>$Z2</id>
+            <id>$Z4</id>
+            <desc>Specify minimum enumeration size</desc>
+        </directive>
+
+        <directive>
+            <id>$OBJTYPENAME</id>
+            <desc>Specify floating point constant precision</desc>
+            <value>Define the typename when creating .obj file or control how to mangle a type's name</value>
+        </directive>
+
+        <directive>
+            <id>$P-</id>
+            <id>$P+</id>
+            <desc>Open string parameters (obsolete)</desc>
+        </directive>
+        <directive>
+            <id>$OPENSTRINGS</id>
+            <desc>Open string parameters (obsolete)</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$OLDTYPELAYOUT</id>
+            <desc>Byte-aligns (pack) fields that have a common type specification like Delphi7 and earlier</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$OPTIMIZATION</id>
+            <desc>Compiler optimizations</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+        <directive>
+            <id>$O-</id>
+            <id>$O+</id>
+            <desc>Compiler optimizations</desc>
+        </directive>
+
+        <directive>
+            <id>$Q-</id>
+            <id>$Q+</id>
+            <desc>Overflow checking</desc>
+        </directive>
+        <directive>
+            <id>$OVERFLOWCHECKS</id>
+            <desc>Overflow checking</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$SetPEFlags</id>
+            <id>$SetPEOptFlags</id>
+            <desc>Set PE flags</desc>
+            <value>IMAGE_FILE_RELOCS_STRIPPED</value>
+            <!--Relocation information is stripped from file.-->
+            <value>IMAGE_FILE_EXECUTABLE_IMAGE</value>
+            <!--File is executable (i.e. no unresolved external references).-->
+            <value>IMAGE_FILE_LINE_NUMS_STRIPPED</value>
+            <!--Line numbers are stripped from file.-->
+            <value>IMAGE_FILE_LOCAL_SYMS_STRIPPED</value>
+            <!--Local symbols are stripped from file.-->
+            <value>IMAGE_FILE_AGGRESIVE_WS_TRIM</value>
+            <!--Agressively trim working set.-->
+            <value>IMAGE_FILE_LARGE_ADDRESS_AWARE</value>
+            <!--Application can handle addresses larger than 2 GB.-->
+            <value>IMAGE_FILE_BYTES_REVERSED_LO</value>
+            <!--Bytes of machine word are reversed.-->
+            <value>IMAGE_FILE_32BIT_MACHINE</value>
+            <!--32 bit word machine.-->
+            <value>IMAGE_FILE_DEBUG_STRIPPED</value>
+            <!--Debugging info is stripped from file in .DBG file.-->
+            <value>IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP</value>
+            <!--If Image is on removable media, copy and run from the swap file.-->
+            <value>IMAGE_FILE_NET_RUN_FROM_SWAP</value>
+            <!--If Image is on Net, copy and run from the swap file.-->
+            <value>IMAGE_FILE_SYSTEM</value>
+            <!--System File.-->
+            <value>IMAGE_FILE_DLL</value>
+            <!--The file is a DLL.-->
+            <value>IMAGE_FILE_UP_SYSTEM_ONLY</value>
+            <!--File should only be run on a UP machine.-->
+            <value>IMAGE_FILE_BYTES_REVERSED_HI</value>
+            <!--Bytes of machine word are reversed.-->
+            <value>IMAGE_FILE_MACHINE_UNKNOWN</value>
+            <!--Unknown machine.-->
+            <value>IMAGE_FILE_MACHINE_I386</value>
+            <!--Intel 386.-->
+            <value>IMAGE_FILE_MACHINE_R3000</value>
+            <!--MIPS Little-Endian, 0x160 big-endian.-->
+            <value>IMAGE_FILE_MACHINE_R4000</value>
+            <!--MIPS Little-Endian.-->
+            <value>IMAGE_FILE_MACHINE_R10000</value>
+            <!--MIPS Little-Endian.-->
+            <value>IMAGE_FILE_MACHINE_ALPHA</value>
+            <!--Alpha_AXP.-->
+            <value>IMAGE_FILE_MACHINE_POWERPC</value>
+            <!--IBM PowerPC Little-Endian.-->
+        </directive>
+
+        <directive>
+            <id>$SETPEOSVERSION</id>
+            <desc>Specify required Windows version</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$SETPESUBSYSVERSION</id>
+            <desc>Specify required Windows subsystem version</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$SETPEUSERVERSION</id>
+            <desc>Specify version number of application</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$U-</id>
+            <id>$U+</id>
+            <desc>Pentium-safe FDIV operations</desc>
+        </directive>
+        <directive>
+            <id>$SAFEDIVIDE</id>
+            <desc>Pentium-safe FDIV operations</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$POINTERMATH</id>
+            <desc>Pointer math</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$R-</id>
+            <id>$R+</id>
+            <desc>Range checking</desc>
+        </directive>
+        <directive>
+            <id>$RANGECHECKS</id>
+            <desc>Range checking</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$REALCOMPATIBILITY</id>
+            <desc>Real48 compatibility</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$REGION</id>
+            <desc>Mark start of collapsible region</desc>
+        </directive>
+
+        <directive>
+            <id>$R</id>
+            <id>$RESOURCE</id>
+            <desc>Include resource</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$RTTI</id>
+            <desc>RTTI directive</desc>
+            <value>INHERIT</value>
+            <value>EXPLICIT</value>
+        </directive>
+
+        <directive>
+            <id>$RUNONLY</id>
+            <desc>Compile as runtime only</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$SCOPEDENUMS</id>
+            <desc>Control use of scoped enumeration types</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$STRONGLINKTYPES</id>
+            <desc>Strong link types</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$Y-</id>
+            <id>$Y+</id>
+            <id>$YD</id>
+            <desc>Symbol declaration and cross-reference information</desc>
+        </directive>
+        <directive>
+            <id>$REFERENCEINFO</id>
+            <id>$DEFINITIONINFO</id>
+            <desc>Symbol declaration and cross-reference information</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$T-</id>
+            <id>$T+</id>
+            <desc>Typed address operator (@)</desc>
+        </directive>
+        <directive>
+            <id>$TYPEDADDRESS</id>
+            <desc>Typed address operator (@)</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$UNDEF</id>
+            <desc>Undefine a symbol</desc>
+        </directive>
+
+        <directive>
+            <id>$V-</id>
+            <id>$V+</id>
+            <desc>Var-string checking</desc>
+        </directive>
+        <directive>
+            <id>$VARSTRINGCHECKS</id>
+            <desc>Var-string checking</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$W-</id>
+            <id>$W+</id>
+            <desc>Generate stackframes</desc>
+        </directive>
+        <directive>
+            <id>$STACKFRAMES</id>
+            <desc>Generate stackframes</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$WARN</id>
+            <desc>Control emission of warnings (ON, OFF, ERROR and DEFAULT)</desc>
+            <value>SYMBOL_DEPRECATED</value> <!-- W1000 -->
+            <value>SYMBOL_LIBRARY</value> <!-- W1001 -->
+            <value>SYMBOL_PLATFORM</value> <!-- W1002 -->
+            <value>SYMBOL_EXPERIMENTAL</value> <!-- W1003 -->
+            <value>UNIT_LIBRARY</value> <!-- W1004 -->
+            <value>UNIT_PLATFORM</value> <!-- W1005 -->
+            <value>UNIT_DEPRECATED</value> <!-- W1006 -->
+            <value>UNIT_EXPERIMENTAL</value> <!-- W1007 -->
+            <value>HRESULT_COMPAT</value> <!-- W1008 -->
+            <value>HIDING_MEMBER</value> <!-- W1009 -->
+            <value>HIDDEN_VIRTUAL</value> <!-- W1010 -->
+            <value>GARBAGE</value> <!-- W1011 -->
+            <value>BOUNDS_ERROR</value> <!-- W1012 -->
+            <value>ZERO_NIL_COMPAT</value> <!-- W1013 -->
+            <value>STRING_CONST_TRUNCED</value> <!-- W1014 -->
+            <value>FOR_LOOP_VAR_VARPAR</value> <!-- W1015 -->
+            <value>TYPED_CONST_VARPAR</value> <!-- W1016 -->
+            <value>ASG_TO_TYPED_CONST</value> <!-- W1017 -->
+            <value>CASE_LABEL_RANGE</value> <!-- W1018 -->
+            <value>FOR_VARIABLE</value> <!-- W1019 -->
+            <value>CONSTRUCTING_ABSTRACT</value> <!-- W1020 -->
+            <value>COMPARISON_FALSE</value> <!-- W1021 -->
+            <value>COMPARISON_TRUE</value> <!-- W1022 -->
+            <value>COMPARING_SIGNED_UNSIGNED</value> <!-- W1023 -->
+            <value>COMBINING_SIGNED_UNSIGNED</value> <!-- W1024 -->
+            <value>UNSUPPORTED_CONSTRUCT</value> <!-- W1025 -->
+            <value>FILE_OPEN</value> <!-- W1026 -->
+            <value>FILE_OPEN_UNITSRC</value> <!-- W1027 -->
+            <value>BAD_GLOBAL_SYMBOL</value> <!-- W1028 -->
+            <value>DUPLICATE_CTOR_DTOR</value> <!-- W1029 -->
+            <value>INVALID_DIRECTIVE</value> <!-- W1030 -->
+            <value>PACKAGE_NO_LINK</value> <!-- W1031 -->
+            <value>PACKAGED_THREADVAR</value> <!-- W1032 -->
+            <value>IMPLICIT_IMPORT</value> <!-- W1033 -->
+            <value>HPPEMIT_IGNORED</value> <!-- W1034 -->
+            <value>NO_RETVAL</value> <!-- W1035 -->
+            <value>USE_BEFORE_DEF</value> <!-- W1036 -->
+            <value>FOR_LOOP_VAR_UNDEF</value> <!-- W1037 -->
+            <value>UNIT_NAME_MISMATCH</value> <!-- W1038 -->
+            <value>NO_CFG_FILE_FOUND</value> <!-- W1039 -->
+            <value>IMPLICIT_VARIANTS</value> <!-- W1040 -->
+            <value>UNICODE_TO_LOCALE</value> <!-- W1041 -->
+            <value>LOCALE_TO_UNICODE</value> <!-- W1042 -->
+            <value>IMAGEBASE_MULTIPLE</value> <!-- W1043 -->
+            <value>SUSPICIOUS_TYPECAST</value> <!-- W1044 -->
+            <value>PRIVATE_PROPACCESSOR</value> <!-- W1045 -->
+            <value>UNSAFE_TYPE</value> <!-- W1046 -->
+            <value>UNSAFE_CODE</value> <!-- W1047 -->
+            <value>UNSAFE_CAST</value> <!-- W1048 -->
+            <value>OPTION_TRUNCATED</value> <!-- W1049 -->
+            <value>WIDECHAR_REDUCED</value> <!-- W1050 -->
+            <value>DUPLICATES_IGNORED</value> <!-- W1051 -->
+            <value>UNIT_INIT_SEQ</value> <!-- W1052 -->
+            <value>LOCAL_PINVOKE</value> <!-- W1053 -->
+            <value>MESSAGE_DIRECTIVE</value> <!-- W1054 -->
+            <value>TYPEINFO_IMPLICITLY_ADDED</value> <!-- W1055 -->
+            <value>RLINK_WARNING</value> <!-- W1056 -->
+            <value>IMPLICIT_STRING_CAST</value> <!-- W1057 -->
+            <value>IMPLICIT_STRING_CAST_LOSS</value> <!-- W1058 -->
+            <value>EXPLICIT_STRING_CAST</value> <!-- W1059 -->
+            <value>EXPLICIT_STRING_CAST_LOSS</value> <!-- W1060 -->
+            <value>CVT_WCHAR_TO_ACHAR</value> <!-- W1061 -->
+            <value>CVT_NARROWING_STRING_LOST</value> <!-- W1062 -->
+            <value>CVT_ACHAR_TO_WCHAR</value> <!-- W1063 -->
+            <value>CVT_WIDENING_STRING_LOST</value> <!-- W1064 -->
+            <value>NON_PORTABLE_TYPECAST</value> <!-- W1065 -->
+            <value>LOST_EXTENDED_PRECISION</value> <!-- W1066 -->
+            <value>LNKDFM_NOTFOUND</value> <!-- W1067 -->
+            <value>IMMUTABLE_STRINGS</value> <!-- W1068 -->
+            <value>MOBILE_DELPHI</value> <!-- W1069 -->
+            <value>UNSAFE_VOID_POINTER</value> <!-- W1070 -->
+            <value>XML_WHITESPACE_NOT_ALLOWED</value> <!-- W1201 -->
+            <value>XML_UNKNOWN_ENTITY</value> <!-- W1202 -->
+            <value>XML_INVALID_NAME_START</value> <!-- W1203 -->
+            <value>XML_INVALID_NAME</value> <!-- W1204 -->
+            <value>XML_EXPECTED_CHARACTER</value> <!-- W1205 -->
+            <value>XML_CREF_NO_RESOLVE</value> <!-- W1206 -->
+            <value>XML_NO_PARM</value> <!-- W1207 -->
+            <value>XML_NO_MATCHING_PARM</value> <!-- W1208 -->
+        </directive>
+
+        <directive>
+            <id>$WARNINGS</id>
+            <desc>Emit warnings</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$WEAKPACKAGEUNIT</id>
+            <desc>Weak packaging</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$WEAKLINKRTTI</id>
+            <desc>Do not include all methods into binary</desc>
+            <value>ON</value>
+            <value>OFF</value>
         </directive>
     </compiler>
 </compilers>

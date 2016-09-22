@@ -29,6 +29,13 @@
         </directive>
 
         <directive>
+            <id>$APPTYPE</id>
+            <desc>Application type</desc>
+            <value>GUI</value>
+            <value>CONSOLE</value>
+        </directive>
+
+        <directive>
             <id>$ASMMODE</id>
             <desc>Set assembler mode</desc>
             <value>att</value>
@@ -37,11 +44,15 @@
         </directive>
 
         <directive>
-            <id>$B</id>
             <id>$BOOLEVAL</id>
             <desc>Complete boolean evaluation</desc>
             <value>ON</value>
             <value>OFF</value>
+        </directive>
+        <directive>
+            <id>$B-</id>
+            <id>$B+</id>
+            <desc>Complete boolean evaluation</desc>
         </directive>
 
         <directive>
@@ -158,16 +169,6 @@
         </directive>
 
         <directive>
-            <id>$EXTENDEDSYM</id>
-            <desc>Ignored (Delphi compatibility)</desc>
-        </directive>
-
-        <directive>
-            <id>$EXTERNALSYM</id>
-            <desc>Ignored (Delphi compatibility)</desc>
-        </directive>
-
-        <directive>
             <id>$F-</id>
             <id>$F+</id>
             <desc>Far or near functions (Turbo Pascal compatibility)</desc>
@@ -182,11 +183,17 @@
         <directive>
             <id>$FPUTYPE</id>
             <desc>Select coprocessor type</desc>
-            SOFT
-            X87, SSE, SSE2
-            SSE64
-            STANDARD
-            LIBGCC, FPA, FPA10, FPA11,VFP
+            <value>SOFT</value>
+            <value>X87</value>
+            <value>SSE</value>
+            <value>SSE2</value>
+            <value>SSE64</value>
+            <value>STANDARD</value>
+            <value>LIBGCC</value>
+            <value>FPA</value>
+            <value>FPA10</value>
+            <value>FPA11</value>
+            <value>VFP</value>
         </directive>
 
         <directive>
@@ -219,11 +226,6 @@
             <desc>Emit hints</desc>
             <value>ON</value>
             <value>OFF</value>
-        </directive>
-
-        <directive>
-            <id>$HPPEMIT</id>
-            <desc>Ignored (Delphi compatibility)</desc>
         </directive>
 
         <directive>
@@ -408,9 +410,6 @@
         <directive>
             <id>$MINENUMSIZE</id>
             <id>$PACKENUM</id>
-            <id>$Z1</id>
-            <id>$Z2</id>
-            <id>$Z4</id>
             <desc>Specify minimum enumeration size</desc>
             <value>0</value>
             <value>1</value>
@@ -424,6 +423,12 @@
             <desc>Specify minimum enumeration size: OFF - 1, ON - 4</desc>
             <value>ON</value>
             <value>OFF</value>
+        </directive>
+        <directive>
+            <id>$Z1</id>
+            <id>$Z2</id>
+            <id>$Z4</id>
+            <desc>Specify minimum enumeration size</desc>
         </directive>
 
         <directive>
@@ -622,7 +627,7 @@
 
         <directive>
             <id>$T-</id>
-            <id>$T-</id>
+            <id>$T+</id>
             <desc>Typed address operator (@)</desc>
         </directive>
         <directive>
@@ -724,6 +729,3 @@
 
     </compiler>
 </compilers>
-
-        <!--.*?(\$\w+( or \$\w+)?) : ((\w+\s)*\w+)-->
-<!--<directive>\n<id>$1</id>\n<desc>$3</desc>\n</directive>\n-->
