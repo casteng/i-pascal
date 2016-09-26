@@ -38,9 +38,9 @@
         <directive>
             <id>$ASMMODE</id>
             <desc>Set assembler mode</desc>
-            <value>att</value>
-            <value>intel</value>
-            <value>direct</value>
+            <value>ATT</value>
+            <value>INTEL</value>
+            <value>DIRECT</value>
         </directive>
 
         <directive>
@@ -73,13 +73,13 @@
         <directive>
             <id>$CALLING</id>
             <desc>Specify calling convention</desc>
-            <value>default</value>
-            <value>register</value>
-            <value>cdecl</value>
-            <value>pascal</value>
-            <value>safecall</value>
-            <value>stdcall</value>
-            <value>oldfpccall</value>
+            <value>DEFAULT</value>
+            <value>REGISTER</value>
+            <value>CDECL</value>
+            <value>PASCAL</value>
+            <value>SAFECALL</value>
+            <value>STDCALL</value>
+            <value>OLDFPCCALL</value>
         </directive>
 
         <directive>
@@ -515,8 +515,8 @@
             <value>32</value>
             <value>C</value>
             <!--The special value C is used to specify alignment as by the GNU CC compiler. It should be used only when making import units for C routines.-->
-            <value>Normal</value>
-            <value>Default</value>
+            <value>NORMAL</value>
+            <value>DEFAULT</value>
         </directive>
 
         <directive>
@@ -530,8 +530,8 @@
             <value>16</value>
             <value>32</value>
             <value>FIXED</value>
-            <value>Normal</value>
-            <value>Default</value>
+            <value>NORMAL</value>
+            <value>DEFAULT</value>
         </directive>
 
         <directive>

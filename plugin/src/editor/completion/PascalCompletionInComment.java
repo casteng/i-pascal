@@ -13,6 +13,7 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.impl.DirectoryIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.PascalBundle;
@@ -63,8 +64,8 @@ class PascalCompletionInComment {
         String text = comment.getText().substring(0, ofs);
         if (DIRECTIVE.matcher(text).matches()) {
             for (Map.Entry<String, Directive> entry : retrieveDirectives(comment).entrySet()) {
-                result.addElement(LookupElementBuilder.create(entry.getKey() + (entry.getValue().hasParameters(entry.getKey()) ? " " : ""))
-                        .withTypeText(entry.getValue().desc, true).withInsertHandler(needClose ? INSERT_HANDLER_COMMENT_CLOSED : INSERT_HANDLER_COMMENT));
+                result.addElement(withTexts(null, entry.getKey() + (entry.getValue().hasParameters(entry.getKey()) ? " " : ""), entry.getValue().desc)
+                        .withInsertHandler(needClose ? INSERT_HANDLER_COMMENT_CLOSED : INSERT_HANDLER_COMMENT));
             }
         } else {
             Matcher m = DIRECTIVE_PARAM.matcher(text);
@@ -74,14 +75,13 @@ class PascalCompletionInComment {
                 if (Directive.isDefine(id)) {
                     Map<String, Define> defines = retrieveDefines(comment.getContainingFile() != null ? comment.getContainingFile().getVirtualFile() : null, comment.getProject());
                     for (Define define : defines.values()) {
-                        result.addElement(LookupElementBuilder.create(define.name + (needClose ? "}" : "")).withPresentableText(define.name)
-                                .withCaseSensitivity(false).withTypeText(getDesc(define), true));
+                        result.addElement(withTexts(define.name + (needClose ? "}" : ""), define.name, getDesc(comment.getProject(), define)));
                     }
                 } else {
                     Directive dir = retrieveDirectives(comment).get(id);
                     if ((dir != null) && (dir.values != null)) {
                         for (String value : dir.values) {
-                            result.addElement(LookupElementBuilder.create(value + (needClose ? "}" : "")).withPresentableText(value));
+                            result.addElement(withTexts(value + (needClose ? "}" : ""), value, null));
                         }
                     }
                 }
@@ -89,10 +89,20 @@ class PascalCompletionInComment {
         }
     }
 
-    private static String getDesc(Define define) {
+    private static LookupElementBuilder withTexts(String lookup, String text, String desc) {
+        lookup = lookup != null ? lookup : text;
+        return LookupElementBuilder.create(lookup).withLookupString(lookup.toUpperCase()).withLookupString(lookup.toLowerCase())
+                .withPresentableText(text).withTypeText(desc, true).withCaseSensitivity(true);
+    }
+
+    private static String getDesc(Project project, Define define) {
         if (define.virtualFile != null) {
+            VirtualFile root = DirectoryIndex.getInstance(project).getInfoForFile(define.virtualFile).getContentRoot();
+            String start = root != null ? root.getPath() : null;
             Document doc = FileDocumentManager.getInstance().getDocument(define.virtualFile);
-            return define.virtualFile.getPath() + (doc != null ? ":" + doc.getLineNumber(define.offset) : "");
+            String path = define.virtualFile.getPath();
+            path = (start != null) && path.startsWith(start) ? root.getPresentableName() + path.substring(start.length()) : path;
+            return path + (doc != null ? ":" + doc.getLineNumber(define.offset) : "");
         }
         return define.offset < 0 ? PascalBundle.message("completion.defines.source.builtin") : PascalBundle.message("completion.defines.source.commandLine");
     }
