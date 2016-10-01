@@ -104,7 +104,7 @@ class PascalCompletionInComment {
             path = (start != null) && path.startsWith(start) ? root.getPresentableName() + path.substring(start.length()) : path;
             return path + (doc != null ? ":" + doc.getLineNumber(define.offset) : "");
         }
-        return define.offset < 0 ? PascalBundle.message("completion.defines.source.builtin") : PascalBundle.message("completion.defines.source.commandLine");
+        return PascalBundle.message("completion.defines.source." + (define.offset < 0 ? "builtin" : "commandLine"));
     }
 
     private static Map<String, Define> retrieveDefines(@Nullable VirtualFile file, @NotNull Project project) {
