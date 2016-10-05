@@ -11,7 +11,7 @@ import java.util.List;
  * Date: 04/09/2016
  */
 public class Directive {
-    private static final Collection<String> DEFINES = Arrays.asList("$IFDEF", "$IFNDEF");
+    private static final Collection<String> DEFINES = Arrays.asList("$IFDEF", "$IFNDEF", "$UNDEF");
     // description
     public String desc;
     // possible values

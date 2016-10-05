@@ -1,0 +1,3 @@
+{$<caret>}
+begin
+end.

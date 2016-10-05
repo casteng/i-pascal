@@ -162,11 +162,11 @@ public abstract class BasePascalSdkType extends SdkType {
         InputStream definesStream = null;
         InputStream directivesStream = null;
         try {
-            definesStream = getClass().getClassLoader().getResourceAsStream("/" + resourcePrefix + "Defines.xml");
+            definesStream = getClass().getResourceAsStream("/" + resourcePrefix + "Defines.xml");
             if (definesStream != null) {
                 defines = DefinesParser.parse(definesStream);
             }
-            directivesStream = getClass().getClassLoader().getResourceAsStream("/" + resourcePrefix + "Directives.xml");
+            directivesStream = getClass().getResourceAsStream("/" + resourcePrefix + "Directives.xml");
             if (directivesStream != null) {
                 directives = DirectivesParser.parse(directivesStream);
             }

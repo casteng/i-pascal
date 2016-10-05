@@ -43,7 +43,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals(new TreeSet<String>(Arrays.asList(expected)), new TreeSet<String>(strings));
     }
 
-    private void checkCompletionContains(CodeInsightTestFixture myFixture, String...expected) {
+    public static void checkCompletionContains(CodeInsightTestFixture myFixture, String...expected) {
         myFixture.completeBasic();
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
@@ -57,7 +57,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         }
     }
 
-    private void checkContains(List<String> strings, String[] expected, String prefix) {
+    private static void checkContains(List<String> strings, String[] expected, String prefix) {
         List<String> exp = Arrays.asList(expected);
         ArrayList<String> lacking = new ArrayList<String>(exp);
         lacking.removeAll(strings);
@@ -262,11 +262,6 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     public void testElse() {
-        myFixture.configureByFiles("else.pas");
-        checkCompletionContains(myFixture, "else");
-    }
-
-    public void testDirective() {
         myFixture.configureByFiles("else.pas");
         checkCompletionContains(myFixture, "else");
     }
