@@ -18,6 +18,8 @@ import com.intellij.openapi.util.AsyncResult;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.util.containers.HashMap;
+import com.intellij.util.io.BaseInputStreamReader;
 import com.intellij.util.text.CharArrayCharSequence;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.Define;
@@ -26,10 +28,8 @@ import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -151,13 +151,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private static Sdk getSdk(Project project, VirtualFile virtualFile) {
-        if (virtualFile != null) {
-            Module module = ModuleUtil.findModuleForFile(virtualFile, project);
-            if (module != null) {
-                return ModuleRootManager.getInstance(module).getSdk();
-            }
-        }
-        return ProjectRootManager.getInstance(project).getProjectSdk();
+        Module module = virtualFile != null ? ModuleUtil.findModuleForFile(virtualFile, project) : null;
+        Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
+        return sdk != null ? sdk : ProjectRootManager.getInstance(project).getProjectSdk();
     }
 
     @Override
@@ -186,12 +182,12 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     synchronized private void initDefines(Project project, VirtualFile virtualFile) {
-        actualDefines = Collections.emptySet();
-        allDefines = Collections.emptyMap();
+        actualDefines = new HashSet<String>();
+        allDefines = new HashMap<String, Define>();
         if ((project != null)) {
             actualDefines = new HashSet<String>();
             final Sdk sdk = getSdk(project, virtualFile);
-            allDefines = sdk != null ? BasePascalSdkType.getDefaultDefines(sdk, sdk.getVersionString()) : Collections.<String, Define>emptyMap();
+            allDefines = (sdk != null) && (sdk.getVersionString() != null) ? BasePascalSdkType.getDefaultDefines(sdk, sdk.getVersionString()) : allDefines;
             for (Map.Entry<String, Define> entry : allDefines.entrySet()) {
                 actualDefines.add(entry.getKey());
                 allDefines.put(entry.getKey(), entry.getValue());
@@ -276,7 +272,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         Reader reader = null;
         try {
             if ((file != null) && (file.getCanonicalPath() != null)) {
-                reader = new FileReader(file.getCanonicalPath());
+                reader = new BaseInputStreamReader(file.getInputStream());
                 PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, file);
                 Document doc = FileDocumentManager.getInstance().getDocument(file);
                 if (doc != null) {
@@ -317,7 +313,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return yystate() == INACTIVE_BRANCH;
     }
 
-    private static final Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\}");
+    private static final Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\s*\\}");
     private static String extractDefineName(CharSequence sequence) {
         Matcher m = PATTERN_DEFINE.matcher(sequence);
         return m.matches() ? m.group(1) : null;

@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.sdk;
 
+import com.intellij.codeInspection.SmartHashMap;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkAdditionalData;
@@ -19,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -109,7 +109,7 @@ public abstract class BasePascalSdkType extends SdkType {
             }
             return result;
         }
-        return Collections.emptyMap();
+        return new SmartHashMap<String, Define>();
     }
 
     public static Map<String, Directive> getDirectives(@NotNull Sdk sdk, String version) {
@@ -124,7 +124,7 @@ public abstract class BasePascalSdkType extends SdkType {
             }
             return result;
         }
-        return Collections.emptyMap();
+        return new SmartHashMap<String, Directive>();
     }
 
     protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {

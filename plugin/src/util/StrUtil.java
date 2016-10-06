@@ -93,7 +93,7 @@ public class StrUtil {
         return version1.compareTo(version2) <= 0;
     }
 
-    private static final Pattern DIR_PAT = Pattern.compile("\\{(\\$\\w+)\\s+([\\w.]+)}");
+    private static final Pattern DIR_PAT = Pattern.compile("\\{(\\$\\w+)\\s+([\\w.]+)\\s*}");
     public static Pair<String, String> getDirectivePair(String text) {
         Matcher m = DIR_PAT.matcher(text);
         if (m.matches()) {

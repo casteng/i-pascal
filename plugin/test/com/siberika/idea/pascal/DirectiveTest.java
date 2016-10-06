@@ -26,6 +26,11 @@ public class DirectiveTest extends LightPlatformCodeInsightFixtureTestCase {
                 "$A ", "$A8", "$DEFINE", "$ELSE", "$IFDEF ", "$IFOPT ", "$INCLUDE ", "$INLINE ", "$Q+", "$R-", "$WARN ");
     }
 
+    public void testDefine() {
+        myFixture.configureByFiles("define.pas");
+        CompletionTest.checkCompletionContains(myFixture, "test1", "test2", "test3");
+    }
+
     private static Sdk mockPascalSdk = createSdk();
 
     private static Sdk createSdk() {
