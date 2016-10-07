@@ -17,12 +17,56 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static com.intellij.util.ArrayUtil.swap;
+
 /**
  * @since 4/14/2016 3:05 AM
  */
 @Ignore
 public class Tester {
     private static final long MAX_SIZE = 1024 * 1024 * 100;
+
+    @Test
+    public void testIpm() throws Exception {
+        int[] a = new int[] {4, 8, 22, 35,   3, 9, 20, 27};
+        int[] res = ipm(a, 4);
+        System.out.println(Arrays.toString(res));
+    }
+
+    // {3, 8, 22,   4,  9, 20, 27};
+    // {3, 4, 22,   8,  9, 20, 27};
+    // {3, 4, 8,   22,  9, 20, 27};
+    private int[] ipm(int[] a, int aSize) {
+        int n = a.length;
+        int ai = 0;
+        int bi = aSize;
+
+        while (ai < aSize && a[ai] < a[aSize]) {
+            ai++;
+        }
+
+        if (ai < aSize) {
+            swap(a, ai, aSize);
+            ai++;
+            bi++;
+        }
+
+        System.out.println(Arrays.toString(a));
+
+        while (ai < aSize && a[aSize] < a[bi]) {
+            swap(a, ai, aSize);
+            ai++;
+        }
+
+        System.out.println(Arrays.toString(a));
+
+        while (ai < n-1 && a[ai] > a[ai+1]) {
+            swap(a, ai, ai+1);
+            ai++;
+        }
+
+        return a;
+    }
 
     @Test
     public void testSI() throws Exception {
