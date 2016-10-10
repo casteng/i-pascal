@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.jps.builder;
 
-import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.util.io.URLUtil;
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;

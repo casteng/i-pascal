@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.jps.builder;
 
-import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
 import org.jetbrains.annotations.NonNls;
 
@@ -38,9 +37,9 @@ public class DelphiCompilerProcessAdapter extends PascalCompilerProcessAdapter {
             } else {
                 matcher = PATTERN_INFO.matcher(line);
                 if (matcher.find()) {
-                    PascalCompilerMessager.createMessage(CompilerMessageCategory.INFORMATION, line, matcher, messager);
+                    PascalCompilerMessager.createMessage(CompilerMessageCategory.INFO, line, matcher, messager);
                 } else {
-                    PascalCompilerMessager.createMessage(CompilerMessageCategory.INFORMATION, line, null, messager);
+                    PascalCompilerMessager.createMessage(CompilerMessageCategory.INFO, line, null, messager);
                 }
             }
         }
