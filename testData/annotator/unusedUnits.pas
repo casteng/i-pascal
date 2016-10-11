@@ -3,7 +3,7 @@ unit unusedUnits;
 interface
 
 uses
-    {!}types,
+    {!}types, enumTypes,
     <warning descr="Unused unit">scoped.types</warning>
     ,
     <warning descr="Used only in implementation">objects</warning>
