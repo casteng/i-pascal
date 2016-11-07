@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.1</p>
+        <ul>
+          <li>repeat-until brace matcher</li>
+        </ul>
         <p>1.06</p>
         <ul>
           <li>find declaration and find usages for include files</li>

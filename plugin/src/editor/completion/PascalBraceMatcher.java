@@ -25,12 +25,14 @@ public class PascalBraceMatcher implements BraceMatcher {
 
     @Override
     public boolean isLBraceToken(HighlighterIterator iterator, CharSequence fileText, FileType fileType) {
-        return END_PAIRS.contains(iterator.getTokenType()) || (iterator.getTokenType() == PasTypes.LBRACK) || (iterator.getTokenType() == PasTypes.LPAREN);
+        return END_PAIRS.contains(iterator.getTokenType()) || (iterator.getTokenType() == PasTypes.REPEAT)
+            || (iterator.getTokenType() == PasTypes.LBRACK) || (iterator.getTokenType() == PasTypes.LPAREN);
     }
 
     @Override
     public boolean isRBraceToken(HighlighterIterator iterator, CharSequence fileText, FileType fileType) {
-        return (iterator.getTokenType() == PasTypes.END) || (iterator.getTokenType() == PasTypes.RBRACK) || (iterator.getTokenType() == PasTypes.RPAREN);
+        return (iterator.getTokenType() == PasTypes.END) || (iterator.getTokenType() == PasTypes.UNTIL)
+            || (iterator.getTokenType() == PasTypes.RBRACK) || (iterator.getTokenType() == PasTypes.RPAREN);
     }
 
     @Override
@@ -40,13 +42,15 @@ public class PascalBraceMatcher implements BraceMatcher {
 
     private boolean isPairBracesInternal(IElementType tokenType, IElementType tokenType2) {
         return (END_PAIRS.contains(tokenType) && (tokenType2 == PasTypes.END))
+            || ((tokenType == PasTypes.REPEAT) && (tokenType2 == PasTypes.UNTIL))
             || ((tokenType == PasTypes.LBRACK) && (tokenType2 == PasTypes.RBRACK))
             || ((tokenType == PasTypes.LPAREN) && (tokenType2 == PasTypes.RPAREN));
     }
 
     @Override
     public boolean isStructuralBrace(HighlighterIterator iterator, CharSequence text, FileType fileType) {
-        return END_PAIRS.contains(iterator.getTokenType()) || (iterator.getTokenType() == PasTypes.END);
+        return END_PAIRS.contains(iterator.getTokenType()) || (iterator.getTokenType() == PasTypes.END)
+                || (iterator.getTokenType() == PasTypes.REPEAT) || (iterator.getTokenType() == PasTypes.UNTIL);
     }
 
     @Nullable
@@ -58,12 +62,14 @@ public class PascalBraceMatcher implements BraceMatcher {
         if (type == PasTypes.RBRACK) { return PasTypes.LBRACK; }
         if (type == PasTypes.LPAREN) { return PasTypes.RPAREN; }
         if (type == PasTypes.RPAREN) { return PasTypes.LPAREN; }
+        if (type == PasTypes.REPEAT) { return PasTypes.UNTIL; }
+        if (type == PasTypes.UNTIL) { return PasTypes.REPEAT; }
         return null;
     }
 
     @Override
     public boolean isPairedBracesAllowedBeforeType(@NotNull IElementType lbraceType, @Nullable IElementType contextType) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return false;
     }
 
     @Override
