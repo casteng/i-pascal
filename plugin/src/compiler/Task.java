@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.compiler;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.CompilationStatusListener;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.compiler.CompileTask;
@@ -8,6 +9,7 @@ import com.intellij.openapi.compiler.CompilerMessage;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.search.FilenameIndex;
@@ -53,17 +55,22 @@ public class Task implements CompileTask {
         context.addMessage(CompilerMessageCategory.WARNING, message, null, -1, -1);
     }
 
-    private VirtualFile retrieveMainFile(Module module) {
-        List<String> extensions = new ArrayList<String>(PascalFileType.PROGRAM_EXTENSIONS.size() + PascalFileType.UNIT_EXTENSIONS.size());
-        extensions.addAll(PascalFileType.PROGRAM_EXTENSIONS);
-        extensions.addAll(PascalFileType.UNIT_EXTENSIONS);
-        for (String extension : extensions) {
-            Collection<VirtualFile> files = FilenameIndex.getAllFilesByExt(module.getProject(), extension, GlobalSearchScope.moduleScope(module));
-            if (!files.isEmpty()) {
-                return files.iterator().next();
+    private VirtualFile retrieveMainFile(final Module module) {
+        return ApplicationManager.getApplication().runReadAction(new Computable<VirtualFile>() {
+            @Override
+            public VirtualFile compute() {
+                List<String> extensions = new ArrayList<String>(PascalFileType.PROGRAM_EXTENSIONS.size() + PascalFileType.UNIT_EXTENSIONS.size());
+                extensions.addAll(PascalFileType.PROGRAM_EXTENSIONS);
+                extensions.addAll(PascalFileType.UNIT_EXTENSIONS);
+                for (String extension : extensions) {
+                    Collection<VirtualFile> files = FilenameIndex.getAllFilesByExt(module.getProject(), extension, GlobalSearchScope.moduleScope(module));
+                    if (!files.isEmpty()) {
+                        return files.iterator().next();
+                    }
+                }
+                return null;
             }
-        }
-        return null;
+        });
     }
 
     private static class MyListener implements CompilationStatusListener {

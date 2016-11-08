@@ -78,7 +78,9 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
         // Force main file to compile. TODO: force only for context-based (line marker?) run configurations
 //        if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) return;
         final Map<PascalTarget, List<File>> files = new HashMap<PascalTarget, List<File>>();
-        files.put(target, new SmartList<File>(mainFile));
+        if (mainFile != null) {
+            files.put(target, new SmartList<File>(mainFile));
+        }
         collectChangedFiles(files, holder);
         boolean isRebuild = JavaBuilderUtil.isForcedRecompilationAllJavaModules(context) || (!JavaBuilderUtil.isCompileJavaIncrementally(context));
         if (files.isEmpty() && !isRebuild) {
