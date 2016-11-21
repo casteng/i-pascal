@@ -8,6 +8,7 @@ import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -145,7 +146,12 @@ public class SectionToggle {
         while ((current.scope != null) && !(current.scope instanceof PascalModuleImpl)) {
             current.scope = findOwner(current.scope);
             if (current.scope instanceof PascalStructType) {
-                current.prefix = current.scope.getName() + "." + current.prefix;
+                PsiElement nameEl = current.scope.getNameIdentifier();
+                if (nameEl instanceof PasGenericTypeIdent) {
+                    current.prefix = ((PasGenericTypeIdent) nameEl).getRefNamedIdent().getName() + "." + current.prefix;
+                } else {
+                    current.prefix = current.scope.getName() + "." + current.prefix;
+                }
             } else if (current.scope instanceof PascalRoutineImpl) {
                 current.element = current.scope;
             }

@@ -3,7 +3,7 @@ interface
 type
     TEnumerable = TEnumerable;
     Integer = Integer;
-    TList<T> = class(TEnumerable<T>)
+    TList<T: TEnumerable, P:A> = class(TEnumerable<T>)
     public
         constructor Create();
         function GetItem(const Value: T): Integer;
@@ -17,17 +17,17 @@ implementation
 var
     List: TList<Integer>;
 
-constructor TList<T>.Create();
+constructor TList<T, P>.Create();
 begin
 
 end;
 
-function TList<T>.GetItem(const Value: T): Integer;
+function TList<T, P>.GetItem(const Value: T): Integer;
 begin
 
 end;
 
-procedure TList<T>.SetItem(const Value: T);
+procedure TList< T,P>.SetItem(const Value: T);
 begin
 
 end;

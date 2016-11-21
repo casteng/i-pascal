@@ -867,4 +867,23 @@ public class PsiUtil {
         }
         return null;
     }
+
+    private static String normalizeGenericName(PasGenericTypeIdent ident) {
+        StringBuilder res = new StringBuilder();
+        PasGenericDefinition gen = ident.getGenericDefinition();
+        if (gen != null) {
+            for (PasNamedIdent type : gen.getNamedIdentList()) {
+                if (res.length() > 0) {
+                    res.append(",");
+                }
+                res.append(type.getName());
+            }
+        }
+        if (res.length() > 0) {
+            res.insert(0, "<").insert(0, ident.getRefNamedIdent().getName()).append(">");
+        } else {
+            return ident.getRefNamedIdent().getName();
+        }
+        return res.toString();
+    }
 }

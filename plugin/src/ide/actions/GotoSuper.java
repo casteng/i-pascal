@@ -91,9 +91,11 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         }
         PasEntityScope scope = routine.getContainingScope();
         if (scope instanceof PascalStructType) {
-            extractMethodsByName(targets, PsiUtil.extractSmartPointers(scope.getParentScope()), routine, true, LIMIT_NONE);
+            extractMethodsByName(targets, PsiUtil.extractSmartPointers(scope.getParentScope()), routine, true, LIMIT_NONE, 0);
         }
     }
+
+    private static final int MAX_RECURSION_COUNT = 100;
 
     /**
      * Extracts methods with same name as routine from the given scopes and places them into targets collection
@@ -101,7 +103,10 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
      * @param scopes     scopes where to search methods
      * @param routine    routine which name to search
      */
-    static void extractMethodsByName(Collection<PasEntityScope> targets, Collection<PasEntityScope> scopes, PascalRoutineImpl routine, boolean handleParents, Integer limit) {
+    static void extractMethodsByName(Collection<PasEntityScope> targets, Collection<PasEntityScope> scopes, PascalRoutineImpl routine, boolean handleParents, Integer limit, int recursionCount) {
+        if (recursionCount > MAX_RECURSION_COUNT) {
+            throw new IllegalStateException("Recursion limit reached");
+        }
         for (PasEntityScope scope : scopes) {
             if ((limit != null) && (limit <= targets.size())) {
                 return;
@@ -113,7 +118,7 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
                         addTarget(targets, field);
                     }
                     if (handleParents) {
-                        extractMethodsByName(targets, PsiUtil.extractSmartPointers(scope.getParentScope()), routine, true, calcRemainingLimit(targets, limit));
+                        extractMethodsByName(targets, PsiUtil.extractSmartPointers(scope.getParentScope()), routine, true, calcRemainingLimit(targets, limit), recursionCount++);
                     }
                 }
             } else {

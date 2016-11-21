@@ -65,11 +65,11 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
         }
         PascalStructType struct = PsiUtil.getStructByElement(routine);
         findDescendingStructs(scopes, struct, limit != null ? GotoSuper.LIMIT_FIRST_ATTEMPT : GotoSuper.LIMIT_NONE, rCnt);
-        GotoSuper.extractMethodsByName(found, scopes, routine, false, GotoSuper.calcRemainingLimit(targets, limit));
+        GotoSuper.extractMethodsByName(found, scopes, routine, false, GotoSuper.calcRemainingLimit(targets, limit), 0);
         if ((limit != null) && (scopes.size() == GotoSuper.LIMIT_FIRST_ATTEMPT) && (found.size() < limit)) {        // second attempt if the first one not found all results
             scopes = new LinkedHashSet<PasEntityScope>();
             findDescendingStructs(scopes, PsiUtil.getStructByElement(routine), GotoSuper.LIMIT_NONE, rCnt);
-            GotoSuper.extractMethodsByName(targets, scopes, routine, false, GotoSuper.calcRemainingLimit(targets, limit));
+            GotoSuper.extractMethodsByName(targets, scopes, routine, false, GotoSuper.calcRemainingLimit(targets, limit), 0);
         } else {
             targets.addAll(found);
         }

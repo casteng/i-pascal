@@ -9,9 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>1.1</p>
+        <p>1.07</p>
         <ul>
           <li>repeat-until brace matcher</li>
+          <li>fixed constrained generic method section search (Issue #14)<li>
         </ul>
         <p>1.06</p>
         <ul>

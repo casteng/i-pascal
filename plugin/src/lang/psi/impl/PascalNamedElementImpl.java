@@ -14,6 +14,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
@@ -23,6 +24,8 @@ import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Iterator;
 
 /**
  * Author: George Bakhtadze
@@ -47,10 +50,21 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     public String getName() {                                                      // TODO: synchronize?
         if ((myCachedName == null) || (myCachedName.length() == 0)) {
-            PsiElement element = getNameElement();
-            myCachedName = element != null ? element.getText() : "";
+            myCachedName = calcName(getNameElement());
         }
         return myCachedName;
+    }
+
+    private static String calcName(PsiElement nameElement) {
+        if ((nameElement != null) && (nameElement.getClass() == PasClassQualifiedIdentImpl.class)) {
+            Iterator<PasSubIdent> it = ((PasClassQualifiedIdent) nameElement).getSubIdentList().iterator();
+            StringBuilder sb = new StringBuilder(it.next().getName());
+            while (it.hasNext()) {
+                sb.append(".").append(it.next().getName());
+            }
+            return sb.toString();
+        }
+        return nameElement != null ? nameElement.getText() : "";
     }
 
     @Override

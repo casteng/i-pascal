@@ -267,7 +267,7 @@ private rec_classparent     ::= !(CASE) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | "]") & rec_section
 private rec_propspec        ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
-private rec_generic_def     ::= !(">") & rec_section
+private rec_generic_def     ::= !(">" | ":") & rec_section
 
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
@@ -371,14 +371,14 @@ private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= classForwardDecl ";"
 
-GenericTypeIdent    ::= identifier [GenericDefinition] {recoverWhile=rec_typeId}
+GenericTypeIdent    ::= RefNamedIdent [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
-private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {pin=1}             //TODO use meta rule
+private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {}             //TODO use meta rule
 private identsRest          ::= "," NamedIdent {recoverWhile=rec_generic_def}
-private constrainedGenericDefinition ::= "<" constrainedGeneric constrainedGenericsRest* ">" {pin=1}
-private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint genericConstraintsRest* ]
+private constrainedGenericDefinition ::= "<" constrainedGeneric genericConstraintsRest* ">" {pin=1}
+private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint]
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
-private genericConstraintsRest ::= "," GenericConstraint {pin=1}
+private genericConstraintsRest ::= "," constrainedGeneric {pin=1}
 private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
 GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"               // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
