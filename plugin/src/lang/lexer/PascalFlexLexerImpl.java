@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.lexer;
 
+import com.google.common.base.Preconditions;
 import com.intellij.ide.DataManager;
 import com.intellij.lexer.FlexAdapter;
 import com.intellij.openapi.actionSystem.DataContext;
@@ -20,7 +21,6 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.containers.HashMap;
 import com.intellij.util.io.BaseInputStreamReader;
-import com.intellij.util.text.CharArrayCharSequence;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.Define;
 import com.siberika.idea.pascal.util.StrUtil;
@@ -48,10 +48,12 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private int inactiveLevel = -1;
 
     private Set<String> actualDefines;
+    // not used in syntax highlighting lexer
     private Map<String, Define> allDefines;
 
     private VirtualFile virtualFile;
     private Project project;
+    private final boolean incremental;
     private AsyncResult<DataContext> dataContextResult;
     private DataContext dataContext;
 
@@ -63,11 +65,13 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         this.project = project;
     }
 
-    public PascalFlexLexerImpl(Reader in, Project project, VirtualFile virtualFile) {
+    public PascalFlexLexerImpl(Reader in, Project project, VirtualFile virtualFile, boolean incremental) {
         super(in);
+        Preconditions.checkArgument((project != null) || incremental, "No project in non-incremental lexer");
         this.virtualFile = virtualFile;
         this.project = project;
-        if (null == virtualFile) {
+        this.incremental = incremental;
+        if ((null == virtualFile) && incremental) {
             getDataContext();
         } else if (null == project) {
             this.project = ProjectLocator.getInstance().guessProjectForFile(virtualFile);
@@ -76,6 +80,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
 
     @Override
     public void reset(CharSequence buffer, int start, int end, int initialState) {
+//        super.reset(buffer, start > 0 ? Math.max(1, start-10000)*0+start : 0, end, YYINITIAL);
+//        System.out.println(String.format("===reset: [%d - %d], %d", start, end, initialState));
         super.reset(buffer, 0, end, YYINITIAL);
         actualDefines = null;
         allDefines = null;
@@ -84,18 +90,23 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private DataContext getDataContext() {
-        if (dataContext != null) {
+        try {
+            if (dataContext != null) {
+                return dataContext;
+            }
+            if (null == dataContextResult) {
+                dataContextResult = DataManager.getInstance().getDataContextFromFocus();
+            }
+            if (dataContextResult.isDone()) {
+                dataContext = dataContextResult.getResult();
+            } else if (dataContextResult.isRejected()) {
+                dataContextResult = DataManager.getInstance().getDataContextFromFocus();
+            }
             return dataContext;
+        } catch (Throwable t) {
+            LOG.warn("-=Error=-", t);
+            return null;
         }
-        if (null == dataContextResult) {
-            dataContextResult = DataManager.getInstance().getDataContextFromFocus();
-        }
-        if (dataContextResult.isDone()) {
-            dataContext = dataContextResult.getResult();
-        } else if (dataContextResult.isRejected()) {
-            dataContextResult = DataManager.getInstance().getDataContextFromFocus();
-        }
-        return dataContext;
     }
 
     private <T> T getData(String s) {
@@ -121,7 +132,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private Project getProject() {
-        if (isValidProject(project)) {
+        if (isValidProject(project) || !incremental) {
             return project;
         }
         project = getData(PlatformDataKeys.PROJECT.getName());
@@ -132,7 +143,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private VirtualFile getVirtualFile() {
-        if (virtualFile != null) {
+        if ((virtualFile != null) || !incremental) {
             return virtualFile;
         }
         virtualFile = getData(PlatformDataKeys.VIRTUAL_FILE.getName());
@@ -154,11 +165,6 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         Module module = virtualFile != null ? ModuleUtil.findModuleForFile(virtualFile, project) : null;
         Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
         return sdk != null ? sdk : ProjectRootManager.getInstance(project).getProjectSdk();
-    }
-
-    @Override
-    public CharSequence getIncludeContent(CharSequence text) {
-        return new CharArrayCharSequence("{Some text}".toCharArray());
     }
 
     @Override
@@ -273,7 +279,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         try {
             if ((file != null) && (file.getCanonicalPath() != null)) {
                 reader = new BaseInputStreamReader(file.getInputStream());
-                PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, file);
+                PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, file, false);
                 Document doc = FileDocumentManager.getInstance().getDocument(file);
                 if (doc != null) {
                     lexer.reset(doc.getCharsSequence(), 0);

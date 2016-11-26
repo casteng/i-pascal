@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>1.07</p>
         <ul>
+          <li>fixed IDEA 2016.3 issues</li>
           <li>repeat-until brace matcher</li>
           <li>fixed constrained generic method section search (Issue #14)<li>
         </ul>

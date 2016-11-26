@@ -125,8 +125,8 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
         return myDelegate instanceof FlexAdapter ? ((FlexAdapter) myDelegate).getFlex() : null;
     }
 
-    public PascalLexer(Project project, VirtualFile virtualFile) {
-        super(new FlexAdapter(new PascalFlexLexerImpl(null, project, virtualFile)), TokenSet.create());
+    public PascalLexer(Project project, VirtualFile virtualFile, boolean incremental) {
+        super(new FlexAdapter(new PascalFlexLexerImpl(null, project, virtualFile, incremental)), TokenSet.create());
     }
 
 }

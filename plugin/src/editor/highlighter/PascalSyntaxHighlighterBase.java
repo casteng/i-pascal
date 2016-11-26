@@ -45,9 +45,10 @@ public class PascalSyntaxHighlighterBase extends SyntaxHighlighterBase {
         fillMap(colors, PascalLexer.SYMBOLS, SYMBOLS);
     }
 
+    // Used in decompilers
     @NotNull
     public Lexer getHighlightingLexer() {
-        return new PascalLexer(null, null);
+        return new PascalLexer(null, null, true);
     }
 
     @NotNull

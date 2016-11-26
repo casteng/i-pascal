@@ -23,7 +23,6 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 %eof}
 
 %{
-  public abstract CharSequence getIncludeContent(CharSequence text);
 %}
 
 

@@ -25,6 +25,7 @@ import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunConfigurationModule;
 import com.intellij.execution.configurations.RunConfigurationWithSuppressedDefaultDebugAction;
 import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.configurations.SearchScopeProvider;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
@@ -33,6 +34,7 @@ import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAc
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
@@ -160,5 +162,10 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     public void setProgramFileName(String programFileName) {
         this.programFileName = programFileName;
+    }
+
+    // 2016.3 compatibility
+    public GlobalSearchScope getSearchScope() {
+        return SearchScopeProvider.createSearchScope(getModules());
     }
 }
