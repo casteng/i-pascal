@@ -52,6 +52,9 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
                 PascalCompleteIdent.completeIdent(editor, (PascalVariableDeclaration) el);
             }
         }
+        if (el != null) {
+            CodeStyleManager.getInstance(el.getManager()).reformat(el, true);
+        }
         return true;
     }
 
@@ -80,7 +83,6 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
                 completeStatement(editor, parent);
             }
         }
-        CodeStyleManager.getInstance(statement.getManager()).reformat(statement, true);
     }
 
     /* WHILE

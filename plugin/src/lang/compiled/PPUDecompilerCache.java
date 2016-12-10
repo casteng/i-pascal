@@ -47,7 +47,7 @@ public class PPUDecompilerCache {
 
     public PPUDecompilerCache(@NotNull Module module) {
         this.module = module;
-        cache = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build(new Loader());//===***
+        cache = CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.HOURS).build(new Loader());
     }
 
     public static String decompile(Module module, String filename, @Nullable VirtualFile file) {
