@@ -48,7 +48,7 @@ public class PascalSyntaxHighlighterBase extends SyntaxHighlighterBase {
     // Used in decompilers
     @NotNull
     public Lexer getHighlightingLexer() {
-        return new PascalLexer(null, null, true);
+        return new PascalLexer.SyntaxHighlightingPascalLexer(null, null);
     }
 
     @NotNull

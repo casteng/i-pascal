@@ -24,7 +24,7 @@ public class PascalSyntaxHighlighter extends PascalSyntaxHighlighterBase {
 
     @NotNull
     public Lexer getHighlightingLexer() {
-        return new PascalLexer(project, virtualFile, true);
+        return new PascalLexer.SyntaxHighlightingPascalLexer(project, virtualFile);
     }
 
 }

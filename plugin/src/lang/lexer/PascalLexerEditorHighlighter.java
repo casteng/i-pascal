@@ -32,17 +32,12 @@ public class PascalLexerEditorHighlighter extends LexerEditorHighlighter {
     @Override
     public synchronized void documentChanged(DocumentEvent e) {
         super.documentChanged(e);
-
         if (getDocument() != null) {
-            // reset highlighting lexer cache
-            //noinspection ConstantConditions
-            setText(getDocument().getCharsSequence());
-            // clear conditional defines
             initPascalFlexLexer();
         }
     }
 
-    public void initPascalFlexLexer() {
+    private void initPascalFlexLexer() {
         Lexer lexer = getLexer();
         if (lexer instanceof PascalLexer) {
             FlexLexer flexLexer = ((PascalLexer) lexer).getFlexLexer();

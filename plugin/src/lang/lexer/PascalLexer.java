@@ -1,14 +1,16 @@
 package com.siberika.idea.pascal.lang.lexer;
 
+import com.intellij.lexer.DelegateLexer;
 import com.intellij.lexer.FlexAdapter;
 import com.intellij.lexer.FlexLexer;
-import com.intellij.lexer.MergingLexerAdapter;
+import com.intellij.lexer.Lexer;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import org.jetbrains.annotations.NotNull;
 
-public class PascalLexer extends MergingLexerAdapter implements PasTypes {
+public abstract class PascalLexer extends DelegateLexer implements PasTypes {
     public static final TokenSet KEYWORDS = TokenSet.create(
             BEGIN, END,
             CLASS, DISPINTERFACE,
@@ -120,13 +122,32 @@ public class PascalLexer extends MergingLexerAdapter implements PasTypes {
 
     public static final TokenSet COMMENTS = TokenSet.orSet(TokenSet.create(PasTypes.COMMENT), COMPILER_DIRECTIVES);
 
+    protected final PascalFlexLexerImpl pascalFlexLexer;
+
+    public PascalLexer(@NotNull Lexer delegate) {
+        super(delegate);
+        pascalFlexLexer = (PascalFlexLexerImpl) getFlexLexer();
+    }
 
     public FlexLexer getFlexLexer() {
         return myDelegate instanceof FlexAdapter ? ((FlexAdapter) myDelegate).getFlex() : null;
     }
 
-    public PascalLexer(Project project, VirtualFile virtualFile, boolean incremental) {
-        super(new FlexAdapter(new PascalFlexLexerImpl(null, project, virtualFile, incremental)), TokenSet.create());
+    public static class ParsingPascalLexer extends PascalLexer {
+        public ParsingPascalLexer(Project project, VirtualFile virtualFile) {
+            super(new FlexAdapter(new PascalFlexLexerImpl(null, project, virtualFile, false)));
+        }
     }
 
+    public static class SyntaxHighlightingPascalLexer extends PascalLexer {
+
+        public SyntaxHighlightingPascalLexer(Project project, VirtualFile virtualFile) {
+            super(new FlexAdapter(new PascalFlexLexerImpl(null, project, virtualFile, true)));
+        }
+
+        @Override
+        public int getState() {
+            return pascalFlexLexer.getStateWithConditionals();
+        }
+    }
 }

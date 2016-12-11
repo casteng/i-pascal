@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.06</version>
+    <version>1.07</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -11,7 +11,8 @@
     <change-notes><![CDATA[
         <p>1.07</p>
         <ul>
-          <li>fixed IDEA 2016.3 issues</li>
+          <li>fixed IDEA 2016.3 issues (Issue #20, Issue #24)</li>
+          <li>Fixed file reindexing on edit</li>
           <li>repeat-until brace matcher</li>
           <li>fixed constrained generic method section search (Issue #14)<li>
         </ul>

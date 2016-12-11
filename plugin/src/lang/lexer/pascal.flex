@@ -69,13 +69,13 @@ NUM_OCT         = \&[0-7]+
 
 %%
 <INACTIVE_BRANCH> {
-    {CT_IF}         { return handleIf(yytext()); }
-    {CT_IFDEF}      { return handleIfDef(yytext()); }
-    {CT_IFNDEF}     { return handleIfNDef(yytext()); }
-    {CT_IFOPT}      { return handleIfOpt(yytext()); }
-    {CT_ELSE}       { return handleElse(); }
-    {CT_ENDIF}      { return handleEndIf(); }
-    {CT_IFEND}      { return handleEndIf(); }
+    {CT_IF}         { return handleIf(zzCurrentPos, yytext()); }
+    {CT_IFDEF}      { return handleIfDef(zzCurrentPos, yytext()); }
+    {CT_IFNDEF}     { return handleIfNDef(zzCurrentPos, yytext()); }
+    {CT_IFOPT}      { return handleIfOpt(zzCurrentPos, yytext()); }
+    {CT_ELSE}       { return handleElse(zzCurrentPos); }
+    {CT_ENDIF}      { return handleEndIf(zzCurrentPos); }
+    {CT_IFEND}      { return handleEndIf(zzCurrentPos); }
     {IDENTIFIER}    { return COMMENT; }
     {WHITESPACE}    { return TokenType.WHITE_SPACE; }
     .               { return COMMENT; }
@@ -256,15 +256,15 @@ NUM_OCT         = \&[0-7]+
     {CT_DEFINE}     { define(zzCurrentPos, yytext()); return CT_DEFINE; }
     {CT_UNDEFINE}   { unDefine(zzCurrentPos, yytext()); return CT_UNDEFINE; }
 
-    {CT_IF}         { return handleIf(yytext()); }
-    {CT_IFDEF}      { return handleIfDef(yytext()); }
-    {CT_IFNDEF}     { return handleIfNDef(yytext()); }
-    {CT_IFOPT}      { return handleIfOpt(yytext()); }
-    {CT_ELSE}       { return handleElse(); }
-    {CT_ENDIF}      { return handleEndIf(); }
-    {CT_IFEND}      { return handleEndIf(); }
+    {CT_IF}         { return handleIf(zzCurrentPos, yytext()); }
+    {CT_IFDEF}      { return handleIfDef(zzCurrentPos, yytext()); }
+    {CT_IFNDEF}     { return handleIfNDef(zzCurrentPos, yytext()); }
+    {CT_IFOPT}      { return handleIfOpt(zzCurrentPos, yytext()); }
+    {CT_ELSE}       { return handleElse(zzCurrentPos); }
+    {CT_ENDIF}      { return handleEndIf(zzCurrentPos); }
+    {CT_IFEND}      { return handleEndIf(zzCurrentPos); }
 
-    {INCLUDE}       { return handleInclude(yytext()); }
+    {INCLUDE}       { return handleInclude(zzCurrentPos, yytext()); }
 
     {COMP_OPTION}   { return getElement(COMP_OPTION); }
 
