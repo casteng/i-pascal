@@ -60,7 +60,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private List<Pair<Integer, String>> defines = new SmartList<Pair<Integer, String>>();
 
     private Set<String> actualDefines;
-    // not used in syntax highlighting (incremental) lexer
+    // TODO: replace with defines
     private Map<String, Define> allDefines;
 
     private VirtualFile virtualFile;
@@ -321,6 +321,10 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             if (lexer != null) {
                 getActualDefines().addAll(lexer.getActualDefines());
                 getAllDefines().putAll(lexer.getAllDefines());
+                for (Pair<Integer, String> define : lexer.defines) {
+                    defines.add(Pair.create(define.first > 0 ? pos : -pos, define.second));
+                }
+                //TODO: put in levels
             } else {
                 LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
             }
