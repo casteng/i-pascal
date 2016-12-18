@@ -16,4 +16,9 @@ begin
     b := a >= 1;
     b := a = 1;
     b := a < 1;
+
+    b := a shl 1;
+    b := a << 1;
+    b := a shr 1;
+    b := a >> 1;
 end.

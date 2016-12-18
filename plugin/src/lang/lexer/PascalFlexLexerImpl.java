@@ -341,7 +341,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                 PascalFlexLexerImpl lexer = new PascalFlexLexerImpl(reader, project, file, false);
                 Document doc = FileDocumentManager.getInstance().getDocument(file);
                 if (doc != null) {
-                    lexer.reset(doc.getCharsSequence(), 0);
+                    lexer.reset(doc.getCharsSequence(), 0, doc.getTextLength(), YYINITIAL);
                     lexer.setVirtualFile(file);
                     FlexAdapter flexAdapter = new FlexAdapter(lexer);
                     while (flexAdapter.getTokenType() != null) {

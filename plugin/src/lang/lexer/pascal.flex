@@ -90,6 +90,8 @@ NUM_OCT         = \&[0-7]+
     "mod"               { return getElement(MOD); }
     "shr"               { return getElement(SHR); }
     "shl"               { return getElement(SHL); }
+    ">>"               { return getElement(SHR); }
+    "<<"               { return getElement(SHL); }
     "in"                { return getElement(IN); }
 
     "as"                { return getElement(AS); }

@@ -28,8 +28,8 @@
         MOD="regexp:(?i)mod"
         OR="regexp:(?i)or"
         IDIV="regexp:(?i)div"
-        SHR="regexp:(?i)shr"
-        SHL="regexp:(?i)shl"
+        SHR="regexp:(?i)shr | >>"
+        SHL="regexp:(?i)shl | <<"
         IN='regexp:(?i)in'
 
         AS="regexp:(?i)as"

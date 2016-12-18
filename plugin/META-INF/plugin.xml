@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>1.08</p>
         <ul>
+          <li>fixed bitwise operators parsing (Issue #25)</li>
           <li>fixed WebStorom 2016.3 issues (Issue #26)</li>
           <li>FPC global directives suggestions</li>
         </ul>
