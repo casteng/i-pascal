@@ -11,8 +11,8 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.SmartPsiElementPointer;
-import com.intellij.psi.impl.PsiImplUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.FileContentUtil;
@@ -559,7 +559,7 @@ public class PsiUtil {
 
     public static <T extends PsiElement> T getLeafSiblingOfType(@Nullable PsiElement sibling, @NotNull Class<T> aClass) {
         T result = PsiTreeUtil.getNextSiblingOfType(sibling, aClass);
-        while ((result != null) && (PsiImplUtil.isWhitespaceOrComment(result.getNode()))) {
+        while ((result != null) && (TreeUtil.isWhitespaceOrComment(result.getNode()))) {
             result = PsiTreeUtil.getNextSiblingOfType(result, aClass);
         }
         return result;

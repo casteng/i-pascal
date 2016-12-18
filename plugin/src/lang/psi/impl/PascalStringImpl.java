@@ -5,7 +5,8 @@ import com.intellij.openapi.util.ProperTextRange;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.LiteralTextEscaper;
 import com.intellij.psi.PsiLanguageInjectionHost;
-import com.intellij.psi.PsiLiteral;
+import com.intellij.psi.PsiLiteralExpression;
+import com.intellij.psi.PsiType;
 import com.intellij.psi.impl.source.tree.LeafElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import org.apache.commons.lang.StringUtils;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
  * Author: George Bakhtadze
  * Date: 21/01/2016
  */
-public abstract class PascalStringImpl extends PascalPsiElementImpl implements PsiLanguageInjectionHost, PascalPsiElement, PsiLiteral {
+public abstract class PascalStringImpl extends PascalPsiElementImpl implements PsiLanguageInjectionHost, PascalPsiElement, PsiLiteralExpression {
 
     public PascalStringImpl(ASTNode node) {
         super(node);
@@ -39,6 +40,12 @@ public abstract class PascalStringImpl extends PascalPsiElementImpl implements P
     @Override
     public String getValue() {
         return getText().length() > 2 ? getText().substring(1, getText().length() - 1) : "";
+    }
+
+    @Nullable
+    @Override
+    public PsiType getType() {
+        return null;
     }
 
     @NotNull
