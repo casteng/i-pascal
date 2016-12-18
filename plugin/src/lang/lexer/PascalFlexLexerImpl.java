@@ -390,6 +390,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
 
     // Returns state modified if lexer state can be modified by a conditional define declared in the text
     public int getStateWithConditionals() {
-        return yystate() + ((virtualFile != null) && (virtualFile.getLength() < DEFINE_CORRECT_HIGHLIGHT_THRESHOLD) ? levels.size() + defines.size() : 0) * 10;
+        if ((yylength() > 0) && (virtualFile != null) && (virtualFile.getLength() < DEFINE_CORRECT_HIGHLIGHT_THRESHOLD)) {
+            return yystate() + (levels.size() + defines.size()) * 10;
+        }
+        return yystate();
     }
 }
