@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.07</version>
+    <version>1.08</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,11 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.08</p>
+        <ul>
+          <li>fixed WebStorom 2016.3 issues (Issue #26)</li>
+          <li>FPC global directives suggestions</li>
+        </ul>
         <p>1.07</p>
         <ul>
           <li>fixed IDEA 2016.3 issues (Issue #20, Issue #24)</li>

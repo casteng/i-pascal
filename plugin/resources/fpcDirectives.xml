@@ -33,6 +33,8 @@
             <desc>Application type</desc>
             <value>GUI</value>
             <value>CONSOLE</value>
+            <value>FS</value>
+            <value>TOOL</value>
         </directive>
 
         <directive>
@@ -68,18 +70,6 @@
             <desc>Enable bitsize packing</desc>
             <value>ON</value>
             <value>OFF</value>
-        </directive>
-
-        <directive>
-            <id>$CALLING</id>
-            <desc>Specify calling convention</desc>
-            <value>DEFAULT</value>
-            <value>REGISTER</value>
-            <value>CDECL</value>
-            <value>PASCAL</value>
-            <value>SAFECALL</value>
-            <value>STDCALL</value>
-            <value>OLDFPCCALL</value>
         </directive>
 
         <directive>
@@ -723,6 +713,335 @@
         <directive>
             <id>$WARNINGS</id>
             <desc>Emit warnings</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <!--Global-->
+
+        <directive>
+            <id>$APPID</id>
+            <desc>Specify application ID for Palm OS</desc>
+            <value></value>
+        </directive>
+        <directive>
+            <id>$APPNAME</id>
+            <desc>Specify application name for Palm OS</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$CALLING</id>
+            <desc>Specify calling convention</desc>
+            <value>CDECL</value>
+            <!--C compiler calling convention.-->
+            <value>CPPDECL</value>
+            <!--C++ compiler calling convention.-->
+            <value>FAR16</value>
+            <!--Ignored, but parsed for Turbo Pascal compatibility reasons.-->
+            <value>FPCCALL</value>
+            <!--Older FPC (1.0.X and before) standard calling convention. If a lot of direct assembler blocks are used, this mode should be used for maximum compatibility.-->
+            <value>INLINE</value>
+            <!--Use inline code: the code for the function is inserted whenever it is called.-->
+            <value>PASCAL</value>
+            <!--Pascal calling convention.-->
+            <value>REGISTER</value>
+            <!--Register calling convention (the default).-->
+            <value>SAFECALL</value>
+            <!--Safecall calling convention (used in COM): The called procedure/function saves all registers.-->
+            <value>STDCALL</value>
+            <!--Windows library calling convention.-->
+            <value>SOFTFLOAT</value>
+            <!--For ARM processors.-->
+        </directive>
+
+        <directive>
+            <id>$CODEPAGE</id>
+            <desc>Codepage which will be used for interpreting literal strings</desc>
+            <value>UTF-8</value>
+            <value>US-ASCII</value>
+            <value>cp1251</value>
+            <value>cp1252</value>
+            <value>cp866</value>
+        </directive>
+
+        <directive>
+            <id>$COPYRIGHT</id>
+            <desc>Specifies the copyright information that can be viewed on a module for a Netware OS</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$D-</id>
+            <id>$D+</id>
+            <desc>Include GNU debugging information in the executable</desc>
+        </directive>
+        <directive>
+            <id>$DEBUGINFO</id>
+            <desc>Include GNU debugging information in the executable</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$E-</id>
+            <id>$E+</id>
+            <desc>Emulation of the coprocessor</desc>
+        </directive>
+
+        <directive>
+            <id>$EXTENSTION</id>
+            <desc>Set the extension for the generated binary/library</desc>
+            <value>'so'</value>
+            <value>'cgi'</value>
+            <value>'exe'</value>
+            <value>'dll'</value>
+        </directive>
+
+        <directive>
+            <id>$FRAMEWORKPATH</id>
+            <desc>Specify the framework search path on Darwin</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$IMAGEBASE</id>
+            <desc>Set the base location for a DLL on windows-based systems</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$INCLUDEPATH</id>
+            <desc>Specify the include path, where the compiler looks for include files</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$LIBPREFIX</id>
+            <desc>Set the prefix of the library</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$LIBRARYPATH</id>
+            <desc>Specify the library path, where the linker looks for static or dynamic libraries</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$LIBSUFFIX</id>
+            <desc>Set the suffix of the library</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$MAXSTACKSIZE</id>
+            <desc>Set the maximum stack size for an executable on Windows-based systems in bytes</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$M</id>
+            <id>$MEMORY</id>
+            <desc>Set the heap and stacksize</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$MINSTACKSIZE</id>
+            <desc>Set the minimum stack size for an executable on Windows-based systems in bytes</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$MODE</id>
+            <desc>Set the compatibility mode of the compiler</desc>
+            <value>Default</value>
+            <value>Delphi</value>
+            <value>TP</value>
+            <value>FPC</value>
+            <value>OBJFPC</value>
+            <value>MACPAS</value>
+        </directive>
+
+        <directive>
+            <id>$MODESWITCH</id>
+            <desc>Select some compiler features</desc>
+            <!--Use object pascal classes.-->
+            <value>CLASS</value>
+            <!--Automatically include the ObjPas unit.-->
+            <value>OBJPAS</value>
+            <!--Enable the Result identifier for function results.-->
+            <value>RESULT</value>
+            <!--Allow automatic conversion of null-terminated strings to strings,-->
+            <value>PCHARTOSTRING</value>
+            <!--Allow the use of the CVAR keyword.-->
+            <value>CVAR</value>
+            <!--Allow use of nested comments.-->
+            <value>NESTEDCOMMENTS</value>
+            <!--Use classical procedural variables.-->
+            <value>CLASSICPROCVARS</value>
+            <!--Use mac-style procedural variables.-->
+            <value>MACPROCVARS</value>
+            <!--Implementation and Forward declaration must match completely.-->
+            <value>REPEATFORWARD</value>
+            <!--Allow silent conversion of pointers to procedural variables.-->
+            <value>POINTERTOPROCVAR</value>
+            <!--Automatic (silent) dereferencing of typed pointers.-->
+            <value>AUTODEREF</value>
+            <!--Allow use of Initialization and Finalization-->
+            <value>INITFINAL</value>
+            <!--Allow use of ansistrings.-->
+            <value>ANSISTRINGS</value>
+            <!--Allow use of the out parameter type.-->
+            <value>OUT</value>
+            <!--Allow use of default parameter values.-->
+            <value>DEFAULTPARAMETERS</value>
+            <!--Support the hint directives (deprecated, platform etc.)-->
+            <value>HINTDIRECTIVE</value>
+            <!--Allow local variables in class methods to have the same names as properties of the class.-->
+            <value>DUPLICATELOCALS</value>
+            <!--Allow use of properties.-->
+            <value>PROPERTIES</value>
+            <!--Allow inline procedures.-->
+            <value>ALLOWINLINE</value>
+            <!--Allow the use of exceptions.-->
+            <value>EXCEPTIONS</value>
+            <!--allow the use of advanced records (i.e. records with methods)-->
+            <value>ADVANCEDRECORDS</value>
+        </directive>
+
+        <directive>
+            <id>$O+</id>
+            <id>$O-</id>
+            <desc>Level 2 optimizations</desc>
+        </directive>
+
+        <directive>
+            <id>$OBJECTPATH</id>
+            <desc>Specify object path</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$P-</id>
+            <id>$P+</id>
+            <desc>Use open strings for short strings parameters</desc>
+        </directive>
+        <directive>
+            <id>$OPENSTRINGS</id>
+            <desc>Use open strings for short strings parameters</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$PASCALMAINNAME</id>
+            <desc>Set entry point name</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$PIC</id>
+            <desc>Generate PIC (Position Independent Code) code</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$POINTERMATH</id>
+            <desc>Allow use of pointer math</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$PROFILE</id>
+            <desc>Generate profiling code</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$S-</id>
+            <id>$S+</id>
+            <desc>Generate stack checking code</desc>
+        </directive>
+
+        <directive>
+            <id>$SCREENNAME</id>
+            <desc>Specify screen name for the Netware</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$SETPEFLAGS</id>
+            <desc>Specify PE Executable flags on windows-based systems</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$SMARTLINK</id>
+            <desc>Use smartlinking</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$SYSCALLS</id>
+            <desc>Select system calling convention on Amiga/MorphOS</desc>
+            <value>LEGACY</value>
+            <value>SYSV</value>
+            <value>SYSVBASE</value>
+            <value>BASESYSV</value>
+            <value>R12BASE</value>
+        </directive>
+
+        <directive>
+            <id>$THREADNAME</id>
+            <desc>Set thread name in Netware</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$UNITPATH</id>
+            <desc>Specify unit path</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$VARPROPSETTER</id>
+            <desc>Enable use of var/out/const parameters for property setters</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$VERSION</id>
+            <desc>Specify DLL version</desc>
+            <value></value>
+        </directive>
+
+        <directive>
+            <id>$X-</id>
+            <id>$X+</id>
+            <desc>Extended syntax</desc>
+        </directive>
+        <directive>
+            <id>$EXTENDEDSYNTAX</id>
+            <desc>Extended syntax</desc>
+            <value>ON</value>
+            <value>OFF</value>
+        </directive>
+
+        <directive>
+            <id>$Y-</id>
+            <id>$Y+</id>
+            <desc>Insert Browser information</desc>
+        </directive>
+        <directive>
+            <id>$REFERENCEINFO</id>
+            <desc>Insert Browser information</desc>
             <value>ON</value>
             <value>OFF</value>
         </directive>
