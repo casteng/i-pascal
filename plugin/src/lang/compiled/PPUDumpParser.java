@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -283,7 +284,7 @@ public class PPUDumpParser {
                 sec.insertText(0, sec.getDataStr("spez") + " ");
                 appendReference(sec, sec.sb.length(), "vartype", ": ", "", UNRESOLVED_INTERNAL);
             } else if ("/field".equalsIgnoreCase(sec.type)) {
-                sec.insertVisibility(LF.length());
+                sec.insertVisibility(LF.length(), getDefaultVisibility());
                 appendReference(sec, sec.sb.length(), "vartype", "", "", UNRESOLVED_INTERNAL);
             } else if ("/var".equalsIgnoreCase(sec.type)) {
                 appendReference(sec, sec.sb.length(), "vartype", "", "", UNRESOLVED_INTERNAL);
@@ -311,11 +312,11 @@ public class PPUDumpParser {
                 }
                 for (String directive : DIRECTIVES) {
                     if (hasOption(sec, directive)) {
-                        sec.sb.append("; " + directive);
+                        sec.sb.append("; ").append(directive);
                     }
                 }
                 sec.sb.append(comment);
-                sec.insertVisibility(LF.length());
+                sec.insertVisibility(LF.length(), getDefaultVisibility());
             } else if ("/obj".equalsIgnoreCase(sec.type)) {
                 StringBuilder psb = new StringBuilder(LF + "type ");
                 psb.append(sec.name).append(" = ").append(sec.getDataStr("objtype"));
@@ -368,8 +369,20 @@ public class PPUDumpParser {
                 appendReference(sec, sec.sb.length(), "proptype", "", "", UNRESOLVED_INTERNAL);
                 appendIfAllNotBlank(sec.sb, " read ", retrieveReference(null, sec.data.get("getter/id"), sec.data.get("getter/symid"), ""));
                 appendIfAllNotBlank(sec.sb, " write ", retrieveReference(null, sec.data.get("setter/id"), sec.data.get("setter/symid"), ""));
-                sec.insertVisibility(LF.length());
+                sec.insertVisibility(LF.length(), getDefaultVisibility());
             }
+        }
+
+        private String getDefaultVisibility() {
+            Iterator<Section> it = stack.iterator();
+            it.next();
+            if (it.hasNext()) {
+                Section sec = it.next();
+                if (sec.isStructuredType()) {
+                    return "public ";
+                }
+            }
+            return "";
         }
 
         private void appendLineEnd(Section sec) {
@@ -720,8 +733,8 @@ public class PPUDumpParser {
                     '}';
         }
 
-        public void insertVisibility(int pos) {
-            insertText(pos, StringUtils.isBlank(getDataStr("visibility")) ? "" : getDataStr("visibility") + " ");
+        public void insertVisibility(int pos, String defaultVisibility) {
+            insertText(pos, StringUtils.isBlank(getDataStr("visibility")) ? defaultVisibility : getDataStr("visibility") + " ");
         }
 
         public void merge(Section sec) {
@@ -786,6 +799,10 @@ public class PPUDumpParser {
                 isb.append(INDENT);
             }
             indent = isb.toString();
+        }
+
+        public boolean isStructuredType() {
+            return "/obj".equals(type);
         }
     }
 
