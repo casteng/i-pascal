@@ -84,6 +84,9 @@ public class SectionToggle {
         PasField field = null;
         if (container.scope instanceof PasModuleImpl) {
             field = ((PasModuleImpl) container.scope).getPrivateField(container.prefix + PsiUtil.getFieldName(container.element));
+            if (null == field) {                             // Try to find implementation w/o parameters
+                field = ((PasModuleImpl) container.scope).getPrivateField(container.prefix + container.element.getName());
+            }
         }
         return field != null ? field.getElement() : null;
     }
@@ -129,13 +132,20 @@ public class SectionToggle {
         if (scope != null) {
             String ns = container.element.getNamespace();
             String name = PsiUtil.getFieldName(container.element).substring(StringUtils.isEmpty(ns) ? 0 : ns.length() + 1);
-            if (scope instanceof PasModuleImpl) {
-                field = ((PasModuleImpl) scope).getPublicField(name);
-            } else {
-                field = scope.getField(name);
+            field = retrieveField(scope, name);
+            if (null == field) {                // Try to find w/o parens
+                field = retrieveField(scope, name.substring(0, name.length() - 2));
             }
         }
         return field != null ? field.getElement() : null;
+    }
+
+    private static PasField retrieveField(PasEntityScope scope, String name) {
+        if (scope instanceof PasModuleImpl) {
+            return ((PasModuleImpl) scope).getPublicField(name);
+        } else {
+            return scope.getField(name);
+        }
     }
 
     public static String getPrefix(PasEntityScope scope) {
