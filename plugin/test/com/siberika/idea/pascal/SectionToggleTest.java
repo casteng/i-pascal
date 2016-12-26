@@ -20,7 +20,7 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
         return "testData/misc";
     }
 
-    public void test() {
+    public void testSectionToggle() {
         myFixture.configureByFiles("sectionToggle.pas");
         List<PascalNamedElement> symbols = new ArrayList<PascalNamedElement>(PascalParserUtil.findSymbols(myFixture.getProject(), ""));
         Collections.sort(symbols, new Comparator<PascalNamedElement>() {
@@ -33,15 +33,23 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
         Collection<PasExportedRoutineImpl> decls = getDecls(symbols);
         List<PascalRoutineImpl> impls = new ArrayList<PascalRoutineImpl>();
         for (PasExportedRoutineImpl decl : decls) {
-            PsiElement impl = SectionToggle.retrieveImplementation(decl);
+            PascalRoutineImpl impl = (PascalRoutineImpl) SectionToggle.retrieveImplementation(decl);
+            assertTrue("Implementation not found", impl != null);
             printElement("Impl: " + decl.getName(), impl);
-            impls.add((PascalRoutineImpl) impl);
+            assertTrue("Wrong implementation found", impl.getName().endsWith(decl.getName()));
+            impls.add(impl);
         }
 
         for (PascalRoutineImpl impl : impls) {
-            PsiElement decl = SectionToggle.retrieveDeclaration(impl);
+            PascalRoutineImpl decl = (PascalRoutineImpl) SectionToggle.retrieveDeclaration(impl);
+            assertTrue("Declaration not found", isInvalid(impl) || (decl != null));
             printElement("Decl: " + impl.getName(), decl);
+            assertTrue("Wrong declaration found", isInvalid(impl) || impl.getName().endsWith(decl.getName()));
         }
+    }
+
+    private boolean isInvalid(PascalRoutineImpl impl) {
+        return impl.getName().endsWith("invalid");
     }
 
     private void printElement(String name, PsiElement impl) {
