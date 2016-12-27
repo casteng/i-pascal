@@ -4,15 +4,18 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -119,11 +122,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
                 Members res = new Members();
                 res.stamp = getStamp(getContainingFile());
 
-                List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
-                for (PasNamedIdent parameter : params) {
-                    addField(res, parameter, PasField.FieldType.VARIABLE);
-                }
-
+                collectFormalParameters(res);
                 collectFields(PascalRoutineImpl.this, PasField.Visibility.STRICT_PRIVATE, res.all, res.redeclared);
 
                 addPseudoFields(res);
@@ -134,6 +133,19 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
             } finally {
                 building = false;
             }
+        }
+    }
+
+    private void collectFormalParameters(Members res) {
+        List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
+        if (params.isEmpty() && (this instanceof PasRoutineImplDecl)) {         // If this is implementation with formal parameters omitted take formal parameters from routine declaration
+            PsiElement decl = SectionToggle.retrieveDeclaration(this);
+            if (decl instanceof PascalRoutineImpl) {
+                params = PsiUtil.getFormalParameters(((PascalRoutineImpl) decl).getFormalParameterSection());
+            }
+        }
+        for (PasNamedIdent parameter : params) {
+            addField(res, parameter, PasField.FieldType.VARIABLE);
         }
     }
 

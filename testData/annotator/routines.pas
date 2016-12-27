@@ -12,7 +12,7 @@ type
     procedure proc2i; external kernel name 'proc2i';
     procedure proc3i; external name 'proc3i';
 
-    procedure test1();
+    function test1(a: TVarData): PChar;
     procedure test2(); abstract;
 
     procedure proc4i; external 'kernel32.dll' index 'proc4i';
@@ -27,9 +27,8 @@ procedure proc11; external 'kernel32.dll' name 'proc1';
 procedure proc2; external kernel name 'proc2';
 procedure proc3; external name 'proc3';
 
-procedure test1();
+function test1(): PChar;
 begin
-
 end;
 
 procedure proc4; external 'kernel32.dll' index 'proc4';

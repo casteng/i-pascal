@@ -21,7 +21,7 @@ type
                 procedure innerProc;
                 constructor Create([CustomAttribute('', '', False)] a: a);
             end;
-        procedure outerProc;
+        procedure outerProc(arg: Integer);
         class destructor Destroy();
     end;
     TOtherClass = record
@@ -47,7 +47,7 @@ end;
 
 procedure TOuterClass.outerProc;
 begin
-
+    arg := 1;
 end;
 
 class destructor TOuterClass.Destroy();
