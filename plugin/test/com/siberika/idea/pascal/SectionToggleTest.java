@@ -21,7 +21,17 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     public void testSectionToggle() {
-        myFixture.configureByFiles("sectionToggle.pas");
+        List<PascalNamedElement> symbols = retrieveSymbols("sectionToggle.pas");
+        doTestSectionToggle(symbols, false);
+    }
+
+    public void testSectionToggleStrict() {
+        List<PascalNamedElement> symbols = retrieveSymbols("sectionToggleStrict.pas");
+        doTestSectionToggle(symbols, true);
+    }
+
+    private List<PascalNamedElement> retrieveSymbols(String filename) {
+        myFixture.configureByFiles(filename);
         List<PascalNamedElement> symbols = new ArrayList<PascalNamedElement>(PascalParserUtil.findSymbols(myFixture.getProject(), ""));
         Collections.sort(symbols, new Comparator<PascalNamedElement>() {
             @Override
@@ -29,22 +39,29 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
                 return o1.getTextOffset() - o2.getTextOffset();
             }
         });
+        return symbols;
+    }
 
+    private void doTestSectionToggle(List<PascalNamedElement> symbols, boolean strict) {
         Collection<PasExportedRoutineImpl> decls = getDecls(symbols);
         List<PascalRoutineImpl> impls = new ArrayList<PascalRoutineImpl>();
         for (PasExportedRoutineImpl decl : decls) {
-            PascalRoutineImpl impl = (PascalRoutineImpl) SectionToggle.retrieveImplementation(decl);
-            assertTrue("Implementation not found", impl != null);
+            boolean invalid = isInvalid(decl);
+            PascalRoutineImpl impl = (PascalRoutineImpl) SectionToggle.retrieveImplementation(decl, strict);
+            assertTrue(String.format("Implementation of %s not found", decl.getName()), invalid || impl != null);
+            assertTrue(String.format("Implementation of %s found but should not", decl.getName()), !invalid || (impl == null));
             printElement("Impl: " + decl.getName(), impl);
-            assertTrue("Wrong implementation found", impl.getName().endsWith(decl.getName()));
-            impls.add(impl);
+            assertTrue(String.format("Wrong implementation of %s found", decl.getName()), invalid || impl.getName().endsWith(decl.getName()));
+            impls.add((PascalRoutineImpl) SectionToggle.retrieveImplementation(decl, false));
         }
 
         for (PascalRoutineImpl impl : impls) {
-            PascalRoutineImpl decl = (PascalRoutineImpl) SectionToggle.retrieveDeclaration(impl);
-            assertTrue("Declaration not found", isInvalid(impl) || (decl != null));
+            boolean invalid = isInvalid(impl);
+            PascalRoutineImpl decl = (PascalRoutineImpl) SectionToggle.retrieveDeclaration(impl, strict);
+            assertTrue(String.format("Declaration of %s not found", impl.getName()), invalid || (decl != null));
+            assertTrue(String.format("Declaration of %s found but should not", impl.getName()), !invalid || (decl == null));
             printElement("Decl: " + impl.getName(), decl);
-            assertTrue("Wrong declaration found", isInvalid(impl) || impl.getName().endsWith(decl.getName()));
+            assertTrue(String.format("Wrong declaration of %s found", impl.getName()), invalid || impl.getName().endsWith(decl.getName()));
         }
     }
 
