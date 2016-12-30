@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,17 +55,19 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     public void testNormalizeRoutineName() throws Exception {
-        Map<String, String> names = new HashMap<String, String>();
+        Map<String, String> names = new LinkedHashMap<String, String>();
         names.put("test1", "test1()");
         names.put("test2", "test2()");
         names.put("test3", "test3(" + PsiUtil.TYPE_UNTYPED_NAME + ")");
         names.put("test4", "test4(type1,type1)");
         names.put("test5", "test5(type1,type1,type2)");
         names.put("test6", "test6():type3");
-        names.put("test7", "test7():type4");
+        names.put("test7", "test7():string");
         names.put("test8", "test8(type5):type6");
         names.put("test9", String.format("test9(%1$s,%1$s,%1$s):type7", PsiUtil.TYPE_UNTYPED_NAME));
         names.put("testA", "testA(typeA1<T>,typeA2):typeA3");
+        names.put("testB", "testB(type1)");
+        names.put("testC", "testC()");
         myFixture.configureByFiles("normalizeRoutineName.pas");
         Collection<PascalRoutineImpl> symbols = PascalParserUtil.findSymbols(myFixture.getProject(), "test", PascalRoutineImpl.class);
         assertEquals("Wrong number of routines", names.size(), symbols.size());

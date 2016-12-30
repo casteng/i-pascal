@@ -175,6 +175,16 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     }
 
     @NotNull
+    public String getFunctionTypeStr() {
+        PasTypeDecl type = findChildByClass(PasTypeDecl.class);
+        PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);
+        if (typeId != null) {
+            return typeId.getFullyQualifiedIdent().getName();
+        }
+        return type != null ? type.getText() : "";
+    }
+
+    @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
         if (!SyncUtil.tryLockQuiet(parentLock, SyncUtil.LOCK_TIMEOUT_MS)) {
