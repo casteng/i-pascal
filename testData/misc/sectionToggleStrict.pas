@@ -4,24 +4,37 @@ interface
 
 type
     TTest = class
-        procedure test1();
+        constructor Create(ac1, ac2: Integer);
+        destructor Destroy(); override;
+        class procedure test1();
         procedure test2_invalid();
         procedure test3_invalid(a3: Integer); overload;
-        procedure test4(a4: Integer; b4: string);
+        function test4(a4: Integer; b4: string): string;
         procedure test5_invalid(a55: string);
         procedure test6(a6: Integer; b6: string); overload;
         procedure test7;
+        function test8_invalid(a4: Integer; b4: string): string;
     end;
 
     function testRoutine1(a: string): Integer;
     function testRoutine2_invalid(a: string): Integer; overload;
     function testRoutine3_invalid(): Integer;
+    function testRoutine4_invalid(): Integer;
+    function testRoutine5(a5: Integer): string;
 
 implementation
 
 { TTest }
 
-procedure TTest.test1();
+constructor TTest.Create;
+begin
+end;
+
+destructor TTest.Destroy();
+begin
+end;
+
+class procedure TTest.test1();
 begin
 end;
 
@@ -52,7 +65,11 @@ procedure TTest.test7();
 begin
 end;
 
-function testRoutine1(): Integer;
+function TTest.test8_invalid(a4: Integer; b4: string): Integer;
+begin
+end;
+
+function testRoutine1();
 begin
     a;
 end;
@@ -62,6 +79,14 @@ begin
 end;
 
 procedure testRoutine3_invalid(a3: Integer);
+begin
+end;
+
+function testRoutine4_invalid(): string;
+begin
+end;
+
+function testRoutine5;
 begin
 end;
 

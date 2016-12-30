@@ -52,7 +52,7 @@ procedure TTest.test7();
 begin
 end;
 
-function testRoutine1(): Integer;
+function testRoutine1();
 begin
     a;
 end;

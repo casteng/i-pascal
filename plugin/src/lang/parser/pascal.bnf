@@ -287,9 +287,11 @@ private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
 private classOperatorDecl   ::= [CLASS] OPERATOR procName FormalParameterSection ":" TypeDecl {pin=2}
 
-RoutineImplDecl             ::= routineDeclaration ProcBodyBlock {pin=1 name="procedure or function declaration"}
+RoutineImplDecl             ::= routineImpl ProcBodyBlock {pin=1 name="procedure or function declaration"}
 RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {extends=RoutineImplDecl}
 RoutineImplDeclNested1      ::= routineDeclaration BlockLocalNested1 [";"] {extends=RoutineImplDecl}
+private routineImpl         ::= customAttributes* (exportedProc | exportedFuncImpl | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine}
+private exportedFuncImpl    ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] [":" customAttributes* TypeDecl] {pin=2}
 
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" RefNamedIdent ";"
 

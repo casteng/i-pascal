@@ -88,9 +88,9 @@ public class SectionToggle {
         if (container.scope instanceof PasModuleImpl) {
             field = ((PasModuleImpl) container.scope).getPrivateField(container.prefix + PsiUtil.getFieldName(container.element));
             field = checkRoutineField(field);
-            if (null == field && (!strict || !isOverloaded((PasExportedRoutine) container.element))) {                             // Try to find implementation w/o parameters
+            if (null == field && (!strict || !isOverloaded((PasExportedRoutine) container.element))) {                          // Try to find implementation w/o parameters
                 field = checkRoutineField(((PasModuleImpl) container.scope).getPrivateField(container.prefix + container.element.getName()));
-                if (strict && (field != null) && hasParameters((PascalRoutineImpl) field.getElement())) { // Only empty parameters list allowed in strict mode
+                if (strict && (field != null) && hasParametersOrReturnType((PascalRoutineImpl) field.getElement())) {           // Only empty parameters list and return type allowed in strict mode
                     field = null;
                 }
             }
@@ -98,7 +98,10 @@ public class SectionToggle {
         return field != null ? field.getElement() : null;
     }
 
-    private static boolean hasParameters(PascalRoutineImpl routine) {
+    private static boolean hasParametersOrReturnType(PascalRoutineImpl routine) {
+        if (routine.getFunctionTypeStr().length() > 0) {
+            return true;
+        }
         PasFormalParameterSection params = routine.getFormalParameterSection();
         return (params != null) && !params.getFormalParameterList().isEmpty();
     }
@@ -162,7 +165,8 @@ public class SectionToggle {
             if (null == field) {                // Try to find any routine with that name, ignoring parameters
                 field = retrieveField(scope, name.substring(0, name.indexOf('(')));
                 field = checkRoutineField(field);
-                if ((field != null) && strict && (isOverloaded((PasExportedRoutine) field.getElement()) || hasParameters((PascalRoutineImpl) container.element))) {
+                if ((field != null) && strict &&
+                        (isOverloaded((PasExportedRoutine) field.getElement()) || hasParametersOrReturnType((PascalRoutineImpl) container.element))) {
                     field = null;               // Overloaded routines must repeat parameters
                 }
             }

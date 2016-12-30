@@ -4,7 +4,8 @@ interface
 
 type
     TTest = class
-        procedure test1();
+        constructor Create(ac1, ac2: Integer);
+        class procedure test1();
         procedure test2();
         procedure test3(a3: Integer); overload;
         procedure test4(a4: Integer; b4: string);
@@ -21,7 +22,11 @@ implementation
 
 { TTest }
 
-procedure TTest.test1();
+constructor TTest.Create;
+begin
+end;
+
+class procedure TTest.test1();
 begin
 end;
 

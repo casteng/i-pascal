@@ -27,7 +27,7 @@ procedure proc11; external 'kernel32.dll' name 'proc1';
 procedure proc2; external kernel name 'proc2';
 procedure proc3; external name 'proc3';
 
-function test1(): PChar;
+function test1();
 begin
 end;
 
