@@ -56,7 +56,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
         Collection<PasEntityScope> found = new LinkedHashSet<PasEntityScope>();
         Collection<PasEntityScope> scopes = new LinkedHashSet<PasEntityScope>();
         if (routine instanceof PasRoutineImplDecl) {
-            PsiElement el = SectionToggle.retrieveDeclaration(routine);
+            PsiElement el = SectionToggle.retrieveDeclaration(routine, false);
             if (el instanceof PasExportedRoutine) {
                 routine = (PascalRoutineImpl) el;
             } else {

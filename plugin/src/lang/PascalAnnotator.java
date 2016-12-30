@@ -208,7 +208,7 @@ public class PascalAnnotator implements Annotator {
      * implement all methods fix
      */
     private void annotateRoutineInInterface(PasExportedRoutineImpl routine, AnnotationHolder holder) {
-        if (!PsiUtil.isFromBuiltinsUnit(routine) && PsiUtil.needImplementation(routine) && (null == SectionToggle.getRoutineTarget(routine))) {
+        if (!PsiUtil.isFromBuiltinsUnit(routine) && PsiUtil.needImplementation(routine) && (null == SectionToggle.retrieveImplementation(routine, true))) {
             Annotation ann = holder.createErrorAnnotation(routine, message("ann.error.missing.implementation"));
             ann.registerFix(new PascalRoutineActions.ActionImplement(message("action.implement"), routine));
             ann.registerFix(new PascalRoutineActions.ActionImplementAll(message("action.implement.all"), routine));
@@ -221,7 +221,7 @@ public class PascalAnnotator implements Annotator {
      * add to interface section fix for routines in implementation section only
      */
     private void annotateRoutineInImplementation(PasRoutineImplDeclImpl routine, AnnotationHolder holder) {
-        if (null == SectionToggle.getRoutineTarget(routine)) {
+        if (null == SectionToggle.retrieveDeclaration(routine, true)) {
             if (routine.getContainingScope() instanceof PasModule) {
                 if (((PasModule) routine.getContainingScope()).getUnitInterface() != null) {
                     Annotation ann = holder.createInfoAnnotation(routine.getNameIdentifier() != null ? routine.getNameIdentifier() : routine, message("ann.error.missing.routine.declaration"));

@@ -139,7 +139,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     private void collectFormalParameters(Members res) {
         List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
         if (params.isEmpty() && (this instanceof PasRoutineImplDecl)) {         // If this is implementation with formal parameters omitted take formal parameters from routine declaration
-            PsiElement decl = SectionToggle.retrieveDeclaration(this);
+            PsiElement decl = SectionToggle.retrieveDeclaration(this, true);
             if (decl instanceof PascalRoutineImpl) {
                 params = PsiUtil.getFormalParameters(((PascalRoutineImpl) decl).getFormalParameterSection());
             }

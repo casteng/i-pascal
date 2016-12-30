@@ -63,7 +63,7 @@ public class PascalRoutineActions {
             if (null != module) {
                 List<PascalRoutineImpl> fields = SectionToggle.collectFields(module.getPrivateFields(), PasField.FieldType.ROUTINE, null);
                 for (PascalRoutineImpl field : fields) {
-                    if ((field != routine) && (field.getContainingScope() == scope) && (null == SectionToggle.retrieveDeclaration(field))) {
+                    if ((field != routine) && (field.getContainingScope() == scope) && (null == SectionToggle.retrieveDeclaration(field, true))) {
                         addData(new FixActionData(field));
                     }
                 }
@@ -126,7 +126,7 @@ public class PascalRoutineActions {
                 }
             });
             for (PasExportedRoutineImpl field : fields) {
-                if ((field != routine) && (PsiUtil.needImplementation(field)) && (null == SectionToggle.retrieveImplementation(field))) {
+                if ((field != routine) && (PsiUtil.needImplementation(field)) && (null == SectionToggle.retrieveImplementation(field, true))) {
                     addData(new FixActionData(field));
                 }
             }

@@ -8,6 +8,8 @@ import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
@@ -61,34 +63,57 @@ public class SectionToggle {
         return null;
     }
 
+    // Non-strict
     public static PsiElement getRoutineTarget(PascalRoutineImpl routine) {
         Container cont = calcPrefix(new Container(routine));
         if (routine instanceof PasExportedRoutine) {
-            return retrieveImplementation(cont);
+            return retrieveImplementation(cont, false);
         } else if (routine instanceof PasRoutineImplDecl) {
-            return retrieveDeclaration(cont);
+            return retrieveDeclaration(cont, false);
         }
         return null;
     }
 
     @Nullable
-    public static PsiElement retrieveImplementation(PascalRoutineImpl routine) {
-        return retrieveImplementation(calcPrefix(new Container(routine)));
+    public static PsiElement retrieveImplementation(PascalRoutineImpl routine, boolean strict) {
+        return retrieveImplementation(calcPrefix(new Container(routine)), strict);
     }
 
     @Nullable
-    private static PsiElement retrieveImplementation(Container container) {
+    private static PsiElement retrieveImplementation(Container container, boolean strict) {
         if (null == container) {
             return null;
         }
         PasField field = null;
         if (container.scope instanceof PasModuleImpl) {
             field = ((PasModuleImpl) container.scope).getPrivateField(container.prefix + PsiUtil.getFieldName(container.element));
-            if (null == field) {                             // Try to find implementation w/o parameters
-                field = ((PasModuleImpl) container.scope).getPrivateField(container.prefix + container.element.getName());
+            field = checkRoutineField(field);
+            if (null == field && (!strict || !isOverloaded((PasExportedRoutine) container.element))) {                             // Try to find implementation w/o parameters
+                field = checkRoutineField(((PasModuleImpl) container.scope).getPrivateField(container.prefix + container.element.getName()));
+                if (strict && (field != null) && hasParameters((PascalRoutineImpl) field.getElement())) { // Only empty parameters list allowed in strict mode
+                    field = null;
+                }
             }
         }
         return field != null ? field.getElement() : null;
+    }
+
+    private static boolean hasParameters(PascalRoutineImpl routine) {
+        PasFormalParameterSection params = routine.getFormalParameterSection();
+        return (params != null) && !params.getFormalParameterList().isEmpty();
+    }
+
+    private static boolean isOverloaded(PasExportedRoutine routine) {
+        for (PasFunctionDirective directive : routine.getFunctionDirectiveList()) {
+            if (directive.getText().toUpperCase().startsWith("OVERLOAD")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static PasField checkRoutineField(PasField field) {
+        return (field == null) || (field.fieldType == PasField.FieldType.ROUTINE) ? field : null;
     }
 
     private static void retrieveFirstImplementations(Collection<PsiElement> targets, Container container) {
@@ -118,12 +143,13 @@ public class SectionToggle {
     }
 
     @Nullable
-    public static PsiElement retrieveDeclaration(PascalRoutineImpl routine) {
-        return retrieveDeclaration(calcPrefix(new Container(routine)));
+    public static PsiElement retrieveDeclaration(PascalRoutineImpl routine, boolean strict) {
+        return retrieveDeclaration(calcPrefix(new Container(routine)), strict);
     }
 
     @Nullable
-    private static PsiElement retrieveDeclaration(Container container) {
+    // In strict mode only correct declaration-implementation pairs will be found
+    private static PsiElement retrieveDeclaration(Container container, boolean strict) {
         if (null == container) {
             return null;
         }
@@ -133,8 +159,12 @@ public class SectionToggle {
             String ns = container.element.getNamespace();
             String name = PsiUtil.getFieldName(container.element).substring(StringUtils.isEmpty(ns) ? 0 : ns.length() + 1);
             field = retrieveField(scope, name);
-            if (null == field) {                // Try to find w/o parens
-                field = retrieveField(scope, name.substring(0, name.length() - 2));
+            if (null == field) {                // Try to find any routine with that name, ignoring parameters
+                field = retrieveField(scope, name.substring(0, name.indexOf('(')));
+                field = checkRoutineField(field);
+                if ((field != null) && strict && (isOverloaded((PasExportedRoutine) field.getElement()) || hasParameters((PascalRoutineImpl) container.element))) {
+                    field = null;               // Overloaded routines must repeat parameters
+                }
             }
         }
         return field != null ? field.getElement() : null;
@@ -142,9 +172,9 @@ public class SectionToggle {
 
     private static PasField retrieveField(PasEntityScope scope, String name) {
         if (scope instanceof PasModuleImpl) {
-            return ((PasModuleImpl) scope).getPublicField(name);
+            return checkRoutineField(((PasModuleImpl) scope).getPublicField(name));
         } else {
-            return scope.getField(name);
+            return checkRoutineField(scope.getField(name));
         }
     }
 
@@ -211,11 +241,11 @@ public class SectionToggle {
             }
             // starting from the index search for implementations
             for (int i = ind - 1; (i >= 0) && (res < 0); i--) {
-                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i))));
+                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i))), false);
                 res = impl != null ? impl.getTextRange().getEndOffset() : -1;
             }
             for (int i = ind + 1; (i < decls.size()) && (res < 0); i++) {
-                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i))));
+                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i))), false);
                 if (impl != null) {
                     res = impl.getTextRange().getStartOffset();
                 }
@@ -286,11 +316,11 @@ public class SectionToggle {
         }
         // starting from the index search for declarations
         for (int i = ind - 1; (i >= 0) && (res < 0); i--) {
-            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))));
+            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))), false);
             res = decl != null ? decl.getTextRange().getEndOffset() : -1;
         }
         for (int i = ind + 1; (i < impls.size()) && (res < 0); i++) {
-            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))));
+            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))), false);
             if (decl != null) {
                 res = decl.getTextRange().getStartOffset();
             }

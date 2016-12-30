@@ -134,7 +134,7 @@ public class ActionImplement extends PascalAction {
 
     private PsiElement getPrevMethod(PsiElement el, PascalRoutineImpl methodImpl) {
         if (methodImpl != null) {
-            return SectionToggle.retrieveDeclaration(methodImpl);
+            return SectionToggle.retrieveDeclaration(methodImpl, false);
         }
         PasExportedRoutine routine = (el instanceof PasExportedRoutine) ? (PasExportedRoutine) el : PsiTreeUtil.getParentOfType(el, PasExportedRoutine.class);
         if (null == routine) {
