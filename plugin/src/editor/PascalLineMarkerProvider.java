@@ -75,7 +75,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     static  <T extends PsiElement> LineMarkerInfo<T> createLineMarkerInfo(@NotNull T element, Icon icon, final String tooltip,
                                                            @NotNull GutterIconNavigationHandler<T> handler) {
         return new LineMarkerInfo<T>(element, element.getTextRange(),
-                icon, Pass.UPDATE_OVERRIDEN_MARKERS,
+                icon, Pass.UPDATE_OVERRIDDEN_MARKERS,
                 new ConstantFunction<T, String>(tooltip), handler,
                 GutterIconRenderer.Alignment.RIGHT);
     }
