@@ -5,18 +5,39 @@ Description
 -----------
 A free Object Pascal language plugin for excellent `IntelliJ IDEA <http://www.jetbrains.com/idea>`_ is to be released in May 2013.
 
-Currently uses `Free Pascal <http://www.freepascal.org>`_ compiler to compile sources.
+Supports integration with Delphi compiler (dcc32) and `Free Pascal <http://www.freepascal.org>`_ compilers.<br />
 
-Compatible with Idea 12.x community edition as well as ultimate edition.
+Compatible with IDEA Community Edition as well as Ultimate Edition from version 13.xx and above.
 
 Pascal-specific features currently implemented
 ++++++++++++++++++++++++++++++++++++++++++++++
 
+* context-aware completion
+* statements completion
+* compiler defines and directives completion
+* undeclared identifiers highlight
+* add variable declaration quick fix
+* missing method declaration/implementation highlight and quick fixes
+* used units usage check and quick fixes
+* missing routine implementation highlight and quick fixes
+* override inherited methods
+* navigate to super methods/classes
+* navigate to implementations/descendants
+* routine parameters hint
+* DCU files interface view - DCU32INT (http://hmelnov.icc.ru/DCU) required
+* PPU files interface view - FPC 2.7.x or above required
+* navigation between unit routine interface definition and implementation
+* navigation between class method definition and implementation
+* rename refactoring
+* braces matcher
+* code commenter
 * Free Pascal compiler integration
-* Program running from the IDE
-* Syntax errors highlighting
-* Object Pascal to abstract syntax tree (AST) conversion
-* Identifier declaration, references and usages search
+* Delphi compiler integration
+* full Object Pascal parser
+* conditional compilation support
+* identifier declaration, references and usages search and highlight
+* program running from the IDE
+* syntax errors highlighting
 * Object Pascal syntax highlighting
 * folding support
 
@@ -35,13 +56,11 @@ Planned in future releases
 ++++++++++++++++++++++++++
 
 * code analysis
-* easy navigation - class/interface <-> descendants/implementations, interface <-> implementation, etc
 * full error insight with quick fixes
 * probably bad code warnings with quick fixes
 * refactoring
 * import of Lazarus and Delphi projects
 * extended includes support
-* conditional compilation support
 * test frameworks support
 * FPC for JVM support
 
