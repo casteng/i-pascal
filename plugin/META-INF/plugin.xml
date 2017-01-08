@@ -13,6 +13,7 @@
         <ul>
           <li>fixed section toggle when parameters omitted (Issue #29)</li>
           <li>omitted parameters in code completion (Issue #29)</li>
+          <li>source code released</li>
         </ul>
         <p>1.08</p>
         <ul>
