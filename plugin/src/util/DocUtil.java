@@ -21,12 +21,14 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.FileContentUtil;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -172,15 +174,21 @@ public class DocUtil {
         tpl.setToIndent(false);
         tpl.setToReformat(false);
         tpl.setToShortenLongNames(true);
+        List<Variable> vars = new SmartList<Variable>();
         for (int i = 0; i < tpl.getSegmentsCount(); i++) {
             String varName = tpl.getSegmentName(i);
             String def = defaults != null ? defaults.get(varName) : null;
             TextExpression expr = new TextExpression(def != null ? def : "");
             Variable var = new Variable(varName, expr, expr, true, false);
+            vars.add(var);
+        }
+        tpl.removeAllParsed();
+        for (Variable var : vars) {
             if (!tpl.getVariables().contains(var)) {
-                tpl.getVariables().add(var);
+                tpl.addVariable(var.getName(), var.getExpression(), var.getDefaultValueExpression(), var.isAlwaysStopAt(), var.skipOnStart());
             }
         }
+
         tpl.parseSegments();
         tpl.setInline(inline);
         return tpl;

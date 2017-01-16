@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.09</version>
+    <version>1.10</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.10</p>
+        <ul>
+          <li>fixed template system regression</li>
+        </ul>
         <p>1.09</p>
         <ul>
           <li>fixed section toggle when parameters omitted (Issue #29)</li>
