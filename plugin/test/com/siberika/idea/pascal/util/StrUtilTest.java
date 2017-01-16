@@ -1,5 +1,7 @@
 package com.siberika.idea.pascal.util;
 
+import com.google.common.collect.ImmutableMap;
+import com.intellij.codeInsight.template.impl.TemplateImpl;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,5 +37,14 @@ public class StrUtilTest {
         Assert.assertEquals("file name", StrUtil.getIncludeName("{$inCluDe 'file name'}"));
         Assert.assertEquals(" file name ", StrUtil.getIncludeName("{$inCluDe  ' file name ' }"));
         Assert.assertEquals(null, StrUtil.getIncludeName("{$inCluDe ''}"));
+    }
+
+    @Test
+    public void testTemplate() throws Exception {
+        TemplateImpl t = (TemplateImpl) DocUtil.createTemplate("var\ni: $TYPE$", ImmutableMap.<String, String>of("TYPE", "T"), true);
+        Assert.assertEquals(1, t.getVariableCount());
+        Assert.assertEquals(1, t.getSegmentsCount());
+        Assert.assertEquals("TYPE", t.getVariableNameAt(0));
+        Assert.assertEquals("T", t.getDefaultValueAt(0).calculateResult(null).toString());
     }
 }
