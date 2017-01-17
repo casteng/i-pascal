@@ -168,6 +168,23 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "const", "type", "var", "procedure", "function", "begin");
     }
 
+    public void testRoutineParams1() {
+        myFixture.configureByFiles("routineParams1.pas");
+        checkCompletionContainsAllCarets(myFixture, "const ", "var ", "out ");
+    }
+
+    public void testRoutineParams2() {
+        myFixture.configureByFiles("routineParams2.pas");
+        checkCompletion(myFixture, "const ", "var ", "out ");
+        myFixture.type('o');
+        checkCompletion(myFixture, "const ", "out ");
+    }
+
+    public void testRoutineParams3() {
+        myFixture.configureByFiles("routineParams3.pas");
+        checkCompletionNotContains(myFixture, "const ", "var ", "out ");
+    }
+
     public void testMethodDirectivesIntf() {
         myFixture.configureByFiles("methodDirectivesIntf.pas");
         checkCompletion(myFixture, "assembler", "cdecl", "deprecated", "dispid", "experimental",

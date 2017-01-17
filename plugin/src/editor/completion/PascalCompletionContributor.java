@@ -8,6 +8,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
+import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.ide.DataManager;
@@ -36,55 +37,7 @@ import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
-import com.siberika.idea.pascal.lang.psi.PasArgumentList;
-import com.siberika.idea.pascal.lang.psi.PasAssignPart;
-import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
-import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
-import com.siberika.idea.pascal.lang.psi.PasCaseItem;
-import com.siberika.idea.pascal.lang.psi.PasCaseStatement;
-import com.siberika.idea.pascal.lang.psi.PasClassField;
-import com.siberika.idea.pascal.lang.psi.PasClassParent;
-import com.siberika.idea.pascal.lang.psi.PasClassProperty;
-import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
-import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
-import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
-import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
-import com.siberika.idea.pascal.lang.psi.PasConstExpressionOrd;
-import com.siberika.idea.pascal.lang.psi.PasContainsClause;
-import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasExpr;
-import com.siberika.idea.pascal.lang.psi.PasForStatement;
-import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
-import com.siberika.idea.pascal.lang.psi.PasIfStatement;
-import com.siberika.idea.pascal.lang.psi.PasIfThenStatement;
-import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
-import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
-import com.siberika.idea.pascal.lang.psi.PasRequiresClause;
-import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
-import com.siberika.idea.pascal.lang.psi.PasStatement;
-import com.siberika.idea.pascal.lang.psi.PasTryStatement;
-import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
-import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PasTypeSection;
-import com.siberika.idea.pascal.lang.psi.PasTypes;
-import com.siberika.idea.pascal.lang.psi.PasUnitFinalization;
-import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
-import com.siberika.idea.pascal.lang.psi.PasUnitInitialization;
-import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
-import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
-import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
-import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.*;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
@@ -211,6 +164,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 }
                 handleDeclarations(result, parameters, pos, originalPos);
                 handleStructured(result, parameters, pos, originalPos);
+                handleParameters(result, pos, originalPos);
 
                 Collection<PasField> entities = new HashSet<PasField>();
                 handleEntities(result, parameters, pos, originalPos, expr, entities);
@@ -391,6 +345,14 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
+    private void handleParameters(CompletionResultSet result, PsiElement pos, PsiElement originalPos) {
+        if ((pos instanceof PasFormalParameter) && (((PasFormalParameter) pos).getParamType() == null)) {
+            appendText(result, "const ");
+            appendText(result, "var ");
+            appendText(result, "out ");
+        }
+    }
+
     private void appendText(CompletionResultSet result, String s) {
         result.caseInsensitive().addElement(getElement(s));
     }
@@ -496,6 +458,10 @@ public class PascalCompletionContributor extends CompletionContributor {
         LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(editor, field) : LookupElementBuilder.create(field.name);
         return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(true).withTypeText(scope, false);
+    }
+
+    private LookupElement priority(LookupElement element, double priority) {
+        return PrioritizedLookupElement.withPriority(element, priority);
     }
 
     private static boolean buildFromElement(@NotNull PasField field) {

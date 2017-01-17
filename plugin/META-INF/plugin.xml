@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>1.10</p>
         <ul>
+          <li>formal parameters type completion</li>
           <li>fixed template system regression</li>
         </ul>
         <p>1.09</p>
