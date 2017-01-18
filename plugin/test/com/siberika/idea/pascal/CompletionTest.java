@@ -258,7 +258,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         /*checkCompletionNotContains(myFixture,
                 "for", "while", "repeat", "if", "case", "with",
                 "goto", "exit", "try", "raise", "begin", "end");*/
-        checkCompletionContains(myFixture, "do", "then", "of");
+        checkCompletionContainsAllCarets(myFixture, "do", "then", "of");
     }
 
     public void testStatementInExpr() {
@@ -275,12 +275,12 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testBeginend() {
         myFixture.configureByFiles("beginend.pas");
-        checkCompletionContains(myFixture, "begin");
+        checkCompletionContainsAllCarets(myFixture, "begin");
     }
 
     public void testElse() {
         myFixture.configureByFiles("else.pas");
-        checkCompletionContains(myFixture, "else");
+        checkCompletionContainsAllCarets(myFixture, "else");
     }
 
 }

@@ -212,6 +212,9 @@ public class PascalCompletionContributor extends CompletionContributor {
             if (!isControlStatement(pos)) {
                 pos = pos.getParent();
             }
+            if (pos instanceof PasIfThenStatement) {
+                pos = pos.getParent();
+            }
             if (isControlStatement(pos)) {
                 ASTNode doThenOf = getDoThenOf(pos);
                 if (doThenOf != null) {
@@ -245,7 +248,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.IF_THEN_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT);
+    private TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT);
     private boolean isControlStatement(PsiElement pos) {
         return TS_CONTROL_STATEMENT.contains(pos.getNode().getElementType());
     }
