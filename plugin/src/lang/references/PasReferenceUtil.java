@@ -291,7 +291,7 @@ public class PasReferenceUtil {
         PsiElement expr = fqn.getParentIdent().getParent();
         expr = expr != null ? expr.getFirstChild() : null;
         if (expr instanceof PascalExpression) {
-            List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) expr);
+            List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) expr);
             if (!types.isEmpty()) {
                 fqn.setNested(true);
                 Set<PasField.FieldType> fieldTypes = new HashSet<PasField.FieldType>(fieldTypesOrig);
@@ -483,7 +483,7 @@ public class PasReferenceUtil {
             if (PsiUtil.isParentOf(ident, ws.getStatement()) && PsiUtil.isParentOf(ws, scope)) {
                 for (PasExpression expr : ws.getExpressionList()) {
                     if ((expr != null) && (expr.getExpr() instanceof PascalExpression)) {
-                        List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) expr.getExpr());
+                        List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) expr.getExpr());
                         if (!types.isEmpty()) {
                             PasEntityScope ns = PascalExpression.retrieveScope(types);
                             if (ns != null) {

@@ -36,7 +36,7 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     public void testExprType() throws Exception {
-        myFixture.configureByFiles("structTypes.pas", "calcTypeTest.pas");
+        myFixture.configureByFiles("structTypes.pas", "calcTypesTest.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
                 PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "calcTypeTest");
         PasStatement stmt = PsiTreeUtil.findChildOfType(mod, PasStatement.class);
@@ -44,7 +44,7 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         PsiElement par = expr.getParent();
         par = par != null ? par.getFirstChild() : null;
         if (par instanceof PascalExpression) {
-            List<PasField.ValueType> types = PascalExpression.getType((PascalExpression) par);
+            List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) par);
             for (PasField.ValueType type : types) {
                 System.out.println(String.format("%s: %s", type.field != null ? type.field.name : "<anon>",
                         type.kind != null ? type.kind.name() : "-"));

@@ -3,8 +3,9 @@ Intellij IDEA Object Pascal plugin
 
 Description
 -----------
-A free Object Pascal language plugin for excellent `IntelliJ IDEA <http://www.jetbrains.com/idea>`_.
 `Project homepage <http://www.siberika.com/ipascal.htm>`_.
+
+A free Object Pascal language plugin for excellent `IntelliJ IDEA <http://www.jetbrains.com/idea>`_.
 
 Supports integration with Delphi compiler (dcc32) and `Free Pascal <http://www.freepascal.org>`_ compilers.
 

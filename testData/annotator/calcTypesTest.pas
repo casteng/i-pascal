@@ -1,4 +1,4 @@
-unit calcTypeTest;
+unit calcTypesTest;
 
 interface
 

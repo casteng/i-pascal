@@ -87,7 +87,7 @@ public class PasField {
 
     private final int cachedHash;
 
-    ReentrantLock typeLock = new ReentrantLock();
+    private ReentrantLock typeLock = new ReentrantLock();
 
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, FieldType fieldType,
                     @NotNull Visibility visibility, @Nullable PsiElement target, ValueType valueType) {

@@ -42,7 +42,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return PsiUtil.findImmChildOfAnyType(this, PascalOperation.class);
     }
 
-    public static List<PasField.ValueType> getType(PascalExpression expr) {
+    public static List<PasField.ValueType> getTypes(PascalExpression expr) {
         List<PasField.ValueType> res;
 
         if (expr instanceof PasReferenceExpr) {
@@ -91,7 +91,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
 
     private static List<PasField.ValueType> getChildType(PsiElement child) {
         if (child instanceof PascalExpression) {
-            return PascalExpression.getType((PascalExpression) child);
+            return PascalExpression.getTypes((PascalExpression) child);
         }
         return new SmartList<PasField.ValueType>();
     }
