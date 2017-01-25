@@ -4,6 +4,7 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
@@ -12,9 +13,11 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
+import com.siberika.idea.pascal.lang.psi.PasLiteralExpr;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -123,4 +126,30 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return newScope != null ? newScope.getTypeScope() : null;
     }
 
+    public static String infereType(PascalExpression expression) {
+        PsiElement expr = expression.getFirstChild();
+        if (expr instanceof PasReferenceExpr) {
+            List<PasField.ValueType> types = getTypes((PascalExpression) expr);
+            for (PasField.ValueType type : types) {
+                if (type.field != null) {
+                    return PsiUtil.getTypeDeclaration(type.field.getElement()).getText();
+                }
+            }
+        } else if (expr instanceof PasLiteralExpr) {
+            PsiElement literal = expr.getFirstChild();
+            IElementType type = literal.getNode().getElementType();
+            if ((type == PasTypes.NUMBER_INT) || (type == PasTypes.NUMBER_HEX) || (type == PasTypes.NUMBER_OCT) || (type == PasTypes.NUMBER_BIN)) {
+                return "Integer";
+            } else if (type == PasTypes.NUMBER_REAL) {
+                return "Single";
+            } else if ((type == PasTypes.TRUE) || (type == PasTypes.FALSE)) {
+                return "Boolean";
+            } else if (type == PasTypes.NIL) {
+                return "Pointer";
+            } else if (type == PasTypes.STRING_FACTOR) {
+                return "String";
+            }
+        }
+        return null;
+    }
 }
