@@ -92,17 +92,17 @@ public class PascalAnnotator implements Annotator {
                         case VAR: {
                             boolean priority = context != PsiContext.CALL;
                             if (!(scope instanceof PascalStructType)) {
-                                ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.var"), namedElement, null, priority, context != PsiContext.FOR ? "T" : "Integer"));
+                                ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.var"), namedElement, null, priority, context != PsiContext.FOR ? null : "Integer"));
                             }
                             PsiElement adjustedScope = adjustScope(scope);
                             if (adjustedScope instanceof PascalStructType) {
                                 if (StrUtil.PATTERN_FIELD.matcher(name).matches()) {
-                                    ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.field"), namedElement, adjustedScope, priority, "T"));
+                                    ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.field"), namedElement, adjustedScope, priority, null));
                                     if (context != PsiContext.PROPERTY_SPEC) {
                                         ann.registerFix(PascalActionDeclare.newActionCreateProperty(message("action.create.property"), namedElement, adjustedScope, false));
                                     }
                                 } else {
-                                    ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.field"), namedElement, adjustedScope, false, "T"));
+                                    ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.field"), namedElement, adjustedScope, false, null));
                                     if (context != PsiContext.PROPERTY_SPEC) {
                                         ann.registerFix(PascalActionDeclare.newActionCreateProperty(message("action.create.property"), namedElement, adjustedScope, priority));
                                     }

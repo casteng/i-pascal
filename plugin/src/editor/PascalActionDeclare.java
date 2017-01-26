@@ -50,6 +50,7 @@ import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
@@ -304,10 +305,20 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
                 prefix = "\nvar ";
             }
+            String type = defaultType != null ? defaultType : calcType(data);
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s: $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)),
-                        StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, defaultType))));
+                        StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, type))));
             }
+        }
+
+        private String calcType(FixActionData data) {
+            String res = "T";
+            if (PsiUtil.isAssignLeftPart(data.element)) {
+                String type = PascalExpression.calcAssignStatementType(PsiUtil.skipToExpressionParent(data.element));
+                res = type != null ? type : res;
+            }
+            return res;
         }
     }
 

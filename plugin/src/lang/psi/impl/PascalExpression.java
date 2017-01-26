@@ -5,8 +5,10 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -25,6 +27,7 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -126,17 +129,10 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return newScope != null ? newScope.getTypeScope() : null;
     }
 
-    public static String infereType(PascalExpression expression) {
-        PsiElement expr = expression.getFirstChild();
-        if (expr instanceof PasReferenceExpr) {
-            List<PasField.ValueType> types = getTypes((PascalExpression) expr);
-            for (PasField.ValueType type : types) {
-                if (type.field != null) {
-                    return PsiUtil.getTypeDeclaration(type.field.getElement()).getText();
-                }
-            }
-        } else if (expr instanceof PasLiteralExpr) {
-            PsiElement literal = expr.getFirstChild();
+    public static String infereType(PasExpression expression) {
+        PsiElement firstChild = expression.getFirstChild();
+        if (firstChild instanceof PasLiteralExpr) {
+            PsiElement literal = firstChild.getFirstChild();
             IElementType type = literal.getNode().getElementType();
             if ((type == PasTypes.NUMBER_INT) || (type == PasTypes.NUMBER_HEX) || (type == PasTypes.NUMBER_OCT) || (type == PasTypes.NUMBER_BIN)) {
                 return "Integer";
@@ -149,7 +145,23 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             } else if (type == PasTypes.STRING_FACTOR) {
                 return "String";
             }
+        } else {
+            PasReferenceExpr ref = PsiTreeUtil.findChildOfType(expression, PasReferenceExpr.class);
+            if (ref != null) {
+                List<PasField.ValueType> types = getTypes((PascalExpression) ref);
+                Collections.reverse(types);
+                for (PasField.ValueType type : types) {
+                    if (type.field != null) {
+                        return PsiUtil.getTypeDeclaration(type.field.getElement()).getText();
+                    }
+                }
+            }
         }
         return null;
+    }
+
+    public static String calcAssignStatementType(PsiElement statement) {
+        PasAssignPart assPart = PsiUtil.findImmChildOfAnyType(statement, PasAssignPart.class);
+        return (assPart != null) && (assPart.getExpression() != null) ? infereType(assPart.getExpression()) : null;
     }
 }
