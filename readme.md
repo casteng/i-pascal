@@ -3,16 +3,16 @@ Intellij IDEA Object Pascal plugin
 
 Description
 -----------
-`Project homepage <http://www.siberika.com/ipascal.htm>`_.
+Project homepage: http://www.siberika.com/ipascal.htm
 
-A free Object Pascal language plugin for excellent `IntelliJ IDEA <http://www.jetbrains.com/idea>`_.
+A free Object Pascal language plugin for excellent IntelliJ IDEA
 
-Supports integration with Delphi compiler (dcc32) and `Free Pascal <http://www.freepascal.org>`_ compilers.
+Supports integration with Delphi compiler (dcc32) and Free Pascal compilers.
 
 Compatible with IDEA Community Edition as well as Ultimate Edition from version 13.xx and above.
 
 Pascal-specific features currently implemented
-++++++++++++++++++++++++++++++++++++++++++++++
+----------------------------------------------
 
 * context-aware completion
 * statements completion
@@ -44,7 +44,7 @@ Pascal-specific features currently implemented
 * folding support
 
 As well as other features provided by IDEA
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------
 
 * full-text search with regular expressions
 * version control systems integration (SVN, Git, Mercurial, ...)
@@ -55,7 +55,7 @@ As well as other features provided by IDEA
 to name a few.
 
 Planned in future releases
-++++++++++++++++++++++++++
+--------------------------
 
 * code analysis
 * full error insight with quick fixes

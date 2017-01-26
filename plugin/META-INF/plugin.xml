@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>1.10</p>
         <ul>
+          <li>simple type inference in create variable/field quick fixes</li>
           <li>formal parameters type completion</li>
           <li>fixed template system regression</li>
           <li>fixed hang in CLion (issue #1@GitHub)</li>
