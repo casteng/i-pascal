@@ -1,0 +1,3 @@
+begin
+    AssignLeftPart := AssignRightPart;
+end.
