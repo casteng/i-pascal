@@ -2,6 +2,7 @@ package com.siberika.idea.pascal;
 
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
@@ -20,30 +21,45 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testSimple() throws Exception {
         myFixture.configureByFiles("infereTypeSimple.pas");
-        List<PascalExpression> expressions = getStatementExpressions("infereTypeSimple");
-        for (PascalExpression expression : expressions) {
+        List<PasExpression> expressions = getStatementExpressions("infereTypeSimple");
+        for (PasExpression expression : expressions) {
             System.out.println(String.format("%s: %s", expression.getText(), PascalExpression.infereType(expression)));
         }
-        assertEquals("Integer", PascalExpression.infereType(expressions.get(0)));
-        assertEquals("TEnum", PascalExpression.infereType(expressions.get(1)));
-        assertEquals("PEnum", PascalExpression.infereType(expressions.get(2)));
-        assertEquals("array of TArr", PascalExpression.infereType(expressions.get(3)));
-        assertEquals("Integer", PascalExpression.infereType(expressions.get(4)));
-        assertEquals("Integer", PascalExpression.infereType(expressions.get(5)));
-        assertEquals("Single", PascalExpression.infereType(expressions.get(6)));
-        assertEquals("String", PascalExpression.infereType(expressions.get(7)));
-        assertEquals("Boolean", PascalExpression.infereType(expressions.get(8)));
-        assertEquals("Pointer", PascalExpression.infereType(expressions.get(9)));
+        int i = 0;
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("TEnum", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("PEnum", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("array of TArr", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("Single", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("String", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("Boolean", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("Pointer", PascalExpression.infereType(expressions.get(i++)));
     }
 
-    private List<PascalExpression> getStatementExpressions(String unitName) {
-        List<PascalExpression> res = new ArrayList<PascalExpression>();
+    public void testPath() throws Exception {
+        myFixture.configureByFiles("infereTypePath.pas");
+        List<PasExpression> expressions = getStatementExpressions("infereTypePath");
+        for (PasExpression expression : expressions) {
+            System.out.println(String.format("%s: %s", expression.getText(), PascalExpression.infereType(expression)));
+        }
+        int i = 0;
+        assertEquals("array of TInnerRec", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("TOuterRec", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("TInnerRec", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("TEnum", PascalExpression.infereType(expressions.get(i++)));
+    }
+
+    private List<PasExpression> getStatementExpressions(String unitName) {
+        List<PasExpression> res = new ArrayList<PasExpression>();
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
                 PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), unitName);
         Collection<PasStatement> stmts = PsiTreeUtil.findChildrenOfType(mod, PasStatement.class);
         for (PasStatement stmt : stmts) {
             if (stmt.getClass() == PasStatementImpl.class) {
-                PascalExpression expr = PsiTreeUtil.findChildOfType(stmt, PascalExpression.class);
+                PasExpression expr = PsiTreeUtil.findChildOfType(stmt, PasExpression.class);
                 if (expr != null) {
                     res.add(expr);
                 }

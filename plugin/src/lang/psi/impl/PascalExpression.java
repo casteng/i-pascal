@@ -5,7 +5,6 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
@@ -14,10 +13,12 @@ import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasLiteralExpr;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -27,7 +28,6 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -146,18 +146,35 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                 return "String";
             }
         } else {
-            PasReferenceExpr ref = PsiTreeUtil.findChildOfType(expression, PasReferenceExpr.class);
-            if (ref != null) {
-                List<PasField.ValueType> types = getTypes((PascalExpression) ref);
-                Collections.reverse(types);
-                for (PasField.ValueType type : types) {
-                    if (type.field != null) {
-                        return PsiUtil.getTypeDeclaration(type.field.getElement()).getText();
-                    }
+            List<PasField.ValueType> types = getTypes((PascalExpression) expression);
+            PasField.ValueType lastType = null;
+            for (PasField.ValueType type : types) {
+                if (type.field != null) {
+                    lastType = type;
+                } else if ((type.kind == PasField.Kind.ARRAY) || (type.kind == PasField.Kind.POINTER)) {
+                    lastType = lastType != null ? lastType.baseType : null;
                 }
+            }
+            if (lastType != null) {
+                return getTypeIdentifier(lastType);
             }
         }
         return null;
+    }
+
+    @Nullable
+    public static String getTypeIdentifier(PasField.ValueType type) {
+        if (type.field != null) {
+            PascalNamedElement el = type.field.getElement();
+            if (el instanceof PasGenericTypeIdent) {
+                return el.getText();
+            } else {
+                PasTypeDecl res = PsiUtil.getTypeDeclaration(type.field.getElement());
+                return res != null ? res.getText() : null;
+            }
+        } else {
+            return null;
+        }
     }
 
     public static String calcAssignStatementType(PsiElement statement) {
