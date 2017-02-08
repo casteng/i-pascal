@@ -5,22 +5,31 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
+import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasLiteralExpr;
+import com.siberika.idea.pascal.lang.psi.PasParenExpr;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasRelationalExpr;
+import com.siberika.idea.pascal.lang.psi.PasSumExpr;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PasUnaryExpr;
+import com.siberika.idea.pascal.lang.psi.PasUnaryOp;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -35,6 +44,7 @@ import java.util.List;
  * Date: 03/02/2015
  */
 public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiElement {
+
     public PascalExpression(ASTNode node) {
         super(node);
     }
@@ -129,24 +139,41 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return newScope != null ? newScope.getTypeScope() : null;
     }
 
-    public static String infereType(PasExpression expression) {
-        PsiElement firstChild = expression.getFirstChild();
-        if (firstChild instanceof PasLiteralExpr) {
-            PsiElement literal = firstChild.getFirstChild();
+    public static String infereType(PasExpr expression) {
+        if (expression instanceof PasLiteralExpr) {
+            PsiElement literal = expression.getFirstChild();
             IElementType type = literal.getNode().getElementType();
             if ((type == PasTypes.NUMBER_INT) || (type == PasTypes.NUMBER_HEX) || (type == PasTypes.NUMBER_OCT) || (type == PasTypes.NUMBER_BIN)) {
-                return "Integer";
+                return Primitive.INTEGER.name;
             } else if (type == PasTypes.NUMBER_REAL) {
-                return "Single";
+                return Primitive.SINGLE.name;
             } else if ((type == PasTypes.TRUE) || (type == PasTypes.FALSE)) {
-                return "Boolean";
+                return Primitive.BOOLEAN.name;
             } else if (type == PasTypes.NIL) {
-                return "Pointer";
+                return Primitive.POINTER.name;
             } else if (type == PasTypes.STRING_FACTOR) {
-                return "String";
+                return Primitive.STRING.name;
             }
+        } else if (expression instanceof PasParenExpr) {
+            return !((PasParenExpr) expression).getExprList().isEmpty() ? infereType(((PasParenExpr) expression).getExprList().get(0)) : null;
+        } else if (expression instanceof PasUnaryExpr) {
+            return infereUnaryExprType((PasUnaryExpr) expression);
+        } else if (expression instanceof PasSumExpr) {
+            return combineType(Operation.SUM, ((PasSumExpr) expression).getExprList());
+        } else if (expression instanceof PasRelationalExpr) {
+            return Primitive.BOOLEAN.name;
+        } else if (expression instanceof PasProductExpr) {
+            if ("AS".equalsIgnoreCase(((PasProductExpr) expression).getMulOp().getText())) {
+                List<PasExpr> exprs = ((PasProductExpr) expression).getExprList();
+                if (exprs.size() > 1) {
+                    return exprs.get(1).getText();
+                }
+            }
+            return combineType(Operation.PRODUCT, ((PasProductExpr) expression).getExprList());
+        } else if (expression instanceof PasCallExpr) {
+            return inferCallType((PasCallExpr) expression);
         } else {
-            List<PasField.ValueType> types = getTypes((PascalExpression) expression);
+            List<PasField.ValueType> types = getTypes((PascalExpression) expression.getParent());
             PasField.ValueType lastType = null;
             for (PasField.ValueType type : types) {
                 if (type.field != null) {
@@ -160,6 +187,50 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             }
         }
         return null;
+    }
+
+    private static String inferCallType(PasCallExpr expression) {
+        PasFullyQualifiedIdent ref = PsiTreeUtil.findChildOfType(expression.getExpr(), PasFullyQualifiedIdent.class);
+        if (null == ref) {
+            return null;
+        }
+        Collection<PasField> routines = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(ref), PasField.TYPES_ROUTINE, true, 0);
+
+        PascalRoutineImpl suitable = null;
+        for (PasField routine : routines) {
+            PascalNamedElement el = routine.getElement();
+            if (el instanceof PascalRoutineImpl) {
+                suitable = (PascalRoutineImpl) el;
+                PasFormalParameterSection params = suitable.getFormalParameterSection();
+                // TODO: make type check and handle overload
+                if (params != null && params.getFormalParameterList().size() == expression.getArgumentList().getExprList().size()) {
+                    return suitable.getFunctionTypeStr();
+                }
+            }
+        }
+        if (suitable != null) {
+            return suitable.getFunctionTypeStr();
+        }
+        // Handle as typecast
+        if ((expression.getExpr() instanceof PasReferenceExpr) && (expression.getArgumentList().getExprList().size() == 1)) {
+            return expression.getExpr().getText();
+        }
+        return null;
+    }
+
+    private static String infereUnaryExprType(PasUnaryExpr expression) {
+        PasUnaryOp op = expression.getUnaryOp();
+        if ("@".equals(op.getText())) {
+            return Primitive.POINTER.name;
+        } else {
+            return infereType(expression.getExpr());
+        }
+    }
+
+    private static String combineType(Operation sum, List<PasExpr> exprList) {
+        PasExpr arg1 = exprList.size() > 0 ? exprList.get(0) : null;
+        PasExpr arg2 = exprList.size() > 1 ? exprList.get(1) : null;
+        return arg1 != null ? infereType(arg1) : null;
     }
 
     @Nullable
@@ -179,6 +250,23 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
 
     public static String calcAssignStatementType(PsiElement statement) {
         PasAssignPart assPart = PsiUtil.findImmChildOfAnyType(statement, PasAssignPart.class);
-        return (assPart != null) && (assPart.getExpression() != null) ? infereType(assPart.getExpression()) : null;
+        return (assPart != null) && (assPart.getExpression() != null) ? infereType(assPart.getExpression().getExpr()) : null;
+    }
+
+    public enum Operation {
+        SUM, PRODUCT
+    }
+
+    public enum Primitive {
+        BYTE("Byte"), WORD("Word"), DWORD("DWord"), LONGWORD("Longword"),
+        SHORTINT("Shortint"), SMALLINT("Smallint"), INTEGER("Integer"), LONGINT("Longint"), NATIVEINT("Nativeint"), INT64("Int64"),
+        SINGLE("Single"), REAL("Real"), DOUBLE("Double"), EXTENDED("Extended"),
+        POINTER("Pointer"), BOOLEAN("Boolean"), STRING("String");
+
+        private final String name;
+
+        Primitive(String name) {
+            this.name = name;
+        }
     }
 }

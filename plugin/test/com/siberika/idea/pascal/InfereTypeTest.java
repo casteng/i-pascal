@@ -23,33 +23,51 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("infereTypeSimple.pas");
         List<PasExpression> expressions = getStatementExpressions("infereTypeSimple");
         for (PasExpression expression : expressions) {
-            System.out.println(String.format("%s: %s", expression.getText(), PascalExpression.infereType(expression)));
+            System.out.println(String.format("%s: %s", expression.getText(), PascalExpression.infereType(expression.getExpr())));
         }
         int i = 0;
-        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("TEnum", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("PEnum", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("array of TArr", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("Single", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("String", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("Boolean", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("Pointer", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("TEnum", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("PEnum", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("array of TArr", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Single", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("String", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Boolean", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Pointer", PascalExpression.infereType(expressions.get(i++).getExpr()));
     }
 
     public void testPath() throws Exception {
         myFixture.configureByFiles("infereTypePath.pas");
         List<PasExpression> expressions = getStatementExpressions("infereTypePath");
         for (PasExpression expression : expressions) {
-            System.out.println(String.format("%s: %s", expression.getText(), PascalExpression.infereType(expression)));
+            String type = PascalExpression.infereType(expression.getExpr());
+            System.out.println(String.format("%s: %s", expression.getText(), type));
         }
         int i = 0;
-        assertEquals("array of TInnerRec", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("TOuterRec", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("TInnerRec", PascalExpression.infereType(expressions.get(i++)));
-        assertEquals("TEnum", PascalExpression.infereType(expressions.get(i++)));
+        assertEquals("array of TInnerRec", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("TOuterRec", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("TInnerRec", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("TEnum", PascalExpression.infereType(expressions.get(i++).getExpr()));
+    }
+
+    public void testComplex() throws Exception {
+        myFixture.configureByFiles("infereTypeComplex.pas");
+        List<PasExpression> expressions = getStatementExpressions("infereTypeComplex");
+        for (PasExpression expression : expressions) {
+            System.out.println(String.format("%s: %s", expression.getText(), PascalExpression.infereType(expression.getExpr())));
+        }
+        int i = 0;
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Single", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Pointer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Boolean", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("SomeType", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("TRec", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("SomeType", PascalExpression.infereType(expressions.get(i++).getExpr()));
     }
 
     private List<PasExpression> getStatementExpressions(String unitName) {
