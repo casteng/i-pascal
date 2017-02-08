@@ -45,6 +45,8 @@ import java.util.List;
  */
 public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiElement {
 
+    private static final int MAX_KIND_DIFF = 2;
+
     public PascalExpression(ASTNode node) {
         super(node);
     }
@@ -173,7 +175,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         } else if (expression instanceof PasCallExpr) {
             return inferCallType((PasCallExpr) expression);
         } else {
-            List<PasField.ValueType> types = getTypes((PascalExpression) expression.getParent());
+            List<PasField.ValueType> types = getTypes((PascalExpression) expression);
             PasField.ValueType lastType = null;
             for (PasField.ValueType type : types) {
                 if (type.field != null) {
@@ -230,7 +232,44 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     private static String combineType(Operation sum, List<PasExpr> exprList) {
         PasExpr arg1 = exprList.size() > 0 ? exprList.get(0) : null;
         PasExpr arg2 = exprList.size() > 1 ? exprList.get(1) : null;
+        if (arg2 != null) {
+            String type1 = infereType(arg1);
+            String type2 = infereType(arg2);
+            if (null == type1) {
+                return type2;
+            }
+            if (null == type2) {
+                return type1;
+            }
+            Primitive prim1 = toPrimitive(type1);
+            if (null == prim1) {
+                return type1;
+            }
+            Primitive prim2 = toPrimitive(type2);
+            if (null == prim2) {
+                return type2;
+            }
+            if (Math.abs(prim1.kind - prim2.kind) > MAX_KIND_DIFF) {
+                return type1;
+            } else if (prim1.kind > prim2.kind) {
+                return type1;
+            } else if (prim1.kind < prim2.kind) {
+                return type2;
+            } else {
+                return prim1.ordinal() > prim2.ordinal() ? type1 : type2;
+            }
+        }
         return arg1 != null ? infereType(arg1) : null;
+    }
+
+    private static Primitive toPrimitive(String type) {
+        type = type.toUpperCase();
+        for (Primitive primitive : Primitive.values()) {
+            if (primitive.name().equals(type)) {
+                return primitive;
+            }
+        }
+        return null;
     }
 
     @Nullable
@@ -258,15 +297,19 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     public enum Primitive {
-        BYTE("Byte"), WORD("Word"), DWORD("DWord"), LONGWORD("Longword"),
-        SHORTINT("Shortint"), SMALLINT("Smallint"), INTEGER("Integer"), LONGINT("Longint"), NATIVEINT("Nativeint"), INT64("Int64"),
-        SINGLE("Single"), REAL("Real"), DOUBLE("Double"), EXTENDED("Extended"),
-        POINTER("Pointer"), BOOLEAN("Boolean"), STRING("String");
+        BYTE("Byte", 0), WORD("Word", 0), DWORD("DWord", 0), LONGWORD("Longword", 0), CARDINAL("Cardinal", 0), QWORD("QWord", 0),
+        SHORTINT("Shortint", 1), SMALLINT("Smallint", 1), INTEGER("Integer", 1), LONGINT("Longint", 1), NATIVEINT("Nativeint", 1), INT64("Int64", 1),
+        SINGLE("Single", 2), REAL("Real", 2), DOUBLE("Double", 2), EXTENDED("Extended", 2),
+        POINTER("Pointer", 10),
+        BYTEBOOL("ByteBool", 20), BOOLEAN("Boolean", 20), WORDBOOL("WordBool", 20), LONGBOOL("LongBool", 20),
+        CHAR("Char", 30), STRING("String", 31);
 
         private final String name;
+        private final int kind;
 
-        Primitive(String name) {
+        Primitive(String name, int kind) {
             this.name = name;
+            this.kind = kind;
         }
     }
 }

@@ -11,8 +11,13 @@ var
   Rec: TRec;
   Obj: TObject;
   Ptr: ^TRec;
+  b: Byte;
+  w: Word;
 
 implementation
+
+var
+  i: Integer;
 
 function test(): TRec;
 begin
@@ -27,4 +32,6 @@ begin
   Obj as SomeType;
   test();
   SomeType(Rec);
+  b + w;
+  w + i;
 end.

@@ -68,6 +68,8 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals("SomeType", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("TRec", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("SomeType", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Word", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
     }
 
     private List<PasExpression> getStatementExpressions(String unitName) {
