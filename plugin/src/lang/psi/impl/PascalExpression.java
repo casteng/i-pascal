@@ -11,6 +11,8 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
+import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
@@ -280,11 +282,17 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                 return el.getText();
             } else {
                 PasTypeDecl res = PsiUtil.getTypeDeclaration(type.field.getElement());
-                return res != null ? res.getText() : null;
+                if (res != null) {
+                    return res.getText();
+                } else if (type.field.fieldType == PasField.FieldType.CONSTANT) {
+                    if ((el != null) && (el.getParent() instanceof PasConstDeclaration)) {
+                        PasConstExpression expr = ((PasConstDeclaration) el.getParent()).getConstExpression();
+                        return (expr != null) && (expr.getExpression() != null) ? infereType(expr.getExpression().getExpr()) : null;
+                    }
+                }
             }
-        } else {
-            return null;
         }
+        return null;
     }
 
     public static String calcAssignStatementType(PsiElement statement) {

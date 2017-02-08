@@ -62,6 +62,7 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         int i = 0;
         assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Single", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Pointer", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Boolean", PascalExpression.infereType(expressions.get(i++).getExpr()));
@@ -70,6 +71,13 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals("SomeType", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Word", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Int64", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Int64", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("QWord", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Single", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Double", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("Extended", PascalExpression.infereType(expressions.get(i++).getExpr()));
     }
 
     private List<PasExpression> getStatementExpressions(String unitName) {
