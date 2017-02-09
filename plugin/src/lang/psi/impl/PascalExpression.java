@@ -144,11 +144,17 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     public static String infereType(PasExpr expression) {
+        return doInfereType(expression, false);
+    }
+
+    private static String doInfereType(PasExpr expression, boolean minus) {
         if (expression instanceof PasLiteralExpr) {
             PsiElement literal = expression.getFirstChild();
             IElementType type = literal.getNode().getElementType();
-            if ((type == PasTypes.NUMBER_INT) || (type == PasTypes.NUMBER_HEX) || (type == PasTypes.NUMBER_OCT) || (type == PasTypes.NUMBER_BIN)) {
+            if ((type == PasTypes.NUMBER_HEX) || (type == PasTypes.NUMBER_OCT) || (type == PasTypes.NUMBER_BIN)) {
                 return Primitive.INTEGER.name;
+            } else if ((type == PasTypes.NUMBER_INT)) {
+                return calcIntType(literal.getText(), minus);
             } else if (type == PasTypes.NUMBER_REAL) {
                 return Primitive.SINGLE.name;
             } else if ((type == PasTypes.TRUE) || (type == PasTypes.FALSE)) {
@@ -167,13 +173,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         } else if (expression instanceof PasRelationalExpr) {
             return Primitive.BOOLEAN.name;
         } else if (expression instanceof PasProductExpr) {
-            if ("AS".equalsIgnoreCase(((PasProductExpr) expression).getMulOp().getText())) {
-                List<PasExpr> exprs = ((PasProductExpr) expression).getExprList();
-                if (exprs.size() > 1) {
-                    return exprs.get(1).getText();
-                }
-            }
-            return combineType(Operation.PRODUCT, ((PasProductExpr) expression).getExprList());
+            return handleProduct((PasProductExpr) expression);
         } else if (expression instanceof PasCallExpr) {
             return inferCallType((PasCallExpr) expression);
         } else {
@@ -191,6 +191,46 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             }
         }
         return null;
+    }
+
+    private static final int MAX_INT32_LENGTH = "2147483648".length();
+    private static final int MAX_INT64_LENGTH = "9223372036854775807".length();
+    private static final long MAX_INT64 = 9223372036854775807L;
+    private static final long MAX_INT32 = 2147483647L;
+    private static final long MIN_INT32 = -2147483648L;
+
+    private static String calcIntType(String text, boolean negative) {
+        int len = text.length();
+        if (len < MAX_INT32_LENGTH) {
+            return Primitive.INTEGER.name;
+        } else if (len == MAX_INT32_LENGTH) {
+            return (!negative && isLEThan(text, MAX_INT32)) || (negative && isLEThan(text, -MIN_INT32)) ? Primitive.INTEGER.name : Primitive.INT64.name;
+        } else if (len < MAX_INT64_LENGTH) {
+            return Primitive.INT64.name;
+        } else if (len == MAX_INT64_LENGTH) {
+            return negative || isLEThan(text, MAX_INT64) ? Primitive.INT64.name : Primitive.QWORD.name;
+        } else {
+            return Primitive.QWORD.name;
+        }
+    }
+
+    private static boolean isLEThan(String text, long l) {
+        try {
+            return Long.valueOf(text) <= l;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private static String handleProduct(PasProductExpr expr) {
+        String op = expr.getMulOp().getText().toUpperCase();
+        if ("AS".equals(op)) {
+            List<PasExpr> exprs = expr.getExprList();
+            if (exprs.size() > 1) {
+                return exprs.get(1).getText();
+            }
+        }
+        return combineType("/".equals(op) ? Operation.DIVISION : Operation.PRODUCT, expr.getExprList());
     }
 
     private static String inferCallType(PasCallExpr expression) {
@@ -227,7 +267,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         if ("@".equals(op.getText())) {
             return Primitive.POINTER.name;
         } else {
-            return infereType(expression.getExpr());
+            return doInfereType(expression.getExpr(), "-".equals(op.getText()));
         }
     }
 
@@ -301,7 +341,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     public enum Operation {
-        SUM, PRODUCT
+        SUM, PRODUCT, DIVISION
     }
 
     public enum Primitive {
