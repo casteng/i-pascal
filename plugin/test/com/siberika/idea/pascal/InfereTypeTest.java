@@ -79,6 +79,8 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals("Int64", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("QWord", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+
+        assertEquals("Single", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Single", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Double", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Extended", PascalExpression.infereType(expressions.get(i++).getExpr()));

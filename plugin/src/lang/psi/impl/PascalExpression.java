@@ -156,7 +156,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             } else if ((type == PasTypes.NUMBER_INT)) {
                 return calcIntType(literal.getText(), minus);
             } else if (type == PasTypes.NUMBER_REAL) {
-                return Primitive.SINGLE.name;
+                return calcFloatType(literal.getText());
             } else if ((type == PasTypes.TRUE) || (type == PasTypes.FALSE)) {
                 return Primitive.BOOLEAN.name;
             } else if (type == PasTypes.NIL) {
@@ -191,6 +191,19 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             }
         }
         return null;
+    }
+
+    private static String calcFloatType(String text) {
+        int len = text.lastIndexOf('.');
+        if (len > 0) {
+            len = text.length() - len - 1;
+            if (len < 8) {
+                return Primitive.SINGLE.name;
+            } else if (len > 15) {
+                return Primitive.EXTENDED.name;
+            }
+        }
+        return Primitive.DOUBLE.name;
     }
 
     private static final int MAX_INT32_LENGTH = "2147483648".length();
