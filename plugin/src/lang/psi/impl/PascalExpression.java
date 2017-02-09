@@ -36,6 +36,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -169,7 +170,8 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         } else if (expression instanceof PasUnaryExpr) {
             return infereUnaryExprType((PasUnaryExpr) expression);
         } else if (expression instanceof PasSumExpr) {
-            return combineType(Operation.SUM, ((PasSumExpr) expression).getExprList());
+            PasSumExpr sumExpr = (PasSumExpr) expression;
+            return combineType("-".equals(sumExpr.getAddOp().getText()) ? Operation.SUBSTRACT : Operation.SUM, sumExpr.getExprList());
         } else if (expression instanceof PasRelationalExpr) {
             return Primitive.BOOLEAN.name;
         } else if (expression instanceof PasProductExpr) {
@@ -284,7 +286,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         }
     }
 
-    private static String combineType(Operation sum, List<PasExpr> exprList) {
+    private static String combineType(Operation op, List<PasExpr> exprList) {
         PasExpr arg1 = exprList.size() > 0 ? exprList.get(0) : null;
         PasExpr arg2 = exprList.size() > 1 ? exprList.get(1) : null;
         if (arg2 != null) {
@@ -304,17 +306,55 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             if (null == prim2) {
                 return type2;
             }
-            if (Math.abs(prim1.kind - prim2.kind) > MAX_KIND_DIFF) {
+            if (Operation.DIVISION.equals(op)) {
+                return divisionType(prim1, prim2, type1, type2);
+            }
+
+            int diff = Math.abs(prim1.kind - prim2.kind);
+            if (diff > MAX_KIND_DIFF) {
                 return type1;
-            } else if (prim1.kind > prim2.kind) {
-                return type1;
-            } else if (prim1.kind < prim2.kind) {
-                return type2;
-            } else {
+            } else if (0 == diff || 2 == diff) {
                 return prim1.ordinal() > prim2.ordinal() ? type1 : type2;
+            } else {
+                int maxKind = Math.max(prim1.kind, prim2.kind);
+                if (maxKind == Primitive.SINGLE.kind) {
+                    return prim1.ordinal() > prim2.ordinal() ? type1 : type2;
+                }
+                // signed and unsigned: widen result
+                Primitive signedPrim = prim1;
+                Primitive unsignedPrim = prim2;
+                if (prim1.kind == Primitive.BYTE.kind) {
+                    signedPrim = prim2;
+                    unsignedPrim = prim1;
+                }
+                switch (unsignedPrim.size) {
+                    case 1: {
+                        unsignedPrim = Primitive.SMALLINT;
+                        break;
+                    }
+                    case 2: {
+                        unsignedPrim = Primitive.INTEGER;
+                        break;
+                    }
+                    case 4: {
+                        unsignedPrim = Primitive.INT64;
+                        break;
+                    }
+                    default: unsignedPrim = Primitive.INT64;
+                }
+                return unsignedPrim.size >= signedPrim.size ? unsignedPrim.name : signedPrim.name;
             }
         }
         return arg1 != null ? infereType(arg1) : null;
+    }
+
+    private static String divisionType(@NotNull Primitive prim1, @NotNull Primitive prim2, String type1, String type2) {
+        int kind = Math.max(prim1.kind, prim2.kind);
+        if (kind <= Primitive.INTEGER.kind) {                             // Integer operands
+            return Primitive.SINGLE.name;
+        } else {
+            return prim1.ordinal() > prim2.ordinal() ? type1 : type2;
+        }
     }
 
     private static Primitive toPrimitive(String type) {
@@ -354,23 +394,25 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     public enum Operation {
-        SUM, PRODUCT, DIVISION
+        SUM, SUBSTRACT, PRODUCT, DIVISION
     }
 
     public enum Primitive {
-        BYTE("Byte", 0), WORD("Word", 0), DWORD("DWord", 0), LONGWORD("Longword", 0), CARDINAL("Cardinal", 0), QWORD("QWord", 0),
-        SHORTINT("Shortint", 1), SMALLINT("Smallint", 1), INTEGER("Integer", 1), LONGINT("Longint", 1), NATIVEINT("Nativeint", 1), INT64("Int64", 1),
-        SINGLE("Single", 2), REAL("Real", 2), DOUBLE("Double", 2), EXTENDED("Extended", 2),
-        POINTER("Pointer", 10),
-        BYTEBOOL("ByteBool", 20), BOOLEAN("Boolean", 20), WORDBOOL("WordBool", 20), LONGBOOL("LongBool", 20),
-        CHAR("Char", 30), STRING("String", 31);
+        BYTE("Byte", 0, 1), WORD("Word", 0, 2), DWORD("DWord", 0, 4), LONGWORD("Longword", 0, 4), CARDINAL("Cardinal", 0, 4), QWORD("QWord", 0, 8),
+        SHORTINT("Shortint", 1, 1), SMALLINT("Smallint", 1, 2), INTEGER("Integer", 1, 4), LONGINT("Longint", 1, 4), NATIVEINT("Nativeint", 1, 4), INT64("Int64", 1, 8),
+        SINGLE("Single", 2, 4), REAL("Real", 2, 6), DOUBLE("Double", 2, 8), EXTENDED("Extended", 2, 10),
+        POINTER("Pointer", 10, 4),
+        BYTEBOOL("ByteBool", 20, 1), BOOLEAN("Boolean", 20, 1), WORDBOOL("WordBool", 20, 2), LONGBOOL("LongBool", 20, 4),
+        CHAR("Char", 30, 1), STRING("String", 31, 4);
 
         private final String name;
         private final int kind;
+        private final int size;
 
-        Primitive(String name, int kind) {
+        Primitive(String name, int kind, int size) {
             this.name = name;
             this.kind = kind;
+            this.size = size;
         }
     }
 }
