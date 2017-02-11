@@ -39,7 +39,7 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
     }
 
     public void testExpressionTypes() {
-        myFixture.configureByFiles("calcTypeTest.pas", "types.pas", "structTypes.pas");
+        myFixture.configureByFiles("calcTypesTest.pas", "types.pas", "structTypes.pas");
         myFixture.checkHighlighting(false, false, true);
     }
 
