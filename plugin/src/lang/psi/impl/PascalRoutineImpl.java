@@ -125,7 +125,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
                 collectFormalParameters(res);
                 collectFields(PascalRoutineImpl.this, PasField.Visibility.STRICT_PRIVATE, res.all, res.redeclared);
 
-                addPseudoFields(res);
+                addSelf(res);
 
                 LOG.debug(PsiUtil.getFieldName(PascalRoutineImpl.this) + ": buildMembers: " + res.all.size() + " members");
 //                    System.out.println(PsiUtil.getFieldName(PascalRoutineImpl.this) + ": buildMembers: " + res.all.size() + " members");
@@ -137,23 +137,24 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     }
 
     private void collectFormalParameters(Members res) {
+        PascalRoutineImpl routine = this;
         List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
         if (params.isEmpty() && (this instanceof PasRoutineImplDecl)) {         // If this is implementation with formal parameters omitted take formal parameters from routine declaration
             PsiElement decl = SectionToggle.retrieveDeclaration(this, true);
             if (decl instanceof PascalRoutineImpl) {
-                params = PsiUtil.getFormalParameters(((PascalRoutineImpl) decl).getFormalParameterSection());
+                routine = (PascalRoutineImpl) decl;
+                params = PsiUtil.getFormalParameters(routine.getFormalParameterSection());
             }
         }
         for (PasNamedIdent parameter : params) {
             addField(res, parameter, PasField.FieldType.VARIABLE);
         }
+        if (!res.all.containsKey(BUILTIN_RESULT.toUpperCase())) {
+            res.all.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, routine, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
+        }
     }
 
-    private void addPseudoFields(Members res) {
-        if (!res.all.containsKey(BUILTIN_RESULT.toUpperCase())) {
-            res.all.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, this, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
-        }
-
+    private void addSelf(Members res) {
         PasEntityScope scope = getContainingScope();
         if ((scope != null) && (scope.getParent() instanceof PasTypeDecl)) {
             PasField field = new PasField(this, scope, BUILTIN_SELF, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE);
