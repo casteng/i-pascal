@@ -13,6 +13,7 @@
         <ul>
           <li>type inference for complex expressions</li>
           <li>fixed result scope resolving in routines with omitted parameters (Issue #29)</li>
+          <li>fixed formatting bug (Issue #2)</li>
         </ul>
         <p>1.10</p>
         <ul>

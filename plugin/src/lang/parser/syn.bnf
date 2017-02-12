@@ -171,6 +171,7 @@
         RPAREN=")"
         LBRACK="["
         RBRACK="]"
+        LTEQ="<="
         EQ="="
         LT="<"
         GT=">"
@@ -276,7 +277,7 @@ private rec_classparent     ::= !(CASE) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | "]") & rec_section
 private rec_propspec        ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
-private rec_generic_def     ::= !(">" | ":") & rec_section
+private rec_generic_def     ::= !(">" | ":" | ">""=") & rec_section
 
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
@@ -284,7 +285,7 @@ private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=
 ExportsSection              ::= EXPORTS RefNamedIdent exportItem ("," RefNamedIdent exportItem)* ";" {pin=1}
 private exportItem          ::= [FormalParameterSection] [INDEX Expression] ["name" Expression] ["resident"]
 
-private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LT | (LT EQ) | GT | (GT EQ) | "<>" | IN | "explicit"
+private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LTEQ | LT | GT | "<>" | IN | "explicit"
 private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
@@ -596,7 +597,7 @@ private expr_relOrd ::= expr_sumOrd (relOp expr_sumOrd)*
 private expr_sumOrd ::= expr_productOrd (addOp expr_productOrd)*
 private expr_productOrd ::= primaryOrd (mulOp primaryOrd)* */
 // **********************************************************************
-relOp                       ::= LT EQ | GT EQ | LT | GT | NE | EQ | IN | IS
+relOp                       ::= (GT EQ) | LTEQ | LT | GT | NE | EQ | IN | IS
 addOp                       ::=	PLUS | MINUS | OR | XOR
 mulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
 unaryOp                     ::= "+" | "-" | "@" | NOT
