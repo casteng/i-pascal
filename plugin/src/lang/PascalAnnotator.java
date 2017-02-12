@@ -12,6 +12,7 @@ import com.siberika.idea.pascal.ide.actions.AddFixType;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.ide.actions.UsesActions;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
@@ -22,6 +23,7 @@ import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiContext;
@@ -132,13 +134,19 @@ public class PascalAnnotator implements Annotator {
                         }
                         case ROUTINE: {
                             boolean priority = context == PsiContext.CALL;
+                            PsiElement parent = PsiUtil.skipToExpressionParent(namedElement);
+                            String type = null;
+                            if (parent instanceof PasAssignPart) {
+                                type = PascalExpression.calcAssignExpectedType(parent.getParent());
+                                type = type != null ? type : "";
+                            }
                             if (scope instanceof PascalStructType) {
-                                ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.method"), namedElement, scope, null, null, priority));
+                                ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.method"), namedElement, scope, null, type, priority));
                             } else {
-                                ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.routine"), namedElement, scope, null, null, priority));
+                                ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create." + (type != null ? "function" : "procedure")), namedElement, scope, null, type, priority));
                                 PsiElement adjustedScope = adjustScope(scope);
                                 if (adjustedScope instanceof PascalStructType) {
-                                    ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.method"), namedElement, adjustedScope, scope, null, priority));
+                                    ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.method"), namedElement, adjustedScope, scope, type, priority));
                                 }
                             }
                             break;

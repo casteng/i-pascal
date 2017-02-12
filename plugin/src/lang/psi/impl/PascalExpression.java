@@ -388,9 +388,17 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public static String calcAssignStatementType(PsiElement statement) {
-        PasAssignPart assPart = PsiUtil.findImmChildOfAnyType(statement, PasAssignPart.class);
-        return (assPart != null) && (assPart.getExpression() != null) ? infereType(assPart.getExpression().getExpr()) : null;
+        PasAssignPart rightPart = PsiUtil.findImmChildOfAnyType(statement, PasAssignPart.class);
+        return (rightPart != null) && (rightPart.getExpression() != null) ? infereType(rightPart.getExpression().getExpr()) : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static String calcAssignExpectedType(PsiElement statement) {
+        PasExpression leftPart = PsiUtil.findImmChildOfAnyType(statement, PasAssignPart.class) != null ?
+                PsiUtil.findImmChildOfAnyType(statement, PasExpression.class) : null;
+        return leftPart != null ? infereType(leftPart.getExpr()) : null;
     }
 
     public enum Operation {
