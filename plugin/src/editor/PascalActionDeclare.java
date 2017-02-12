@@ -32,6 +32,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasBlockBody;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
@@ -39,9 +40,12 @@ import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
+import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
+import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
@@ -61,6 +65,7 @@ import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -78,10 +83,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     final List<FixActionData> fixActionDataArray;
     private final String name;
     protected final PsiElement scope;
-
     private static final String TPL_VAR_RETURN_TYPE = "RETURN_TYPE";
+
     private static final String TPL_VAR_CODE = "CODE";
     private static final String TPL_VAR_TYPE = "TYPE";
+    private static final String TPL_VAR_TYPES = "TYPE";
+    private static final String TPL_VAR_ARGS = "ARG";
     private static final String TPL_VAR_CONST_EXPR = "CONST_EXPR";
     private static final String TPL_VAR_PARAMS = "PARAMS";
 
@@ -503,14 +510,47 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             if (block != null) {
                 data.offset = block.getTextRange().getStartOffset();
                 data.parent = block.getParent();
+                Pair<String, Map<String, String>> arguments = calcArguments(data);
                 String prefix = scope instanceof PascalStructType ? ((PascalStructType) scope).getName() + "." : "";
                 if (returnType != null) {
-                    data.createTemplate(String.format("\n\nfunction %s%s($%s$): $%s$;\nbegin\n$%s$\nend;", prefix, data.element.getName(), TPL_VAR_PARAMS, TPL_VAR_RETURN_TYPE, TPL_VAR_CODE),
-                            StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_RETURN_TYPE, returnType))));
+                    arguments.getSecond().put(TPL_VAR_RETURN_TYPE, returnType);
+                    data.createTemplate(String.format("\n\nfunction %s%s(%s): $%s$;\nbegin\n$%s$\nend;",
+                            prefix, data.element.getName(), arguments.getFirst(), TPL_VAR_RETURN_TYPE, TPL_VAR_CODE), arguments.getSecond());
                 } else {
-                    data.createTemplate(String.format("\n\nprocedure %s%s($%s$);\nbegin\n$%s$\nend;", prefix, data.element.getName(), TPL_VAR_PARAMS, TPL_VAR_CODE), null);
+                    data.createTemplate(String.format("\n\nprocedure %s%s(%s);\nbegin\n$%s$\nend;",
+                            prefix, data.element.getName(), arguments.getFirst(), TPL_VAR_CODE), arguments.getSecond());
                 }
             }
+        }
+
+        private Pair<String, Map<String, String>> calcArguments(FixActionData data) {
+            PasExpr expression = PsiTreeUtil.getParentOfType(data.element, PasExpr.class);
+            StringBuilder params = new StringBuilder();
+            Map<String, String> defaults = new HashMap<String, String>();
+            if ((expression != null) && (expression.getNextSibling() instanceof PasArgumentList)) {
+                PasArgumentList args = (PasArgumentList) expression.getNextSibling();
+                int count = 0;
+                for (PasExpr expr : args.getExprList()) {
+                    if (count != 0) {
+                        params.append("; ");
+                    }
+                    params.append("$").append(TPL_VAR_ARGS).append(count).append("$").append(": $").append(TPL_VAR_TYPES).append(count).append("$");
+                    String type = PascalExpression.infereType(expr);
+                    defaults.put(TPL_VAR_TYPES + count, type);
+                    if (expr instanceof PasReferenceExpr) {
+                        PasFullyQualifiedIdent ident = ((PasReferenceExpr) expr).getFullyQualifiedIdent();
+                        defaults.put(TPL_VAR_ARGS + count, ident.getName());
+                    } else if (StringUtil.isNotEmpty(type)) {
+                        if (type.startsWith("T")) {
+                            defaults.put(TPL_VAR_ARGS + count, type.substring(1));
+                        } else {
+                            defaults.put(TPL_VAR_ARGS + count, type.substring(0, 1).toLowerCase() + (count+1));
+                        }
+                    }
+                    count++;
+                }
+            }
+            return Pair.create(params.length() != 0 ? params.toString() : TPL_VAR_PARAMS, defaults);
         }
 
         private void addToInterface(FixActionData data) {

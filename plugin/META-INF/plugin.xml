@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>1.12</p>
         <ul>
+          <li>suggest argument types in create routine/method quickfix</li>
           <li>type inference for complex expressions</li>
           <li>fixed result scope resolving in routines with omitted parameters (Issue #29)</li>
           <li>fixed formatting bug (Issue #2)</li>
