@@ -255,6 +255,15 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     public static final Map<String, String> TYPE_VAR_DEFAULTS = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, "T")));
 
+    String calcType(FixActionData data) {
+        String res = "T";
+        if (PsiUtil.isAssignLeftPart(data.element)) {
+            String type = PascalExpression.calcAssignStatementType(PsiUtil.skipToExpressionParent(data.element));
+            res = type != null ? type : res;
+        }
+        return res;
+    }
+
     public static class ActionCreateParameter extends PascalActionDeclare {
 
         public ActionCreateParameter(String name, PascalNamedElement element, PsiElement scope) {
@@ -312,14 +321,6 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             }
         }
 
-        private String calcType(FixActionData data) {
-            String res = "T";
-            if (PsiUtil.isAssignLeftPart(data.element)) {
-                String type = PascalExpression.calcAssignStatementType(PsiUtil.skipToExpressionParent(data.element));
-                res = type != null ? type : res;
-            }
-            return res;
-        }
     }
 
     public static class ActionCreateVarHP extends ActionCreateVar implements HighPriorityAction {
@@ -358,7 +359,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                     data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: $%2$s$ read F%1$s write F%1$s;", StringUtil.capitalize(data.element.getName()), TPL_VAR_TYPE));
                 }
             }
-            data.variableDefaults = TYPE_VAR_DEFAULTS;
+            data.variableDefaults = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, calcType(data))));
         }
     }
 
