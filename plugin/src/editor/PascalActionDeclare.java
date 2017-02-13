@@ -556,7 +556,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                     count++;
                 }
             }
-            return Pair.create(params.length() != 0 ? params.toString() : TPL_VAR_PARAMS, defaults);
+            return Pair.create(params.length() != 0 ? params.toString() : "$" + TPL_VAR_PARAMS + "$", defaults);
         }
 
         private void addToInterface(FixActionData data) {
@@ -578,16 +578,17 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             try {
                 if (data.parent != null) {
                     PsiElement routine = PsiUtil.findElementAt(data.parent, data.offset - data.parent.getTextRange().getStartOffset());
-                    if ((scope instanceof PascalStructType) && (null == callScope)) {                   // Scope specified as FQN part
-                        if (routine instanceof PascalRoutineImpl) {
-                            PascalRoutineActions.ActionImplement act = new PascalRoutineActions.ActionImplement(message("action.implement"), (PascalNamedElement) routine);
-                            act.invoke(editor.getProject(), editor, routine.getContainingFile());
-                        }
-                    } else {                                                                            // Called within method
-                        routine = routine != null ? routine.getParent() : null;
-                        if (routine instanceof PascalRoutineImpl) {
-                            PascalRoutineActions.ActionDeclare act = new PascalRoutineActions.ActionDeclare(message("action.declare.routine"), (PascalNamedElement) routine);
-                            act.invoke(editor.getProject(), editor, routine.getContainingFile());
+                    if (scope instanceof PascalStructType) {
+                        if (null == callScope) {                   // Scope specified as FQN part
+                            if (routine instanceof PascalRoutineImpl) {
+                                PascalRoutineActions.ActionImplement act = new PascalRoutineActions.ActionImplement(message("action.implement"), (PascalNamedElement) routine);
+                                act.invoke(editor.getProject(), editor, routine.getContainingFile());
+                            }
+                        } else {                                                                            // Called within method
+                            if (routine instanceof PascalRoutineImpl) {
+                                PascalRoutineActions.ActionDeclare act = new PascalRoutineActions.ActionDeclare(message("action.declare.routine"), (PascalNamedElement) routine);
+                                act.invoke(editor.getProject(), editor, routine.getContainingFile());
+                            }
                         }
                     }
                 }
