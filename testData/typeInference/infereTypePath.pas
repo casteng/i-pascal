@@ -3,19 +3,20 @@ unit infereTypePath;
 interface
 
 type
+  TEnum = (V1, V2);
+  PEnum = ^TEnum;
+
+type
   TInnerRec = record
     innerField: Integer;
   end;
-  TOuterRec = record
+  TOuterRec = class
     arrInRec: array of TInnerRec;
+    function test(): TEnum;
   end;
   TArr = array[0..1] of TOuterRec;
   TClass = class of TObject;
   PArr = ^TArr;
-
-type
-  TEnum = (V1, V2);
-  PEnum = ^TEnum;
 
 var
   arrArr: array of TArr;
@@ -26,6 +27,12 @@ var
   ptr: PEnum;
 
 implementation
+
+function TOuterRec.test(): TEnum;
+begin
+  Self;
+  Result;
+end;
 
 begin
   rec.arrInRec;

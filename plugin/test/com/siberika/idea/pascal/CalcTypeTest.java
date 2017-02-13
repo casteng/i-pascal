@@ -20,19 +20,10 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         return "testData/annotator";
     }
 
-    public void test() {
-        myFixture.configureByFiles("structTypes.pas", "calcTypesTest.pas");
-        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
-                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "calcTypesTest");
-        for (PasField field : mod.getAllFields()) {
-            printIdent(field);
-        }
-    }
-
     public void testGetDefaultProperty() throws Exception {
         myFixture.configureByFiles("structTypes.pas");
         PasEntityScope obj = TestUtil.findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TObserverMapping");
-        assertEquals(PsiUtil.getDefaultProperty(obj).getName(), "DefProp");
+        assertEquals("DefProp", PsiUtil.getDefaultProperty(obj).getName());
     }
 
     public void testExprType() throws Exception {
@@ -50,11 +41,5 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
                         type.kind != null ? type.kind.name() : "-"));
             }
         }
-    }
-
-    private void printIdent(PasField field) {
-        PasReferenceUtil.retrieveFieldTypeScope(field);
-        System.out.println(String.format("%s: %s", field.name, field.getValueType()));
-        System.out.println("Scope: " + field.getValueType().getTypeScope());
     }
 }

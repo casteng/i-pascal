@@ -34,6 +34,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnaryExpr;
 import com.siberika.idea.pascal.lang.psi.PasUnaryOp;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +50,7 @@ import java.util.List;
 public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiElement {
 
     private static final int MAX_KIND_DIFF = 2;
+    private static final String BUILTIN_SELF_UPPER = PasEntityScope.BUILTIN_SELF.toUpperCase();
 
     public PascalExpression(ASTNode node) {
         super(node);
@@ -371,7 +373,9 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     public static String getTypeIdentifier(PasField.ValueType type) {
         if (type.field != null) {
             PascalNamedElement el = type.field.getElement();
-            if (el instanceof PasGenericTypeIdent) {
+            if ((type.field.fieldType == PasField.FieldType.PSEUDO_VARIABLE) && BUILTIN_SELF_UPPER.equals(type.field.name.toUpperCase())) {
+                return el instanceof PascalStructType ? el.getName() : null;
+            } else if (el instanceof PasGenericTypeIdent) {
                 return el.getText();
             } else {
                 PasTypeDecl res = PsiUtil.getTypeDeclaration(type.field.getElement());

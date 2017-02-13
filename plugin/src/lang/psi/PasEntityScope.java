@@ -14,6 +14,9 @@ import java.util.List;
  * Date: 15/09/2013
  */
 public interface PasEntityScope extends PascalNamedElement, NavigatablePsiElement {
+    String BUILTIN_RESULT = "Result";
+    String BUILTIN_SELF = "Self";
+
     @NotNull
     String getName();
     @Nullable

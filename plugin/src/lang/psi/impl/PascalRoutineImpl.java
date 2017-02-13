@@ -36,8 +36,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * Date: 06/09/2013
  */
 public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntityScope, PasDeclSection {
-    private static final String BUILTIN_RESULT = "Result";
-    private static final String BUILTIN_SELF = "Self";
 
     private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
 
