@@ -46,6 +46,7 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
@@ -505,7 +506,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
 
         private void addToImplementation(FixActionData data) {
-            PsiElement block = (callScope instanceof PascalRoutineImpl) ? callScope : PsiTreeUtil.getParentOfType(data.element, PasBlockBody.class);
+            PsiElement block;
+            if (scope instanceof PasRoutineImplDecl) {
+                block = scope;
+            } else {
+                block = (callScope instanceof PascalRoutineImpl) ? callScope : PsiTreeUtil.getParentOfType(data.element, PasBlockBody.class);
+            }
             block = block != null ? block : PsiTreeUtil.getParentOfType(data.element, PasCompoundStatement.class);
             if (block != null) {
                 data.offset = block.getTextRange().getStartOffset();
