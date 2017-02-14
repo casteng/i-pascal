@@ -183,7 +183,7 @@ public class PasReferenceUtil {
         PasTypeID typeId = null;
         PasField.ValueType res = null;
         if (element instanceof PasClassProperty) {
-            typeId = PsiTreeUtil.getChildOfType(element, PasTypeID.class);
+            typeId = resolvePropertyType(field, (PasClassProperty) element);
         } else if (element instanceof PascalRoutineImpl) {                                     // routine declaration case
             typeId = ((PascalRoutineImpl) element).getFunctionTypeIdent();
         } else if ((element != null) && (element.getParent() instanceof PasHandler)) {                                     // exception handler case
@@ -202,6 +202,26 @@ public class PasReferenceUtil {
             res.field = field;
         }
         return res;
+    }
+
+    private static PasTypeID resolvePropertyType(PasField field, PasClassProperty element) {
+        PasTypeID typeId = element.getTypeID();
+        if ((null == typeId) && (field.owner instanceof PascalStructType)) {
+            for (SmartPsiElementPointer<PasEntityScope> parentPtr : field.owner.getParentScope()) {
+                PasEntityScope parent = parentPtr.getElement();
+                PasField propField = parent != null ? parent.getField(field.name) : null;
+                if (propField != null && propField.fieldType == PasField.FieldType.PROPERTY) {
+                    PascalNamedElement propEl = propField.getElement();
+                    if (propEl instanceof PasClassProperty) {
+                        typeId = resolvePropertyType(propField, (PasClassProperty) propEl);
+                        if (typeId != null) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return typeId;
     }
 
     @Nullable

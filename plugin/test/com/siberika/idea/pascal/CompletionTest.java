@@ -283,4 +283,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletionContainsAllCarets(myFixture, "else");
     }
 
+    public void testProp() {
+        myFixture.configureByFiles("prop.pas");
+        checkCompletionContains(myFixture, "X", "Y");
+    }
+
 }

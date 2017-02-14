@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.14</p>
+        <ul>
+          <li>fixed scope resolving for inherited properties (Issue #32)</li>
+        </ul>
         <p>1.12</p>
         <ul>
           <li>suggest argument types in create routine/method quickfix</li>
