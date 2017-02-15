@@ -3,7 +3,7 @@
   generatePsi=true
 
   parserClass="com.siberika.idea.pascal.lang.parser.PascalParser"
-  stubParserClass="com.siberika.idea.pascal.lang.parser.PascalParserUtil"
+  parserUtilClass="com.siberika.idea.pascal.lang.parser.PascalParserUtil"
 
   implements="com.siberika.idea.pascal.lang.psi.PascalPsiElement"
   extends="com.siberika.idea.pascal.lang.psi.impl.PascalPsiElementImpl"
@@ -28,7 +28,7 @@
         MOD="regexp:(?i)mod"
         OR="regexp:(?i)or"
         IDIV="regexp:(?i)div"
-        SHR="regexp:(?i)shr | >>"
+        SHR="regexp:(?i)shr"
         SHL="regexp:(?i)shl | <<"
         IN='regexp:(?i)in'
 
@@ -277,7 +277,7 @@ private rec_classparent     ::= !(CASE) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | "]") & rec_section
 private rec_propspec        ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
-private rec_generic_def     ::= !(">" | ":" | ">""=") & rec_section
+private rec_generic_def     ::= !(">" | "," | ":" | ">""=") & rec_section
 
 
 private interfaceDecl       ::= commonDecl | routineDecl | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
@@ -599,13 +599,13 @@ private expr_productOrd ::= primaryOrd (mulOp primaryOrd)* */
 // **********************************************************************
 relOp                       ::= (GT EQ) | LTEQ | LT | GT | NE | EQ | IN | IS
 addOp                       ::=	PLUS | MINUS | OR | XOR
-mulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | AS
+mulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | (">"">") | AS
 unaryOp                     ::= "+" | "-" | "@" | NOT
 
 ExpressionOrd               ::= Expression
 Expression                  ::= Expr
 
-Expr                        ::= relationalExpr | sumExpr | productExpr | unaryExpr | referenceExpr | callGroup | primaryGroup {extends="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"}
+Expr                        ::= sumExpr | productExpr | relationalExpr | unaryExpr | referenceExpr | callGroup | primaryGroup {extends="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"}
 relationalExpr              ::= Expr relOp Expr
 sumExpr                     ::= Expr addOp Expr
 productExpr                 ::= Expr mulOp Expr

@@ -12,6 +12,7 @@
         <p>1.14</p>
         <ul>
           <li>fixed scope resolving for inherited properties (Issue #32)</li>
+          <li>fixed nested generic definitions parsing (Issue #4)</li>
         </ul>
         <p>1.12</p>
         <ul>
