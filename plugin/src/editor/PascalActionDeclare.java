@@ -578,6 +578,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             try {
                 if (data.parent != null) {
                     PsiElement routine = PsiUtil.findElementAt(data.parent, data.offset - data.parent.getTextRange().getStartOffset());
+                    if (!(routine instanceof PascalRoutineImpl)) {
+                        routine = routine != null ? routine.getParent() : null;
+                    }
                     if (scope instanceof PascalStructType) {
                         if (null == callScope) {                   // Scope specified as FQN part
                             if (routine instanceof PascalRoutineImpl) {
