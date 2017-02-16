@@ -529,6 +529,18 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             }
         }
 
+        private void addToInterface(FixActionData data) {
+            fillMemberPlace(scope, data, PasField.Visibility.PUBLIC.ordinal(), PasField.FieldType.ROUTINE, null, null);
+            Pair<String, Map<String, String>> arguments = calcArguments(data);
+            if (returnType != null) {
+                arguments.getSecond().put(TPL_VAR_RETURN_TYPE, returnType);
+                data.createTemplate(String.format("\nfunction %s(%s): $%s$;",
+                        data.element.getName(), arguments.getFirst(), TPL_VAR_RETURN_TYPE), arguments.getSecond());
+            } else {
+                data.createTemplate(String.format("\nprocedure %s(%s);", data.element.getName(), arguments.getFirst()), arguments.getSecond());
+            }
+        }
+
         private Pair<String, Map<String, String>> calcArguments(FixActionData data) {
             PasExpr expression = PsiTreeUtil.getParentOfType(data.element, PasExpr.class);
             StringBuilder params = new StringBuilder();
@@ -557,16 +569,6 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 }
             }
             return Pair.create(params.length() != 0 ? params.toString() : "$" + TPL_VAR_PARAMS + "$", defaults);
-        }
-
-        private void addToInterface(FixActionData data) {
-            fillMemberPlace(scope, data, PasField.Visibility.PUBLIC.ordinal(), PasField.FieldType.ROUTINE, null, null);
-            if (returnType != null) {
-                data.createTemplate(String.format("\nfunction %s($%s$): $%s$;", data.element.getName(), TPL_VAR_PARAMS, TPL_VAR_RETURN_TYPE),
-                        StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_RETURN_TYPE, returnType))));
-            } else {
-                data.createTemplate(String.format("\nprocedure %s($%s$);", data.element.getName(), TPL_VAR_PARAMS), null);
-            }
         }
 
         @Override
