@@ -204,7 +204,7 @@ public class PasReferenceUtil {
         return res;
     }
 
-    private static PasTypeID resolvePropertyType(PasField field, PasClassProperty element) {
+    public static PasTypeID resolvePropertyType(PasField field, PasClassProperty element) {
         PasTypeID typeId = element.getTypeID();
         if ((null == typeId) && (field.owner instanceof PascalStructType)) {
             for (SmartPsiElementPointer<PasEntityScope> parentPtr : field.owner.getParentScope()) {

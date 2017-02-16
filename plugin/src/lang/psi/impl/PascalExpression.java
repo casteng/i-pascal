@@ -386,6 +386,9 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                         PasConstExpression expr = ((PasConstDeclaration) el.getParent()).getConstExpression();
                         return (expr != null) && (expr.getExpression() != null) ? infereType(expr.getExpression().getExpr()) : null;
                     }
+                } else if (type.field.fieldType == PasField.FieldType.PROPERTY) {
+                    PasTypeID typeId = PasReferenceUtil.resolvePropertyType(type.field, (PasClassProperty) type.field.getElement());
+                    return typeId.getText();
                 }
             }
         }

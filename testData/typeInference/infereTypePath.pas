@@ -13,6 +13,16 @@ type
   TOuterRec = class
     arrInRec: array of TInnerRec;
     function test(): TEnum;
+    property prop: TInnerRec;
+    property arrProp[Index: Integer]: TInnerRec;
+  end;
+  TClass1 = class(TOuterRec)
+    property prop;
+    property arrProp[Index: Integer];
+  end;
+  TClass2 = class(TClass1)
+    property prop;
+    property arrProp[Index: Integer];
   end;
   TArr = array[0..1] of TOuterRec;
   TClass = class of TObject;
@@ -25,6 +35,7 @@ var
   ArrVRec: array of TVarRec;
   rec: TOuterRec;
   ptr: PEnum;
+  cls: TClass2;
 
 implementation
 
@@ -40,6 +51,10 @@ begin
   arr1[0];
   rec.arrInRec[0];
   ptr^;
+  cls.prop;
+  cls.prop.innerField;
+  cls.arrProp;
+  cls.arrProp[0].innerField;
 
   obj[0].A;
   arrPtr^[0].arrInRec[0].innerField;

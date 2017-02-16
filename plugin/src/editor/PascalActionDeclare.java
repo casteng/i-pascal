@@ -557,7 +557,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                     defaults.put(TPL_VAR_TYPES + count, type);
                     if (expr instanceof PasReferenceExpr) {
                         PasFullyQualifiedIdent ident = ((PasReferenceExpr) expr).getFullyQualifiedIdent();
-                        defaults.put(TPL_VAR_ARGS + count, ident.getName());
+                        defaults.put(TPL_VAR_ARGS + count, ident.getNamePart());
                     } else if (StringUtil.isNotEmpty(type)) {
                         if (type.startsWith("T")) {
                             defaults.put(TPL_VAR_ARGS + count, type.substring(1));
