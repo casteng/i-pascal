@@ -80,7 +80,7 @@ type
     end;
 
     TVarRec1 = record
-    case a: Single of
+    case tag: Single of
         1: (a: Integer)
     end;
 
@@ -155,6 +155,9 @@ begin
 
 end;
 
+var
+  vr2: TVarRec1;
+
 begin
     with a do begin
         v[0] := 1;
@@ -167,4 +170,5 @@ begin
         aa := 111;
     with vec do
         Y := 1;
+    vr2.tag := 1;
 end.

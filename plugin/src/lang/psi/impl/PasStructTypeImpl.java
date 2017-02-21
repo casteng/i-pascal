@@ -19,6 +19,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -168,6 +169,8 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
                     visibility = getVisibility(child);
                 } else if (child.getClass() == PasRecordVariantImpl.class) {
                     addFields(res, child, PasField.FieldType.VARIABLE, visibility);
+                } else if ((child.getClass() == PasNamedIdentImpl.class) && (PasStructTypeImpl.this instanceof PasRecordDecl)) {
+                    addField(res, (PascalNamedElement) child, PasField.FieldType.VARIABLE, visibility);
                 }
                 child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
             }
