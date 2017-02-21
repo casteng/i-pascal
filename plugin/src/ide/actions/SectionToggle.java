@@ -98,12 +98,12 @@ public class SectionToggle {
         return field != null ? field.getElement() : null;
     }
 
-    private static boolean hasParametersOrReturnType(PascalRoutineImpl routine) {
-        if (routine.getFunctionTypeStr().length() > 0) {
+    public static boolean hasParametersOrReturnType(PascalRoutineImpl routine) {
+        PasFormalParameterSection params = routine.getFormalParameterSection();
+        if ((params != null) && !params.getFormalParameterList().isEmpty()) {
             return true;
         }
-        PasFormalParameterSection params = routine.getFormalParameterSection();
-        return (params != null) && !params.getFormalParameterList().isEmpty();
+        return routine.getFunctionTypeStr().length() > 0;
     }
 
     private static boolean isOverloaded(PasExportedRoutine routine) {

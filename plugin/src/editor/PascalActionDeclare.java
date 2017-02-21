@@ -32,6 +32,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasBlockBody;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
@@ -109,6 +110,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         fixActionDataArray.add(data);
     }
 
+    protected void onInvoke() {
+    }
+
     @NotNull
     @Override
     public String getText() {
@@ -128,6 +132,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     @Override
     public void invoke(@NotNull final Project project, final Editor editor, final PsiFile file) throws IncorrectOperationException {
+        onInvoke();
         final Document document = editor.getDocument();
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
@@ -274,17 +279,39 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     public static class ActionCreateParameter extends PascalActionDeclare {
 
+        private FixActionData otherSectionData = null;
+        private PascalRoutineImpl routine;
+
         public ActionCreateParameter(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
         }
 
         @Override
+        protected void onInvoke() {
+            if (scope instanceof PascalRoutineImpl) {
+                routine = (PascalRoutineImpl) scope;
+                PsiElement other = SectionToggle.retrieveDeclaration((PascalRoutineImpl) scope, true);
+                if (other instanceof PascalRoutineImpl) {
+                    if (!SectionToggle.hasParametersOrReturnType((PascalRoutineImpl) scope) && SectionToggle.hasParametersOrReturnType((PascalRoutineImpl) other)) {
+                        routine = (PascalRoutineImpl) other;
+                    } else {
+                        otherSectionData = new FixActionData(fixActionDataArray.get(0).element);
+                        otherSectionData.parent = other;
+                        addData(otherSectionData);
+                    }
+                }
+            }
+        }
+
+        @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            if (!(scope instanceof PascalRoutineImpl)) {
+            if (null == routine) {
                 return;
             }
             final String tpl = "%s: $%s$";
-            PascalRoutineImpl routine = (PascalRoutineImpl) scope;
+            if (data == otherSectionData) {
+                routine = (PascalRoutineImpl) data.parent;
+            }
             PasFormalParameterSection section = routine.getFormalParameterSection();
             if (section != null) {
                 data.parent = section;
@@ -302,7 +329,16 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 data.text = "(" + tpl + ")";
             }
             if (data.parent != null) {
-                data.createTemplate(String.format(data.text, data.element.getName(), TPL_VAR_TYPE), TYPE_VAR_DEFAULTS);
+                data.text = String.format(data.text, data.element.getName(), TPL_VAR_TYPE);
+                data.variableDefaults = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, calcType(data))));
+                if (otherSectionData != null) {          // Modify both sections
+                    data.parent = data.element.getContainingFile();
+                    if (data == otherSectionData) {
+                        data.dataType = FixActionData.DataType.COMPLEX_TEMPLATE;
+                    }
+                } else {
+                    data.dataType = FixActionData.DataType.TEMPLATE;
+                }
             }
         }
     }
