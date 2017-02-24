@@ -16,6 +16,7 @@
           <li>fixed nested generic definitions parsing (Issue #4)</li>
           <li>fixed variant record tag identifier resolving (Issue #38)</li>
           <li>fixed unknown units removal during optimize imports (Issue #40)</li>
+          <li>fixed quick definition (Issue #45)</li>
         </ul>
         <p>1.12</p>
         <ul>
@@ -267,6 +268,7 @@
 
         <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.GotoSuper"/>
         <definitionsScopedSearch implementation="com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch"/>
+        <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
 
         <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
         <moduleType id="PASCAL_MODULE" implementationClass="com.siberika.idea.pascal.module.PascalModuleType"/>

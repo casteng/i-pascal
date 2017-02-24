@@ -43,7 +43,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
 
     public static Collection<PasEntityScope> findImplementations(PsiElement element, Integer limit, int rCnt) {
         Collection<PasEntityScope> targets = new LinkedHashSet<PasEntityScope>();
-        PascalRoutineImpl routine = PsiTreeUtil.getParentOfType(element, PascalRoutineImpl.class);
+        PascalRoutineImpl routine = element instanceof PascalRoutineImpl ? (PascalRoutineImpl) element : PsiTreeUtil.getParentOfType(element, PascalRoutineImpl.class);
         if (routine != null) {
             findImplementingMethods(targets, routine, limit, 0);
         } else {
