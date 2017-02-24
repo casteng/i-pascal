@@ -5,5 +5,5 @@ package com.siberika.idea.pascal.lang;
  * Date: 21/12/2015
  */
 public enum UsedUnitStatus {
-    USED_IN_IMPL, USED, UNUSED
+    USED_IN_IMPL, USED, UNUSED, UNKNOWN
 }

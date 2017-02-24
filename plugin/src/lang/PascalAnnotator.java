@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
@@ -188,7 +189,7 @@ public class PascalAnnotator implements Annotator {
             return;
         }
         Annotation ann = null;
-        switch (PascalImportOptimizer.getUsedUnitStatus(usedUnitName)) {
+        switch (PascalImportOptimizer.getUsedUnitStatus(usedUnitName, ModuleUtilCore.findModuleForPsiElement(usedUnitName))) {
             case UNUSED: {
                 ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit"));
                 break;

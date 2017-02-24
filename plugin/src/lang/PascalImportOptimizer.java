@@ -3,6 +3,8 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.ImportOptimizer;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
@@ -24,10 +26,13 @@ import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
+import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,24 +58,30 @@ public class PascalImportOptimizer implements ImportOptimizer {
         return (prev instanceof PsiComment) && "{!}".equals(prev.getText());
     }
 
-    public static UsedUnitStatus getUsedUnitStatus(PasNamespaceIdent usedUnitName) {
-        if (isExcludedFromCheck(usedUnitName)) {
-            return UsedUnitStatus.USED;
+    public static UsedUnitStatus getUsedUnitStatus(PasNamespaceIdent usedUnitName, Module module) {
+        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(usedUnitName.getProject(),
+                PasReferenceUtil.findUnitFiles(usedUnitName.getProject(), module), usedUnitName.getName());
+        if (null == mod) {
+            return UsedUnitStatus.UNKNOWN;
         }
-        PascalModule module = PsiUtil.getElementPasModule(usedUnitName);
-        if ((module != null)) {
-            Pair<List<PascalNamedElement>, List<PascalNamedElement>> idents = module.getIdentsFrom(usedUnitName.getName());
+        UsedUnitStatus res = UsedUnitStatus.USED;
+        if (isExcludedFromCheck(usedUnitName)) {
+            return res;
+        }
+        PascalModule pasModule = PsiUtil.getElementPasModule(usedUnitName);
+        if ((pasModule != null)) {
+            Pair<List<PascalNamedElement>, List<PascalNamedElement>> idents = pasModule.getIdentsFrom(usedUnitName.getName());
             if (PsiUtil.belongsToInterface(usedUnitName)) {
                 if (idents.getFirst().size() + idents.getSecond().size() == 0) {
-                    return UsedUnitStatus.UNUSED;
+                    res = UsedUnitStatus.UNUSED;
                 } else if (idents.getFirst().size() == 0) {
-                    return UsedUnitStatus.USED_IN_IMPL;
+                    res = UsedUnitStatus.USED_IN_IMPL;
                 }
             } else if (idents.getSecond().size() == 0) {
-                return UsedUnitStatus.UNUSED;
+                res = UsedUnitStatus.UNUSED;
             }
         }
-        return UsedUnitStatus.USED;
+        return res;
     }
 
     @Override
@@ -93,9 +104,10 @@ public class PascalImportOptimizer implements ImportOptimizer {
         Collection<PasUsesClause> usesClauses = PsiTreeUtil.findChildrenOfType(file, PasUsesClause.class);
 
         //noinspection unchecked
+        Module module = ModuleUtilCore.findModuleForPsiElement(file);
         for (PasNamespaceIdent usedUnitName : PsiUtil.findChildrenOfAnyType(PsiUtil.getElementPasModule(file), PasNamespaceIdent.class)) {
             if (PsiUtil.isUsedUnitName(usedUnitName)) {
-                UsedUnitStatus status = PascalImportOptimizer.getUsedUnitStatus(usedUnitName);
+                UsedUnitStatus status = PascalImportOptimizer.getUsedUnitStatus(usedUnitName, module);
                 if (status != UsedUnitStatus.USED) {
                     units.put(usedUnitName, status);
                 }
@@ -116,7 +128,16 @@ public class PascalImportOptimizer implements ImportOptimizer {
 
         final Document doc = PsiDocumentManager.getInstance(file.getProject()).getDocument(file);
 
-        return new Runnable() {
+        return new CollectingInfoRunnable() {
+
+            private String status;
+
+            @Nullable
+            @Override
+            public String getUserNotificationInfo() {
+                return status;
+            }
+
             @Override
             public void run() {
                 if (null == doc) {
@@ -140,6 +161,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                     if (addedRange != null) {
                         unitRangesImpl.add(addedRange);
                     }
+                    int unknown = 0;
                     for (Map.Entry<PasNamespaceIdent, UsedUnitStatus> unit : units.entrySet()) {                                // collect all removal ranges
                         if (unit.getValue() == UsedUnitStatus.USED_IN_IMPL) {                                                   // remove due to moving to implementation
                             TextRange range = removeUnitFromSection(unit.getKey(), usesInterface, unitRangesIntf, remIntf);
@@ -159,30 +181,31 @@ public class PascalImportOptimizer implements ImportOptimizer {
                                     toRemoveImpl.add(range);
                                 }
                             }
+                        } else if (unit.getValue() == UsedUnitStatus.UNKNOWN) {
+                            unknown++;
                         }
                     }
-                    if ((usesImplementation != null) && (0 == remImpl)) {                                                         // remove implementation uses clause before other modifications
-                        doc.deleteString(usesImplementation.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesImplementation.getTextRange().getEndOffset(), DocUtil.RE_LF));
-                    } else {
-                        Collections.sort(toRemoveImpl, new ByOffsetComparator2());
-                        for (TextRange textRange : toRemoveImpl) {
-                            doc.deleteString(textRange.getStartOffset(), textRange.getEndOffset());
-                        }
-                    }
-                    if ((usesInterface != null) && (0 == remIntf)) {
-                        doc.deleteString(usesInterface.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesInterface.getTextRange().getEndOffset(), DocUtil.RE_LF));
-                    } else {
-                        Collections.sort(toRemoveIntf, new ByOffsetComparator2());
-                        for (TextRange textRange : toRemoveIntf) {
-                            doc.deleteString(textRange.getStartOffset(), textRange.getEndOffset());
-                        }
-                    }
+                    removeUnits(doc, usesImplementation, toRemoveImpl, remImpl); // remove implementation uses clause before other modifications
+                    removeUnits(doc, usesInterface, toRemoveIntf, remIntf);
                     PsiDocumentManager.getInstance(file.getProject()).commitDocument(doc);
+                    status = String.format("%d units moved to implementation, %d removed, %d unknown",
+                            toMove.size(), toRemoveImpl.size() + toRemoveIntf.size() - toMove.size(), unknown);
                 } catch (Exception e) {
                     LOG.info("Error", e);
                 }
             }
         };
+    }
+
+    private static void removeUnits(Document doc, PasUsesClause clause, List<TextRange> toRemove, int remaining) {
+        if ((clause != null) && (0 == remaining)) {
+            doc.deleteString(clause.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, clause.getTextRange().getEndOffset(), DocUtil.RE_LF));
+        } else {
+            Collections.sort(toRemove, new ByOffsetComparator2());
+            for (TextRange textRange : toRemove) {
+                doc.deleteString(textRange.getStartOffset(), textRange.getEndOffset());
+            }
+        }
     }
 
     public static List<TextRange> getUnitRanges(PasUsesClause usesClause) {

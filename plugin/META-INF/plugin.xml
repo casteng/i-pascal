@@ -15,6 +15,7 @@
           <li>fixed scope resolving for inherited properties (Issue #32)</li>
           <li>fixed nested generic definitions parsing (Issue #4)</li>
           <li>fixed variant record tag identifier resolving (Issue #38)</li>
+          <li>fixed unknown units removal during optimize imports (Issue #40)</li>
         </ul>
         <p>1.12</p>
         <ul>
