@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.editor;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.intellij.codeInsight.intention.HighPriorityAction;
 import com.intellij.codeInsight.intention.IntentionAction;
@@ -8,6 +9,7 @@ import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateEditingListener;
 import com.intellij.codeInsight.template.TemplateManager;
+import com.intellij.codeInspection.SmartHashMap;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
@@ -34,9 +36,12 @@ import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
+import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasBlockBody;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
+import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
@@ -67,7 +72,6 @@ import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -524,24 +528,37 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     public static class ActionCreateRoutine extends PascalActionDeclare {
         private final PsiElement callScope;
-        private final String returnType;
+        private final PascalNamedElement namedElement;
+        private final PasClassPropertySpecifier spec;
 
-        public ActionCreateRoutine(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, String returnType) {
+        public ActionCreateRoutine(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier spec) {
             super(name, element, scope);
             this.callScope = callScope;
-            this.returnType = returnType;
+            this.namedElement = element;
+            this.spec = spec;
         }
 
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            if ((scope instanceof PascalStructType) && (null == callScope)) {
-                addToInterface(data);
+            String type = null;
+            if (spec != null) {
+                PasClassProperty prop = (PasClassProperty) spec.getParent();
+                type = prop.getTypeID() != null ? prop.getTypeID().getText() : null;
             } else {
-                addToImplementation(data);
+                PsiElement parent = PsiUtil.skipToExpressionParent(namedElement);
+                if (parent instanceof PasAssignPart) {
+                    type = PascalExpression.calcAssignExpectedType(parent.getParent());
+                    type = type != null ? type : "";
+                }
+            }
+            if ((scope instanceof PascalStructType) && (null == callScope)) {
+                addToInterface(data, type);
+            } else {
+                addToImplementation(data, type);
             }
         }
 
-        private void addToImplementation(FixActionData data) {
+        private void addToImplementation(FixActionData data, String returnType) {
             PsiElement block;
             if (scope instanceof PasRoutineImplDecl) {
                 block = scope;
@@ -565,9 +582,21 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             }
         }
 
-        private void addToInterface(FixActionData data) {
+        private void addToInterface(FixActionData data, String returnType) {
             fillMemberPlace(scope, data, PasField.Visibility.PUBLIC.ordinal(), PasField.FieldType.ROUTINE, null, null);
-            Pair<String, Map<String, String>> arguments = calcArguments(data);
+            Pair<String, Map<String, String>> arguments;
+            if (spec != null) {
+                if (PsiUtil.isPropertyGetter(spec)) {
+                    Map<String, String> defaults = new SmartHashMap<String, String>();
+                    arguments = Pair.create("", defaults);
+                } else {
+                    Map<String, String> defaults = ImmutableMap.of(TPL_VAR_TYPE, returnType);
+                    arguments = Pair.create(String.format("const value: $%s$", TPL_VAR_TYPE), defaults);
+                    returnType = null;
+                }
+            } else {
+                arguments = calcArguments(data);
+            }
             if (returnType != null) {
                 arguments.getSecond().put(TPL_VAR_RETURN_TYPE, returnType);
                 data.createTemplate(String.format("\nfunction %s(%s): $%s$;",
@@ -580,7 +609,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         private Pair<String, Map<String, String>> calcArguments(FixActionData data) {
             PasExpr expression = PsiTreeUtil.getParentOfType(data.element, PasExpr.class);
             StringBuilder params = new StringBuilder();
-            Map<String, String> defaults = new HashMap<String, String>();
+            Map<String, String> defaults = new SmartHashMap<String, String>();
             if ((expression != null) && (expression.getNextSibling() instanceof PasArgumentList)) {
                 PasArgumentList args = (PasArgumentList) expression.getNextSibling();
                 int count = 0;
@@ -588,7 +617,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                     if (count != 0) {
                         params.append("; ");
                     }
-                    params.append("$").append(TPL_VAR_ARGS).append(count).append("$").append(": $").append(TPL_VAR_TYPES).append(count).append("$");
+                    params.append("const $").append(TPL_VAR_ARGS).append(count).append("$").append(": $").append(TPL_VAR_TYPES).append(count).append("$");
                     String type = PascalExpression.infereType(expr);
                     defaults.put(TPL_VAR_TYPES + count, type);
                     if (expr instanceof PasReferenceExpr) {
@@ -642,16 +671,16 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateRoutineHP extends ActionCreateRoutine implements HighPriorityAction {
-        public ActionCreateRoutineHP(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, String returnType) {
-            super(name, element, scope, callScope, returnType);
+        public ActionCreateRoutineHP(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier spec) {
+            super(name, element, scope, callScope, spec);
         }
     }
 
-    public static IntentionAction newActionCreateRoutine(String message, PascalNamedElement namedElement, PsiElement scope, PsiElement callScope, String returnType, boolean priority) {
+    public static IntentionAction newActionCreateRoutine(String message, PascalNamedElement namedElement, PsiElement scope, PsiElement callScope, boolean priority, PasClassPropertySpecifier spec) {
         if (priority) {
-            return new PascalActionDeclare.ActionCreateRoutineHP(message, namedElement, scope, callScope, returnType);
+            return new PascalActionDeclare.ActionCreateRoutineHP(message, namedElement, scope, callScope, spec);
         } else {
-            return new PascalActionDeclare.ActionCreateRoutine(message, namedElement, scope, callScope, returnType);
+            return new PascalActionDeclare.ActionCreateRoutine(message, namedElement, scope, callScope, spec);
         }
     }
 

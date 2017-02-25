@@ -12,6 +12,7 @@
         <p>1.14</p>
         <ul>
           <li>suggest parameter type in add parameter quickfix</li>
+          <li>suggest return/parameter type in create getter/setter quickfix</li>
           <li>fixed scope resolving for inherited properties (Issue #32)</li>
           <li>fixed nested generic definitions parsing (Issue #4)</li>
           <li>fixed variant record tag identifier resolving (Issue #38)</li>

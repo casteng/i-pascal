@@ -853,4 +853,8 @@ public class PsiUtil {
         PasFormalParameterSection params = routine.getFormalParameterSection();
         return (params != null) && !params.getFormalParameterList().isEmpty();
     }
+
+    public static boolean isPropertyGetter(PasClassPropertySpecifier spec) {
+        return "read".equalsIgnoreCase(spec.getFirstChild().getText());
+    }
 }
