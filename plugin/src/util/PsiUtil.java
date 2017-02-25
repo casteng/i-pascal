@@ -848,4 +848,9 @@ public class PsiUtil {
         }
         return false;
     }
+
+    public static boolean hasParameters(PascalRoutineImpl routine) {
+        PasFormalParameterSection params = routine.getFormalParameterSection();
+        return (params != null) && !params.getFormalParameterList().isEmpty();
+    }
 }

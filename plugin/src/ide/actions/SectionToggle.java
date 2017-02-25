@@ -8,7 +8,6 @@ import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -99,11 +98,7 @@ public class SectionToggle {
     }
 
     public static boolean hasParametersOrReturnType(PascalRoutineImpl routine) {
-        PasFormalParameterSection params = routine.getFormalParameterSection();
-        if ((params != null) && !params.getFormalParameterList().isEmpty()) {
-            return true;
-        }
-        return routine.getFunctionTypeStr().length() > 0;
+        return PsiUtil.hasParameters(routine) || routine.getFunctionTypeStr().length() > 0;
     }
 
     private static boolean isOverloaded(PasExportedRoutine routine) {

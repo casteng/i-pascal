@@ -72,6 +72,9 @@ public class PascalCompletionContributor extends CompletionContributor {
             PasTypes.TYPE, PasTypes.CLASS, PasTypes.DISPINTERFACE, PasTypes.RECORD, PasTypes.OBJECT,
             PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.HELPER, PasTypes.ARRAY
     );
+    private static final double PRIORITY_HIGHER = 10.0;
+    private static final double PRIORITY_LOWER = -10.0;
+    private static final double PRIORITY_LOWEST = -100.0;
 
     private static Map<String, String> getInsertMap() {
         Map<String, String> res = new HashMap<String, String>();
@@ -178,7 +181,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 for (PasField field : entities) {
                     String name = getFieldName(field).toUpperCase();
                     if (!nameSet.contains(name) && StringUtil.isNotEmpty(name)) {
-                        lookupElements.add(getLookupElement(parameters.getEditor(), field));
+                        lookupElements.add(getLookupElement(pos.getContainingFile().getVirtualFile(), parameters.getEditor(), field));
                         nameSet.add(name);
                     }
                 }
@@ -456,11 +459,21 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private LookupElement getLookupElement(Editor editor, @NotNull PasField field) {
+    private LookupElement getLookupElement(VirtualFile virtualFile, Editor editor, @NotNull PasField field) {
         String scope = field.owner != null ? field.owner.getName() : "-";
         LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(editor, field) : LookupElementBuilder.create(field.name);
-        return lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
+        LookupElement element = lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                 withCaseSensitivity(true).withTypeText(scope, false);
+        if (field.name.startsWith("__")) {
+            return priority(element, PRIORITY_LOWEST);
+        }
+        if (field.name.startsWith("_")) {
+            return priority(element, PRIORITY_LOWEST);
+        }
+        if (virtualFile != null && !virtualFile.equals(field.getElementPtr().getVirtualFile())) {
+            return priority(element, PRIORITY_LOWER);
+        }
+        return element;
     }
 
     private LookupElement priority(LookupElement element, double priority) {
@@ -475,10 +488,12 @@ public class PascalCompletionContributor extends CompletionContributor {
         assert field.getElement() != null;
         LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(PsiUtil.getFieldName(field.getElement()));
         if (field.fieldType == PasField.FieldType.ROUTINE) {
+            PascalNamedElement el = field.getElement();
+            final String content = (el instanceof PascalRoutineImpl && PsiUtil.hasParameters((PascalRoutineImpl) el)) ? "(" + DocUtil.PLACEHOLDER_CARET + ")" : "()" + DocUtil.PLACEHOLDER_CARET;
             res = res.withInsertHandler(new InsertHandler<LookupElement>() {
                 @Override
                 public void handleInsert(InsertionContext context, LookupElement item) {
-                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), "(" + DocUtil.PLACEHOLDER_CARET + ")");
+                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), content);
                     AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
                     DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
                     act.actionPerformed(new AnActionEvent(null, dataContext, "", act.getTemplatePresentation(), ActionManager.getInstance(), 0));
