@@ -45,6 +45,11 @@ begin
   Result;
 end;
 
+function test(): TClass2;
+begin
+  Result;
+end;
+
 begin
   rec.arrInRec;
   rec.arrInRec[0].innerField;

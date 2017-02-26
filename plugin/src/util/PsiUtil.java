@@ -567,7 +567,7 @@ public class PsiUtil {
     @Nullable
     public static PasTypeDecl getTypeDeclaration(PascalNamedElement element) {
         PasTypeDecl typeDecl;
-        if ((element instanceof PasExportedRoutine) && (element.getFirstChild() != null)) {                      // resolve function type
+        if ((element instanceof PascalRoutineImpl) && (element.getFirstChild() != null)) {                      // resolve function type
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getFirstChild(), PasTypeDecl.class);
         } else {
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
