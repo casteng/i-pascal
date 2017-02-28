@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.14</version>
+    <version>1.16</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.16</p>
+          <li>fixed new Pascal module creation in a test directory (Issue #47)</li>
+        <ul>
+        </ul>
         <p>1.14</p>
         <ul>
           <li>suggest parameter type in add parameter quickfix</li>

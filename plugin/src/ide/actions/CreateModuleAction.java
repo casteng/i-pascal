@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.ide.actions;
 
+import com.google.common.collect.ImmutableSet;
 import com.intellij.ide.actions.CreateClassAction;
 import com.intellij.ide.actions.CreateFileFromTemplateDialog;
 import com.intellij.ide.actions.CreateTemplateInPackageAction;
@@ -23,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 
 import javax.swing.*;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -38,7 +38,7 @@ public class CreateModuleAction extends CreateTemplateInPackageAction<PsiFile> {
         super(PascalBundle.message("action.create.new.module"),
                 PascalBundle.message("action.create.new.module"),
                 PascalIcons.GENERAL,
-                Collections.singleton(JavaSourceRootType.SOURCE));
+                ImmutableSet.of(JavaSourceRootType.SOURCE, JavaSourceRootType.TEST_SOURCE));
     }
 
     @Nullable
