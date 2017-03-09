@@ -112,7 +112,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private List<Pair<Integer, String>> adjustDefines(Set<String> defines, List<Pair<Integer, String>> events, int offset) {
         for (int i = 0; i < events.size(); i++) {
             int ofs = events.get(i).getFirst();
-            if (Math.abs(ofs) > offset) {
+            if (Math.abs(ofs) >= offset) {
                 return events.subList(0, i);
             }
             if (ofs >= 0) {
