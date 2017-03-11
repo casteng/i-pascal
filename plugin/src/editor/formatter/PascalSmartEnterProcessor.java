@@ -14,6 +14,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
@@ -31,6 +32,7 @@ import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -67,6 +69,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
          *  complete structured types
          *  remove ";" at EOL after "begin"
          */
+        boolean processParent = false;
         if (statement instanceof PasWhileStatement) {
             completeWhile(editor, (PasWhileStatement) statement);
         } else if (statement instanceof PasForStatement) {
@@ -76,13 +79,33 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
         } else if (statement instanceof PasRepeatStatement) {
             completeRepeat(editor, (PasRepeatStatement) statement);
         } else if ((statement instanceof PasCallExpr) || (statement instanceof PasParenExpr)) {
-            completeParen(editor, (PascalExpression) statement);
+            processParent = !completeParen(editor, (PascalExpression) statement);
+        } else if (statement instanceof PasStatement) {
+            processParent = !completeSimpleStatement(editor, (PasStatement) statement);
         } else {
+            processParent = true;
+        }
+        if (processParent) {
             PascalPsiElement parent = PsiTreeUtil.getParentOfType(statement, PasStatement.class, PascalExpression.class);
             if (parent != null) {
                 completeStatement(editor, parent);
             }
         }
+    }
+
+    private static boolean completeSimpleStatement(Editor editor, PasStatement outerStatement) {
+        if (!DocUtil.isSingleLine(editor.getDocument(), outerStatement)) {
+            PascalPsiElement stmt = PsiUtil.findImmChildOfAnyType(outerStatement, PasAssignPart.class);
+            stmt = stmt != null ? stmt : PsiUtil.findImmChildOfAnyType(outerStatement, PasAssignPart.class, PasExpression.class);
+            if (stmt != null) {
+                int endStmt = stmt.getTextRange().getEndOffset();
+                if (endStmt != outerStatement.getTextRange().getEndOffset()) {
+                    DocUtil.adjustDocument(editor, endStmt, String.format(";%s", DocUtil.PLACEHOLDER_CARET));
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /* WHILE
@@ -240,21 +263,28 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
      * ([x] => ([x]_)
      * func([x] => func([x]_)
      */
-    private static void completeParen(Editor editor, PascalExpression statement) {
+    private static boolean completeParen(Editor editor, PascalExpression statement) {
         int parenPos = getChildEndOffset(PasTypes.RPAREN, statement, statement.getLastChild());
         if (parenPos < 0) {
-            DocUtil.adjustDocument(editor, statement.getTextRange().getEndOffset(), DocUtil.PLACEHOLDER_CARET + ")");
+            int ofs = DocUtil.isSingleLine(editor.getDocument(), statement) ? statement.getTextRange().getEndOffset() : getVisualLineEnd(editor) - 1;
+            DocUtil.adjustDocument(editor, ofs, DocUtil.PLACEHOLDER_CARET + ")");
             PsiDocumentManager.getInstance(statement.getProject()).commitDocument(editor.getDocument());
+            return true;
         }
+        return false;
     }
 
     private static void insertNewLine(Editor editor, String doStr, int offset) {
         DocUtil.adjustDocument(editor, offset, doStr + "\n" + DocUtil.PLACEHOLDER_CARET);
         int caretPos = editor.getCaretModel().getCurrentCaret().getOffset();
-        int lineEndPos = editor.getCaretModel().getCurrentCaret().getVisualLineEnd() - 1;
+        int lineEndPos = getVisualLineEnd(editor) - 1;
         if (caretPos >= lineEndPos) {
             EditorUtil.moveToLineEnd(editor);
         }
+    }
+
+    private static int getVisualLineEnd(Editor editor) {
+        return editor.getCaretModel().getCurrentCaret().getVisualLineEnd();
     }
 
     private static int getChildEndOffset(PsiElement element, IElementType type) {
