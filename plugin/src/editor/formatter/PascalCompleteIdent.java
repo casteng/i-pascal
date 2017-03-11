@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.util.DocUtil;
@@ -22,13 +23,18 @@ public class PascalCompleteIdent {
          * name => name: _;
          */
         PsiErrorElement error = PsiTreeUtil.findChildOfType(el, PsiErrorElement.class);
-        if ((el.getTypeDecl() == null) || (error != null)) {
+        PasTypeDecl typeDecl = el.getTypeDecl();
+        if ((null == typeDecl) || (error != null)) {
             int colonPos = getChildEndOffset(PasTypes.COLON, el);
             String colonStr = colonPos >= 0 ? "" : ": ";
             String rparenStr = ";";
             PasNamedIdent last = Iterables.getLast(el.getNamedIdentList(), null);
             if (last != null) {
-                DocUtil.adjustDocument(editor, colonPos >= 0 ? colonPos + 1 : last.getTextRange().getEndOffset(), colonStr + DocUtil.PLACEHOLDER_CARET + rparenStr);
+                int offs = colonPos >= 0 ? colonPos + 1 : last.getTextRange().getEndOffset();
+                if ((colonPos >= 0) && (typeDecl != null)) {
+                    offs = typeDecl.getTextRange().getEndOffset();
+                }
+                DocUtil.adjustDocument(editor, offs, colonStr + DocUtil.PLACEHOLDER_CARET + rparenStr);
             }
         }
     }
