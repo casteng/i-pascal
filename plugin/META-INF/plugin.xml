@@ -10,6 +10,7 @@
 
     <change-notes><![CDATA[
         <p>1.16</p>
+          <li>new module type: Test (Issue #54)</li>
           <li>fixed new Pascal module creation in a test directory (Issue #47)</li>
           <li>complete statement feature improvement</li>
         <ul>
@@ -340,6 +341,7 @@
         <internalFileTemplate name="PascalProgram"/>
         <internalFileTemplate name="PascalLibrary"/>
         <internalFileTemplate name="PascalPackage"/>
+        <internalFileTemplate name="PascalTest"/>
 
         <compileServer.plugin classpath="jps-plugin.jar"/>
         <postStartupActivity implementation="com.siberika.idea.pascal.PostStartupActivity"/>
