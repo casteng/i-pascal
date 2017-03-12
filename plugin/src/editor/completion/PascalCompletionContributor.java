@@ -144,7 +144,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 PsiElement pos = parameters.getPosition();
                 PsiElement prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
                 PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
-                System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent()));
+//                System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent()));
 
                 originalPos = PsiUtil.skipToExpressionParent(parameters.getOriginalPosition());
                 pos = PsiUtil.skipToExpressionParent(parameters.getPosition());
@@ -152,7 +152,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
                 PsiElement expr = PsiUtil.skipToExpression(parameters.getOriginalPosition());
                 int level = PsiUtil.getElementLevel(originalPos);
-                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
+//                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
                 if (parameters.getOriginalPosition() instanceof PsiComment) {
                     PascalCompletionInComment.handleComments(result, parameters);
