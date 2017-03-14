@@ -508,6 +508,11 @@ public class PasReferenceUtil {
                             PasEntityScope ns = PascalExpression.retrieveScope(types);
                             if (ns != null) {
                                 namespaces.add(ns);
+                                if (ns instanceof PascalStructType) {
+                                    for (SmartPsiElementPointer<PasEntityScope> scopePtr : ns.getParentScope()) {
+                                        namespaces.add(scopePtr.getElement());
+                                    }
+                                }
                             }
                         }
                     }

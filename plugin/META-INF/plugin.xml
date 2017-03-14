@@ -13,6 +13,7 @@
           <li>new module type: Test (Issue #54)</li>
           <li>fixed new Pascal module creation in a test directory (Issue #47)</li>
           <li>complete statement feature improvement</li>
+          <li>fixed parent scopes resolving in WITH operator (Issue #41)</li>
         <ul>
         </ul>
         <p>1.14</p>
