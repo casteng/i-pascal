@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDeclNested1;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -45,6 +46,11 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
     private void doTestSectionToggle(List<PascalNamedElement> symbols, boolean strict) {
         Collection<PasExportedRoutineImpl> decls = getDecls(symbols);
         List<PascalRoutineImpl> impls = new ArrayList<PascalRoutineImpl>();
+        for (PascalNamedElement symbol : symbols) {
+            if (symbol instanceof PasRoutineImplDeclNested1) {
+                impls.add((PascalRoutineImpl) symbol);
+            }
+        }
         for (PasExportedRoutineImpl decl : decls) {
             boolean invalid = isInvalid(decl);
             PascalRoutineImpl impl = (PascalRoutineImpl) SectionToggle.retrieveImplementation(decl, strict);

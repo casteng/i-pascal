@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -142,6 +143,9 @@ public class SectionToggle {
 
     @Nullable
     public static PsiElement retrieveDeclaration(PascalRoutineImpl routine, boolean strict) {
+        if (routine.getClass() != PasRoutineImplDeclImpl.class) {           // Filter out nested routines
+            return null;
+        }
         return retrieveDeclaration(calcPrefix(new Container(routine)), strict);
     }
 

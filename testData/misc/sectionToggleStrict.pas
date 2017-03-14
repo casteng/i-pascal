@@ -87,6 +87,11 @@ begin
 end;
 
 function testRoutine5;
+    function nested_invalid(): string;
+    begin
+
+    end;
+
 begin
 end;
 

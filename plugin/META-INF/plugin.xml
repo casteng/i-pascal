@@ -10,10 +10,11 @@
 
     <change-notes><![CDATA[
         <p>1.16</p>
+          <li>complete statement feature improvement</li>
           <li>new module type: Test (Issue #54)</li>
           <li>fixed new Pascal module creation in a test directory (Issue #47)</li>
-          <li>complete statement feature improvement</li>
           <li>fixed parent scopes resolving in WITH operator (Issue #41)</li>
+          <li>fixed incorrect resolving for Result pseudo variable in nested functions (Issue #42)</li>
         <ul>
         </ul>
         <p>1.14</p>
