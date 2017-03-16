@@ -43,7 +43,11 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
     private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().softValues().build();
     private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().softValues().build();
     private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().softValues().build();
-    public static final String INTERFACE_PREFIX = "interface.";
+    private static final String INTERFACE_PREFIX = "interface.";
+
+    private final Callable<? extends Members> PRIVATE_BUILDER = this.new PrivateBuilder();
+    private final Callable<? extends Members> PUBLIC_BUILDER = this.new PublicBuilder();
+    private final Callable<Idents> IDENTS_BUILDER = this.new IdentsBuilder();
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -96,35 +100,35 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
     @Override
     @Nullable
     public final PasField getPrivateField(final String name) {
-        return getMembers(privateCache, this.new PrivateBuilder()).all.get(name.toUpperCase());
+        return getMembers(privateCache, PRIVATE_BUILDER).all.get(name.toUpperCase());
     }
 
     @Override
     @NotNull
     public Collection<PasField> getPrivateFields() {
-        return getMembers(privateCache, this.new PrivateBuilder()).all.values();
+        return getMembers(privateCache, PRIVATE_BUILDER).all.values();
     }
 
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPrivateUnits() {
-        return getMembers(privateCache, this.new PrivateBuilder()).units;
+        return getMembers(privateCache, PRIVATE_BUILDER).units;
     }
 
     @Override
     @Nullable
     public final PasField getPublicField(final String name) {
-        return getMembers(publicCache, this.new PublicBuilder()).all.get(name.toUpperCase());
+        return getMembers(publicCache, PUBLIC_BUILDER).all.get(name.toUpperCase());
     }
 
     @Override
     @NotNull
     public Collection<PasField> getPubicFields() {
-        return getMembers(publicCache, this.new PublicBuilder()).all.values();
+        return getMembers(publicCache, PUBLIC_BUILDER).all.values();
     }
 
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits() {
-        return getMembers(publicCache, this.new PublicBuilder()).units;
+        return getMembers(publicCache, PUBLIC_BUILDER).units;
     }
 
     @NotNull
@@ -145,7 +149,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
 
     @Override
     public Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@NotNull String module) {
-        Idents idents = getIdents(identCache, this.new IdentsBuilder());
+        Idents idents = getIdents(identCache, IDENTS_BUILDER);
         Pair<List<PascalNamedElement>, List<PascalNamedElement>> res = new Pair<List<PascalNamedElement>, List<PascalNamedElement>>(
                 new SmartList<PascalNamedElement>(), new SmartList<PascalNamedElement>());
         for (Map.Entry<String, PasField> entry : idents.idents.entrySet()) {
@@ -281,7 +285,7 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         return result;
     }
 
-    private void addUnit(List<SmartPsiElementPointer<PasEntityScope>> result, PasEntityScope unit, Project project) {
+    private static void addUnit(List<SmartPsiElementPointer<PasEntityScope>> result, PasEntityScope unit, Project project) {
         if (unit != null) {
             result.add(SmartPointerManager.getInstance(project).createSmartPsiElementPointer(unit));
         }

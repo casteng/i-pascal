@@ -48,6 +48,8 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
 
+    private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
+
     static {
         STR_TO_VIS = new HashMap<String, PasField.Visibility>(PasField.Visibility.values().length);
         STR_TO_VIS.put("INTERNAL", PasField.Visibility.INTERNAL);
@@ -115,13 +117,13 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
     @Nullable
     @Override
     public PasField getField(String name) {
-        return getMembers(cache, this.new MemberBuilder()).all.get(name.toUpperCase());
+        return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
     }
 
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        return getMembers(cache, this.new MemberBuilder()).all.values();
+        return getMembers(cache, MEMBER_BUILDER).all.values();
     }
 
     private PasField.Visibility getVisibility(PsiElement element) {

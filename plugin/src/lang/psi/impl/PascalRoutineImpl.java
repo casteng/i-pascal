@@ -42,6 +42,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     private ReentrantLock parentLock = new ReentrantLock();
     private boolean parentBuilding = false;
 
+    private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
+
     @Nullable
     public abstract PasFormalParameterSection getFormalParameterSection();
 
@@ -89,13 +91,13 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     @Nullable
     @Override
     public PasField getField(String name) {
-        return getMembers(cache, this.new MemberBuilder()).all.get(name.toUpperCase());
+        return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
     }
 
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        return getMembers(cache, this.new MemberBuilder()).all.values();
+        return getMembers(cache, MEMBER_BUILDER).all.values();
     }
 
     public static void invalidate(String key) {

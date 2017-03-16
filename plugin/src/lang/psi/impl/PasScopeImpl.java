@@ -181,11 +181,11 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     // Add forward declared field even if it exists as we need full declaration
     // Routines can have various signatures
-    private boolean shouldAddField(PasField existing) {
+    private static boolean shouldAddField(PasField existing) {
         return (null == existing) || (PsiUtil.isForwardClassDecl(existing.getElement()) || (existing.fieldType == PasField.FieldType.ROUTINE));
     }
 
-    private PasField addField(PasEntityScope owner, String name, PascalNamedElement namedElement, PasField.Visibility visibility) {
+    private static PasField addField(PasEntityScope owner, String name, PascalNamedElement namedElement, PasField.Visibility visibility) {
         PasField.FieldType fieldType = getFieldType(namedElement);
         return new PasField(owner, namedElement, name, fieldType, visibility);
     }

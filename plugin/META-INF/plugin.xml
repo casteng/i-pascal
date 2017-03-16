@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.16</version>
+    <version>1.18</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,13 +9,16 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.18</p>
+        <ul>
+        </ul>
         <p>1.16</p>
+        <ul>
           <li>complete statement feature improvement</li>
           <li>new module type: Test (Issue #54)</li>
           <li>fixed new Pascal module creation in a test directory (Issue #47)</li>
           <li>fixed parent scopes resolving in WITH operator (Issue #41)</li>
           <li>fixed incorrect resolving for Result pseudo variable in nested functions (Issue #42)</li>
-        <ul>
         </ul>
         <p>1.14</p>
         <ul>
