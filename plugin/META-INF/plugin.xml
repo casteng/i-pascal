@@ -291,6 +291,8 @@
         <syntaxHighlighter key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
 
+        <!--<problemFileHighlightFilter implementation="com.siberika.idea.pascal.editor.highlighter.PascalProblemFileHighlightFilter"/>-->
+
         <lang.foldingBuilder language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalFoldingBuilder"/>
 
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
