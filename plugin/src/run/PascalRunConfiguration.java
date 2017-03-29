@@ -26,6 +26,7 @@ import com.intellij.execution.configurations.RunConfigurationModule;
 import com.intellij.execution.configurations.RunConfigurationWithSuppressedDefaultDebugAction;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.configurations.SearchScopeProvider;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
@@ -97,6 +98,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     @Nullable
     public RunProfileState getState(@NotNull Executor executor, @NotNull final ExecutionEnvironment env) throws ExecutionException {
+        final boolean debug = executor instanceof DefaultDebugExecutor;
         final String workDirectory = this.workingDirectory;
         final List<String> params = new ArrayList<String>();
         if ((parameters != null) && (parameters.length() > 0)) {
@@ -117,10 +119,22 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                     fileName = mainFile != null ? mainFile.getNameWithoutExtension() : null;
                 }
                 String executable = PascalRunner.getExecutable(module, fileName);
-                if (executable != null) {
-                    commandLine.setExePath(executable);
+                if (debug) {
+                    commandLine.setExePath("gdb");
+                    commandLine.addParameters("-n");
+                    commandLine.addParameters("-fullname");
+                    commandLine.addParameters("-tty");
+                    commandLine.addParameters("/dev/null");
+                    commandLine.addParameters("-nowindows");
+                    commandLine.addParameters("-interpreter=mi");
+                    commandLine.addParameters("--args");
+                    commandLine.addParameters(executable);
                 } else {
-                    throw new ExecutionException(PascalBundle.message("execution.noExecutable"));
+                    if (executable != null) {
+                        commandLine.setExePath(executable);
+                    } else {
+                        throw new ExecutionException(PascalBundle.message("execution.noExecutable"));
+                    }
                 }
                 commandLine.addParameters(params);
                 commandLine.setWorkDirectory(workDirectory);

@@ -10,20 +10,21 @@ import org.jetbrains.annotations.NotNull;
  * Date: 26/03/2017
  */
 public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<PascalLineBreakpointProperties>> {
-    private final PascalXDebugProcess myDebugProcess;
+    private final PascalXDebugProcess debugProcess;
 
     public PascalLineBreakpointHandler(PascalXDebugProcess debugProcess) {
         super(PascalLineBreakpointType.class);
-        myDebugProcess = debugProcess;
+        this.debugProcess = debugProcess;
     }
 
     @Override
     public void registerBreakpoint(@NotNull XLineBreakpoint<PascalLineBreakpointProperties> breakpoint) {
-        myDebugProcess.getSession().reportMessage("Breakpoint add", MessageType.INFO);
+        debugProcess.getSession().reportMessage("Breakpoint add", MessageType.INFO);
+        debugProcess.sendCommand(String.format("break %s:%d", breakpoint.getPresentableFilePath(), breakpoint.getLine()));
     }
 
     @Override
     public void unregisterBreakpoint(@NotNull XLineBreakpoint<PascalLineBreakpointProperties> breakpoint, boolean temporary) {
-        myDebugProcess.getSession().reportMessage("Breakpoint remove", MessageType.INFO);
+        debugProcess.getSession().reportMessage("Breakpoint remove", MessageType.INFO);
     }
 }

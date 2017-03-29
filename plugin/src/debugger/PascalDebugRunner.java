@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.debugger;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.executors.DefaultDebugExecutor;
@@ -26,11 +27,14 @@ public class PascalDebugRunner extends GenericProgramRunner {
     protected RunContentDescriptor doExecute(@NotNull RunProfileState state,
                                              @NotNull final ExecutionEnvironment environment) throws ExecutionException {
         XDebuggerManager xDebuggerManager = XDebuggerManager.getInstance(environment.getProject());
+
+        final ExecutionResult executionResult = state.execute(environment.getExecutor(), this);
+
         return xDebuggerManager.startSession(environment, new XDebugProcessStarter() {
             @NotNull
             @Override
             public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-                return new PascalXDebugProcess(session, environment);
+                return new PascalXDebugProcess(session, environment, executionResult);
             }
         }).getRunContentDescriptor();
     }
