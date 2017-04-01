@@ -1,4 +1,4 @@
-package com.siberika.idea.pascal.debugger;
+package com.siberika.idea.pascal.debugger.gdb;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
@@ -19,9 +19,9 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.evaluation.EvaluationMode;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
-import com.intellij.xdebugger.frame.XExecutionStack;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.debugger.PascalLineBreakpointHandler;
 import com.siberika.idea.pascal.run.PascalRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,7 +54,7 @@ public class PascalXDebugProcess extends XDebugProcess {
     private void createGdbProcess(ExecutionEnvironment env) throws ExecutionException {
         RunProfile profile = env.getRunProfile();
         if (profile instanceof PascalRunConfiguration) {
-            
+            sendCommand("-break-delete");
         }
     }
 
@@ -78,7 +78,7 @@ public class PascalXDebugProcess extends XDebugProcess {
     @Override
     public void sessionInitialized() {
         super.sessionInitialized();
-        getProcessHandler().addProcessListener(new GdbProcessAdapter());
+        getProcessHandler().addProcessListener(new GdbProcessAdapter(this));
         sendCommand("-gdb-set target-async on");
         sendCommand("-exec-run");
         getSession().setPauseActionSupported(true);
@@ -86,34 +86,40 @@ public class PascalXDebugProcess extends XDebugProcess {
 
     @Override
     public void startPausing() {
-        printToConsole("Pausing", ConsoleViewContentType.NORMAL_OUTPUT);
         sendCommand("-exec-interrupt");
-        getSession().positionReached(new XSuspendContext() {
-            @Nullable
-            @Override
-            public XExecutionStack getActiveExecutionStack() {
-                return super.getActiveExecutionStack();
-            }
-
-            @NotNull
-            @Override
-            public XExecutionStack[] getExecutionStacks() {
-                return super.getExecutionStacks();
-            }
-
-            @Override
-            public void computeExecutionStacks(XExecutionStackContainer container) {
-                super.computeExecutionStacks(container);
-            }
-        });
     }
 
     @Override
     public void resume(@Nullable XSuspendContext context) {
-        sendCommand("-exec-continue");
+        sendCommand("-exec-continue --all");
     }
 
-    void sendCommand(String command) {
+    @Override
+    public void startStepOver(@Nullable XSuspendContext context) {
+        sendCommand("-exec-next");
+    }
+
+    @Override
+    public void startStepInto(@Nullable XSuspendContext context) {
+        sendCommand("-exec-step");
+    }
+
+    @Override
+    public void startStepOut(@Nullable XSuspendContext context) {
+        sendCommand("-exec-finish");
+    }
+
+    @Override
+    public void stop() {
+        // finalize something
+    }
+
+    @Override
+    public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
+        sendCommand(String.format("-exec-until %s:%d", position.getFile().getCanonicalPath(), position.getLine()));
+    }
+
+    public void sendCommand(String command) {
         try {
             OutputStream commandStream = getProcessHandler().getProcessInput();
             if (commandStream != null) {
