@@ -66,6 +66,15 @@ public abstract class BasePascalSdkType extends SdkType {
         return res;
     }
 
+    public static String getDebuggerCommand(@Nullable Sdk sdk, String defaultDebuggerCommand) {
+        String command = sdk != null ? (String) getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DEBUGGER_COMMAND) : null;
+        if (StringUtils.isEmpty(command)) {
+            return defaultDebuggerCommand;
+        } else {
+            return command;
+        }
+    }
+
     public static String[] getDecompilerArgs(Sdk sdk) {
         return EMPTY_ARGS;
         /*String command = (String) getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND);
@@ -142,6 +151,7 @@ public abstract class BasePascalSdkType extends SdkType {
         if (additionalData instanceof PascalSdkData) {
             setParam((PascalSdkData) additionalData, additional, PascalSdkData.DATA_KEY_COMPILER_OPTIONS);
             setParam((PascalSdkData) additionalData, additional, PascalSdkData.DATA_KEY_DECOMPILER_COMMAND);
+            setParam((PascalSdkData) additionalData, additional, PascalSdkData.DATA_KEY_DEBUGGER_COMMAND);
             additional.setAttribute(PascalSdkData.DATA_KEY_COMPILER_FAMILY, compilerFamily);
         }
     }
@@ -153,6 +163,7 @@ public abstract class BasePascalSdkType extends SdkType {
         if (additional != null) {
             result.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, additional.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS));
             result.setValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND, additional.getAttributeValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND));
+            result.setValue(PascalSdkData.DATA_KEY_DEBUGGER_COMMAND, additional.getAttributeValue(PascalSdkData.DATA_KEY_DEBUGGER_COMMAND));
             result.setValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY, compilerFamily);
         }
         return result;

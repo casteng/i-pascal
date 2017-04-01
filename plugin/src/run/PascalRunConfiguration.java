@@ -26,6 +26,7 @@ import com.intellij.execution.configurations.RunConfigurationModule;
 import com.intellij.execution.configurations.RunConfigurationWithSuppressedDefaultDebugAction;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.configurations.SearchScopeProvider;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
@@ -33,11 +34,14 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
+import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,6 +101,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     @Nullable
     public RunProfileState getState(@NotNull Executor executor, @NotNull final ExecutionEnvironment env) throws ExecutionException {
+        final boolean debug = executor instanceof DefaultDebugExecutor;
         final String workDirectory = this.workingDirectory;
         final List<String> params = new ArrayList<String>();
         if ((parameters != null) && (parameters.length() > 0)) {
@@ -117,10 +122,24 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                     fileName = mainFile != null ? mainFile.getNameWithoutExtension() : null;
                 }
                 String executable = PascalRunner.getExecutable(module, fileName);
-                if (executable != null) {
-                    commandLine.setExePath(executable);
+                if (debug) {
+                    Sdk sdk = getConfigurationModule().getModule() != null ? ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() : null;
+                    String command = BasePascalSdkType.getDebuggerCommand(sdk, "gdb");
+                    commandLine.setExePath(command);
+                    commandLine.addParameters("-n");
+                    commandLine.addParameters("-fullname");
+                    commandLine.addParameters("-tty");
+                    commandLine.addParameters("/dev/null");
+                    commandLine.addParameters("-nowindows");
+                    commandLine.addParameters("-interpreter=mi");
+                    commandLine.addParameters("--args");
+                    commandLine.addParameters(executable);
                 } else {
-                    throw new ExecutionException(PascalBundle.message("execution.noExecutable"));
+                    if (executable != null) {
+                        commandLine.setExePath(executable);
+                    } else {
+                        throw new ExecutionException(PascalBundle.message("execution.noExecutable"));
+                    }
                 }
                 commandLine.addParameters(params);
                 commandLine.setWorkDirectory(workDirectory);
