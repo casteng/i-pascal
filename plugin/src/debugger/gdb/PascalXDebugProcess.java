@@ -19,6 +19,7 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.evaluation.EvaluationMode;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
+import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.debugger.PascalLineBreakpointHandler;
@@ -39,6 +40,7 @@ public class PascalXDebugProcess extends XDebugProcess {
     private final ExecutionEnvironment environment;
     private final ExecutionResult executionResult;
     private ConsoleView myExecutionConsole;
+    private XCompositeNode lastQueriedVariablesCompositeNode;
 
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
@@ -164,5 +166,13 @@ public class PascalXDebugProcess extends XDebugProcess {
 
     public PascalLineBreakpointHandler getBreakpointHandler() {
         return (PascalLineBreakpointHandler) MY_BREAKPOINT_HANDLERS[0];
+    }
+
+    public XCompositeNode getLastQueriedVariablesCompositeNode() {
+        return lastQueriedVariablesCompositeNode;
+    }
+
+    public void setLastQueriedVariablesCompositeNode(XCompositeNode lastQueriedVariablesCompositeNode) {
+        this.lastQueriedVariablesCompositeNode = lastQueriedVariablesCompositeNode;
     }
 }

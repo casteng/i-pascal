@@ -25,7 +25,7 @@ public class GdbExecutionStack extends XExecutionStack {
     @Override
     public XStackFrame getTopFrame() {
         GdbMiResults frame = response.getResults().getTuple("frame");
-        return new GdbStackFrame(frame);
+        return new GdbStackFrame(context.getProcess(), frame);
     }
 
     @Override

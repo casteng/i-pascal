@@ -2,15 +2,22 @@ package com.siberika.idea.pascal.debugger.gdb;
 
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessListener;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.Key;
+import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
+import com.intellij.xdebugger.frame.XValue;
+import com.intellij.xdebugger.frame.XValueChildrenList;
+import com.intellij.xdebugger.frame.XValueNode;
+import com.intellij.xdebugger.frame.XValuePlace;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiParser;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbStopReason;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,14 +56,12 @@ public class GdbProcessAdapter implements ProcessListener {
             }
         } else if (GdbMiLine.Type.RESULT_RECORD.equals(res.getType())) {
             if ("done".equals(res.getRecClass())) {
-                List<Object> stack = res.getResults().getList("stack");
-                if (stack != null) {
-                    addStackFramesToContainer(stack);
-                } else {
-                    GdbMiResults bp = res.getResults().getTuple("bkpt");
-                    if (bp != null) {
-                        process.getBreakpointHandler().handleBreakpointResult(bp);
-                    }
+                if (res.getResults().getValue("stack") != null) {
+                    addStackFramesToContainer(res.getResults().getList("stack"));
+                } else if (res.getResults().getValue("bkpt") != null) {
+                    process.getBreakpointHandler().handleBreakpointResult(res.getResults().getTuple("bkpt"));
+                } else if (res.getResults().getValue("variables") != null) {
+                    handleVariablesResponse(res.getResults().getList("variables"));
                 }
             }
         }
@@ -97,14 +102,41 @@ public class GdbProcessAdapter implements ProcessListener {
         for (Object o : stack) {
             if (o instanceof GdbMiResults) {
                 GdbMiResults res = (GdbMiResults) o;
-                frames.add(new GdbStackFrame(res.getTuple("frame")));
+                frames.add(new GdbStackFrame(process, res.getTuple("frame")));
             } else {
                 reportError("Invalid stack frames list entry");
                 return;
             }
         }
-
         suspendContext.getStackFrameContainer().addStackFrames(frames, true);
+    }
+
+    private void handleVariablesResponse(List<Object> variables) {
+        XCompositeNode node = process.getLastQueriedVariablesCompositeNode();
+        if (null == node) {
+            return;
+        }
+        if (variables.isEmpty()) {
+            node.addChildren(XValueChildrenList.EMPTY, true);
+        } else {
+            XValueChildrenList children = new XValueChildrenList(variables.size());
+            for (Object variable : variables) {
+                if (variable instanceof GdbMiResults) {
+                    final GdbMiResults res = (GdbMiResults) variable;
+                    children.add(res.getString("name"), new XValue() {
+                        @Override
+                        public void computePresentation(@NotNull XValueNode node, @NotNull XValuePlace place) {
+                            String type = res.getString("type");
+                            String value = res.getString("value");
+                            node.setPresentation(AllIcons.Nodes.Variable, type != null ? type : "??", value != null ? value : "??", false);
+                        }
+                    });
+                } else {
+                    node.setErrorMessage("Invalid variables list entry");
+                    return;
+                }
+            }
+            node.addChildren(children, true);        }
     }
 
     private void reportError(String msg) {

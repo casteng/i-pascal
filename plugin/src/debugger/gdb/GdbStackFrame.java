@@ -7,10 +7,13 @@ import com.intellij.ui.ColoredTextContainer;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.XSourcePosition;
+import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
+import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
@@ -19,9 +22,11 @@ import java.io.File;
  * Date: 01/04/2017
  */
 public class GdbStackFrame extends XStackFrame {
+    private final PascalXDebugProcess process;
     private final GdbMiResults frame;
 
-    public GdbStackFrame(GdbMiResults frame) {
+    public GdbStackFrame(PascalXDebugProcess process, GdbMiResults frame) {
+        this.process = process;
         this.frame = frame;
     }
 
@@ -62,4 +67,15 @@ public class GdbStackFrame extends XStackFrame {
         return routine + "()";
     }
 
+    @Nullable
+    @Override
+    public XDebuggerEvaluator getEvaluator() {
+        return super.getEvaluator();
+    }
+
+    @Override
+    public void computeChildren(@NotNull XCompositeNode node) {
+        process.setLastQueriedVariablesCompositeNode(node);
+        process.sendCommand("-stack-list-variables 2");
+    }
 }
