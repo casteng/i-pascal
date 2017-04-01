@@ -38,7 +38,7 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
         if (ind != null) {
             debugProcess.sendCommand(String.format("-break-delete %d", ind));
         } else {
-            debugProcess.getSession().reportMessage(PascalBundle.message("debug.breakpint.notFound"), MessageType.INFO);
+            debugProcess.getSession().reportMessage(PascalBundle.message("debug.breakpoint.notFound"), MessageType.ERROR);
         }
     }
 

@@ -63,6 +63,12 @@ public class GdbProcessAdapter implements ProcessListener {
                 } else if (res.getResults().getValue("variables") != null) {
                     handleVariablesResponse(res.getResults().getList("variables"));
                 }
+            } else if ("error".equals(res.getRecClass())) {
+                String msg = res.getResults().getString("msg");
+                if (msg != null) {
+                    process.getSession().reportMessage(PascalBundle.message("debug.error.response",
+                            msg.replace("\\n", "\n")), MessageType.ERROR);
+                }
             }
         }
     }
