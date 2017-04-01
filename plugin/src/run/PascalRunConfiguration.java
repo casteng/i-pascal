@@ -34,11 +34,14 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
+import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -120,7 +123,9 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                 }
                 String executable = PascalRunner.getExecutable(module, fileName);
                 if (debug) {
-                    commandLine.setExePath("gdb");
+                    Sdk sdk = getConfigurationModule().getModule() != null ? ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() : null;
+                    String command = BasePascalSdkType.getDebuggerCommand(sdk, "gdb");
+                    commandLine.setExePath(command);
                     commandLine.addParameters("-n");
                     commandLine.addParameters("-fullname");
                     commandLine.addParameters("-tty");

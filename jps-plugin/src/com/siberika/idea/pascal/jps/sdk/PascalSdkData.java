@@ -15,6 +15,7 @@ public class PascalSdkData implements SdkAdditionalData {
     public static final String DATA_KEY_COMPILER_OPTIONS = "compilerOptions";
     public static final String DATA_KEY_DECOMPILER_CACHE = "decompilerCache";
     public static final String DATA_KEY_DECOMPILER_COMMAND = "decompilerCommand";
+    public static final String DATA_KEY_DEBUGGER_COMMAND = "debuggerCommand";
 
     private final Map<String, Object> data;
 

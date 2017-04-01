@@ -38,10 +38,11 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private Sdk sdk;
     JTextField optionsEdit;
     JTextField commandEdit;
+    JTextField debuggerCommandEdit;
 
     public JComponent createComponent() {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel.setLayout(new GridLayoutManager(3, 2, new Insets(0, 0, 0, 0), -1, -1));
         final JLabel label1 = new JLabel();
         label1.setText(PascalBundle.message("ui.sdkSettings.compiler.options"));
         panel.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -56,12 +57,20 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         commandEdit = new JTextField();
         panel.add(commandEdit, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 
+        final JLabel label3 = new JLabel();
+        label3.setText(PascalBundle.message("ui.sdkSettings.debugger.command"));
+        panel.add(label3, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+
+        debuggerCommandEdit = new JTextField();
+        panel.add(debuggerCommandEdit, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+
         return panel;
     }
 
     public boolean isModified() {
         return (optionsEdit != null) && !optionsEdit.getText().equals(BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS)) ||
-               (commandEdit != null) && !commandEdit.getText().equals(BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND));
+               (commandEdit != null) && !commandEdit.getText().equals(BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND)) ||
+               (debuggerCommandEdit != null) && !debuggerCommandEdit.getText().equals(BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DEBUGGER_COMMAND));
     }
 
     public void apply() throws ConfigurationException {
@@ -73,6 +82,9 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
             BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE, null);
 
             invalidateCompiledCache();
+        }
+        if (commandEdit != null) {
+            BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_DEBUGGER_COMMAND, debuggerCommandEdit.getText());
         }
     }
 
@@ -108,6 +120,9 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         }
         if (commandEdit != null) {
             commandEdit.setText((String) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_COMMAND));
+        }
+        if (debuggerCommandEdit != null) {
+            debuggerCommandEdit.setText((String) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DEBUGGER_COMMAND));
         }
     }
 
