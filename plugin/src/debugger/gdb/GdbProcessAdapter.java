@@ -6,9 +6,11 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.Key;
 import com.intellij.xdebugger.frame.XStackFrame;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiParser;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
+import com.siberika.idea.pascal.debugger.gdb.parser.GdbStopReason;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,9 +60,31 @@ public class GdbProcessAdapter implements ProcessListener {
     private void handleStop(GdbMiLine res) {
         suspendContext = new GdbSuspendContext(process, res);
         process.getSession().positionReached(suspendContext);
-        String detail = res.getResults().getString("signal-name");
-        detail = detail != null ? String.format(", %s (%s)", res.getResults().getValue("signal-name"), res.getResults().getValue("signal-meaning")) : "";
-        process.getSession().reportMessage(String.format("Stopped: %s%s", res.getResults().getValue("reason"), detail), MessageType.WARNING);
+        GdbStopReason reason = GdbStopReason.fromUid(res.getResults().getString("reason"));
+        String msg = null;
+        if (reason != null) {
+            switch (reason) {
+                case SIGNAL_RECEIVED: {
+                    String detail = res.getResults().getString("signal-name");
+                    msg = detail != null ? String.format(", %s (%s)", res.getResults().getValue("signal-name"), res.getResults().getValue("signal-meaning")) : "";
+                    break;
+                }
+                case BREAKPOINT_HIT:
+                case WATCHPOINT_TRIGGER:
+                case READ_WATCHPOINT_TRIGGER:
+                case ACCESS_WATCHPOINT_TRIGGER:
+                case EXITED:
+                case EXITED_SIGNALLED:
+                case EXITED_NORMALLY:
+                case LOCATION_REACHED:
+                case FUNCTION_FINISHED: {
+                    msg = reason.getUid();
+                }
+            }
+            if (msg != null) {
+                process.getSession().reportMessage(PascalBundle.message("debug.notify.stopped", msg), MessageType.INFO);
+            }
+        }
     }
 
     private void addStackFramesToContainer(List<Object> stack) {
