@@ -28,6 +28,6 @@ public class PascalLineBreakpointType extends XLineBreakpointType<PascalLineBrea
     @Nullable
     @Override
     public PascalLineBreakpointProperties createBreakpointProperties(@NotNull VirtualFile file, int line) {
-        return new PascalLineBreakpointProperties();
+        return new PascalLineBreakpointProperties(file.getCanonicalPath(), line);
     }
 }

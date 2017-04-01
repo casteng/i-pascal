@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.debugger.gdb.parser;
 
 import com.intellij.codeInspection.SmartHashMap;
+import com.siberika.idea.pascal.util.StrUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -38,5 +39,9 @@ public class GdbMiResults {
 
     public GdbMiResults getTuple(String name) {
         return (GdbMiResults) getValue(name);
+    }
+
+    public Integer getInteger(String name) {
+        return StrUtil.strToIntDef(getString(name), null);
     }
 }

@@ -72,7 +72,9 @@ public class PascalXDebugProcess extends XDebugProcess {
     }
 
     public void printToConsole(String text, ConsoleViewContentType contentType) {
-        myExecutionConsole.print(text, contentType);
+        if (myExecutionConsole != null) {
+            myExecutionConsole.print(text, contentType);
+        }
     }
 
     @Override
@@ -125,6 +127,7 @@ public class PascalXDebugProcess extends XDebugProcess {
             if (commandStream != null) {
                 commandStream.write((command + "\n").getBytes("UTF-8"));
                 commandStream.flush();
+//                printToConsole(">>>> " + command + "\n", ConsoleViewContentType.NORMAL_OUTPUT);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -159,4 +162,7 @@ public class PascalXDebugProcess extends XDebugProcess {
         return MY_BREAKPOINT_HANDLERS;
     }
 
+    public PascalLineBreakpointHandler getBreakpointHandler() {
+        return (PascalLineBreakpointHandler) MY_BREAKPOINT_HANDLERS[0];
+    }
 }

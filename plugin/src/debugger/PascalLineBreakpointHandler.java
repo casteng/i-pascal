@@ -3,8 +3,13 @@ package com.siberika.idea.pascal.debugger;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.gdb.PascalXDebugProcess;
+import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Author: George Bakhtadze
@@ -12,6 +17,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<PascalLineBreakpointProperties>> {
     private final PascalXDebugProcess debugProcess;
+    final Map<PascalLineBreakpointProperties, Integer> breakIndexMap = new HashMap<PascalLineBreakpointProperties, Integer>();
+    final Map<Integer, PascalLineBreakpointProperties> indexBreakMap = new HashMap<Integer, PascalLineBreakpointProperties>();
 
     public PascalLineBreakpointHandler(PascalXDebugProcess debugProcess) {
         super(PascalLineBreakpointType.class);
@@ -20,12 +27,23 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
 
     @Override
     public void registerBreakpoint(@NotNull XLineBreakpoint<PascalLineBreakpointProperties> breakpoint) {
-        debugProcess.getSession().reportMessage("Breakpoint add", MessageType.INFO);
-        debugProcess.sendCommand(String.format("-break-insert %s:%d", breakpoint.getPresentableFilePath(), breakpoint.getLine()));
+        PascalLineBreakpointProperties props = breakpoint.getProperties();
+        debugProcess.sendCommand(String.format("-break-insert %s:%d", props.getFilename(), props.getLine()));
     }
 
     @Override
     public void unregisterBreakpoint(@NotNull XLineBreakpoint<PascalLineBreakpointProperties> breakpoint, boolean temporary) {
-        debugProcess.getSession().reportMessage("Breakpoint remove", MessageType.INFO);
+        PascalLineBreakpointProperties props = breakpoint.getProperties();
+        Integer ind = breakIndexMap.get(props);
+        if (ind != null) {
+            debugProcess.sendCommand(String.format("-break-delete %d", ind));
+        } else {
+            debugProcess.getSession().reportMessage(PascalBundle.message("debug.breakpint.notFound"), MessageType.INFO);
+        }
+    }
+
+    public void handleBreakpointResult(GdbMiResults bp) {
+        PascalLineBreakpointProperties props = new PascalLineBreakpointProperties(bp.getString("fullname"), bp.getInteger("line"));
+        breakIndexMap.put(props, bp.getInteger("number"));
     }
 }

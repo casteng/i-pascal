@@ -52,6 +52,11 @@ public class GdbProcessAdapter implements ProcessListener {
                 List<Object> stack = res.getResults().getList("stack");
                 if (stack != null) {
                     addStackFramesToContainer(stack);
+                } else {
+                    GdbMiResults bp = res.getResults().getTuple("bkpt");
+                    if (bp != null) {
+                        process.getBreakpointHandler().handleBreakpointResult(bp);
+                    }
                 }
             }
         }

@@ -101,4 +101,12 @@ public class StrUtil {
         }
         return null;
     }
+
+    public static Integer strToIntDef(String value, Integer def) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return def;
+        }
+    }
 }

@@ -40,6 +40,7 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
     @Override
     public boolean isConfigurationFromContext(PascalRunConfiguration configuration, ConfigurationContext context) {
         return (configuration.getConfigurationModule().getModule() == context.getModule()) &&
+                (context.getPsiLocation() != null) &&
                 (configuration.getProgramFileName().equals(getMainFile(context.getPsiLocation()).getPath()));
     }
 
