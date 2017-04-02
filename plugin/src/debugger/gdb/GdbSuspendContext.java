@@ -15,7 +15,6 @@ public class GdbSuspendContext extends XSuspendContext {
     private final XExecutionStack stack;
     private XExecutionStack.XStackFrameContainer stackFrameContainer;
 
-
     public GdbSuspendContext(PascalXDebugProcess process, GdbMiLine line) {
         this.process = process;
         this.stack = new GdbExecutionStack(this, line);

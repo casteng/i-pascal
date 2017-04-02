@@ -108,7 +108,7 @@ public class GdbProcessAdapter implements ProcessListener {
         for (Object o : stack) {
             if (o instanceof GdbMiResults) {
                 GdbMiResults res = (GdbMiResults) o;
-                frames.add(new GdbStackFrame(process, res.getTuple("frame")));
+                frames.add(new GdbStackFrame((GdbExecutionStack) suspendContext.getActiveExecutionStack(), res.getTuple("frame")));
             } else {
                 reportError("Invalid stack frames list entry");
                 return;

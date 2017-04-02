@@ -11,6 +11,7 @@ import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
+import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,11 +24,15 @@ import java.io.File;
  */
 public class GdbStackFrame extends XStackFrame {
     private final PascalXDebugProcess process;
+    private final GdbExecutionStack executionStack;
     private final GdbMiResults frame;
+    private final int level;
 
-    public GdbStackFrame(PascalXDebugProcess process, GdbMiResults frame) {
-        this.process = process;
+    public GdbStackFrame(GdbExecutionStack executionStack, GdbMiResults frame) {
+        this.process = executionStack.getProcess();
+        this.executionStack = executionStack;
         this.frame = frame;
+        level = (frame != null) && (frame.getValue("level") != null) ? StrUtil.strToIntDef(frame.getString("level"), 0) : 0;
     }
 
     public XSourcePosition getSourcePosition() {
@@ -51,6 +56,9 @@ public class GdbStackFrame extends XStackFrame {
 
     @Override
     public void customizePresentation(@NotNull ColoredTextContainer component) {
+        if (null == frame) {
+            return;
+        }
         String filename = frame.getString("file");
         String line = frame.getString("line");
         component.append(formatRoutine(frame), SimpleTextAttributes.REGULAR_ATTRIBUTES);
@@ -76,6 +84,6 @@ public class GdbStackFrame extends XStackFrame {
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
         process.setLastQueriedVariablesCompositeNode(node);
-        process.sendCommand("-stack-list-variables 2");
+        process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --simple-values", executionStack.getThreadId(), level));
     }
 }
