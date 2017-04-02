@@ -61,4 +61,12 @@ public class GdbMiParserTest {
         assertEquals("breakpoint", bp.getString("type"));
         assertEquals("608", bp.getValue("line"));
     }
+
+    @Test
+    public void testStringWithEscapedQuotes() throws Exception {
+        String s = "^error,msg=\"No symbol table is loaded.  Use the \\\"file\\\" command.\"";
+        GdbMiLine res = GdbMiParser.parseLine(s);
+        assertEquals(GdbMiLine.Type.RESULT_RECORD, res.getType());
+        assertEquals("No symbol table is loaded.  Use the \\\"file\\\" command.", res.getResults().getString("msg"));
+    }
 }

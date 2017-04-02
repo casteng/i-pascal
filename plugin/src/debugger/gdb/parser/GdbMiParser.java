@@ -144,6 +144,9 @@ public class GdbMiParser {
         StringBuilder t = new StringBuilder();
         while (nextChar() != 0 && lastChar != '"') {
             t = t.append(lastChar);
+            if ('\\' == lastChar) {
+                t = t.append(nextChar());
+            }
         }
         if ('"' != lastChar) {
             throw new GdbMiParserException("Error parsing const", pos, input);
