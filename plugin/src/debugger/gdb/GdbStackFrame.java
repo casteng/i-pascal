@@ -62,7 +62,7 @@ public class GdbStackFrame extends XStackFrame {
         String filename = frame.getString("file");
         String line = frame.getString("line");
         component.append(formatRoutine(frame), SimpleTextAttributes.REGULAR_ATTRIBUTES);
-        component.append(String.format(", %s:%s", filename != null ? filename : "-", line != null ? line : "-"), SimpleTextAttributes.GRAYED_ATTRIBUTES);
+        component.append(String.format(" (%s:%s)", filename != null ? filename : "-", line != null ? line : "-"), SimpleTextAttributes.GRAYED_ATTRIBUTES);
         component.setIcon(AllIcons.Debugger.StackFrame);
     }
 
@@ -78,12 +78,20 @@ public class GdbStackFrame extends XStackFrame {
     @Nullable
     @Override
     public XDebuggerEvaluator getEvaluator() {
-        return super.getEvaluator();
+        return new GdbEvaluator(this);
     }
 
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
         process.setLastQueriedVariablesCompositeNode(node);
         process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --simple-values", executionStack.getThreadId(), level));
+    }
+
+    public GdbExecutionStack getExecutionStack() {
+        return executionStack;
+    }
+
+    public int getLevel() {
+        return level;
     }
 }

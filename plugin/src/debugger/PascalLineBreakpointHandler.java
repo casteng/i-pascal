@@ -28,7 +28,13 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
     @Override
     public void registerBreakpoint(@NotNull XLineBreakpoint<PascalLineBreakpointProperties> breakpoint) {
         PascalLineBreakpointProperties props = breakpoint.getProperties();
-        debugProcess.sendCommand(String.format("-break-insert %s:%d", props.getFilename(), props.getLine()));
+        int line = breakpoint.getLine();
+        String filename = breakpoint.getPresentableFilePath();
+        if (props != null) {
+            line = props.getLine();
+            filename = props.getFilename();
+        }
+        debugProcess.sendCommand(String.format("-break-insert %s:%d", filename, line));
     }
 
     @Override

@@ -62,6 +62,10 @@ public class GdbProcessAdapter implements ProcessListener {
                     process.getBreakpointHandler().handleBreakpointResult(res.getResults().getTuple("bkpt"));
                 } else if (res.getResults().getValue("variables") != null) {
                     handleVariablesResponse(res.getResults().getList("variables"));
+                } else if (isCreateVarResult(res.getResults())) {
+                    process.handleVarResult(res.getResults());
+                } else if (res.getResults().getValue("changelist") != null) {
+                    process.handleVarUpdate(res.getResults());
                 }
             } else if ("error".equals(res.getRecClass())) {
                 String msg = res.getResults().getString("msg");
@@ -71,6 +75,10 @@ public class GdbProcessAdapter implements ProcessListener {
                 }
             }
         }
+    }
+
+    private boolean isCreateVarResult(GdbMiResults results) {
+        return (results.getValue("name") != null) && (results.getValue("value") != null);
     }
 
     private void handleStop(GdbMiLine res) {

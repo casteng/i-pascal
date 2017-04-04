@@ -19,16 +19,22 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.evaluation.EvaluationMode;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
+import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalLineBreakpointHandler;
+import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.run.PascalRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Author: George Bakhtadze
@@ -41,6 +47,7 @@ public class PascalXDebugProcess extends XDebugProcess {
     private final ExecutionResult executionResult;
     private ConsoleView myExecutionConsole;
     private XCompositeNode lastQueriedVariablesCompositeNode;
+    private Map<String, GdbVariableObject> variableObjectMap;
 
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
@@ -56,6 +63,7 @@ public class PascalXDebugProcess extends XDebugProcess {
     private void createGdbProcess(ExecutionEnvironment env) throws ExecutionException {
         RunProfile profile = env.getRunProfile();
         if (profile instanceof PascalRunConfiguration) {
+            variableObjectMap = new HashMap<String, GdbVariableObject>();
             sendCommand("-break-delete");
         }
     }
@@ -152,6 +160,8 @@ public class PascalXDebugProcess extends XDebugProcess {
                                            @NotNull String text,
                                            @Nullable XSourcePosition sourcePosition,
                                            @NotNull EvaluationMode mode) {
+//                PsiFile file = PsiManager.getInstance(project).findFile(sourcePosition.getFile());
+//                return PsiDocumentManager.getInstance(project).getDocument(file);
                 LightVirtualFile file = new LightVirtualFile("_debug.pas", text);
                 return FileDocumentManager.getInstance().getDocument(file);
             }
@@ -174,5 +184,38 @@ public class PascalXDebugProcess extends XDebugProcess {
 
     public void setLastQueriedVariablesCompositeNode(XCompositeNode lastQueriedVariablesCompositeNode) {
         this.lastQueriedVariablesCompositeNode = lastQueriedVariablesCompositeNode;
+    }
+
+    public void evaluate(String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
+        GdbVariableObject var = variableObjectMap.get(expression);
+        if (null == var) {
+            variableObjectMap.put(expression, new GdbVariableObject(expression, callback));
+            sendCommand(String.format("-var-create \"%s\" @ \"%s\"", expression, expression));
+        } else {
+            var.setCallback(callback);
+            updateVariableObjectUI(var);
+            sendCommand(String.format("-var-update --all-values \"%s\"", expression));
+        }
+    }
+
+    public void handleVarResult(GdbMiResults res) {
+        String key = res.getString("name");
+        GdbVariableObject var = variableObjectMap.get(key);
+        if (var != null) {
+            var.updateFromResult(res);
+            updateVariableObjectUI(var);
+        }
+    }
+
+    private void updateVariableObjectUI(@NotNull GdbVariableObject var) {
+        var.getCallback().evaluated(new PascalDebuggerValue(var.getExpression(), var.getType(), var.getValue(), var.getChildrenCount()));
+    }
+
+    public void handleVarUpdate(GdbMiResults results) {
+        List<Object> changes = results.getList("changelist");
+        for (Object o : changes) {
+            GdbMiResults change = (GdbMiResults) o;
+            handleVarResult(change);
+        }
     }
 }

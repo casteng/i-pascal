@@ -5,6 +5,8 @@ import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiParser;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -69,4 +71,27 @@ public class GdbMiParserTest {
         assertEquals(GdbMiLine.Type.RESULT_RECORD, res.getType());
         assertEquals("No symbol table is loaded.  Use the \\\"file\\\" command.", res.getResults().getString("msg"));
     }
+
+    @Test
+    public void testVar() throws Exception {
+        String s = "^done,name=\"test\",numchild=\"2\",value=\"{...}\",type=\"number\",has_more=\"0\"";
+        GdbMiLine res = GdbMiParser.parseLine(s);
+        assertEquals(GdbMiLine.Type.RESULT_RECORD, res.getType());
+        assertEquals("test", res.getResults().getString("name"));
+        assertEquals(Integer.valueOf(2), res.getResults().getInteger("numchild"));
+    }
+
+    @Test
+    public void testVarUpdate() throws Exception {
+        String s = "^done,changelist=[{name=\"test\",value=\"0x7ffff7f843e8\",in_scope=\"true\",type_changed=\"false\",has_more=\"0\"}]";
+        GdbMiLine res = GdbMiParser.parseLine(s);
+        List<Object> changes = res.getResults().getList("changelist");
+        GdbMiResults change = (GdbMiResults) changes.get(0);
+        assertEquals(GdbMiLine.Type.RESULT_RECORD, res.getType());
+        assertEquals("test", change.getString("name"));
+        assertEquals("0x7ffff7f843e8", change.getString("value"));
+        assertEquals("false", change.getString("type_changed"));
+        assertEquals(Integer.valueOf(0), change.getInteger("has_more"));
+    }
+
 }

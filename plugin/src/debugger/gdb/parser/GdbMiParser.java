@@ -160,7 +160,7 @@ public class GdbMiParser {
 
     private String parseString() {
         StringBuilder t = new StringBuilder();
-        while ((nextChar() >= 'a') && (lastChar <= 'z') || ('-' == lastChar)) {
+        while ((nextChar() >= 'a') && (lastChar <= 'z') || ('-' == lastChar) || ('_' == lastChar)) {
             t = t.append(lastChar);
         }
         return t.length() > 0 ? t.toString() : null;
