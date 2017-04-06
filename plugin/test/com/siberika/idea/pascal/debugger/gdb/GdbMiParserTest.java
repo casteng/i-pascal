@@ -94,4 +94,16 @@ public class GdbMiParserTest {
         assertEquals(Integer.valueOf(0), change.getInteger("has_more"));
     }
 
+    @Test
+    public void testChildren() throws Exception {
+        String s = "^done,numchild=\"11\",children=[child={name=\"app.TOBJECT\",exp=\"TOBJECT\",numchild=\"1\",value=\"{...}\",type=\"TOBJECT\"},child={name=\"app.FCONFIG\",exp=\"FCONFIG\",numchild=\"2\",value=\"0x7ffff7fc4180\",type=\"TCECONFIG\"},child={name=\"app.FACTIVE\",exp=\"FACTIVE\",numchild=\"0\",value=\"false\",type=\"BOOLEAN\"},child={name=\"app.FNAME\",exp=\"FNAME\",numchild=\"1\",value=\"0x7ffff7fd6418 'TileDemo'\",type=\"UNICODESTRING\"},child={name=\"app.FTERMINATED\",exp=\"FTERMINATED\",numchild=\"0\",value=\"false\",type=\"BOOLEAN\"},child={name=\"app.FMESSAGEHANDLER\",exp=\"FMESSAGEHANDLER\",numchild=\"2\",value=\"{...}\",type=\"TCEMESSAGEHANDLER\"},child={name=\"app.NAME\",exp=\"NAME\",numchild=\"1\",value=\"0x7ffff7fd6418 'TileDemo'\",type=\"UNICODESTRING\"},child={name=\"app.TERMINATED\",exp=\"TERMINATED\",numchild=\"0\",value=\"false\",type=\"BOOLEAN\"},child={name=\"app.ACTIVE\",exp=\"ACTIVE\",numchild=\"0\",value=\"false\",type=\"BOOLEAN\"},child={name=\"app.CFG\",exp=\"CFG\",numchild=\"2\",value=\"0x7ffff7fc4180\",type=\"TCECONFIG\"},child={name=\"app.MESSAGEHANDLER\",exp=\"MESSAGEHANDLER\",numchild=\"2\",value=\"{...}\",type=\"TCEMESSAGEHANDLER\"}],has_more=\"0\"\n";
+        GdbMiLine res = GdbMiParser.parseLine(s);
+        assertEquals(Integer.valueOf(11), res.getResults().getInteger("numchild"));
+        List<Object> children = res.getResults().getList("children");
+        GdbMiResults childRes = (GdbMiResults) children.get(0);
+        GdbMiResults child = childRes.getTuple("child");
+        assertEquals("app.TOBJECT", child.getString("name"));
+        assertEquals(Integer.valueOf(1), child.getInteger("numchild"));
+
+    }
 }

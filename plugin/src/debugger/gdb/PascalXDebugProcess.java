@@ -22,6 +22,7 @@ import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XSuspendContext;
+import com.intellij.xdebugger.frame.XValueChildrenList;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalLineBreakpointHandler;
@@ -137,7 +138,7 @@ public class PascalXDebugProcess extends XDebugProcess {
             if (commandStream != null) {
                 commandStream.write((command + "\n").getBytes("UTF-8"));
                 commandStream.flush();
-//                printToConsole(">>>> " + command + "\n", ConsoleViewContentType.NORMAL_OUTPUT);
+                printToConsole(">>>> " + command + "\n", ConsoleViewContentType.NORMAL_OUTPUT);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -208,7 +209,7 @@ public class PascalXDebugProcess extends XDebugProcess {
     }
 
     private void updateVariableObjectUI(@NotNull GdbVariableObject var) {
-        var.getCallback().evaluated(new PascalDebuggerValue(var.getExpression(), var.getType(), var.getValue(), var.getChildrenCount()));
+        var.getCallback().evaluated(new PascalDebuggerValue(this, var.getExpression(), var.getType(), var.getValue(), var.getChildrenCount()));
     }
 
     public void handleVarUpdate(GdbMiResults results) {
@@ -217,5 +218,33 @@ public class PascalXDebugProcess extends XDebugProcess {
             GdbMiResults change = (GdbMiResults) o;
             handleVarResult(change);
         }
+    }
+
+    private XCompositeNode lastParentNode;
+    synchronized public void computeValueChildren(String name, XCompositeNode node) {
+        lastParentNode = node;
+        sendCommand("-var-list-children --all-values " + name);
+    }
+
+    synchronized public void handleChildrenResult(GdbMiResults results) {
+        if (null == lastParentNode) {
+            return;
+        }
+        XValueChildrenList childrenList = new XValueChildrenList();
+        List<Object> children = results.getList("children");
+        for (Object o : children) {
+            GdbMiResults childResult = (GdbMiResults) o;
+            GdbMiResults child = childResult.getTuple("child");
+            String varName = child.getString("name");
+            GdbVariableObject var = variableObjectMap.get(varName);
+            if (null == var) {
+                var = new GdbVariableObject(varName, null);
+                variableObjectMap.put(varName, var);
+            }
+            var.updateFromResult(child);
+            childrenList.add(varName.substring(varName.lastIndexOf('.') + 1), new PascalDebuggerValue(this, var.getExpression(), var.getType(), var.getValue(), var.getChildrenCount()));
+        }
+        lastParentNode.addChildren(childrenList, true);
+        lastParentNode = null;
     }
 }

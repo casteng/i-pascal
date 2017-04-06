@@ -2,22 +2,18 @@ package com.siberika.idea.pascal.debugger.gdb;
 
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessListener;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.Key;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
-import com.intellij.xdebugger.frame.XValue;
 import com.intellij.xdebugger.frame.XValueChildrenList;
-import com.intellij.xdebugger.frame.XValueNode;
-import com.intellij.xdebugger.frame.XValuePlace;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiParser;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbStopReason;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +62,8 @@ public class GdbProcessAdapter implements ProcessListener {
                     process.handleVarResult(res.getResults());
                 } else if (res.getResults().getValue("changelist") != null) {
                     process.handleVarUpdate(res.getResults());
+                } else if (res.getResults().getValue("children") != null) {
+                    process.handleChildrenResult(res.getResults());
                 }
             } else if ("error".equals(res.getRecClass())) {
                 String msg = res.getResults().getString("msg");
@@ -137,14 +135,8 @@ public class GdbProcessAdapter implements ProcessListener {
             for (Object variable : variables) {
                 if (variable instanceof GdbMiResults) {
                     final GdbMiResults res = (GdbMiResults) variable;
-                    children.add(res.getString("name"), new XValue() {
-                        @Override
-                        public void computePresentation(@NotNull XValueNode node, @NotNull XValuePlace place) {
-                            String type = res.getString("type");
-                            String value = res.getString("value");
-                            node.setPresentation(AllIcons.Nodes.Variable, type != null ? type : "??", value != null ? value : "??", false);
-                        }
-                    });
+                    children.add(res.getString("name"), new PascalDebuggerValue(process,
+                            res.getString("name"), res.getString("type"), res.getString("value"), 0));
                 } else {
                     node.setErrorMessage("Invalid variables list entry");
                     return;
