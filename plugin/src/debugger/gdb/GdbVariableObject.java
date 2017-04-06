@@ -8,6 +8,7 @@ import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
  * Date: 04/04/2017
  */
 public class GdbVariableObject {
+    private final String key;
     private final String expression;
 
     private XDebuggerEvaluator.XEvaluationCallback callback;
@@ -16,14 +17,19 @@ public class GdbVariableObject {
     private String value;
     private Integer childrenCount;
 
-    public GdbVariableObject(String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
+    public GdbVariableObject(String key, String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
+        this.key = key;
         this.expression = expression;
         this.callback = callback;
     }
 
-    public GdbVariableObject(String expression, XDebuggerEvaluator.XEvaluationCallback callback, GdbMiResults res) {
-        this(expression, callback);
+    public GdbVariableObject(String key, String expression, XDebuggerEvaluator.XEvaluationCallback callback, GdbMiResults res) {
+        this(key, expression, callback);
         updateFromResult(res);
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public String getExpression() {

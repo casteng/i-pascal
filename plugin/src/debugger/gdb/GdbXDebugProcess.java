@@ -48,7 +48,11 @@ public class GdbXDebugProcess extends XDebugProcess {
     private final ExecutionResult executionResult;
     private ConsoleView myExecutionConsole;
     private XCompositeNode lastQueriedVariablesCompositeNode;
+    private XCompositeNode lastParentNode;
     private Map<String, GdbVariableObject> variableObjectMap;
+
+    private static final String VAR_PREFIX_LOCAL = "l%";
+    private static final String VAR_PREFIX_WATCHES = "w%";
 
     public GdbXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
@@ -184,14 +188,15 @@ public class GdbXDebugProcess extends XDebugProcess {
     }
 
     public void evaluate(String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
-        GdbVariableObject var = variableObjectMap.get(expression);
+        String key = VAR_PREFIX_WATCHES + expression;
+        GdbVariableObject var = variableObjectMap.get(key);
         if (null == var) {
-            variableObjectMap.put(expression, new GdbVariableObject(expression, callback));
-            sendCommand(String.format("-var-create \"%s\" @ \"%s\"", expression, expression));
+            variableObjectMap.put(key, new GdbVariableObject(key, expression, callback));
+            sendCommand(String.format("-var-create \"%s\" @ \"%s\"", key, expression));
         } else {
             var.setCallback(callback);
             updateVariableObjectUI(var);
-            sendCommand(String.format("-var-update --all-values \"%s\"", expression));
+            sendCommand(String.format("-var-update --all-values \"%s\"", key));
         }
     }
 
@@ -207,7 +212,7 @@ public class GdbXDebugProcess extends XDebugProcess {
     }
 
     private void updateVariableObjectUI(@NotNull GdbVariableObject var) {
-        var.getCallback().evaluated(new PascalDebuggerValue(this, var.getExpression(), var.getType(), var.getValue(), var.getChildrenCount()));
+        var.getCallback().evaluated(new PascalDebuggerValue(this, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount()));
     }
 
     public void handleVarUpdate(GdbMiResults results) {
@@ -218,7 +223,6 @@ public class GdbXDebugProcess extends XDebugProcess {
         }
     }
 
-    private XCompositeNode lastParentNode;
     synchronized public void computeValueChildren(String name, XCompositeNode node) {
         lastParentNode = node;
         sendCommand("-var-list-children --all-values " + name);
@@ -248,7 +252,7 @@ public class GdbXDebugProcess extends XDebugProcess {
                         res = res.getTuple("child");
                     }
                     String varName = res.getString("name");
-                    String varKey = (children ? "" : "l%") + varName;
+                    String varKey = (children ? "" : VAR_PREFIX_LOCAL) + varName;
                     GdbVariableObject var = variableObjectMap.get(varKey);
                     if (null != var) {
                         var.updateFromResult(res);
@@ -256,7 +260,7 @@ public class GdbXDebugProcess extends XDebugProcess {
                             sendCommand(String.format("-var-update --all-values \"%s\"", varKey));
                         }
                     } else {
-                        var = new GdbVariableObject(varKey, null, res);
+                        var = new GdbVariableObject(varKey, varName, null, res);
                         variableObjectMap.put(varKey, var);
                         if (!children) {
                             sendCommand(String.format("-var-create \"%s\" @ \"%s\"", varKey, varName));
@@ -264,7 +268,7 @@ public class GdbXDebugProcess extends XDebugProcess {
                     }
 
                     childrenList.add(varName.substring(varName.lastIndexOf('.')+1),
-                            new PascalDebuggerValue(this, var.getExpression(), var.getType(), var.getValue(), var.getChildrenCount()));
+                            new PascalDebuggerValue(this, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount()));
                 } else {
                     node.setErrorMessage("Invalid variables list entry");
                     return;
