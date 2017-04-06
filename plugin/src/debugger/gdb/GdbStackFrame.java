@@ -23,7 +23,7 @@ import java.io.File;
  * Date: 01/04/2017
  */
 public class GdbStackFrame extends XStackFrame {
-    private final PascalXDebugProcess process;
+    private final GdbXDebugProcess process;
     private final GdbExecutionStack executionStack;
     private final GdbMiResults frame;
     private final int level;

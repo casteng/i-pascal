@@ -5,7 +5,7 @@ import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XValue;
 import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
-import com.siberika.idea.pascal.debugger.gdb.PascalXDebugProcess;
+import com.siberika.idea.pascal.debugger.gdb.GdbXDebugProcess;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -14,13 +14,13 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PascalDebuggerValue extends XValue {
 
-    private final PascalXDebugProcess debugProcess;
+    private final GdbXDebugProcess debugProcess;
     private final String name;
     private final String type;
     private final String value;
     private final Integer childrenCount;
 
-    public PascalDebuggerValue(PascalXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount) {
+    public PascalDebuggerValue(GdbXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount) {
         this.debugProcess = debugProcess;
         this.name = name;
         this.type = type;

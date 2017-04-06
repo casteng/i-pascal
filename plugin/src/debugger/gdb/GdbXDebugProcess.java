@@ -41,7 +41,7 @@ import java.util.Map;
  * Author: George Bakhtadze
  * Date: 26/03/2017
  */
-public class PascalXDebugProcess extends XDebugProcess {
+public class GdbXDebugProcess extends XDebugProcess {
 
     private final XBreakpointHandler<?>[] MY_BREAKPOINT_HANDLERS = new XBreakpointHandler[] {new PascalLineBreakpointHandler(this)};
     private final ExecutionEnvironment environment;
@@ -50,7 +50,7 @@ public class PascalXDebugProcess extends XDebugProcess {
     private XCompositeNode lastQueriedVariablesCompositeNode;
     private Map<String, GdbVariableObject> variableObjectMap;
 
-    public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
+    public GdbXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
         this.environment = environment;
         this.executionResult = executionResult;

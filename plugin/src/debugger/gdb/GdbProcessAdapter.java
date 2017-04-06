@@ -22,10 +22,10 @@ import java.util.List;
  */
 public class GdbProcessAdapter implements ProcessListener {
     private static final Logger LOG = Logger.getInstance(GdbProcessAdapter.class);
-    private final PascalXDebugProcess process;
+    private final GdbXDebugProcess process;
     private GdbSuspendContext suspendContext;
 
-    public GdbProcessAdapter(PascalXDebugProcess xDebugProcess) {
+    public GdbProcessAdapter(GdbXDebugProcess xDebugProcess) {
         this.process = xDebugProcess;
     }
 

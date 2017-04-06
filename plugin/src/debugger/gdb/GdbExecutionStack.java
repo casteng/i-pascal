@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 public class GdbExecutionStack extends XExecutionStack {
 
     private final GdbSuspendContext context;
-    private final PascalXDebugProcess process;
+    private final GdbXDebugProcess process;
     private final GdbMiLine response;
     private final String threadId;
 
@@ -38,7 +38,7 @@ public class GdbExecutionStack extends XExecutionStack {
         context.getProcess().sendCommand("-stack-list-frames");
     }
 
-    public PascalXDebugProcess getProcess() {
+    public GdbXDebugProcess getProcess() {
         return process;
     }
 

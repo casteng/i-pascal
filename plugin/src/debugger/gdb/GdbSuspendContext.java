@@ -11,11 +11,11 @@ import org.jetbrains.annotations.Nullable;
  * Date: 31/03/2017
  */
 public class GdbSuspendContext extends XSuspendContext {
-    private final PascalXDebugProcess process;
+    private final GdbXDebugProcess process;
     private final XExecutionStack stack;
     private XExecutionStack.XStackFrameContainer stackFrameContainer;
 
-    public GdbSuspendContext(PascalXDebugProcess process, GdbMiLine line) {
+    public GdbSuspendContext(GdbXDebugProcess process, GdbMiLine line) {
         this.process = process;
         this.stack = new GdbExecutionStack(this, line);
     }
@@ -32,7 +32,7 @@ public class GdbSuspendContext extends XSuspendContext {
         return super.getExecutionStacks();
     }
 
-    public PascalXDebugProcess getProcess() {
+    public GdbXDebugProcess getProcess() {
         return process;
     }
 
