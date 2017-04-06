@@ -5,17 +5,15 @@ import com.intellij.execution.process.ProcessListener;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.Key;
-import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
-import com.intellij.xdebugger.frame.XValueChildrenList;
 import com.siberika.idea.pascal.PascalBundle;
-import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiParser;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbStopReason;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -57,13 +55,15 @@ public class GdbProcessAdapter implements ProcessListener {
                 } else if (res.getResults().getValue("bkpt") != null) {
                     process.getBreakpointHandler().handleBreakpointResult(res.getResults().getTuple("bkpt"));
                 } else if (res.getResults().getValue("variables") != null) {
-                    handleVariablesResponse(res.getResults().getList("variables"));
+                    process.handleVariablesResponse(res.getResults().getList("variables"));
                 } else if (isCreateVarResult(res.getResults())) {
                     process.handleVarResult(res.getResults());
                 } else if (res.getResults().getValue("changelist") != null) {
                     process.handleVarUpdate(res.getResults());
                 } else if (res.getResults().getValue("children") != null) {
-                    process.handleChildrenResult(res.getResults());
+                    process.handleChildrenResult(res.getResults().getList("children"));
+                } else if ("0".equals(res.getResults().getString("numchild"))) {
+                    process.handleChildrenResult(Collections.emptyList());
                 }
             } else if ("error".equals(res.getRecClass())) {
                 String msg = res.getResults().getString("msg");
@@ -121,28 +121,6 @@ public class GdbProcessAdapter implements ProcessListener {
             }
         }
         suspendContext.getStackFrameContainer().addStackFrames(frames, true);
-    }
-
-    private void handleVariablesResponse(List<Object> variables) {
-        XCompositeNode node = process.getLastQueriedVariablesCompositeNode();
-        if (null == node) {
-            return;
-        }
-        if (variables.isEmpty()) {
-            node.addChildren(XValueChildrenList.EMPTY, true);
-        } else {
-            XValueChildrenList children = new XValueChildrenList(variables.size());
-            for (Object variable : variables) {
-                if (variable instanceof GdbMiResults) {
-                    final GdbMiResults res = (GdbMiResults) variable;
-                    children.add(res.getString("name"), new PascalDebuggerValue(process,
-                            res.getString("name"), res.getString("type"), res.getString("value"), 0));
-                } else {
-                    node.setErrorMessage("Invalid variables list entry");
-                    return;
-                }
-            }
-            node.addChildren(children, true);        }
     }
 
     private void reportError(String msg) {

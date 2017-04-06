@@ -21,6 +21,11 @@ public class GdbVariableObject {
         this.callback = callback;
     }
 
+    public GdbVariableObject(String expression, XDebuggerEvaluator.XEvaluationCallback callback, GdbMiResults res) {
+        this(expression, callback);
+        updateFromResult(res);
+    }
+
     public String getExpression() {
         return expression;
     }
@@ -36,7 +41,7 @@ public class GdbVariableObject {
     public void updateFromResult(GdbMiResults res) {
         type = res.getString("type");
         value = res.getString("value");
-        childrenCount = res.getInteger("numchild");
+        childrenCount = res.getValue("numchild") != null ? res.getInteger("numchild") : 1;
     }
 
     public String getType() {

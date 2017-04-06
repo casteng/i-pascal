@@ -179,10 +179,6 @@ public class PascalXDebugProcess extends XDebugProcess {
         return (PascalLineBreakpointHandler) MY_BREAKPOINT_HANDLERS[0];
     }
 
-    public XCompositeNode getLastQueriedVariablesCompositeNode() {
-        return lastQueriedVariablesCompositeNode;
-    }
-
     public void setLastQueriedVariablesCompositeNode(XCompositeNode lastQueriedVariablesCompositeNode) {
         this.lastQueriedVariablesCompositeNode = lastQueriedVariablesCompositeNode;
     }
@@ -204,7 +200,9 @@ public class PascalXDebugProcess extends XDebugProcess {
         GdbVariableObject var = variableObjectMap.get(key);
         if (var != null) {
             var.updateFromResult(res);
-            updateVariableObjectUI(var);
+            if (var.getCallback() != null) {
+                updateVariableObjectUI(var);
+            }
         }
     }
 
@@ -226,25 +224,54 @@ public class PascalXDebugProcess extends XDebugProcess {
         sendCommand("-var-list-children --all-values " + name);
     }
 
-    synchronized public void handleChildrenResult(GdbMiResults results) {
-        if (null == lastParentNode) {
-            return;
-        }
-        XValueChildrenList childrenList = new XValueChildrenList();
-        List<Object> children = results.getList("children");
-        for (Object o : children) {
-            GdbMiResults childResult = (GdbMiResults) o;
-            GdbMiResults child = childResult.getTuple("child");
-            String varName = child.getString("name");
-            GdbVariableObject var = variableObjectMap.get(varName);
-            if (null == var) {
-                var = new GdbVariableObject(varName, null);
-                variableObjectMap.put(varName, var);
-            }
-            var.updateFromResult(child);
-            childrenList.add(varName.substring(varName.lastIndexOf('.') + 1), new PascalDebuggerValue(this, var.getExpression(), var.getType(), var.getValue(), var.getChildrenCount()));
-        }
-        lastParentNode.addChildren(childrenList, true);
+    synchronized void handleVariablesResponse(List<Object> variables) {
+        handleVariables(lastQueriedVariablesCompositeNode, variables, false);
+    }
+
+    synchronized void handleChildrenResult(List<Object> variables) {
+        handleVariables(lastParentNode, variables, true);
         lastParentNode = null;
     }
+
+    private void handleVariables(XCompositeNode node, List<Object> variables, boolean children) {
+        if (null == node) {
+            return;
+        }
+        if (variables.isEmpty()) {
+            node.addChildren(XValueChildrenList.EMPTY, true);
+        } else {
+            XValueChildrenList childrenList = new XValueChildrenList(variables.size());
+            for (Object o : variables) {
+                if (o instanceof GdbMiResults) {
+                    GdbMiResults res = (GdbMiResults) o;
+                    if (children) {
+                        res = res.getTuple("child");
+                    }
+                    String varName = res.getString("name");
+                    String varKey = (children ? "" : "l%") + varName;
+                    GdbVariableObject var = variableObjectMap.get(varKey);
+                    if (null != var) {
+                        var.updateFromResult(res);
+                        if (!children) {
+                            sendCommand(String.format("-var-update --all-values \"%s\"", varKey));
+                        }
+                    } else {
+                        var = new GdbVariableObject(varKey, null, res);
+                        variableObjectMap.put(varKey, var);
+                        if (!children) {
+                            sendCommand(String.format("-var-create \"%s\" @ \"%s\"", varKey, varName));
+                        }
+                    }
+
+                    childrenList.add(varName.substring(varName.lastIndexOf('.')+1),
+                            new PascalDebuggerValue(this, var.getExpression(), var.getType(), var.getValue(), var.getChildrenCount()));
+                } else {
+                    node.setErrorMessage("Invalid variables list entry");
+                    return;
+                }
+            }
+            node.addChildren(childrenList, true);
+        }
+    }
+
 }
