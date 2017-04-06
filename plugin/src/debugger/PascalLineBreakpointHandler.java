@@ -18,7 +18,6 @@ import java.util.Map;
 public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<PascalLineBreakpointProperties>> {
     private final PascalXDebugProcess debugProcess;
     final Map<PascalLineBreakpointProperties, Integer> breakIndexMap = new HashMap<PascalLineBreakpointProperties, Integer>();
-    final Map<Integer, PascalLineBreakpointProperties> indexBreakMap = new HashMap<Integer, PascalLineBreakpointProperties>();
 
     public PascalLineBreakpointHandler(PascalXDebugProcess debugProcess) {
         super(PascalLineBreakpointType.class);
@@ -40,6 +39,7 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
     @Override
     public void unregisterBreakpoint(@NotNull XLineBreakpoint<PascalLineBreakpointProperties> breakpoint, boolean temporary) {
         PascalLineBreakpointProperties props = breakpoint.getProperties();
+        props = props != null ? props : new PascalLineBreakpointProperties(breakpoint.getPresentableFilePath(), breakpoint.getLine());
         Integer ind = breakIndexMap.get(props);
         if (ind != null) {
             debugProcess.sendCommand(String.format("-break-delete %d", ind));
