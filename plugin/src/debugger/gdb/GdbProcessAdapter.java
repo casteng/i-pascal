@@ -47,6 +47,8 @@ public class GdbProcessAdapter implements ProcessListener {
         if (GdbMiLine.Type.EXEC_ASYNC.equals(res.getType())) {
             if ("stopped".equals(res.getRecClass())) {
                 handleStop(res);
+            } else if ("running".equals(res.getRecClass())) {
+                process.setInferiorRunning(true);
             }
         } else if (GdbMiLine.Type.RESULT_RECORD.equals(res.getType())) {
             if ("done".equals(res.getRecClass())) {
@@ -81,6 +83,7 @@ public class GdbProcessAdapter implements ProcessListener {
 
     private void handleStop(GdbMiLine res) {
         suspendContext = new GdbSuspendContext(process, res);
+        process.setInferiorRunning(false);
         process.getSession().positionReached(suspendContext);
         GdbStopReason reason = GdbStopReason.fromUid(res.getResults().getString("reason"));
         String msg = null;

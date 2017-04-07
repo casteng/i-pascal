@@ -33,7 +33,7 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
             line = props.getLine();
             filename = props.getFilename();
         }
-        debugProcess.sendCommand(String.format("-break-insert -h -f %s:%d", filename, line));
+        debugProcess.sendCommand(String.format("-break-insert %s -f %s:%d", debugProcess.isInferiorRunning() ? "-h" : "", filename, line));
     }
 
     @Override

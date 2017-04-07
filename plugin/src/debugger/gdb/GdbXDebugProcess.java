@@ -53,6 +53,7 @@ public class GdbXDebugProcess extends XDebugProcess {
 
     private static final String VAR_PREFIX_LOCAL = "l%";
     private static final String VAR_PREFIX_WATCHES = "w%";
+    private boolean inferiorRunning = false;
 
     public GdbXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
@@ -281,4 +282,11 @@ public class GdbXDebugProcess extends XDebugProcess {
         }
     }
 
+    public boolean isInferiorRunning() {
+        return inferiorRunning;
+    }
+
+    public void setInferiorRunning(boolean inferiorRunning) {
+        this.inferiorRunning = inferiorRunning;
+    }
 }
