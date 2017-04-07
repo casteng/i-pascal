@@ -1,16 +1,14 @@
 package com.siberika.idea.pascal.debugger.gdb;
 
-import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessListener;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.util.Key;
 import com.intellij.xdebugger.frame.XStackFrame;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiParser;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbStopReason;
+import com.siberika.idea.pascal.jps.util.PascalConsoleProcessAdapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,30 +18,18 @@ import java.util.List;
  * Author: George Bakhtadze
  * Date: 28/03/2017
  */
-public class GdbProcessAdapter implements ProcessListener {
+public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
     private static final Logger LOG = Logger.getInstance(GdbProcessAdapter.class);
     private final GdbXDebugProcess process;
     private GdbSuspendContext suspendContext;
 
-    public GdbProcessAdapter(GdbXDebugProcess xDebugProcess) {
+    GdbProcessAdapter(GdbXDebugProcess xDebugProcess) {
         this.process = xDebugProcess;
     }
 
     @Override
-    public void startNotified(ProcessEvent event) {
-    }
-
-    @Override
-    public void processTerminated(ProcessEvent event) {
-    }
-
-    @Override
-    public void processWillTerminate(ProcessEvent event, boolean willBeDestroyed) {
-    }
-
-    @Override
-    public void onTextAvailable(ProcessEvent event, Key outputType) {
-        GdbMiLine res = GdbMiParser.parseLine(event.getText());
+    public boolean onLine(String text) {
+        GdbMiLine res = GdbMiParser.parseLine(text);
         if (GdbMiLine.Type.EXEC_ASYNC.equals(res.getType())) {
             if ("stopped".equals(res.getRecClass())) {
                 handleStop(res);
@@ -75,6 +61,7 @@ public class GdbProcessAdapter implements ProcessListener {
                 }
             }
         }
+        return true;
     }
 
     private boolean isCreateVarResult(GdbMiResults results) {
