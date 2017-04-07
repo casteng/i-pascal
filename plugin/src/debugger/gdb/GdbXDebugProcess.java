@@ -8,6 +8,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.ExecutionConsole;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
@@ -42,6 +43,8 @@ import java.util.Map;
  * Date: 26/03/2017
  */
 public class GdbXDebugProcess extends XDebugProcess {
+
+    private static final Logger LOG = Logger.getInstance(GdbXDebugProcess.class);
 
     private final XBreakpointHandler<?>[] MY_BREAKPOINT_HANDLERS = new XBreakpointHandler[] {new PascalLineBreakpointHandler(this)};
     private final ExecutionEnvironment environment;
@@ -149,7 +152,7 @@ public class GdbXDebugProcess extends XDebugProcess {
                 printToConsole(">>>> " + command + "\n", ConsoleViewContentType.NORMAL_OUTPUT);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("ERROR: sending command to GDB", e);
         }
     }
 
