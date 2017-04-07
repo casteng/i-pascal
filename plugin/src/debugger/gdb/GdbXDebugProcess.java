@@ -137,6 +137,9 @@ public class GdbXDebugProcess extends XDebugProcess {
     }
 
     public void sendCommand(String command) {
+        if (getSession().isStopped()) {
+            return;
+        }
         try {
             OutputStream commandStream = getProcessHandler().getProcessInput();
             if (commandStream != null) {

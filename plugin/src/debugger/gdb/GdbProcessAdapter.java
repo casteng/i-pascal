@@ -95,12 +95,16 @@ public class GdbProcessAdapter implements ProcessListener {
                 case WATCHPOINT_TRIGGER:
                 case READ_WATCHPOINT_TRIGGER:
                 case ACCESS_WATCHPOINT_TRIGGER:
-                case EXITED:
-                case EXITED_SIGNALLED:
-                case EXITED_NORMALLY:
                 case LOCATION_REACHED:
                 case FUNCTION_FINISHED: {
                     msg = reason.getUid();
+                    break;
+                }
+                case EXITED:
+                case EXITED_SIGNALLED:
+                case EXITED_NORMALLY: {
+                    msg = reason.getUid();
+                    process.sendCommand("-gdb-exit");
                 }
             }
             if (msg != null) {

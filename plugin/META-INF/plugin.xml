@@ -12,6 +12,7 @@
         <p>1.22</p>
         <ul>
           <li>watches in debugger</li>
+          <li>inspection of complex types in watches and local variables while debugging</li>
         </ul>
         <p>1.2</p>
         <ul>
