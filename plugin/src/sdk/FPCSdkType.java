@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class FPCSdkType extends BasePascalSdkType {
 
-    public static final Logger LOG = Logger.getInstance(FPCSdkType.class.getName());
+    private static final Logger LOG = Logger.getInstance(FPCSdkType.class.getName());
     private static final String[] LIBRARY_DIRS = {"rtl", "rtl-objpas", "pthreads", "regexpr", "x11", "windows"};
 
     @NotNull
@@ -104,7 +104,7 @@ public class FPCSdkType extends BasePascalSdkType {
     }
 
     @Nullable
-    public static String getTargetString(String sdkHome) {
+    private static String getTargetString(String sdkHome) {
         LOG.info("Getting target for SDK path: " + sdkHome);
         try {
             return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getFPCExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_TARGET_GET);
@@ -114,6 +114,7 @@ public class FPCSdkType extends BasePascalSdkType {
         return null;
     }
 
+    @NotNull
     @NonNls
     @Override
     public String getPresentableName() {
@@ -130,6 +131,8 @@ public class FPCSdkType extends BasePascalSdkType {
     @Override
     protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {
         super.configureOptions(sdk, data, target);
+        File file = PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath() != null ? sdk.getHomePath() : "");
+        data.setValue(PascalSdkData.keys.DECOMPILER_COMMAND.getKey(), file.getAbsolutePath());
         StrBuilder sb = new StrBuilder();
         if (SystemUtils.IS_OS_WINDOWS) {
             sb.append("-dMSWINDOWS ");
@@ -146,7 +149,11 @@ public class FPCSdkType extends BasePascalSdkType {
         } else {
             sb.append("-dCPUX86 ");
         }
-        data.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, sb.toString());
+        data.setValue(PascalSdkData.keys.COMPILER_OPTIONS.getKey(), sb.toString());
+        data.setValue(PascalSdkData.keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), "1");
+        data.setValue(PascalSdkData.keys.DEBUGGER_RETRIEVE_CHILDS.getKey(), "1");
+        data.setValue(PascalSdkData.keys.DEBUGGER_USE_GDBINIT.getKey(), "0");
+        data.setValue(PascalSdkData.keys.DEBUGGER_RESOLVE_NAMES.getKey(), "1");
     }
 
     private static void configureSdkPaths(@NotNull final Sdk sdk, String target) {
@@ -175,7 +182,7 @@ public class FPCSdkType extends BasePascalSdkType {
     }
 
     @Override
-    public boolean isRootTypeApplicable(OrderRootType type) {
+    public boolean isRootTypeApplicable(@NotNull OrderRootType type) {
         return type.equals(OrderRootType.SOURCES) || type.equals(OrderRootType.CLASSES);
     }
 

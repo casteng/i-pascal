@@ -11,11 +11,32 @@ import java.util.Map;
  */
 public class PascalSdkData implements SdkAdditionalData {
 
-    public static final String DATA_KEY_COMPILER_FAMILY = "compilerFamily";
-    public static final String DATA_KEY_COMPILER_OPTIONS = "compilerOptions";
-    public static final String DATA_KEY_DECOMPILER_CACHE = "decompilerCache";
-    public static final String DATA_KEY_DECOMPILER_COMMAND = "decompilerCommand";
-    public static final String DATA_KEY_DEBUGGER_COMMAND = "debuggerCommand";
+    public enum keys {
+        COMPILER_COMMAND("compilerCommand"),
+        COMPILER_FAMILY("compilerFamily"),
+        COMPILER_OPTIONS("compilerOptions"),
+        DECOMPILER_CACHE("decompilerCache"),
+        DECOMPILER_COMMAND("decompilerCommand"),
+
+        DEBUGGER_COMMAND("debuggerCommand"),
+        DEBUGGER_OPTIONS("debuggerOptions"),
+        DEBUGGER_REDIRECT_CONSOLE("debuggerRedirectConsole"),
+        DEBUGGER_RETRIEVE_CHILDS("debuggerRetrieveChilds"),
+        DEBUGGER_USE_GDBINIT("debuggerUseGdbinit"),
+        DEBUGGER_RESOLVE_NAMES("debuggerResolveNames"),
+        DEBUGGER_CALL_GETTERS("debuggerCallGetters"),
+        DEBUGGER_ASM_FORMAT("debuggerAsmFormat"),
+        ;
+        private final String key;
+
+        keys(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+    }
 
     private final Map<String, Object> data;
 

@@ -56,10 +56,10 @@ public class PPUDecompilerCache {
         PPUDecompilerCache decompilerCache;
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (sdk) {
-            decompilerCache = (PPUDecompilerCache) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE);
+            decompilerCache = (PPUDecompilerCache) BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.keys.DECOMPILER_CACHE.getKey());
             if ((null == decompilerCache) || (decompilerCache.module != module)) {
                 decompilerCache = new PPUDecompilerCache(module);
-                BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.DATA_KEY_DECOMPILER_CACHE, decompilerCache);
+                BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.keys.DECOMPILER_CACHE.getKey(), decompilerCache);
             }
         }
         String unitName = FileUtil.getNameWithoutExtension(com.siberika.idea.pascal.jps.util.FileUtil.getFilename(filename));

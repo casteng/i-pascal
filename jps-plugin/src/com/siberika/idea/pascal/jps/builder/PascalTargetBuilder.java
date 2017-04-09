@@ -110,9 +110,13 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                         files.get(target), ParamMap.getJpsParams(module.getProperties()),
                         isRebuild,
                         ParamMap.getJpsParams(sdk.getSdkProperties()));
-                int exitCode = launchCompiler(compiler, messager, cmdLine, mainFile != null ? mainFile.getParentFile() : null);
-                if (exitCode != 0) {
-                    messager.warning("Error. Compiler exit code: " + exitCode, null, -1L, -1L);
+                if (cmdLine != null) {
+                    int exitCode = launchCompiler(compiler, messager, cmdLine, mainFile != null ? mainFile.getParentFile() : null);
+                    if (exitCode != 0) {
+                        messager.warning("Error. Compiler exit code: " + exitCode, null, -1L, -1L);
+                    }
+                } else {
+                    messager.warning("Error. Can't launch compiler", null, -1L, -1L);
                 }
             } else {
                 messager.error("Can't determine compiler family", "", -1L, -1L);
@@ -125,7 +129,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
     @Nullable
     private PascalBackendCompiler getCompiler(@NotNull JpsSdk<?> sdk, CompilerMessager messager) {
         ParamMap params = ParamMap.getJpsParams(sdk.getSdkProperties());
-        String family = params != null ? params.get(PascalSdkData.DATA_KEY_COMPILER_FAMILY) : null;
+        String family = params != null ? params.get(PascalSdkData.keys.COMPILER_FAMILY.getKey()) : null;
         if (PascalCompilerFamily.FPC.name().equals(family)) {
             return new FPCBackendCompiler(messager);
         } else if (PascalCompilerFamily.DELPHI.name().equals(family)) {

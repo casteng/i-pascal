@@ -98,9 +98,13 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
                             files.get(target), ParamMap.getJpsParams(module.getProperties()),
                             JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
                             ParamMap.getJpsParams(sdk.getSdkProperties()));
-                    int exitCode = launchCompiler(compiler, messager, cmdLine);
-                    if (exitCode != 0) {
-                        messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
+                    if (cmdLine != null) {
+                        int exitCode = launchCompiler(compiler, messager, cmdLine);
+                        if (exitCode != 0) {
+                            messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
+                            return ExitCode.ABORT;
+                        }
+                    } else {
                         return ExitCode.ABORT;
                     }
                 } else {
@@ -119,7 +123,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
     @Nullable
     private PascalBackendCompiler getCompiler(@NotNull JpsSdk<?> sdk, CompilerMessager messager) {
         ParamMap params = ParamMap.getJpsParams(sdk.getSdkProperties());
-        String family = params != null ? params.get(PascalSdkData.DATA_KEY_COMPILER_FAMILY) : null;
+        String family = params != null ? params.get(PascalSdkData.keys.COMPILER_FAMILY.getKey()) : null;
         if (PascalCompilerFamily.FPC.toString().equals(family)) {
             return new FPCBackendCompiler(messager);
         } else if (PascalCompilerFamily.DELPHI.toString().equals(family)) {

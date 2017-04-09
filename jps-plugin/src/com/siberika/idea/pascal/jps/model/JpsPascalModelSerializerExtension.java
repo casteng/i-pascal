@@ -62,8 +62,12 @@ public class JpsPascalModelSerializerExtension extends JpsModelSerializerExtensi
         @Override
         public JpsSimpleElement<ParamMap> loadProperties(@Nullable Element propertiesElement) {
             return JpsElementFactory.getInstance().createSimpleElement(new ParamMap()
-                    .addPair(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS) : "")
-                    .addPair(PascalSdkData.DATA_KEY_COMPILER_FAMILY, propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.DATA_KEY_COMPILER_FAMILY) : "")
+                    .addPair(PascalSdkData.keys.COMPILER_COMMAND.getKey(),
+                            propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.keys.COMPILER_COMMAND.getKey()) : "")
+                    .addPair(PascalSdkData.keys.COMPILER_OPTIONS.getKey(),
+                            propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.keys.COMPILER_OPTIONS.getKey()) : "")
+                    .addPair(PascalSdkData.keys.COMPILER_FAMILY.getKey(),
+                            propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.keys.COMPILER_FAMILY.getKey()) : "")
             );
         }
 

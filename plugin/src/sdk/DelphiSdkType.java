@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  */
 public class DelphiSdkType extends BasePascalSdkType {
 
-    public static final Logger LOG = Logger.getInstance(DelphiSdkType.class.getName());
+    private static final Logger LOG = Logger.getInstance(DelphiSdkType.class.getName());
     private static final String[] LIBRARY_DIRS = {"debug"};
     private static final Pattern DELPHI_VERSION_PATTERN = Pattern.compile("[\\w\\s]+[vV]ersion\\s(\\d+\\.\\d+)");
 
@@ -122,12 +122,13 @@ public class DelphiSdkType extends BasePascalSdkType {
         return null;
     }
 
-    @Nullable
-    public static String getTargetString(String sdkHome) {
+    @NotNull
+    private static String getTargetString(String sdkHome) {
         LOG.info("Getting target for SDK path: " + sdkHome);
         return "Win32";
     }
 
+    @NotNull
     @NonNls
     @Override
     public String getPresentableName() {
@@ -146,7 +147,7 @@ public class DelphiSdkType extends BasePascalSdkType {
         StrBuilder sb = new StrBuilder();
         sb.append("-dWINDOWS ");
         sb.append("-dWIN32 ");
-        data.setValue(PascalSdkData.DATA_KEY_COMPILER_OPTIONS, sb.toString());
+        data.setValue(PascalSdkData.keys.COMPILER_OPTIONS.getKey(), sb.toString());
     }
 
     private static void configureSdkPaths(@NotNull final Sdk sdk) {
@@ -173,7 +174,7 @@ public class DelphiSdkType extends BasePascalSdkType {
     }
 
     @Override
-    public boolean isRootTypeApplicable(OrderRootType type) {
+    public boolean isRootTypeApplicable(@NotNull OrderRootType type) {
         return type.equals(OrderRootType.SOURCES) || type.equals(OrderRootType.CLASSES);
     }
 
