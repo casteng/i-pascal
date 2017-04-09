@@ -110,7 +110,7 @@ public class GdbXDebugProcess extends XDebugProcess {
     }
 
     private boolean isOutputConsoleNeeded() {
-        return !SystemInfo.isWindows && getData().getBoolean(PascalSdkData.keys.DEBUGGER_REDIRECT_CONSOLE);
+        return !SystemInfo.isWindows && getData().getBoolean(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE);
     }
 
     private void createOutputConsole(Project project) {
@@ -152,7 +152,7 @@ public class GdbXDebugProcess extends XDebugProcess {
         super.sessionInitialized();
         getProcessHandler().addProcessListener(new GdbProcessAdapter(this));
         sendCommand("-gdb-set target-async on");
-        if (getData().getBoolean(PascalSdkData.keys.DEBUGGER_REDIRECT_CONSOLE)) {
+        if (getData().getBoolean(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE)) {
             if (SystemInfo.isWindows) {
                 sendCommand("-gdb-set new-console on");
             } else {

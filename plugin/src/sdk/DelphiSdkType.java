@@ -147,7 +147,7 @@ public class DelphiSdkType extends BasePascalSdkType {
         StrBuilder sb = new StrBuilder();
         sb.append("-dWINDOWS ");
         sb.append("-dWIN32 ");
-        data.setValue(PascalSdkData.keys.COMPILER_OPTIONS.getKey(), sb.toString());
+        data.setValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(), sb.toString());
     }
 
     private static void configureSdkPaths(@NotNull final Sdk sdk) {

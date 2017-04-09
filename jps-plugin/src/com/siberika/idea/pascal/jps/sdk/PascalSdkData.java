@@ -13,7 +13,7 @@ public class PascalSdkData implements SdkAdditionalData {
 
     public static final PascalSdkData EMPTY = new PascalSdkData();
 
-    public enum keys {
+    public enum Keys {
         COMPILER_COMMAND("compilerCommand"),
         COMPILER_FAMILY("compilerFamily"),
         COMPILER_OPTIONS("compilerOptions"),
@@ -31,7 +31,7 @@ public class PascalSdkData implements SdkAdditionalData {
         ;
         private final String key;
 
-        keys(String key) {
+        Keys(String key) {
             this.key = key;
         }
 
@@ -63,11 +63,11 @@ public class PascalSdkData implements SdkAdditionalData {
         data.put(key, value);
     }
 
-    public boolean getBoolean(final keys key) {
+    public boolean getBoolean(final Keys key) {
         return "1".equals(getValue(key.getKey()));
     }
 
-    public String getString(final keys key) {
+    public String getString(final Keys key) {
         return (String) getValue(key.getKey());
     }
 

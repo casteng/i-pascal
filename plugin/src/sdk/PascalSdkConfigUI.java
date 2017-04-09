@@ -65,16 +65,16 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         myTabbedPane.addTab(PascalBundle.message("ui.sdkSettings.tab.debugger"), createDebuggerOptionsPanel());
 
         keyComponentMap.clear();
-        keyComponentMap.put(PascalSdkData.keys.COMPILER_COMMAND.getKey(), compilerCommandEdit);
-        keyComponentMap.put(PascalSdkData.keys.COMPILER_OPTIONS.getKey(), compilerOptionsEdit);
-        keyComponentMap.put(PascalSdkData.keys.DECOMPILER_COMMAND.getKey(), decompilerCommandEdit);
+        keyComponentMap.put(PascalSdkData.Keys.COMPILER_COMMAND.getKey(), compilerCommandEdit);
+        keyComponentMap.put(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(), compilerOptionsEdit);
+        keyComponentMap.put(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey(), decompilerCommandEdit);
 
-        keyComponentMap.put(PascalSdkData.keys.DEBUGGER_COMMAND.getKey(), gdbCommandEdit);
-        keyComponentMap.put(PascalSdkData.keys.DEBUGGER_OPTIONS.getKey(), gdbOptionsEdit);
-        keyComponentMap.put(PascalSdkData.keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), gdbRedirectConsole);
-        keyComponentMap.put(PascalSdkData.keys.DEBUGGER_RETRIEVE_CHILDS.getKey(), gdbRetrieveChilds);
-        keyComponentMap.put(PascalSdkData.keys.DEBUGGER_RESOLVE_NAMES.getKey(), gdbResolveNames);
-        keyComponentMap.put(PascalSdkData.keys.DEBUGGER_USE_GDBINIT.getKey(), gdbUseGdbInit);
+        keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_COMMAND.getKey(), gdbCommandEdit);
+        keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_OPTIONS.getKey(), gdbOptionsEdit);
+        keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), gdbRedirectConsole);
+        keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS.getKey(), gdbRetrieveChilds);
+        keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES.getKey(), gdbResolveNames);
+        keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_USE_GDBINIT.getKey(), gdbUseGdbInit);
 
         return myTabbedPane.getComponent();
     }
@@ -159,10 +159,10 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
             BasePascalSdkType.getAdditionalData(sdk).setValue(entry.getKey(), getValue(keyComponentMap.get(entry.getKey())));
         }
         if ((decompilerCommandEdit != null) &&
-                !getValue(keyComponentMap.get(PascalSdkData.keys.DECOMPILER_COMMAND.getKey())).equals(
-                        BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.keys.DECOMPILER_COMMAND.getKey()))
+                !getValue(keyComponentMap.get(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey())).equals(
+                        BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey()))
                 ) {
-            BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.keys.DECOMPILER_CACHE.getKey(), null);
+            BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.Keys.DECOMPILER_CACHE.getKey(), null);
             invalidateCompiledCache();
         }
     }

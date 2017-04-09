@@ -132,15 +132,15 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                     PascalSdkData data = sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
                     String command = BasePascalSdkType.getDebuggerCommand(sdk, "gdb");
                     commandLine.setExePath(command);
-                    if (!data.getBoolean(PascalSdkData.keys.DEBUGGER_USE_GDBINIT)) {
+                    if (!data.getBoolean(PascalSdkData.Keys.DEBUGGER_USE_GDBINIT)) {
                         commandLine.addParameters("-n");
                         commandLine.addParameters("-fullname");
                         commandLine.addParameters("-nowindows");
                         commandLine.addParameters("-interpreter=mi");
                     }
 
-                    if (data.getValue(PascalSdkData.keys.DEBUGGER_OPTIONS.getKey()) != null) {
-                        String[] compilerOptions = data.getString(PascalSdkData.keys.DEBUGGER_OPTIONS).split("\\s+");
+                    if (data.getValue(PascalSdkData.Keys.DEBUGGER_OPTIONS.getKey()) != null) {
+                        String[] compilerOptions = data.getString(PascalSdkData.Keys.DEBUGGER_OPTIONS).split("\\s+");
                         commandLine.addParameters(compilerOptions);
                     }
 

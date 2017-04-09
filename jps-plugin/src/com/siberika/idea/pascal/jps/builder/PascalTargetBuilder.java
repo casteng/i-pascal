@@ -129,7 +129,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
     @Nullable
     private PascalBackendCompiler getCompiler(@NotNull JpsSdk<?> sdk, CompilerMessager messager) {
         ParamMap params = ParamMap.getJpsParams(sdk.getSdkProperties());
-        String family = params != null ? params.get(PascalSdkData.keys.COMPILER_FAMILY.getKey()) : null;
+        String family = params != null ? params.get(PascalSdkData.Keys.COMPILER_FAMILY.getKey()) : null;
         if (PascalCompilerFamily.FPC.name().equals(family)) {
             return new FPCBackendCompiler(messager);
         } else if (PascalCompilerFamily.DELPHI.name().equals(family)) {

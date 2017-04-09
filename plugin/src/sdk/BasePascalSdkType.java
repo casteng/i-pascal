@@ -53,7 +53,7 @@ public abstract class BasePascalSdkType extends SdkType {
 
     public static File getDecompilerCommand(@NotNull Sdk sdk, File defaultDecompilerCommand) {
         File res;
-        String command = (String) getAdditionalData(sdk).getValue(PascalSdkData.keys.DECOMPILER_COMMAND.getKey());
+        String command = (String) getAdditionalData(sdk).getValue(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey());
         if (StringUtils.isEmpty(command)) {
             res = defaultDecompilerCommand;
         } else {
@@ -66,7 +66,7 @@ public abstract class BasePascalSdkType extends SdkType {
     }
 
     public static String getDebuggerCommand(@Nullable Sdk sdk, String defaultDebuggerCommand) {
-        String command = sdk != null ? (String) getAdditionalData(sdk).getValue(PascalSdkData.keys.DEBUGGER_COMMAND.getKey()) : null;
+        String command = sdk != null ? (String) getAdditionalData(sdk).getValue(PascalSdkData.Keys.DEBUGGER_COMMAND.getKey()) : null;
         if (StringUtils.isEmpty(command)) {
             return defaultDebuggerCommand;
         } else {
@@ -106,7 +106,7 @@ public abstract class BasePascalSdkType extends SdkType {
             SdkAdditionalData data = sdk.getSdkAdditionalData();
             Map<String, Define> result = new HashMap<String, Define>();
             if (data instanceof PascalSdkData) {
-                String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.keys.COMPILER_OPTIONS.getKey());
+                String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey());
                 getDefinesFromCmdLine(result, options);
             }
             Map<String, Map<String, Define>> compilerDefines = ((BasePascalSdkType) id).defines;
@@ -141,13 +141,13 @@ public abstract class BasePascalSdkType extends SdkType {
     @Override
     public void saveAdditionalData(@NotNull final SdkAdditionalData additionalData, @NotNull final Element additional) {
         if (additionalData instanceof PascalSdkData) {
-            for (PascalSdkData.keys key : PascalSdkData.keys.values()) {
+            for (PascalSdkData.Keys key : PascalSdkData.Keys.values()) {
                 Object val = ((PascalSdkData)additionalData).getValue(key.getKey());
                 if (val instanceof String) {
                     additional.setAttribute(key.getKey(), val != null ? (String) val : "");
                 }
             }
-            additional.setAttribute(PascalSdkData.keys.COMPILER_FAMILY.getKey(), compilerFamily);
+            additional.setAttribute(PascalSdkData.Keys.COMPILER_FAMILY.getKey(), compilerFamily);
         }
     }
 
@@ -156,10 +156,10 @@ public abstract class BasePascalSdkType extends SdkType {
     public SdkAdditionalData loadAdditionalData(Element additional) {
         PascalSdkData result = new PascalSdkData();
         if (additional != null) {
-            for (PascalSdkData.keys key : PascalSdkData.keys.values()) {
+            for (PascalSdkData.Keys key : PascalSdkData.Keys.values()) {
                 result.setValue(key.getKey(), additional.getAttributeValue(key.getKey()));
             }
-            result.setValue(PascalSdkData.keys.COMPILER_FAMILY.getKey(), compilerFamily);
+            result.setValue(PascalSdkData.Keys.COMPILER_FAMILY.getKey(), compilerFamily);
         }
         return result;
     }
