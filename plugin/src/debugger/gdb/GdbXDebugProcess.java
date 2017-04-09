@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.debugger.gdb;
 
+import com.intellij.diagnostic.logging.LogConsoleImpl;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.configurations.RunProfile;
@@ -8,12 +9,25 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.ExecutionConsole;
+import com.intellij.execution.ui.RunnerLayoutUi;
+import com.intellij.execution.ui.layout.PlaceInGrid;
+import com.intellij.icons.AllIcons;
+import com.intellij.openapi.actionSystem.ActionPlaces;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.SystemInfo;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testFramework.LightVirtualFile;
+import com.intellij.ui.content.Content;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XSourcePosition;
@@ -24,16 +38,22 @@ import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import com.intellij.xdebugger.frame.XValueChildrenList;
+import com.intellij.xdebugger.ui.XDebugTabLayouter;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalLineBreakpointHandler;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.run.PascalRunConfiguration;
+import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,33 +67,65 @@ public class GdbXDebugProcess extends XDebugProcess {
     private static final Logger LOG = Logger.getInstance(GdbXDebugProcess.class);
 
     private final XBreakpointHandler<?>[] MY_BREAKPOINT_HANDLERS = new XBreakpointHandler[] {new PascalLineBreakpointHandler(this)};
-    private final ExecutionEnvironment environment;
     private final ExecutionResult executionResult;
-    private ConsoleView myExecutionConsole;
+    private ConsoleView console;
+    private LogConsoleImpl outputConsole;
     private XCompositeNode lastQueriedVariablesCompositeNode;
     private XCompositeNode lastParentNode;
     private Map<String, GdbVariableObject> variableObjectMap;
 
     private static final String VAR_PREFIX_LOCAL = "l%";
     private static final String VAR_PREFIX_WATCHES = "w%";
+    private static final AnAction[] EMPTY_ACTIONS = new AnAction[0];
     private boolean inferiorRunning = false;
+    private File outputFile;
+    private Sdk sdk;
 
     public GdbXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
-        this.environment = environment;
+        RunProfile conf = environment.getRunProfile();
+        if (conf instanceof PascalRunConfiguration) {
+            Module module = ((PascalRunConfiguration) conf).getConfigurationModule().getModule();
+            sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
+        }
+        if (null == sdk) {
+            sdk = ProjectRootManager.getInstance(environment.getProject()).getProjectSdk();
+        }
+
         this.executionResult = executionResult;
         try {
             createGdbProcess(environment);
         } catch (ExecutionException e) {
-            e.printStackTrace();
+            LOG.warn("Error running GDB", e);
         }
     }
 
     private void createGdbProcess(ExecutionEnvironment env) throws ExecutionException {
-        RunProfile profile = env.getRunProfile();
-        if (profile instanceof PascalRunConfiguration) {
-            variableObjectMap = new HashMap<String, GdbVariableObject>();
-            sendCommand("-break-delete");
+        if (isOutputConsoleNeeded()) {
+            createOutputConsole(env.getProject());
+        }
+        console = (ConsoleView) executionResult.getExecutionConsole();
+        variableObjectMap = new HashMap<String, GdbVariableObject>();
+        sendCommand("-break-delete");
+    }
+
+    private boolean isOutputConsoleNeeded() {
+        return !SystemInfo.isWindows && getData().getBoolean(PascalSdkData.keys.DEBUGGER_REDIRECT_CONSOLE);
+    }
+
+    private void createOutputConsole(Project project) {
+        try {
+            outputFile = File.createTempFile("ipas_run_out_", ".tmp");
+            outputConsole = new LogConsoleImpl(project, outputFile, Charset.forName("utf-8"), 0,
+                    PascalBundle.message("debug.output.title"), false, GlobalSearchScope.allScope(project)) {
+                @Override
+                public boolean isActive() {
+                    return true;
+                }
+            };
+            outputConsole.activate();
+        } catch (IOException e) {
+            LOG.warn("Error creating output console");
         }
     }
 
@@ -86,13 +138,12 @@ public class GdbXDebugProcess extends XDebugProcess {
     @NotNull
     @Override
     public ExecutionConsole createConsole() {
-        myExecutionConsole = (ConsoleView) executionResult.getExecutionConsole();
-        return myExecutionConsole;
+        return console;
     }
 
     public void printToConsole(String text, ConsoleViewContentType contentType) {
-        if (myExecutionConsole != null) {
-            myExecutionConsole.print(text, contentType);
+        if (console != null) {
+            console.print(text, contentType);
         }
     }
 
@@ -101,6 +152,13 @@ public class GdbXDebugProcess extends XDebugProcess {
         super.sessionInitialized();
         getProcessHandler().addProcessListener(new GdbProcessAdapter(this));
         sendCommand("-gdb-set target-async on");
+        if (getData().getBoolean(PascalSdkData.keys.DEBUGGER_REDIRECT_CONSOLE)) {
+            if (SystemInfo.isWindows) {
+                sendCommand("-gdb-set new-console on");
+            } else {
+                sendCommand("-exec-arguments > " + outputFile.getAbsolutePath());
+            }
+        } 
         sendCommand("-exec-run");
         getSession().setPauseActionSupported(true);
     }
@@ -176,6 +234,31 @@ public class GdbXDebugProcess extends XDebugProcess {
 //                return PsiDocumentManager.getInstance(project).getDocument(file);
                 LightVirtualFile file = new LightVirtualFile("_debug.pas", text);
                 return FileDocumentManager.getInstance().getDocument(file);
+            }
+        };
+    }
+
+    @NotNull
+    @Override
+    public XDebugTabLayouter createTabLayouter() {
+        return new XDebugTabLayouter() {
+            @Override
+            public void registerAdditionalContent(@NotNull RunnerLayoutUi ui) {
+                if (!isOutputConsoleNeeded()) {
+                    return;
+                }
+                Content gdbConsoleContent = ui.createContent("PascalDebugConsoleContent", outputConsole.getComponent(),
+                        PascalBundle.message("debug.output.title"), AllIcons.Debugger.Console, outputConsole.getPreferredFocusableComponent());
+                gdbConsoleContent.setCloseable(false);
+
+                DefaultActionGroup consoleActions = new DefaultActionGroup();
+                AnAction[] actions = outputConsole.getConsole() != null ? outputConsole.getConsole().createConsoleActions() : EMPTY_ACTIONS;
+                for (AnAction action : actions) {
+                    consoleActions.add(action);
+                }
+                gdbConsoleContent.setActions(consoleActions, ActionPlaces.DEBUGGER_TOOLBAR, outputConsole.getPreferredFocusableComponent());
+
+                ui.addContent(gdbConsoleContent, 2, PlaceInGrid.bottom, false);
             }
         };
     }
@@ -291,5 +374,9 @@ public class GdbXDebugProcess extends XDebugProcess {
 
     public void setInferiorRunning(boolean inferiorRunning) {
         this.inferiorRunning = inferiorRunning;
+    }
+
+    public PascalSdkData getData() {
+        return sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
     }
 }

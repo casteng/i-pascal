@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class PascalSdkData implements SdkAdditionalData {
 
+    public static final PascalSdkData EMPTY = new PascalSdkData();
+
     public enum keys {
         COMPILER_COMMAND("compilerCommand"),
         COMPILER_FAMILY("compilerFamily"),
@@ -60,4 +62,13 @@ public class PascalSdkData implements SdkAdditionalData {
     public void setValue(final String key, final Object value) {
         data.put(key, value);
     }
+
+    public boolean getBoolean(final keys key) {
+        return "1".equals(getValue(key.getKey()));
+    }
+
+    public String getString(final keys key) {
+        return (String) getValue(key.getKey());
+    }
+
 }

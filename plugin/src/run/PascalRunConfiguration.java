@@ -36,9 +36,11 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
@@ -123,15 +125,25 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                 }
                 String executable = PascalRunner.getExecutable(module, fileName);
                 if (debug) {
-                    Sdk sdk = getConfigurationModule().getModule() != null ? ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() : null;
+                    Sdk sdk = getConfigurationModule().getModule() != null ?
+                            ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() :
+                            ProjectRootManager.getInstance(getProject()).getProjectSdk();
+
+                    PascalSdkData data = sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
                     String command = BasePascalSdkType.getDebuggerCommand(sdk, "gdb");
                     commandLine.setExePath(command);
-                    commandLine.addParameters("-n");
-                    commandLine.addParameters("-fullname");
-                    commandLine.addParameters("-tty");
-                    commandLine.addParameters("/dev/null");
-                    commandLine.addParameters("-nowindows");
-                    commandLine.addParameters("-interpreter=mi");
+                    if (!data.getBoolean(PascalSdkData.keys.DEBUGGER_USE_GDBINIT)) {
+                        commandLine.addParameters("-n");
+                        commandLine.addParameters("-fullname");
+                        commandLine.addParameters("-nowindows");
+                        commandLine.addParameters("-interpreter=mi");
+                    }
+
+                    if (data.getValue(PascalSdkData.keys.DEBUGGER_OPTIONS.getKey()) != null) {
+                        String[] compilerOptions = data.getString(PascalSdkData.keys.DEBUGGER_OPTIONS).split("\\s+");
+                        commandLine.addParameters(compilerOptions);
+                    }
+
                     commandLine.addParameters("--args");
                     commandLine.addParameters(executable);
                 } else {
