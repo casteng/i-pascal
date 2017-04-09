@@ -49,11 +49,12 @@ public class FPCBackendCompiler extends PascalBackendCompiler {
     }
 
     @Override
-    protected void createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
+    protected boolean createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
                                           List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild,
                                           @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine) {
-        File executable = checkCompilerExe(sdkHomePath, moduleName, compilerMessager, PascalSdkUtil.getFPCExecutable(sdkHomePath));
-        if (null == executable) return;
+        String compilerCommand = pascalSdkData != null ? pascalSdkData.get(PascalSdkData.keys.COMPILER_COMMAND.getKey()) : null;
+        File executable = checkCompilerExe(sdkHomePath, moduleName, compilerMessager, PascalSdkUtil.getFPCExecutable(sdkHomePath), compilerCommand);
+        if (null == executable) return false;
         commandLine.add(executable.getPath());
 
         commandLine.add(COMPILER_SETTING_COMMON);
@@ -78,9 +79,10 @@ public class FPCBackendCompiler extends PascalBackendCompiler {
         }
 
         if (pascalSdkData != null) {
-            String[] compilerOptions = pascalSdkData.get(PascalSdkData.DATA_KEY_COMPILER_OPTIONS).split("\\s+");
+            String[] compilerOptions = pascalSdkData.get(PascalSdkData.keys.COMPILER_OPTIONS.getKey()).split("\\s+");
             Collections.addAll(commandLine, compilerOptions);
         }
+        return true;
     }
 
 }

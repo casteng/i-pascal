@@ -4,6 +4,7 @@ import com.intellij.execution.process.ProcessAdapter;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.util.ParamMap;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.PropertyKey;
@@ -25,7 +26,7 @@ public abstract class PascalBackendCompiler {
         this.compilerMessager = compilerMessager;
     }
 
-    abstract protected void createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
+    abstract protected boolean createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
                                           List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild,
                                           @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine);
     @NotNull
@@ -42,7 +43,9 @@ public abstract class PascalBackendCompiler {
                                          @Nullable final ParamMap pascalSdkData) throws IOException, IllegalArgumentException {
         final ArrayList<String> commandLine = new ArrayList<String>();
         if (outputDir != null) {
-            createStartupCommandImpl(sdkHomePath, moduleName, getExeOutputPath(moduleData), outputDir, sdkLibFiles, moduleLibFiles, isRebuild, pascalSdkData, commandLine);
+            if (!createStartupCommandImpl(sdkHomePath, moduleName, getExeOutputPath(moduleData), outputDir, sdkLibFiles, moduleLibFiles, isRebuild, pascalSdkData, commandLine)) {
+                return null;
+            }
             File mainFile = getMainFile(moduleData);
             if ((null == mainFile) && (files.size() > 0)) {
                 mainFile = files.get(0);
@@ -84,21 +87,29 @@ public abstract class PascalBackendCompiler {
         }
     }
 
-    protected static String getMessage(String moduleName, @PropertyKey(resourceBundle = JpsPascalBundle.JPSBUNDLE)String msgId, String...args) {
+    protected static String getMessage(String moduleName, @PropertyKey(resourceBundle = JpsPascalBundle.JPSBUNDLE)String msgId, Object...args) {
         return JpsPascalBundle.message(msgId, args) + (moduleName != null ? " (" + JpsPascalBundle.message("general.module", moduleName) + ")" : "");
     }
 
-    protected static File checkCompilerExe(String sdkHomePath, String moduleName, CompilerMessager compilerMessager, File executable) {
+    protected static File checkCompilerExe(String sdkHomePath, String moduleName, CompilerMessager compilerMessager, File executable, String compilerCommand) {
+        if (!StringUtils.isEmpty(compilerCommand)) {
+            return checkExecutable(compilerMessager, moduleName, new File(compilerCommand));
+        }
         if (sdkHomePath != null) {
-            if (!executable.canExecute()) {
-                compilerMessager.error(getMessage(moduleName, "compile.noCompiler", executable.getPath()), null, -1, -1);
-                return null;
-            }
+            return checkExecutable(compilerMessager, moduleName, executable);
         } else {
             compilerMessager.error(getMessage(moduleName, "compile.noSdkHomePath"), null, -1, -1);
             return null;
         }
-        return executable;
+    }
+
+    private static File checkExecutable(CompilerMessager compilerMessager, String moduleName, File executable) {
+        if (executable.exists() && executable.canExecute()) {
+            return executable;
+        } else {
+            compilerMessager.error(getMessage(moduleName, "compile.noCompiler", executable.getPath()), null, -1, -1);
+            return null;
+        }
     }
 
 }

@@ -51,15 +51,16 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
     }
 
     @Override
-    protected void createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
+    protected boolean createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
                                           List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild,
                                           @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine) {
-        File executable = checkCompilerExe(sdkHomePath, moduleName, compilerMessager, PascalSdkUtil.getDCC32Executable(sdkHomePath));
-        if (null == executable) return;
+        String compilerCommand = pascalSdkData != null ? pascalSdkData.get(PascalSdkData.keys.COMPILER_COMMAND.getKey()) : null;
+        File executable = checkCompilerExe(sdkHomePath, moduleName, compilerMessager, PascalSdkUtil.getDCC32Executable(sdkHomePath), compilerCommand);
+        if (null == executable) return false;
         commandLine.add(executable.getPath());
 
         if (pascalSdkData != null) {
-            String[] compilerOptions = pascalSdkData.get(PascalSdkData.DATA_KEY_COMPILER_OPTIONS).split("\\s+");
+            String[] compilerOptions = pascalSdkData.get(PascalSdkData.keys.COMPILER_OPTIONS.getKey()).split("\\s+");
             Collections.addAll(commandLine, compilerOptions);
         }
         commandLine.add(COMPILER_SETTING_COMMON);
@@ -85,6 +86,7 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
         for (File sdkPath : FileUtil.retrievePaths(sdkFiles)) {
             addLibPathToCmdLine(commandLine, sdkPath, COMPILER_SETTING_SRCPATH, COMPILER_SETTING_INCPATH);
         }
+        return true;
     }
 
 }
