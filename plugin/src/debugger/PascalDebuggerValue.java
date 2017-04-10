@@ -5,7 +5,9 @@ import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XValue;
 import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.gdb.GdbXDebugProcess;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -35,7 +37,11 @@ public class PascalDebuggerValue extends XValue {
 
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
-        debugProcess.computeValueChildren(name, node);
+        if (debugProcess.getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS)) {
+            debugProcess.computeValueChildren(name, node);
+        } else {
+            node.setErrorMessage(PascalBundle.message("debug.error.subfields.disabled"));
+        }
     }
 
 }
