@@ -1,10 +1,10 @@
 package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.execution.process.ProcessAdapter;
+import com.intellij.openapi.util.text.StringUtil;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.util.ParamMap;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.PropertyKey;
@@ -92,7 +92,7 @@ public abstract class PascalBackendCompiler {
     }
 
     protected static File checkCompilerExe(String sdkHomePath, String moduleName, CompilerMessager compilerMessager, File executable, String compilerCommand) {
-        if (!StringUtils.isEmpty(compilerCommand)) {
+        if (!StringUtil.isEmpty(compilerCommand)) {
             return checkExecutable(compilerMessager, moduleName, new File(compilerCommand));
         }
         if (sdkHomePath != null) {

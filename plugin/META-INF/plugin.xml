@@ -13,6 +13,8 @@
         <ul>
           <li>watches in debugger</li>
           <li>inspection of complex types in watches and local variables while debugging</li>
+          <li>compiler executable setting in FPC/Delphi SDK</li>
+          <li>Delphi Starter Edition support (Issue #8)</li>
         </ul>
         <p>1.2</p>
         <ul>

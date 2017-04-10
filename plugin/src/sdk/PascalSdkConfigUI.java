@@ -22,6 +22,7 @@ import com.intellij.openapi.vfs.VirtualFileEvent;
 import com.intellij.openapi.vfs.VirtualFileListener;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.TabbedPaneWrapper;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -34,6 +35,7 @@ import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,6 +65,9 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         TabbedPaneWrapper myTabbedPane = new TabbedPaneWrapper(myDisposable);
         myTabbedPane.addTab(PascalBundle.message("ui.sdkSettings.tab.general"), createGeneralOptionsPanel());
         myTabbedPane.addTab(PascalBundle.message("ui.sdkSettings.tab.debugger"), createDebuggerOptionsPanel());
+        if (!(sdk.getSdkType() instanceof FPCSdkType)) {
+            myTabbedPane.getTabComponentAt(1).setVisible(false);
+        }
 
         keyComponentMap.clear();
         keyComponentMap.put(PascalSdkData.Keys.COMPILER_COMMAND.getKey(), compilerCommandEdit);
@@ -81,7 +86,8 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
 
     private JPanel createGeneralOptionsPanel() {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayoutManager(3, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel.setBorder(new LineBorder(JBColor.border()));
+        panel.setLayout(new GridLayoutManager(4, 2, new Insets(0, 0, 0, 0), -1, -1));
 
         addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.command"), 0);
         compilerCommandEdit = addFileFieldWithBrowse(panel, 0);
@@ -93,11 +99,18 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         addLabel(panel, PascalBundle.message("ui.sdkSettings.decompiler.command"), 2);
         decompilerCommandEdit = addFileFieldWithBrowse(panel, 2);
 
+        JLabel statusLabel = new JLabel();
+        panel.add(statusLabel, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL,
+                GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 1, false));
+        if (BasePascalSdkType.getAdditionalData(sdk).getBoolean(PascalSdkData.Keys.DELPHI_IS_STARTER)) {
+            statusLabel.setText(PascalBundle.message("ui.sdkSettings.delphi.starter.warning"));
+        }
         return panel;
     }
 
     private JPanel createDebuggerOptionsPanel() {
         JPanel panel = new JPanel();
+        panel.setBorder(new LineBorder(JBColor.border()));
         panel.setLayout(new GridLayoutManager(6, 2, new Insets(0, 0, 0, 0), -1, -1));
 
         addLabel(panel, PascalBundle.message("ui.sdkSettings.gdb.command"), 0);
@@ -128,10 +141,9 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     }
 
     private void addLabel(JPanel panel, String caption, int row) {
-        final JLabel label1 = new JLabel();
-        label1.setText(caption);
+        final JLabel label1 = new JLabel(caption);
         panel.add(label1, new GridConstraints(row, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE,
-                GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+                GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 1, false));
     }
 
     private TextFieldWithBrowseButton addFileFieldWithBrowse(JPanel panel, int row) {
@@ -173,7 +185,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         } else if (control instanceof JTextField) {
             return ((JTextField) control).getText();
         } else if (control instanceof JCheckBox) {
-            return ((JCheckBox) control).isSelected() ? "1" : "0";
+            return ((JCheckBox) control).isSelected() ? PascalSdkData.SDK_DATA_TRUE : "0";
         } else {
             throw new IllegalStateException("getValue: Invalid control: " + ((control != null) ? control.getClass() : "null"));
         }
@@ -217,7 +229,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         } else if (control instanceof JTextField) {
             ((JTextField) control).setText((String) value);
         } else if (control instanceof JCheckBox) {
-            ((JCheckBox) control).setSelected("1".equals(value));
+            ((JCheckBox) control).setSelected(PascalSdkData.SDK_DATA_TRUE.equals(value));
         } else {
             throw new IllegalStateException("setValue: Invalid control: " + ((control != null) ? control.getClass() : "null"));
         }

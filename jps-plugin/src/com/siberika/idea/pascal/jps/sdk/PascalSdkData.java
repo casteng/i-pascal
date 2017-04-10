@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.jps.sdk;
 
+import com.google.common.collect.ImmutableMap;
 import com.intellij.openapi.projectRoots.SdkAdditionalData;
 
 import java.util.HashMap;
@@ -12,6 +13,13 @@ import java.util.Map;
 public class PascalSdkData implements SdkAdditionalData {
 
     public static final PascalSdkData EMPTY = new PascalSdkData();
+    public static final String SDK_DATA_TRUE = "1";
+    private static final Map<String, Object> DEFAULTS_MAP = new ImmutableMap.Builder<String, Object>()
+            .put(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), "1")
+            .put(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS.getKey(), "1")
+            .put(PascalSdkData.Keys.DEBUGGER_USE_GDBINIT.getKey(), "0")
+            .put(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES.getKey(), "1")
+            .build();
 
     public enum Keys {
         COMPILER_COMMAND("compilerCommand"),
@@ -28,6 +36,7 @@ public class PascalSdkData implements SdkAdditionalData {
         DEBUGGER_RESOLVE_NAMES("debuggerResolveNames"),
         DEBUGGER_CALL_GETTERS("debuggerCallGetters"),
         DEBUGGER_ASM_FORMAT("debuggerAsmFormat"),
+        DELPHI_IS_STARTER("delphiIsStarter")
         ;
         private final String key;
 
@@ -56,7 +65,12 @@ public class PascalSdkData implements SdkAdditionalData {
     };
 
     public Object getValue(final String key) {
-        return data.get(key);
+        Object res = data.get(key);
+        if (res != null) {
+            return res;
+        } else {
+            return DEFAULTS_MAP.get(key);
+        }
     }
 
     public void setValue(final String key, final Object value) {
@@ -64,7 +78,7 @@ public class PascalSdkData implements SdkAdditionalData {
     }
 
     public boolean getBoolean(final Keys key) {
-        return "1".equals(getValue(key.getKey()));
+        return SDK_DATA_TRUE.equals(getValue(key.getKey()));
     }
 
     public String getString(final Keys key) {

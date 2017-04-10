@@ -40,6 +40,7 @@ public abstract class BasePascalSdkType extends SdkType {
         this.compilerFamily = compilerFamily.name();
     }
 
+    @NotNull
     public static PascalSdkData getAdditionalData(@NotNull Sdk sdk) {
         SdkAdditionalData params = sdk.getSdkAdditionalData();
         if (!(params instanceof PascalSdkData)) {

@@ -150,10 +150,6 @@ public class FPCSdkType extends BasePascalSdkType {
             sb.append("-dCPUX86 ");
         }
         data.setValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(), sb.toString());
-        data.setValue(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), "1");
-        data.setValue(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS.getKey(), "1");
-        data.setValue(PascalSdkData.Keys.DEBUGGER_USE_GDBINIT.getKey(), "0");
-        data.setValue(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES.getKey(), "1");
     }
 
     private static void configureSdkPaths(@NotNull final Sdk sdk, String target) {

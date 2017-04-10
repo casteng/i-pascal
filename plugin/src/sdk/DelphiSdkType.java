@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.sdk;
 
+import com.google.common.collect.ImmutableMap;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.projectRoots.AdditionalDataConfigurable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -25,6 +26,7 @@ import javax.swing.*;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,6 +39,17 @@ public class DelphiSdkType extends BasePascalSdkType {
     private static final Logger LOG = Logger.getInstance(DelphiSdkType.class.getName());
     private static final String[] LIBRARY_DIRS = {"debug"};
     private static final Pattern DELPHI_VERSION_PATTERN = Pattern.compile("[\\w\\s]+[vV]ersion\\s(\\d+\\.\\d+)");
+    private static final String DELPHI_STARTER_VERSION_PATTERN = "This version of the product does not support command line compiling";
+    private static final Pattern RTLPKG_PATTERN = Pattern.compile("RTL(\\d{3,4}).BPL");
+    private static final String[] EMPTY_STRINGS = new String[0];
+    private static final Map<Integer, String> rtlPkgVersionMap = new ImmutableMap.Builder<Integer, String>().
+            put(240, "30").
+            put(250, "31").
+            put(260, "32").
+            put(270, "33").
+            put(280, "34").
+            put(290, "35")
+            .build();
 
     @NotNull
     public static DelphiSdkType getInstance() {
@@ -97,29 +110,74 @@ public class DelphiSdkType extends BasePascalSdkType {
     @NotNull
     public String suggestSdkName(@Nullable final String currentSdkName, @NotNull final String sdkHome) {
         String version = getVersionString(sdkHome);
-        if (version == null) return "Delphi v. ?? at " + sdkHome;
-        return "Delphi v. " + version + " | " + getTargetString(sdkHome);
+        final String prefix = String.format("Delphi %sv. ", isStarter(getVersionLines(sdkHome)) ? "(Starter) " : "");
+        if (version != null) {
+            return prefix + version + " | " + getTargetString(sdkHome);
+        } else {
+            return prefix + "?? at " + sdkHome;
+        }
+    }
+
+    private String getVersion(String[] lines) {
+        for (String line : lines) {
+            Matcher m = DELPHI_VERSION_PATTERN.matcher(line);
+            if (m.matches()) {
+                return m.group(1);
+            }
+        }
+        return null;
+    }
+
+    private boolean isStarter(String[] lines) {
+        LOG.info("Checking for starter edition");
+        for (String line : lines) {
+            LOG.info("=== Line: " + line);
+            if ((line != null) && line.startsWith(DELPHI_STARTER_VERSION_PATTERN)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @NotNull
+    private String[] getVersionLines(String sdkHome) {
+        try {
+            String out = SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getDCC32Executable(sdkHome).getAbsolutePath(), PascalSdkUtil.DELPHI_PARAMS_VERSION_GET);
+            return out != null ? out.split("\n", 3) : EMPTY_STRINGS;
+        } catch (PascalException e) {
+            LOG.info("Error: " + e.getMessage(), e);
+            return EMPTY_STRINGS;
+        }
     }
 
     @Nullable
+    @Override
     public String getVersionString(String sdkHome) {
         LOG.info("Getting version for SDK path: " + sdkHome);
-        try {
-            String out = SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getDCC32Executable(sdkHome).getAbsolutePath(), PascalSdkUtil.DELPHI_PARAMS_VERSION_GET);
-            String[] lines = out != null ? out.split("\n", 3) : null;
-            if ((lines != null) && (lines.length > 1)) {
-                LOG.info("=== lines: " + lines.length + ", " + lines[1]);
-                Matcher m = DELPHI_VERSION_PATTERN.matcher(lines[1]);
-                if (m.matches()) {
-                    return m.group(1);
-                }
-            } else {
-                LOG.info("=== wrong lines: " + (lines != null ? lines.length : "null"));
-            }
-        } catch (PascalException e) {
-            LOG.info("Error: " + e.getMessage(), e);
+        String[] lines = getVersionLines(sdkHome);
+        if (isStarter(lines)) {
+            return getVersionByRTL(sdkHome);
+        } else {
+            return getVersion(lines);
         }
-        return null;
+    }
+
+    private String getVersionByRTL(String sdkHome) {
+        File binDir = new File(sdkHome, "bin");
+        File[] rtl = binDir.listFiles();
+        Integer version = null;
+        if (rtl != null) {
+            for (File file : rtl) {
+                Matcher m = RTLPKG_PATTERN.matcher(file.getName().toUpperCase());
+                if (m.matches()) {
+                    int v = Integer.parseInt(m.group(1));
+                    if ((null == version) || (v > version)) {
+                        version = v;
+                    }
+                }
+            }
+        }
+        return rtlPkgVersionMap.get(version);
     }
 
     @NotNull
@@ -148,6 +206,9 @@ public class DelphiSdkType extends BasePascalSdkType {
         sb.append("-dWINDOWS ");
         sb.append("-dWIN32 ");
         data.setValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(), sb.toString());
+        if (isStarter(getVersionLines(sdk.getHomePath()))) {
+            data.setValue(PascalSdkData.Keys.DELPHI_IS_STARTER.getKey(), PascalSdkData.SDK_DATA_TRUE);
+        }
     }
 
     private static void configureSdkPaths(@NotNull final Sdk sdk) {
