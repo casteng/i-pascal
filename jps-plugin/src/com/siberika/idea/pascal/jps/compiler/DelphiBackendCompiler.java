@@ -21,6 +21,7 @@ import java.util.List;
  */
 public class DelphiBackendCompiler extends PascalBackendCompiler {
 
+    public static final String DELPHI_STARTER_RESPONSE = "This version of the product does not support command line compiling";
     private static final String COMPILER_SETTING_OPATH_EXE = "-E";
     private static final String COMPILER_SETTING_OPATH_UNIT = "-N";
     private static final String COMPILER_SETTING_OPATH_UNIT_D2007 = "-N0";

@@ -12,6 +12,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.jps.compiler.DelphiBackendCompiler;
 import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
 import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
@@ -39,16 +40,16 @@ public class DelphiSdkType extends BasePascalSdkType {
     private static final Logger LOG = Logger.getInstance(DelphiSdkType.class.getName());
     private static final String[] LIBRARY_DIRS = {"debug"};
     private static final Pattern DELPHI_VERSION_PATTERN = Pattern.compile("[\\w\\s]+[vV]ersion\\s(\\d+\\.\\d+)");
-    private static final String DELPHI_STARTER_VERSION_PATTERN = "This version of the product does not support command line compiling";
+    private static final String DELPHI_STARTER_VERSION_PATTERN = DelphiBackendCompiler.DELPHI_STARTER_RESPONSE;
     private static final Pattern RTLPKG_PATTERN = Pattern.compile("RTL(\\d{3,4}).BPL");
     private static final String[] EMPTY_STRINGS = new String[0];
     private static final Map<Integer, String> rtlPkgVersionMap = new ImmutableMap.Builder<Integer, String>().
-            put(240, "30").
-            put(250, "31").
-            put(260, "32").
-            put(270, "33").
-            put(280, "34").
-            put(290, "35")
+            put(240, "31").
+            put(250, "32").
+            put(260, "33").
+            put(270, "34").
+            put(280, "35").
+            put(290, "36")
             .build();
 
     @NotNull

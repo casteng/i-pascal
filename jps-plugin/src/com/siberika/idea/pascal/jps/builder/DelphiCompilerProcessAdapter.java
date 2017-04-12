@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.jps.builder;
 
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
+import com.siberika.idea.pascal.jps.compiler.DelphiBackendCompiler;
 import org.jetbrains.annotations.NonNls;
 
 import java.util.regex.Matcher;
@@ -26,6 +27,10 @@ public class DelphiCompilerProcessAdapter extends PascalCompilerProcessAdapter {
     protected boolean processLine(CompilerMessager messager, String line) {
         if (line == null) {
             return false;
+        }
+        if (line.startsWith(DelphiBackendCompiler.DELPHI_STARTER_RESPONSE)) {
+            PascalCompilerMessager.createMessage(CompilerMessageCategory.ERROR, line, null, messager);
+            return true;
         }
         Matcher matcher = PATTERN_ERROR.matcher(line);
         if (matcher.find()) {
