@@ -36,6 +36,7 @@ import com.intellij.xdebugger.evaluation.EvaluationMode;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
+import com.intellij.xdebugger.frame.XStackFrame;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import com.intellij.xdebugger.frame.XValueChildrenList;
 import com.intellij.xdebugger.ui.XDebugTabLayouter;
@@ -45,6 +46,7 @@ import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalLineBreakpointHandler;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.run.PascalRunConfiguration;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import org.jetbrains.annotations.NotNull;
@@ -80,6 +82,7 @@ public class GdbXDebugProcess extends XDebugProcess {
     private boolean inferiorRunning = false;
     private File outputFile;
     private Sdk sdk;
+    Options options = new Options();
 
     public GdbXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
@@ -343,6 +346,18 @@ public class GdbXDebugProcess extends XDebugProcess {
                     }
                     String varName = res.getString("name");
                     String varKey = (children ? "" : VAR_PREFIX_LOCAL) + varName;
+                    if (varName.startsWith(VAR_PREFIX_LOCAL) || varName.startsWith(VAR_PREFIX_WATCHES)) {
+                        varName = varName.substring(2);
+                    }
+                    PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
+                    XStackFrame frame = getSession().getCurrentStackFrame();
+                    if (frame instanceof GdbStackFrame) {
+                        PasField field = ((GdbStackFrame) frame).resolveIdentifierName(varName, PasField.TYPES_LOCAL);
+                        if (field != null) {
+                            varName = formatVariableName(field);
+                            fieldType = field.fieldType;
+                        }
+                    }
                     GdbVariableObject var = variableObjectMap.get(varKey);
                     if (null != var) {
                         var.updateFromResult(res);
@@ -358,7 +373,7 @@ public class GdbXDebugProcess extends XDebugProcess {
                     }
 
                     childrenList.add(varName.substring(varName.lastIndexOf('.')+1),
-                            new PascalDebuggerValue(this, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount()));
+                            new PascalDebuggerValue(this, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount(), fieldType));
                 } else {
                     node.setErrorMessage("Invalid variables list entry");
                     return;
@@ -366,6 +381,10 @@ public class GdbXDebugProcess extends XDebugProcess {
             }
             node.addChildren(childrenList, true);
         }
+    }
+
+    private String formatVariableName(@NotNull PasField field) {
+        return field.name + (field.fieldType == PasField.FieldType.ROUTINE ? "()" : "");
     }
 
     public boolean isInferiorRunning() {
@@ -378,5 +397,21 @@ public class GdbXDebugProcess extends XDebugProcess {
 
     public PascalSdkData getData() {
         return sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
+    }
+
+    final class Options {
+        boolean resolveNames() {
+            return getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES);
+        }
+        boolean callGetters() {
+            return false;
+        }
+        String asmFormat() {
+            return getData().getString(PascalSdkData.Keys.DEBUGGER_ASM_FORMAT);
+        }
+
+        public boolean needPosition() {
+            return resolveNames() || callGetters();
+        }
     }
 }

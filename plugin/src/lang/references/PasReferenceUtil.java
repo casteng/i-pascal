@@ -169,7 +169,7 @@ public class PasReferenceUtil {
                     || PsiUtil.allowsForwardReference(fqn.getParentIdent());
         } else {
             // check if field visibility allows usage from another unit
-            return (field.fieldType == PasField.FieldType.ROUTINE) || PasField.isAllowed(field.visibility, PasField.Visibility.STRICT_PROTECTED);
+            return fqn.isIgnoreVisibility() || (field.fieldType == PasField.FieldType.ROUTINE) || PasField.isAllowed(field.visibility, PasField.Visibility.STRICT_PROTECTED);
         }
     }
 
@@ -429,9 +429,7 @@ public class PasReferenceUtil {
                 }
                 if (result.isEmpty() && (resultScope != null)) {
                     resultScope.clear();
-                    for (PasEntityScope namespace : namespaces) {
-                        resultScope.add(namespace);
-                    }
+                    resultScope.addAll(namespaces);
                 }
             }
         } catch (PasInvalidScopeException e) {

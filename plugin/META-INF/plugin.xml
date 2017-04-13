@@ -13,8 +13,10 @@
         <ul>
           <li>watches in debugger</li>
           <li>inspection of complex types in watches and local variables while debugging</li>
-          <li>compiler executable setting in FPC/Delphi SDK</li>
-          <li>Delphi Starter Edition support (Issue #8)</li>
+          <li>correct identifier names in debugger</li>
+          <li>compiler executable setting in FPC/Delphi SDK (Issue #8)</li>
+          <li>Delphi Starter Edition support (Issue #53)</li>
+          <li>Delphi compiler output parsing fix (Issue #60)</li>
         </ul>
         <p>1.2</p>
         <ul>

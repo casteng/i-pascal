@@ -23,6 +23,7 @@ public class NamespaceRec {
 
     private static final String[] EMPTY_LEVELS = {};
     private boolean nested = false;
+    private boolean ignoreVisibility = false;
 
     private NamespaceRec(@NotNull String[] levels, @NotNull PsiElement parentIdent, int target) {
         this.levels = levels;
@@ -152,6 +153,14 @@ public class NamespaceRec {
 
     public void setNested(boolean nested) {
         this.nested = nested;
+    }
+
+    public boolean isIgnoreVisibility() {
+        return ignoreVisibility;
+    }
+
+    public void setIgnoreVisibility(boolean ignoreVisibility) {
+        this.ignoreVisibility = ignoreVisibility;
     }
 
     public boolean advance(String fqn) {
