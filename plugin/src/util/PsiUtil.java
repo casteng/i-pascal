@@ -765,7 +765,7 @@ public class PsiUtil {
     @NotNull
     public static PsiContext getContext(@NotNull PascalNamedElement element) {
         PascalNamedElement fqn = element;
-        PasFullyQualifiedIdent fqi = getFQI(element);
+        PascalQualifiedIdent fqi = getFQI(element);
         int count = 1;
         int index = 0;
         if (fqi != null) {
@@ -810,13 +810,13 @@ public class PsiUtil {
     }
 
     // Returns FQI which element is a part of
-    public static PasFullyQualifiedIdent getFQI(PsiElement element) {
-        if (element instanceof PasFullyQualifiedIdent) {
-            return (PasFullyQualifiedIdent) element;
+    public static PascalQualifiedIdent getFQI(PsiElement element) {
+        if (element instanceof PascalQualifiedIdent) {
+            return (PascalQualifiedIdent) element;
         }
         PsiElement sub = (element instanceof PasSubIdent) ? element : element.getParent();
         if (sub != null) {
-            return (sub.getParent() instanceof PasFullyQualifiedIdent) ? (PasFullyQualifiedIdent) sub.getParent() : null;
+            return (sub.getParent() instanceof PascalQualifiedIdent) ? (PascalQualifiedIdent) sub.getParent() : null;
         }
         return null;
     }

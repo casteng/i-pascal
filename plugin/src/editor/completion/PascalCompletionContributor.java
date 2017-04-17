@@ -280,7 +280,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private boolean isQualified(PsiElement pos) {
-        PasFullyQualifiedIdent fqi = PsiUtil.getFQI(pos);
+        PascalQualifiedIdent fqi = PsiUtil.getFQI(pos);
         return (fqi != null) && (fqi.getSubIdentList().size() > 1);
     }
 

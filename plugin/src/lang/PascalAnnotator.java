@@ -87,6 +87,9 @@ public class PascalAnnotator implements Annotator {
                 } else if (context == PsiContext.FOR) {
                     fixes = EnumSet.of(AddFixType.VAR);
                 }
+                if (context == PsiContext.USES) {
+                    fixes = EnumSet.of(AddFixType.NEW_UNIT);
+                }
 
                 String name = namedElement.getName();
                 for (AddFixType fix : fixes) {
@@ -160,7 +163,11 @@ public class PascalAnnotator implements Annotator {
                             break;
                         }
                         case UNIT: {
-                            ann.registerFix(new UsesActions.AddUnitAction(message("action.create.unit"), namedElement.getName(), PsiUtil.belongsToInterface(namedElement)));
+                            ann.registerFix(new UsesActions.AddUnitAction(message("action.add.uses"), namedElement.getName(), PsiUtil.belongsToInterface(namedElement)));
+                            break;
+                        }
+                        case NEW_UNIT: {
+                            ann.registerFix(new UsesActions.NewUnitAction(message("action.create.unit"), namedElement.getName()));
                             break;
                         }
                     }
