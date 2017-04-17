@@ -49,7 +49,10 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
     }
 
     public void handleBreakpointResult(GdbMiResults bp) {
-        PascalLineBreakpointProperties props = new PascalLineBreakpointProperties(bp.getString("fullname"), bp.getInteger("line"));
-        breakIndexMap.put(props, bp.getInteger("number"));
+        String fullname = bp.getString("fullname");
+        Integer line = bp.getInteger("line");
+        if (fullname != null && line != null) {
+            breakIndexMap.put(new PascalLineBreakpointProperties(fullname, line), bp.getInteger("number"));
+        }
     }
 }
