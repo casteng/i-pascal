@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.22</version>
+    <version>1.24</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.24</p>
+        <ul>
+          <li>in resolve take in account if a unit is used in implementation section (Issue #44)</li>
+        </ul>
         <p>1.22</p>
         <ul>
           <li>watches in debugger</li>

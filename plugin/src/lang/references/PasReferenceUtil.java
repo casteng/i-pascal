@@ -61,6 +61,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -337,6 +338,10 @@ public class PasReferenceUtil {
         if (recursionCount > MAX_RECURSION_COUNT) {
             throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
         }
+
+        boolean implAffects = fqn.isFirst()
+                && PsiUtil.isBefore(PsiUtil.getModuleImplementationSection(fqn.getParentIdent().getContainingFile()), fqn.getParentIdent());
+
         if (null == scope) {
             scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
         }
@@ -344,13 +349,13 @@ public class PasReferenceUtil {
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
         Collection<PasField> result = new HashSet<PasField>();
 
-        Set<PasField.FieldType> fieldTypes = new HashSet<PasField.FieldType>(fieldTypesOrig);
+        Set<PasField.FieldType> fieldTypes = EnumSet.copyOf(fieldTypesOrig);
 
         try {
             handleWith(namespaces, scope, fqn.getParentIdent());
             // Retrieve all namespaces affecting first FQN level
             while (scope != null) {
-                addFirstNamespaces(namespaces, scope, includeLibrary);
+                addFirstNamespaces(namespaces, scope, includeLibrary, implAffects);
                 scope = fqn.isFirst() ? PsiUtil.getNearestAffectingScope(scope) : null;
             }
 
@@ -373,7 +378,8 @@ public class PasReferenceUtil {
                 if (field != null) {
                     PasEntityScope newNS;
                     if (field.fieldType == PasField.FieldType.UNIT) {
-                        newNS = fqn.isFirst() ? retrieveFieldUnitScope(field, includeLibrary) : null;                    // First qualifier can be unit name
+                        newNS = fqn.isFirst() && implAffects && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE) ?
+                                retrieveFieldUnitScope(field, includeLibrary) : null;                    // First qualifier can be unit name
                     } else {
                         newNS = retrieveFieldTypeScope(field, recursionCount);
                         boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
@@ -540,10 +546,12 @@ public class PasReferenceUtil {
       . SELF - in method context
       . RESULT - in routine context
 */
-    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope section, boolean includeLibrary) {
+    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope section, boolean includeLibrary, boolean implAffects) {
         namespaces.add(section);
         if (section instanceof PascalModuleImpl) {
-            addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPrivateUnits(), includeLibrary);
+            if (implAffects) {
+                addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPrivateUnits(), includeLibrary);
+            }
             addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPublicUnits(), includeLibrary);
         }
         addParentNamespaces(namespaces, section, true);

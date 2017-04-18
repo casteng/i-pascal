@@ -312,7 +312,7 @@ public class PsiUtil {
      * @param section - can be PasModule or PsiFile
      * @return unit implementation section or module itself if the module is not a unit
      */
-    @Nullable
+    @NotNull
     public static PsiElement getModuleImplementationSection(@NotNull PsiElement section) {
         assert (section instanceof PasModule) || (section instanceof PsiFile);
         PsiElement result = PsiTreeUtil.findChildOfType(section, PasUnitImplementation.class);
@@ -856,5 +856,9 @@ public class PsiUtil {
 
     public static boolean isPropertyGetter(PasClassPropertySpecifier spec) {
         return "read".equalsIgnoreCase(spec.getFirstChild().getText());
+    }
+
+    public static boolean isBefore(@NotNull PsiElement el1, @NotNull PsiElement el2) {
+        return el1.getTextRange().getStartOffset() < el2.getTextRange().getStartOffset();
     }
 }
