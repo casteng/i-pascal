@@ -148,4 +148,8 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(true, false, false);
     }
 
+    public void testKeywordIdentifiers() throws Exception {
+        myFixture.configureByFiles("keywordIdentifiers.pas");
+        myFixture.checkHighlighting(true, false, false);
+    }
 }
