@@ -26,141 +26,255 @@
         STRING_LITERAL="STRING_LITERAL"
 
         AND="and"
+        AND_="&and"
         MOD="mod"
+        MOD_="&mod"
         OR="or"
+        OR_="&or"
         IDIV="div"
+        IDIV_="&div"
         SHR="shr"
+        SHR_="&shr"
         SHL="shl"
+        SHL_="&shl"
         IN="in"
+        IN_="&in"
 
         AS="as"
+        AS_="&as"
         IS="is"
+        IS_="&is"
         NIL="nil"
+        NIL_="&nil"
 
         CLASS="class"
+        CLASS_="&class"
         DISPINTERFACE="dispinterface"
+        DISPINTERFACE_="&dispinterface"
 
         TRY="try"
+        TRY_="&try"
         RAISE="raise"
+        RAISE_="&raise"
         EXCEPT="except"
+        EXCEPT_="&except"
         ON="on"
+        ON_="&on"
         FINALLY="finally"
+        FINALLY_="&finally"
 
         PROGRAM="program"
+        PROGRAM_="&program"
         UNIT="unit"
+        UNIT_="&unit"
         LIBRARY="library"
+        LIBRARY_="&library"
         PACKAGE="package"
+        PACKAGE_="&package"
         USES="uses"
+        USES_="&uses"
         EXPORTS="exports"
+        EXPORTS_="&exports"
         FINALIZATION="finalization"
+        FINALIZATION_="&finalization"
         INITIALIZATION="initialization"
+        INITIALIZATION_="&initialization"
 
         THREADVAR="threadvar"
+        THREADVAR_="&threadvar"
         ABSOLUTE="absolute"
+        ABSOLUTE_="&absolute"
         OUT="out"
+        OUT_="&out"
         CONSTREF="constref"
+        CONSTREF_="&constref"
         RESOURCESTRING="resourcestring"
+        RESOURCESTRING_="&resourcestring"
         INLINE="inline"
+        INLINE_="&inline"
         PACKED="packed"
+        PACKED_="&packed"
         PROPERTY="property"
+        PROPERTY_="&property"
         SET="set"
+        SET_="&set"
         FILE="file"
+        FILE_="&file"
 
         ASM="asm"
+        ASM_="&asm"
         GOTO="goto"
+        GOTO_="&goto"
         LABEL="label"
+        LABEL_="&label"
         WITH="with"
+        WITH_="&with"
         EXIT="exit"
+        EXIT_="&exit"
         CONTINUE="continue"
+        CONTINUE_="&continue"
         BREAK="break"
+        BREAK_="&break"
 
         CONSTRUCTOR="constructor"
+        CONSTRUCTOR_="&constructor"
         DESTRUCTOR="destructor"
+        DESTRUCTOR_="&destructor"
         INHERITED="inherited"
+        INHERITED_="&inherited"
         OBJECT="object"
+        OBJECT_="&object"
         OPERATOR="operator"
+        OPERATOR_="&operator"
         REINTRODUCE="reintroduce"
+        REINTRODUCE_="&reintroduce"
         SELF="self"
+        SELF_="&self"
 
         NOT="not"
+        NOT_="&not"
         XOR="xor"
+        XOR_="&xor"
 
         TO="to"
+        TO_="&to"
         DOWNTO="downto"
+        DOWNTO_="&downto"
         REPEAT="repeat"
+        REPEAT_="&repeat"
 
         STATIC="static"
+        STATIC_="&static"
         SEALED="sealed"
+        SEALED_="&sealed"
         FINAL="final"
+        FINAL_="&final"
         HELPER="helper"
+        HELPER_="&helper"
         EXPORT="export"
+        EXPORT_="&export"
         DISPID="dispid"
+        DISPID_="&dispid"
         ABSTRACT="abstract"
+        ABSTRACT_="&abstract"
 
         STRICT="strict"
+        STRICT_="&strict"
         PUBLISHED="published"
+        PUBLISHED_="&published"
         PUBLIC="public"
+        PUBLIC_="&public"
         PROTECTED="protected"
+        PROTECTED_="&protected"
         PRIVATE="private"
+        PRIVATE_="&private"
         AUTOMATED="automated"
+        AUTOMATED_="&automated"
 
         MESSAGE="message"
+        MESSAGE_="&message"
         FORWARD="forward"
+        FORWARD_="&forward"
         EXTERNAL="external"
+        EXTERNAL_="&external"
         EXPERIMENTAL="experimental"
+        EXPERIMENTAL_="&experimental"
         DEPRECATED="deprecated"
+        DEPRECATED_="&deprecated"
         ASSEMBLER="assembler"
+        ASSEMBLER_="&assembler"
 
         INDEX="index"
+        INDEX_="&index"
         DEFAULT="default"
+        DEFAULT_="&default"
 
         VIRTUAL="virtual"
+        VIRTUAL_="&virtual"
         DYNAMIC="dynamic"
+        DYNAMIC_="&dynamic"
         OVERRIDE="override"
+        OVERRIDE_="&override"
         OVERLOAD="overload"
+        OVERLOAD_="&overload"
 
         REGISTER="register"
+        REGISTER_="&register"
         STDCALL="stdcall"
+        STDCALL_="&stdcall"
         PLATFORM="platform"
+        PLATFORM_="&platform"
         PASCAL="pascal"
+        PASCAL_="&pascal"
         CDECL="cdecl"
+        CDECL_="&cdecl"
         SAFECALL="safecall"
+        SAFECALL_="&safecall"
 
         REFERENCE="reference"
+        REFERENCE_="&reference"
 
         IMPLEMENTS="implements"
+        IMPLEMENTS_="&implements"
         REQUIRES="requires"
+        REQUIRES_="&requires"
         CONTAINS="contains"
+        CONTAINS_="&contains"
 
         POINTER="pointer"
+        POINTER_="&pointer"
         FALSE="false"
+        FALSE_="&false"
         TRUE="true"
+        TRUE_="&true"
 
         INTERFACE="interface"
+        INTERFACE_="&interface"
         IMPLEMENTATION="implementation"
+        IMPLEMENTATION_="&implementation"
 
         VAR="var"
+        VAR_="&var"
         CONST="const"
+        CONST_="&const"
         TYPE="type"
+        TYPE_="&type"
         ARRAY="array"
+        ARRAY_="&array"
         RECORD="record"
+        RECORD_="&record"
         PROCEDURE="procedure"
+        PROCEDURE_="&procedure"
         FUNCTION="function"
+        FUNCTION_="&function"
         OF="of"
+        OF_="&of"
 
         CASE="case"
+        CASE_="&case"
         BEGIN="begin"
+        BEGIN_="&begin"
         END="end"
+        END_="&end"
         FOR="for"
+        FOR_="&for"
         UNTIL="until"
+        UNTIL_="&until"
         WHILE="while"
+        WHILE_="&while"
         DO="do"
+        DO_="&do"
         IF="if"
+        IF_="&if"
         THEN="then"
+        THEN_="&then"
         ELSE="else"
+        ELSE_="&else"
 
         READ="read"
+        READ_="&read"
         WRITE="write"
+        WRITE_="&write"
 
         POWER="**"
         MULT="*"
@@ -189,7 +303,6 @@
         AT="@"
         HEXNUM="$"
         CHARNUM="#"
-        KEYWORDESCAPE="&"
 
         INCLUDE="include"
         CT_DEFINE="ct_define"
@@ -474,7 +587,7 @@ private enumRest    ::= "," enumEl {pin=1}
 private enumEl      ::= NamedIdent ["=" Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
-                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | NUMBER_OCT | NUMBER_BIN | identifier | KeywordIdent | KEYWORDESCAPE | '^' | END "." | '[' | '('
+                                  | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | NUMBER_OCT | NUMBER_BIN | identifier | '^' | END "." | '[' | '('
     private rec__stmt_middle         ::= DO | ELSE | THEN
 
 CompoundStatement           ::= BEGIN statementBlock END {pin=1}
@@ -534,13 +647,44 @@ private namespaceItem       ::= SubIdent "."// {pin=2 }
 private hintingDirective    ::= (DEPRECATED [StringFactor]) | EXPERIMENTAL | PLATFORM | LIBRARY // {}
 //recover_hintingDir          ::= !(';' | ')' | END | global_decl)
 
-KeywordIdent                ::= OUT | EXIT | BREAK | CONTINUE | SELF | NEW | REINTRODUCE | OVERLOAD | MESSAGE |STATIC | DYNAMIC
-                              | OVERRIDE | VIRTUAL | ABSTRACT | SEALED | FINAL | ASSEMBLER | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL
-                              | EXPORT | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER
-                              | DEFAULT | IMPLEMENTS | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
+private identifier          ::= EscapedIdent | KeywordIdent | NAME
+KeywordIdent                ::= OUT | SELF | NEW
+                              | EXIT | BREAK | CONTINUE
+                              | VIRTUAL | DYNAMIC | ABSTRACT | OVERLOAD | OVERRIDE | REINTRODUCE | MESSAGE | STATIC | SEALED | FINAL | ASSEMBLER
+                              | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT
+                              | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER | IMPLEMENTS
+                              | DEFAULT | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
                               | PACKAGE | CONTAINS | REQUIRES
-private identifier          ::= KEYWORDESCAPE reservedWord | KeywordIdent | NAME
-private reservedWord	    ::=	NAME //===***
+private unescapedIdent      ::= reservedWord | KeywordIdent | NAME
+EscapedIdent                ::= PROGRAM_ | UNIT_ | LIBRARY_ | INTERFACE_ | IMPLEMENTATION_ | INITIALIZATION_ | FINALIZATION_
+                              | EXPORTS_ | USES_ | VAR_ | CONST_ | TYPE_ | THREADVAR_ | RESOURCESTRING_ | CONSTREF_ | ABSOLUTE_
+                              | PROCEDURE_ | FUNCTION_ | OPERATOR_ | CONSTRUCTOR_ | DESTRUCTOR_ | STRICT_ | PRIVATE_ | PROTECTED_ | PUBLIC_ | PUBLISHED_
+                              | ARRAY_ | RECORD_ | SET_ | FILE_ | OBJECT_ | CLASS_ | OF_ | PROPERTY_ | LABEL_
+                              | TRY_ | RAISE_ | EXCEPT_ | FINALLY_ | ON_ | GOTO_
+                              | FOR_ | TO_ | DOWNTO_ | REPEAT_ | UNTIL_ | WHILE_ | DO_ | WITH_ | BEGIN_ | END_ | IF_ | THEN_ | ELSE_ | CASE_
+                              | NIL_ | FALSE_ | TRUE_ | ASM_ | INHERITED_
+                              | AND_ | OR_ | XOR_ | NOT_ | SHL_ | SHR_ | DIV_ | MOD_ | IN_ | AS_ | IS_
+                              | INLINE_
+
+                              | OUT_ | SELF_ | NEW_
+                              | EXIT_ | BREAK_ | CONTINUE_
+                              | VIRTUAL_ | DYNAMIC_ | ABSTRACT_ | OVERLOAD_ | OVERRIDE_ | REINTRODUCE_ | MESSAGE_ | STATIC_ | SEALED_ | FINAL_ | ASSEMBLER_
+                              | CDECL_ | PASCAL_ | REGISTER_ | SAFECALL_ | STDCALL_ | EXPORT_
+                              | AUTOMATED_ | DISPID_ | EXTERNAL_ | FORWARD_ | HELPER_ | IMPLEMENTS_
+                              | DEFAULT_ | INDEX_ | READ_ | WRITE_ | DEPRECATED_ | EXPERIMENTAL_ | PLATFORM_ | REFERENCE_
+                              | PACKAGE_ | CONTAINS_ | REQUIRES_
+
+                              | NAME_
+private reservedWord	    ::= PROGRAM | UNIT | LIBRARY | INTERFACE | IMPLEMENTATION | INITIALIZATION | FINALIZATION
+                              | EXPORTS | USES | VAR | CONST | TYPE | THREADVAR | RESOURCESTRING | CONSTREF | ABSOLUTE
+                              | PROCEDURE | FUNCTION | OPERATOR | CONSTRUCTOR | DESTRUCTOR | STRICT | PRIVATE | PROTECTED | PUBLIC | PUBLISHED
+                              | ARRAY | RECORD | SET | FILE | OBJECT | CLASS | OF | PROPERTY | LABEL
+                              | TRY | RAISE | EXCEPT | FINALLY | ON | GOTO
+                              | FOR | TO | DOWNTO | REPEAT | UNTIL | WHILE | DO | WITH | BEGIN | END | IF | THEN | ELSE | CASE
+                              | NIL | FALSE | TRUE | ASM | INHERITED
+                              | AND | OR | XOR | NOT | SHL | SHR | DIV | MOD | IN | AS | IS
+                              | INLINE
+                                //===***
 private identList	        ::=	identListItem identListRest*
 private identListRest       ::= "," identListItem {pin=1}
 private identListItem       ::= NamedIdent

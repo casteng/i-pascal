@@ -33,8 +33,8 @@ import java.util.Iterator;
  */
 public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
     private static final int MAX_SHORT_TEXT_LENGTH = 32;
+    private static final TokenSet NAME_TYPE_SET = TokenSet.create(PasTypes.NAME, PasTypes.KEYWORD_IDENT, PasTypes.ESCAPED_IDENT);
     private volatile String myCachedName;
-    private static final TokenSet NAMED_SET = TokenSet.create(PasTypes.NAME, PasTypes.KEYWORD_IDENT);
 
     public PascalNamedElementImpl(ASTNode node) {
         super(node);
@@ -60,11 +60,19 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
             Iterator<PasSubIdent> it = ((PasClassQualifiedIdent) nameElement).getSubIdentList().iterator();
             StringBuilder sb = new StringBuilder(it.next().getName());
             while (it.hasNext()) {
-                sb.append(".").append(it.next().getName());
+                String name = it.next().getName();
+                name = !name.startsWith("&") ? name : name.substring(1);
+                sb.append(".").append(name);
             }
             return sb.toString();
+        } else {
+            if (nameElement != null) {
+                String name = nameElement.getText();
+                return !name.startsWith("&") ? name : name.substring(1);
+            } else {
+                return  "";
+            }
         }
-        return nameElement != null ? nameElement.getText() : "";
     }
 
     @Override
@@ -92,7 +100,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
             result = namedChild != null ? namedChild.getNameIdentifier() : null;
         }
         if (null == result) {
-            result = findChildByType(NAMED_SET);
+            result = findChildByType(NAME_TYPE_SET);
         }
         return result;
     }

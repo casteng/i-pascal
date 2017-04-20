@@ -20,7 +20,6 @@ import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
@@ -35,6 +34,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
@@ -138,7 +138,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                     public String getPlaceholderText() {
                         StringBuilder sb = new StringBuilder(" ");
                         boolean first = true;
-                        for (PasNamespaceIdent ident : uses.getNamespaceIdentList()) {
+                        for (PascalQualifiedIdent ident : uses.getNamespaceIdentList()) {
                             if (!first) {
                                 sb.append(", ").append(ident.getName());
                             } else {

@@ -46,7 +46,7 @@ public abstract class PascalLexer extends DelegateLexer implements PasTypes {
             MULT, DIV, PLUS, MINUS,
             EQ, GT, LT, NE,
             COLON, COMMA, DOT, DEREF, AT,
-            HEXNUM, CHARNUM, KEYWORDESCAPE
+            HEXNUM, CHARNUM
     );
 
     public static final TokenSet OPERATORS = TokenSet.create(

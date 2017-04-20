@@ -12,6 +12,7 @@
         <p>1.24</p>
         <ul>
           <li>in resolve take in account if a unit is used in implementation section (Issue #44)</li>
+          <li> fixed support of escaped keywords in identifiers (Issue #5)</li>
         </ul>
         <p>1.22</p>
         <ul>

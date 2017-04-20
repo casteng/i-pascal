@@ -324,8 +324,8 @@ public class PsiUtil {
 
     @NotNull
     @SuppressWarnings("unchecked")
-    public static List<PasNamespaceIdent> getUsedUnits(PsiElement parent) {
-        List<PasNamespaceIdent> result = new SmartList<PasNamespaceIdent>();
+    public static List<PascalQualifiedIdent> getUsedUnits(PsiElement parent) {
+        List<PascalQualifiedIdent> result = new SmartList<PascalQualifiedIdent>();
         Collection<PasUsesClause> usesClauses = findChildrenOfAnyType(parent, PasUsesClause.class);
         for (PasUsesClause usesClause : usesClauses) {
             for (PsiElement usedUnitName : usesClause.getChildren()) {
@@ -715,7 +715,7 @@ public class PsiUtil {
 
     public static PsiElement skipToExpression(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
-                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamespaceIdent.class, PasGenericTypeIdent.class,
+                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasGenericTypeIdent.class,
                 PsiWhiteSpace.class, PsiErrorElement.class,
                 PasUnitModuleHead.class);
     }

@@ -16,8 +16,8 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -270,11 +270,11 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
     @SuppressWarnings("unchecked")
     private List<SmartPsiElementPointer<PasEntityScope>> retrieveUsedUnits(PsiElement section) {
         List<SmartPsiElementPointer<PasEntityScope>> result;
-        List<PasNamespaceIdent> usedNames = PsiUtil.getUsedUnits(section);
+        List<PascalQualifiedIdent> usedNames = PsiUtil.getUsedUnits(section);
         result = new ArrayList<SmartPsiElementPointer<PasEntityScope>>(usedNames.size());
         List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
         Project project = section.getProject();
-        for (PasNamespaceIdent ident : usedNames) {
+        for (PascalQualifiedIdent ident : usedNames) {
             addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, ident.getName()), project);
         }
         for (String unitName : PascalParserUtil.EXPLICIT_UNITS) {

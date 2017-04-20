@@ -25,6 +25,7 @@ public class NamespaceRec {
     private boolean nested = false;
     private boolean ignoreVisibility = false;
 
+    // Levels should be w/o "&"
     private NamespaceRec(@NotNull String[] levels, @NotNull PsiElement parentIdent, int target) {
         this.levels = levels;
         this.parentIdent = parentIdent;
@@ -41,7 +42,8 @@ public class NamespaceRec {
     }
 
     private NamespaceRec(@NotNull PasRefNamedIdent element) {
-        this(new String[] {element.getName()}, element.getParent() != null ? element.getParent() : element, 0);
+        this(new String[] {!element.getName().startsWith("&") ? element.getName() : element.getName().substring(1)},
+                element.getParent() != null ? element.getParent() : element, 0);
     }
 
     /**
@@ -131,6 +133,13 @@ public class NamespaceRec {
 
     public static NamespaceRec fromFQN(@NotNull PsiElement context, @NotNull String fqn) {
         String[] lvls = fqn.split("\\.");
+        for (int i = 0, lvlsLength = lvls.length; i < lvlsLength; i++) {
+            String lvl = lvls[i];
+            if (lvl.startsWith("&")) {
+                lvls[i] = lvl.substring(1);
+            }
+        }
+
         /*if ((lvls.length > 0) && (lvls[lvls.length - 1].endsWith(PasField.DUMMY_IDENTIFIER))) {
             lvls[lvls.length - 1] = lvls[lvls.length - 1].replace(PasField.DUMMY_IDENTIFIER, "");
         }*/

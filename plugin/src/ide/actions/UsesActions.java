@@ -14,8 +14,8 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
+import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nls;
@@ -33,7 +33,7 @@ import static com.intellij.openapi.actionSystem.ActionPlaces.EDITOR_POPUP;
 public class UsesActions {
 
     public static class ExcludeUnitAction extends BaseUsesUnitAction {
-        public ExcludeUnitAction(String name, PasNamespaceIdent usedUnitName) {
+        public ExcludeUnitAction(String name, PascalQualifiedIdent usedUnitName) {
             super(name, usedUnitName);
         }
 
@@ -59,7 +59,7 @@ public class UsesActions {
     }
 
     public static class MoveUnitAction extends BaseUsesUnitAction {
-        public MoveUnitAction(String name, PasNamespaceIdent usedUnitName) {
+        public MoveUnitAction(String name, PascalQualifiedIdent usedUnitName) {
             super(name, usedUnitName);
         }
 
@@ -119,7 +119,7 @@ public class UsesActions {
     }
 
     public static class RemoveUnitAction extends BaseUsesUnitAction {
-        public RemoveUnitAction(String name, PasNamespaceIdent usedUnitName) {
+        public RemoveUnitAction(String name, PascalQualifiedIdent usedUnitName) {
             super(name, usedUnitName);
         }
 
@@ -137,8 +137,8 @@ public class UsesActions {
     }
 
     private static abstract class BaseUsesUnitAction extends BaseUsesAction {
-        protected final PasNamespaceIdent usedUnitName;
-        public BaseUsesUnitAction(String name, PasNamespaceIdent usedUnitName) {
+        protected final PascalQualifiedIdent usedUnitName;
+        public BaseUsesUnitAction(String name, PascalQualifiedIdent usedUnitName) {
             super(name);
             this.usedUnitName = usedUnitName;
         }

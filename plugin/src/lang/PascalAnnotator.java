@@ -18,8 +18,8 @@ import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -176,7 +176,7 @@ public class PascalAnnotator implements Annotator {
         }
 
         if ((element instanceof PascalNamedElement) && PsiUtil.isUsedUnitName(element.getParent())) {
-            annotateUnit(holder, (PasNamespaceIdent) element.getParent());
+            annotateUnit(holder, (PascalQualifiedIdent) element.getParent());
         }
     }
 
@@ -190,7 +190,7 @@ public class PascalAnnotator implements Annotator {
         return scope;
     }
 
-    private void annotateUnit(AnnotationHolder holder, PasNamespaceIdent usedUnitName) {
+    private void annotateUnit(AnnotationHolder holder, PascalQualifiedIdent usedUnitName) {
         if (PascalImportOptimizer.isExcludedFromCheck(usedUnitName)) {
             return;
         }

@@ -20,11 +20,11 @@ import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -53,12 +53,12 @@ public class PascalImportOptimizer implements ImportOptimizer {
 
     private static final Pattern RE_UNITNAME_PREFIX = Pattern.compile("[{}!]");
 
-    static boolean isExcludedFromCheck(PasNamespaceIdent usedUnitName) {
+    static boolean isExcludedFromCheck(PascalQualifiedIdent usedUnitName) {
         PsiElement prev = usedUnitName.getPrevSibling();
         return (prev instanceof PsiComment) && "{!}".equals(prev.getText());
     }
 
-    public static UsedUnitStatus getUsedUnitStatus(PasNamespaceIdent usedUnitName, Module module) {
+    public static UsedUnitStatus getUsedUnitStatus(PascalQualifiedIdent usedUnitName, Module module) {
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(usedUnitName.getProject(),
                 PasReferenceUtil.findUnitFiles(usedUnitName.getProject(), module), usedUnitName.getName());
         if (null == mod) {
@@ -100,12 +100,12 @@ public class PascalImportOptimizer implements ImportOptimizer {
     }
 
     public static Runnable doProcess(final PsiFile file) {
-        final Map<PasNamespaceIdent, UsedUnitStatus> units = new TreeMap<PasNamespaceIdent, UsedUnitStatus>(new ByOffsetComparator<PasNamespaceIdent>());
+        final Map<PascalQualifiedIdent, UsedUnitStatus> units = new TreeMap<PascalQualifiedIdent, UsedUnitStatus>(new ByOffsetComparator<PascalQualifiedIdent>());
         Collection<PasUsesClause> usesClauses = PsiTreeUtil.findChildrenOfType(file, PasUsesClause.class);
 
         //noinspection unchecked
         Module module = ModuleUtilCore.findModuleForPsiElement(file);
-        for (PasNamespaceIdent usedUnitName : PsiUtil.findChildrenOfAnyType(PsiUtil.getElementPasModule(file), PasNamespaceIdent.class)) {
+        for (PascalQualifiedIdent usedUnitName : PsiUtil.findChildrenOfAnyType(PsiUtil.getElementPasModule(file), PascalQualifiedIdent.class)) {
             if (PsiUtil.isUsedUnitName(usedUnitName)) {
                 UsedUnitStatus status = PascalImportOptimizer.getUsedUnitStatus(usedUnitName, module);
                 if (status != UsedUnitStatus.USED) {
@@ -151,7 +151,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                     List<TextRange> unitRangesIntf = getUnitRanges(usesInterface);
                     List<TextRange> unitRangesImpl = getUnitRanges(usesImplementation);
                     List<String> toMove = new SmartList<String>();
-                    for (Map.Entry<PasNamespaceIdent, UsedUnitStatus> unit : units.entrySet()) {                                // perform add operations
+                    for (Map.Entry<PascalQualifiedIdent, UsedUnitStatus> unit : units.entrySet()) {                                // perform add operations
                         if (unit.getValue() == UsedUnitStatus.USED_IN_IMPL) {                                                   // move from interface to implementation
                             toMove.add(unit.getKey().getName());
                             remImpl++;
@@ -162,7 +162,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                         unitRangesImpl.add(addedRange);
                     }
                     int unknown = 0;
-                    for (Map.Entry<PasNamespaceIdent, UsedUnitStatus> unit : units.entrySet()) {                                // collect all removal ranges
+                    for (Map.Entry<PascalQualifiedIdent, UsedUnitStatus> unit : units.entrySet()) {                                // collect all removal ranges
                         if (unit.getValue() == UsedUnitStatus.USED_IN_IMPL) {                                                   // remove due to moving to implementation
                             TextRange range = removeUnitFromSection(unit.getKey(), usesInterface, unitRangesIntf, remIntf);
                             if (range != null) {
@@ -213,7 +213,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
             return new SmartList<TextRange>();
         }
         List<TextRange> res = new ArrayList<TextRange>(usesClause.getNamespaceIdentList().size());
-        for (PasNamespaceIdent ident : usesClause.getNamespaceIdentList()) {
+        for (PascalQualifiedIdent ident : usesClause.getNamespaceIdentList()) {
             res.add(ident.getTextRange());
         }
         return res;
@@ -273,7 +273,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         return prev != null ? prev.getTextRange().getEndOffset() : -1;
     }
 
-    public static TextRange removeUnitFromSection(PasNamespaceIdent usedUnit, PasUsesClause uses, List<TextRange> unitRanges, int remaining) {
+    public static TextRange removeUnitFromSection(PascalQualifiedIdent usedUnit, PasUsesClause uses, List<TextRange> unitRanges, int remaining) {
         if ((0 == remaining) || (null == uses) || (null == uses.getContainingFile())) {
             return null;
         }
@@ -301,7 +301,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         return TextRange.create(start, end);
     }
 
-    private static int getUnitIndex(PasUsesClause uses, PasNamespaceIdent usedUnit) {
+    private static int getUnitIndex(PasUsesClause uses, PascalQualifiedIdent usedUnit) {
         if (null == uses) {
             return -1;
         }
