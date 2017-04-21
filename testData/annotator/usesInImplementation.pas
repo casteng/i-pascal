@@ -7,8 +7,7 @@ var
     set1: <error descr="Undeclared identifier">types</error>.<error descr="Undeclared identifier">TSet</error>;
 
 implementation
-
-
+uses
     <warning descr="Unused unit">types</warning>;
 
 begin

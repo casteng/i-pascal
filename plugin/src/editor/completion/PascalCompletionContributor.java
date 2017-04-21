@@ -25,6 +25,7 @@ import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.TreeUtil;
@@ -34,6 +35,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.editor.ContectAwareVirtualFile;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
@@ -154,6 +156,18 @@ public class PascalCompletionContributor extends CompletionContributor {
                 int level = PsiUtil.getElementLevel(originalPos);
 //                System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
 
+                Collection<PasField> entities = new HashSet<PasField>();
+
+                if ((pos instanceof PsiFile) && (((PsiFile) pos).getVirtualFile() instanceof ContectAwareVirtualFile)) {
+                    NamespaceRec namespace = NamespaceRec.fromFQN(pos, pos.getText().replace(PasField.DUMMY_IDENTIFIER, "")); // TODO: refactor
+                    namespace.setIgnoreVisibility(true);
+                    entities.addAll(PasReferenceUtil.resolve(null, PsiUtil.getNearestAffectingScope(((ContectAwareVirtualFile) ((PsiFile) pos).getVirtualFile()).getContextElement()),
+                            namespace, PasField.TYPES_ALL, true, 0));
+                    addEntitiesToResult(result, entities, parameters);
+                    result.stopHere();
+                    return;
+                }
+
                 if (parameters.getOriginalPosition() instanceof PsiComment) {
                     PascalCompletionInComment.handleComments(result, parameters);
                     result.stopHere();
@@ -169,26 +183,29 @@ public class PascalCompletionContributor extends CompletionContributor {
                 handleStructured(result, parameters, pos, originalPos);
                 handleParameters(result, pos, originalPos);
 
-                Collection<PasField> entities = new HashSet<PasField>();
                 handleEntities(result, parameters, pos, originalPos, expr, entities);
 
                 handleStatement(result, parameters, pos, originalPos, entities);
                 handleInsideStatement(result, parameters, pos, originalPos);
 
                 handleDirectives(result, parameters, originalPos, pos);
-                Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
-                Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
-                for (PasField field : entities) {
-                    String name = getFieldName(field).toUpperCase();
-                    if (!nameSet.contains(name) && StringUtil.isNotEmpty(name)) {
-                        lookupElements.add(getLookupElement(pos.getContainingFile().getVirtualFile(), parameters.getEditor(), field));
-                        nameSet.add(name);
-                    }
-                }
-                result.caseInsensitive().addAllElements(lookupElements);
+                addEntitiesToResult(result, entities, parameters);
                 result.restartCompletionWhenNothingMatches();
             }
         });
+    }
+
+    private void addEntitiesToResult(CompletionResultSet result, Collection<PasField> entities, CompletionParameters parameters) {
+        Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
+        Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
+        for (PasField field : entities) {
+            String name = getFieldName(field).toUpperCase();
+            if (!nameSet.contains(name) && StringUtil.isNotEmpty(name)) {
+                lookupElements.add(getLookupElement(parameters.getOriginalFile().getVirtualFile(), parameters.getEditor(), field));
+                nameSet.add(name);
+            }
+        }
+        result.caseInsensitive().addAllElements(lookupElements);
     }
 
     private TokenSet TS_BEGIN = TokenSet.create(PasTypes.BEGIN);

@@ -25,11 +25,13 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.ui.content.Content;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
+import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.evaluation.EvaluationMode;
@@ -45,6 +47,7 @@ import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalLineBreakpointHandler;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
+import com.siberika.idea.pascal.editor.ContectAwareVirtualFile;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.run.PascalRunConfiguration;
@@ -233,9 +236,13 @@ public class GdbXDebugProcess extends XDebugProcess {
                                            @NotNull String text,
                                            @Nullable XSourcePosition sourcePosition,
                                            @NotNull EvaluationMode mode) {
-//                PsiFile file = PsiManager.getInstance(project).findFile(sourcePosition.getFile());
-//                return PsiDocumentManager.getInstance(project).getDocument(file);
-                LightVirtualFile file = new LightVirtualFile("_debug.pas", text);
+                LightVirtualFile file;
+                if (sourcePosition != null) {
+                    PsiElement psiElement = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), project, false);
+                    file = new ContectAwareVirtualFile("_debug.pas", text, psiElement);
+                } else {
+                    file = new LightVirtualFile("_debug.pas", text);
+                }
                 return FileDocumentManager.getInstance().getDocument(file);
             }
         };

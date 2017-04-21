@@ -132,7 +132,7 @@ public class NamespaceRec {
     }
 
     public static NamespaceRec fromFQN(@NotNull PsiElement context, @NotNull String fqn) {
-        String[] lvls = fqn.split("\\.");
+        String[] lvls = fqn.split("\\.", 100);
         for (int i = 0, lvlsLength = lvls.length; i < lvlsLength; i++) {
             String lvl = lvls[i];
             if (lvl.startsWith("&")) {
