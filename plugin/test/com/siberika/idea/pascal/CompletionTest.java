@@ -4,12 +4,21 @@ import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.CaretModel;
+import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.intellij.xdebugger.XDebuggerUtil;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.util.PsiUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -286,6 +295,17 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testProp() {
         myFixture.configureByFiles("prop.pas");
         checkCompletionContains(myFixture, "X", "Y");
+    }
+
+    public void testContext() {
+        myFixture.configureByFiles("empty.pas", "contextTest.pas");
+        PsiElement el = XDebuggerUtil.getInstance().findContextElement(myFixture.findFileInTempDir("contextTest.pas"), 42, myFixture.getProject(), false);
+        PasEntityScope scope = PsiUtil.getNearestAffectingScope(el);
+        NamespaceRec fqn = NamespaceRec.fromFQN(myFixture.getFile(), "");
+        fqn.setIgnoreVisibility(true);
+        Collection<PasField> fields = PasReferenceUtil.resolve(null, scope, fqn, EnumSet.of(PasField.FieldType.VARIABLE), false, 0);
+        assertTrue(fields.iterator().hasNext());
+        assertTrue("local".equals(fields.iterator().next().name));
     }
 
 }
