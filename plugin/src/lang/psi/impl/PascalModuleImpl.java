@@ -200,7 +200,6 @@ public class PascalModuleImpl extends PasScopeImpl implements PascalModule {
         @Override
         public UnitMembers call() throws Exception {
             PsiElement section = PsiUtil.getModuleImplementationSection(PascalModuleImpl.this);
-            if (null == section) section = PascalModuleImpl.this;
             UnitMembers res = new UnitMembers();
             if (!PsiUtil.checkeElement(section)) {
                 //throw new PasInvalidElementException(section);

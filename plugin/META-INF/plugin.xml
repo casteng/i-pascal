@@ -14,6 +14,7 @@
           <li>completion in watches</li>
           <li>take in account if a unit is used in implementation section (Issue #44)</li>
           <li>fixed support of escaped keywords in identifiers (Issue #5)</li>
+          <li>forward declaration of interfaces support (Issue #30)</li>
         </ul>
         <p>1.22</p>
         <ul>

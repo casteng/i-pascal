@@ -165,9 +165,10 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
                     PasField existing = members.get(memberName);
                     if (shouldAddField(existing)) {                       // Otherwise replace with full declaration
                         PasField field = addField(this, name, namedElement, visibility);
-                        if (existing != null) {
+                        if ((existing != null) && (field.offset > existing.offset)) {
                             field.offset = existing.offset;               // replace field but keep offset to resolve fields declared later
-                        } else if (field.fieldType == PasField.FieldType.ROUTINE) {
+                        }
+                        if (field.fieldType == PasField.FieldType.ROUTINE) {
                             members.put(memberName, field);
                         }
                         members.put(name.toUpperCase(), field);
@@ -182,7 +183,8 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     // Add forward declared field even if it exists as we need full declaration
     // Routines can have various signatures
     private static boolean shouldAddField(PasField existing) {
-        return (null == existing) || (PsiUtil.isForwardClassDecl(existing.getElement()) || (existing.fieldType == PasField.FieldType.ROUTINE));
+        return (null == existing) || (PsiUtil.isForwardClassDecl(existing.getElement())
+                || (existing.fieldType == PasField.FieldType.ROUTINE));
     }
 
     private static PasField addField(PasEntityScope owner, String name, PascalNamedElement namedElement, PasField.Visibility visibility) {

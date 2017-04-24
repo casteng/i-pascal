@@ -507,7 +507,7 @@ public class PsiUtil {
     public static boolean isForwardClassDecl(PascalNamedElement element) {
         LeafPsiElement leaf1 = getLeafSiblingOfType(element, LeafPsiElement.class);
         LeafPsiElement leaf2 = leaf1 != null ? getLeafSiblingOfType(leaf1, LeafPsiElement.class) : null;
-        return ((leaf2 != null) && (leaf2.getElementType() == PasTypes.CLASS));
+        return ((leaf2 != null) && ((leaf2.getElementType() == PasTypes.CLASS) || (leaf2.getElementType() == PasTypes.INTERFACE)));
     }
 
     public static <T extends PsiElement> T getLeafSiblingOfType(@Nullable PsiElement sibling, @NotNull Class<T> aClass) {

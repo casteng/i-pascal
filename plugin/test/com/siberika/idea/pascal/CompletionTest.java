@@ -308,4 +308,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         assertTrue("local".equals(fields.iterator().next().name));
     }
 
+    public void testForwardStructure() {
+        myFixture.configureByFiles("forwardStructure.pas");
+        checkCompletionContains(myFixture, "Bar");
+    }
+
 }
