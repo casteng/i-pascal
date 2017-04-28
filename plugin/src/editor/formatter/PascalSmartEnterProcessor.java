@@ -86,9 +86,15 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
             processParent = true;
         }
         if (processParent) {
-            PascalPsiElement parent = PsiTreeUtil.getParentOfType(statement, PasStatement.class, PascalExpression.class);
-            if (parent != null) {
-                completeStatement(editor, parent);
+            if (statement instanceof PasStatement) {
+                int ofs = statement.getTextRange().getEndOffset();
+                ofs = DocUtil.expandRangeEnd(editor.getDocument(), ofs, DocUtil.RE_SEMICOLON);
+                editor.getCaretModel().moveToOffset(ofs);
+            } else {
+                PascalPsiElement parent = PsiTreeUtil.getParentOfType(statement, PasStatement.class, PascalExpression.class);
+                if (parent != null) {
+                    completeStatement(editor, parent);
+                }
             }
         }
     }

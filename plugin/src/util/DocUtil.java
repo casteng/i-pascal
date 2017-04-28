@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 public class DocUtil {
     public static final Pattern RE_LF = Pattern.compile("\n");
     public static final Pattern RE_WHITESPACE = Pattern.compile("\\s");
+    public static final Pattern RE_SEMICOLON = Pattern.compile(";");
     private static final Map<String, String> DUP_MAP = getDupMap();
     public static final String PLACEHOLDER_CARET = "__CARET__";
     private static final int SPACES = 3;
