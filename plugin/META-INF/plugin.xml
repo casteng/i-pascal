@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.24</version>
+    <version>1.26</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.26</p>
+        <ul>
+          <li>parameter hints</li>
+        </ul>
         <p>1.24</p>
         <ul>
           <li>completion in watches</li>
@@ -362,6 +366,8 @@
         <compiler.task implementation="com.siberika.idea.pascal.compiler.Task"/>
 
         <runLineMarkerContributor language="Pascal" implementationClass="com.siberika.idea.pascal.run.PascalRunLineMarkerContributor"/>
+
+        <codeInsight.parameterNameHints language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterNameHints"/>
 
         <internalFileTemplate name="PascalUnit"/>
         <internalFileTemplate name="PascalProgram"/>

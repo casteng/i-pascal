@@ -22,10 +22,12 @@ import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -584,4 +586,13 @@ public class PasReferenceUtil {
         }
     }
 
+    @NotNull
+    public static Collection<PasField> resolveRoutines(PasCallExpr callExpr) {
+        PasFullyQualifiedIdent ident = callExpr != null ? PsiTreeUtil.findChildOfType(callExpr.getExpr(), PasFullyQualifiedIdent.class) : null;
+        if (null == ident) {
+            return Collections.emptyList();
+        }
+        Collection<PasField> routines = resolveExpr(null, NamespaceRec.fromElement(ident), PasField.TYPES_ROUTINE, true, 0);
+        return !routines.isEmpty() ? routines : Collections.<PasField>emptyList();
+    }
 }

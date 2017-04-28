@@ -10,11 +10,9 @@ import com.intellij.lang.parameterInfo.UpdateParameterInfoContext;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
-import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -24,7 +22,6 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -71,16 +68,8 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
     }
 
     private Object[] getParameters(PasCallExpr callExpr) {
-        PasFullyQualifiedIdent ident = callExpr != null ? PsiTreeUtil.findChildOfType(callExpr.getExpr(), PasFullyQualifiedIdent.class) : null;
-        if (null == ident) {
-            return null;
-        }
-        Collection<PasField> routines = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(ident), PasField.TYPES_ROUTINE, true, 0);
-        if (routines.isEmpty()) {
-            return null;
-        }
         Map<String, PasFormalParameterSection> res = new TreeMap<String, PasFormalParameterSection>();
-        for (PasField field : routines) {
+        for (PasField field : PasReferenceUtil.resolveRoutines(callExpr)) {
             if (field.getElement() instanceof PascalRoutineImpl) {
                 PasFormalParameterSection parameters = ((PascalRoutineImpl) field.getElement()).getFormalParameterSection();
                 if (parameters != null) {
