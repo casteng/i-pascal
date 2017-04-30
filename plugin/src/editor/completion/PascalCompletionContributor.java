@@ -35,7 +35,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalLanguage;
-import com.siberika.idea.pascal.editor.ContectAwareVirtualFile;
+import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
@@ -158,11 +158,12 @@ public class PascalCompletionContributor extends CompletionContributor {
 
                 Collection<PasField> entities = new HashSet<PasField>();
 
-                if ((pos instanceof PsiFile) && (((PsiFile) pos).getVirtualFile() instanceof ContectAwareVirtualFile)) {
+                if ((pos instanceof PsiFile) && (((PsiFile) pos).getVirtualFile() instanceof ContextAwareVirtualFile)) {
                     NamespaceRec namespace = NamespaceRec.fromFQN(pos, pos.getText().replace(PasField.DUMMY_IDENTIFIER, "")); // TODO: refactor
                     namespace.setIgnoreVisibility(true);
-                    entities.addAll(PasReferenceUtil.resolve(null, PsiUtil.getNearestAffectingScope(((ContectAwareVirtualFile) ((PsiFile) pos).getVirtualFile()).getContextElement()),
-                            namespace, PasField.TYPES_ALL, true, 0));
+                    namespace.clearTarget();
+                    entities.addAll(PasReferenceUtil.resolve(null, PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) ((PsiFile) pos).getVirtualFile()).getContextElement()),
+                            namespace, PasField.TYPES_ALL, false, 0));
                     addEntitiesToResult(result, entities, parameters);
                     result.stopHere();
                     return;

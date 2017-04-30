@@ -47,7 +47,7 @@ import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalLineBreakpointHandler;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
-import com.siberika.idea.pascal.editor.ContectAwareVirtualFile;
+import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.run.PascalRunConfiguration;
@@ -239,7 +239,7 @@ public class GdbXDebugProcess extends XDebugProcess {
                 LightVirtualFile file;
                 if (sourcePosition != null) {
                     PsiElement psiElement = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), project, false);
-                    file = new ContectAwareVirtualFile("_debug.pas", text, psiElement);
+                    file = new ContextAwareVirtualFile("_debug.pas", text, psiElement);
                 } else {
                     file = new LightVirtualFile("_debug.pas", text);
                 }
