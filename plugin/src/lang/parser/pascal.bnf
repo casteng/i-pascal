@@ -451,7 +451,8 @@ FunctionDirective           ::= overloadDirective | oldCallConventionDirectiveSe
 private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
-ExternalDirective           ::= "varargs" ";" | EXTERNAL ";" | EXTERNAL externalSpecifier [libLoadSpec] ";" | EXTERNAL ConstExpression [externalSpecifier] [libLoadSpec] ";"
+ExternalDirective           ::= varagrs ";" | EXTERNAL ";" | EXTERNAL externalSpecifier [libLoadSpec] ";" | EXTERNAL ConstExpression [externalSpecifier] [libLoadSpec] ";"
+private varagrs             ::= "varargs"
 private libLoadSpec         ::= "delayed" | "dependency" constExpr libListRest*
 private libListRest         ::= COMMA constExpr
 private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpressionOrd
@@ -576,8 +577,10 @@ ClosureRoutine              ::= (funcHeading | procHeading) BlockLocal
 
 private procedureReference  ::= REFERENCE TO procedureTypeHeading
 private procedureTypeHeading ::= (funcHeading | procHeading) [OF OBJECT]
-private funcHeading         ::= FUNCTION [FormalParameterSection] ":" customAttributes* TypeDecl [";" callConvention+] {pin=1}
-private procHeading         ::= PROCEDURE [FormalParameterSection] [";" callConvention+] {pin=1}
+private funcHeading         ::= FUNCTION [FormalParameterSection] ":" customAttributes* TypeDecl procTypeDirectives {pin=1}
+private procHeading         ::= PROCEDURE [FormalParameterSection] procTypeDirectives {pin=1}
+private procTypeDirectives  ::= (";" ProcTypeDirective)* ([";"] ProcTypeDirective)*
+ProcTypeDirective           ::= callConvention | varagrs {name="directive"}
 
 private simpleType          ::= EnumType | SubRangeType
 SubRangeType        ::= RangeBound RANGE RangeBound
