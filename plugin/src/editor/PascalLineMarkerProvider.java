@@ -1,11 +1,14 @@
 package com.siberika.idea.pascal.editor;
 
 import com.intellij.codeHighlighting.Pass;
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzerSettings;
 import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
+import com.intellij.codeInsight.daemon.impl.LineMarkersPass;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -40,6 +43,14 @@ import java.util.List;
 public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     public static final Logger LOG = Logger.getInstance(PascalLineMarkerProvider.class.getName());
+
+    private final DaemonCodeAnalyzerSettings myDaemonSettings;
+    private final EditorColorsManager myColorsManager;
+
+    public PascalLineMarkerProvider(DaemonCodeAnalyzerSettings daemonSettings, EditorColorsManager colorsManager) {
+        myDaemonSettings = daemonSettings;
+        myColorsManager = colorsManager;
+    }
 
     private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result) {
         boolean impl = true;
@@ -83,6 +94,11 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     @Nullable
     @Override
     public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
+        if (element instanceof PasRoutineImplDeclImpl) {
+            if (myDaemonSettings.SHOW_METHOD_SEPARATORS) {
+                return LineMarkersPass.createMethodSeparatorLineMarker(element, myColorsManager);
+            }
+        }
         return null;
     }
 
