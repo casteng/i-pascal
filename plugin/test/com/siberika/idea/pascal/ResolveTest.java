@@ -10,11 +10,11 @@ public class ResolveTest extends LightPlatformCodeInsightFixtureTestCase {
         return "testData/misc";
     }
 
-    public void testGetDefaultProperty() throws Exception {
-        myFixture.configureByFiles("routinesForward.pas");
+    public void testResolveForwardRoutine() throws Exception {
+        myFixture.configureByFiles("routinesFwd.pas");
         PsiReference ref = myFixture.getFile().findReferenceAt(140);
         PsiElement decl = ref.resolve();
-        assertEquals(89, decl.getTextRange().getStartOffset());
+        assertEquals(46, decl.getTextRange().getStartOffset());
     }
 
 }

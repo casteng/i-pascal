@@ -429,6 +429,9 @@ public class PasReferenceUtil {
                                 isVisibleWithinUnit(pasField, fqn)) {
                             saveScope(resultScope, namespace, false);
                             result.add(pasField);
+                            if (!isCollectingAll(fqn)) {
+                                break;
+                            }
                         }
                     }
                     if (!result.isEmpty() && !isCollectingAll(fqn)) {

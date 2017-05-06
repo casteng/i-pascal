@@ -13,6 +13,7 @@
         <ul>
           <li>parameter hints</li>
           <li>routine/method separators</li>
+          <li>make all routine definitions resolve to same element (Issue #48)</li>
           <li>bug fixes</li>
         </ul>
         <p>1.24</p>

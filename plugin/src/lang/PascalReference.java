@@ -1,8 +1,6 @@
 package com.siberika.idea.pascal.lang;
 
-import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementResolveResult;
@@ -10,16 +8,20 @@ import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiPolyVariantReferenceBase;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
+import com.intellij.util.ArrayUtil;
+import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Date: 3/13/13
@@ -39,8 +41,8 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
     @Override
     public ResolveResult[] multiResolve(boolean incompleteCode) {
         final ResolveCache resolveCache = ResolveCache.getInstance(myElement.getProject());
-        //return resolveCache.resolveWithCaching(this, Resolver.INSTANCE, true, incompleteCode, myElement.getContainingFile());
-        return Resolver.INSTANCE.resolve(this, incompleteCode);
+        return resolveCache.resolveWithCaching(this, Resolver.INSTANCE, true, incompleteCode, myElement.getContainingFile());
+//        return Resolver.INSTANCE.resolve(this, incompleteCode);
     }
 
     @Nullable
@@ -53,19 +55,7 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
     @NotNull
     @Override
     public Object[] getVariants() {
-        Project project = myElement.getProject();
-        List<LookupElement> variants = new ArrayList<LookupElement>();
-
-        /*List<PascalNamedElement> properties = PascalParserUtil.findTypes(project);
-        for (final PascalNamedElement property : properties) {
-            if (property.getName().length() > 0) {
-                variants.add(LookupElementBuilder.create(property).
-                        withIcon(PascalIcons.GENERAL).
-                        withTypeText(property.getContainingFile().getName())
-                );
-            }
-        }*/
-        return variants.toArray();
+        return ArrayUtil.EMPTY_OBJECT_ARRAY;
     }
 
     private static class Resolver implements ResolveCache.PolyVariantResolver<PascalReference> {
@@ -74,23 +64,49 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
         @NotNull
         @Override
         public ResolveResult[] resolve(@NotNull PascalReference pascalReference, boolean incompleteCode) {
-            if (PasField.DUMMY_IDENTIFIER.equals(pascalReference.key)) {
-                return new ResolveResult[0];
+            return doResolve(pascalReference.getElement(), pascalReference.key, incompleteCode);
+        }
+
+        static ResolveResult[] doResolve(@NotNull PascalNamedElement named, @NotNull String key, boolean incompleteCode) {
+            if (PasField.DUMMY_IDENTIFIER.equals(key)) {
+                return ResolveResult.EMPTY_ARRAY;
             }
-            final Collection<PasField> references = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(pascalReference.getElement()), PasField.TYPES_ALL, true, 0);
+
+            if (named.getParent() instanceof PasRoutineImplDeclImpl) {
+                PasRoutineImplDeclImpl routine = (PasRoutineImplDeclImpl) named.getParent();
+                PsiElement decl = SectionToggle.retrieveDeclaration(routine, true);
+                if (decl != null) {
+                    return createResults(decl);
+                } else {
+                    PasEntityScope parent = routine.getContainingScope();
+                    if (parent instanceof PascalModule) {
+                        PasField decl2 = ((PascalModule) parent).getPrivateField(PsiUtil.getFieldName(routine));
+                        if (decl2 != null) {
+                            return createResults(decl2.getElement());
+                        }
+                    }
+                }
+            }
+
+            final Collection<PasField> references = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(named), PasField.TYPES_ALL, true, 0);
             // return only first reference
             for (PasField el : references) {
                 if (el != null) {
                     PsiElement element = el.target != null ? el.target : el.getElement();
                     if (element != null) {
-                        return PsiElementResolveResult.createResults(new PsiElement[]{element});
+                        return createResults(element);
                     }
                 } else {
-                    LOG.info("ERROR: null resolved for " + this);
+                    LOG.info("ERROR: null resolved for " + named);
                 }
             }
-            return PsiElementResolveResult.createResults(new PsiElement[] {});
+            return ResolveResult.EMPTY_ARRAY;
         }
+
+        private static ResolveResult[] createResults(PsiElement element) {
+            return PsiElementResolveResult.createResults(new PsiElement[]{element});
+        }
+
     }
 
     @Override

@@ -25,6 +25,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRefNamedIdentImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
@@ -860,5 +861,9 @@ public class PsiUtil {
 
     public static boolean isBefore(@NotNull PsiElement el1, @NotNull PsiElement el2) {
         return el1.getTextRange().getStartOffset() < el2.getTextRange().getStartOffset();
+    }
+
+    public static boolean isNotNestedRoutine(PascalRoutineImpl routine) {
+        return routine.getClass() == PasRoutineImplDeclImpl.class;
     }
 }
