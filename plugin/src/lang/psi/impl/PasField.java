@@ -98,10 +98,10 @@ public class PasField {
         this.name = name;
         this.fieldType = fieldType;
         this.visibility = visibility;
-        this.offset = element != null ? element.getTextOffset() : 0;
+        this.offset = element != null ? element.getTextRange().getStartOffset() : 0;
         this.target = target;
-        this.cachedHash = name.hashCode() * 31 + (element != null ? element.hashCode() : 0);
         this.valueType = valueType;
+        this.cachedHash = updateHashCode();
     }
 
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, FieldType fieldType,
@@ -130,26 +130,37 @@ public class PasField {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        PasField field = (PasField) o;
-
-        if (!name.equals(field.name)) return false;
-        if (getElement() != null ? !getElement().equals(field.getElement()) : field.getElement() != null) return false;
-
-        return true;
-    }
-
-    @Override
     public int hashCode() {
         return cachedHash;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PasField pasField = (PasField) o;
+
+        if (owner != null ? !owner.equals(pasField.owner) : pasField.owner != null) return false;
+        if (name != null ? !name.equals(pasField.name) : pasField.name != null) return false;
+        if (fieldType != pasField.fieldType) return false;
+        if (visibility != pasField.visibility) return false;
+        if (getElement() != null ? !getElement().equals(pasField.getElement()) : pasField.getElement() != null) return false;
+        return true;
+    }
+
+    private int updateHashCode() {
+        int result = owner != null ? owner.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (fieldType != null ? fieldType.hashCode() : 0);
+        result = 31 * result + visibility.hashCode();
+        PascalNamedElement el = getElement();
+        result = 31 * result + (el != null ? el.hashCode() : 0);
+        return result;
+    }
+
     public boolean isTypeResolved() {
         return (valueType != NOT_INITIALIZED);
-        //&& ((null == valueType.field) || (null == valueType.field.element) || (valueType.field.element.isValid()));
     }
 
     public boolean isInteger() {
