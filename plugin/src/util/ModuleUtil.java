@@ -16,6 +16,7 @@ import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.jps.util.FileUtil;
+import com.siberika.idea.pascal.module.PascalModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -164,5 +165,15 @@ public class ModuleUtil {
             }
         }
         return FileUtil.getVirtualFile(file.getPath());
+    }
+
+    public static boolean hasPascalModules(Project project) {
+        Module[] modules = ModuleManager.getInstance(project).getModules();
+        for (Module module : modules) {
+            if (PascalModuleType.isPascalModule(module)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

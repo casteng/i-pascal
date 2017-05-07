@@ -111,7 +111,9 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                         isRebuild,
                         ParamMap.getJpsParams(sdk.getSdkProperties()));
                 if (cmdLine != null) {
-                    int exitCode = launchCompiler(compiler, messager, cmdLine, null);
+                    // For Delphi workingDirectory should be null otherwise file paths in compiler messages will be relative
+                    File workingDirectory = PascalCompilerFamily.DELPHI.equals(getCompilerFamily(sdk)) ? null : new File(FileUtil.expandUserHome("~/"));
+                    int exitCode = launchCompiler(compiler, messager, cmdLine, workingDirectory);
                     if (exitCode != 0) {
                         messager.warning("Error. Compiler exit code: " + exitCode, null, -1L, -1L);
                     }
@@ -128,12 +130,22 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
 
     @Nullable
     private PascalBackendCompiler getCompiler(@NotNull JpsSdk<?> sdk, CompilerMessager messager) {
+        PascalCompilerFamily family = getCompilerFamily(sdk);
+        if (PascalCompilerFamily.FPC.equals(family)) {
+            return new FPCBackendCompiler(messager);
+        } else if (PascalCompilerFamily.DELPHI.equals(family)) {
+            return new DelphiBackendCompiler(messager);
+        }
+        return null;
+    }
+
+    private PascalCompilerFamily getCompilerFamily(JpsSdk<?> sdk) {
         ParamMap params = ParamMap.getJpsParams(sdk.getSdkProperties());
         String family = params != null ? params.get(PascalSdkData.Keys.COMPILER_FAMILY.getKey()) : null;
-        if (PascalCompilerFamily.FPC.name().equals(family)) {
-            return new FPCBackendCompiler(messager);
-        } else if (PascalCompilerFamily.DELPHI.name().equals(family)) {
-            return new DelphiBackendCompiler(messager);
+        for (PascalCompilerFamily compilerFamily : PascalCompilerFamily.values()) {
+            if (compilerFamily.name().equals(family)) {
+                return compilerFamily;
+            }
         }
         return null;
     }

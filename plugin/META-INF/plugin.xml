@@ -15,7 +15,7 @@
           <li>routine/method separators</li>
           <li>make all routine definitions resolve to same element (Issue #48)</li>
           <li>fix nested forward routines (Issue #56)</li>
-          <li>bug fixes</li>
+          <li>clickable file hyperlinks in Heaptrc output (Issue #62)</li>
         </ul>
         <p>1.24</p>
         <ul>
@@ -326,6 +326,7 @@
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
         <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.PascalConfigurationType"/>
         <runConfigurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.PascalRunContextConfigurationProducer" />
+        <consoleFilterProvider implementation="com.siberika.idea.pascal.run.HeaptrcConsoleFilterProvider" />
         <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
         <programRunner implementation="com.siberika.idea.pascal.debugger.PascalDebugRunner"/>
         <xdebugger.breakpointType implementation="com.siberika.idea.pascal.debugger.PascalLineBreakpointType"/>
@@ -381,5 +382,6 @@
 
         <compileServer.plugin classpath="jps-plugin.jar"/>
         <postStartupActivity implementation="com.siberika.idea.pascal.PostStartupActivity"/>
+
     </extensions>
 </idea-plugin>
