@@ -411,8 +411,8 @@ private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [N
 private classOperatorDecl   ::= [CLASS] OPERATOR procName FormalParameterSection ":" TypeDecl {pin=2}
 
 RoutineImplDecl             ::= routineImpl ProcBodyBlock {pin=1 name="procedure or function declaration"}
-RoutineImplDeclWoNested     ::= routineDeclaration BlockLocalWONested [";"] {extends=RoutineImplDecl}
-RoutineImplDeclNested1      ::= routineDeclaration BlockLocalNested1 [";"] {extends=RoutineImplDecl}
+RoutineImplDeclNested1      ::= routineDeclaration (ProcForwardDecl | BlockLocalNested1) [";"] {extends=RoutineImplDecl}
+RoutineImplDeclWoNested     ::= routineDeclaration (ProcForwardDecl | BlockLocalWONested) [";"] {extends=RoutineImplDecl}
 private routineImpl         ::= customAttributes* (exportedProc | exportedFuncImpl | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFuncImpl    ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] [":" customAttributes* TypeDecl] {pin=2}
 

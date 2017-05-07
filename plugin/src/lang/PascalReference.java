@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
+import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -73,19 +74,7 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
             }
 
             if (named.getParent() instanceof PasRoutineImplDeclImpl) {
-                PasRoutineImplDeclImpl routine = (PasRoutineImplDeclImpl) named.getParent();
-                PsiElement decl = SectionToggle.retrieveDeclaration(routine, true);
-                if (decl != null) {
-                    return createResults(decl);
-                } else {
-                    PasEntityScope parent = routine.getContainingScope();
-                    if (parent instanceof PascalModule) {
-                        PasField decl2 = ((PascalModule) parent).getPrivateField(PsiUtil.getFieldName(routine));
-                        if (decl2 != null) {
-                            return createResults(decl2.getElement());
-                        }
-                    }
-                }
+                return resolveRoutineImpl((PasRoutineImplDeclImpl) named.getParent());
             }
 
             final Collection<PasField> references = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(named), PasField.TYPES_ALL, true, 0);
@@ -101,6 +90,22 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
                 }
             }
             return ResolveResult.EMPTY_ARRAY;
+        }
+
+        private static ResolveResult[] resolveRoutineImpl(PasRoutineImplDeclImpl routine) {
+            PsiElement decl = SectionToggle.retrieveDeclaration(routine, true);
+            if (decl != null) {
+                return createResults(decl);
+            } else {
+                PasEntityScope parent = routine.getContainingScope();
+                PasField field = null;
+                if (parent instanceof PascalModule) {
+                    field = ((PascalModule) parent).getPrivateField(PsiUtil.getFieldName(routine));
+                } else if (parent instanceof PascalRoutineImpl) {
+                    field = parent.getField(PsiUtil.getFieldName(routine));
+                }
+                return field != null ? createResults(field.getElement()) : ResolveResult.EMPTY_ARRAY;
+            }
         }
 
         private static ResolveResult[] createResults(PsiElement element) {

@@ -14,6 +14,7 @@
           <li>parameter hints</li>
           <li>routine/method separators</li>
           <li>make all routine definitions resolve to same element (Issue #48)</li>
+          <li>fix nested forward routines (Issue #56)</li>
           <li>bug fixes</li>
         </ul>
         <p>1.24</p>
