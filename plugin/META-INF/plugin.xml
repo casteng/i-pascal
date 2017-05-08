@@ -13,6 +13,7 @@
         <ul>
           <li>parameter hints</li>
           <li>routine/method separators</li>
+          <li>rename parameters both in declaration and implementation (Issue #50)</li>
           <li>make all routine definitions resolve to same element (Issue #48)</li>
           <li>fix nested forward routines (Issue #56)</li>
           <li>clickable file hyperlinks in Heaptrc output (Issue #62)</li>

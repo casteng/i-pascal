@@ -11,14 +11,10 @@ import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.util.ArrayUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,14 +93,8 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
             if (decl != null) {
                 return createResults(decl);
             } else {
-                PasEntityScope parent = routine.getContainingScope();
-                PasField field = null;
-                if (parent instanceof PascalModule) {
-                    field = ((PascalModule) parent).getPrivateField(PsiUtil.getFieldName(routine));
-                } else if (parent instanceof PascalRoutineImpl) {
-                    field = parent.getField(PsiUtil.getFieldName(routine));
-                }
-                return field != null ? createResults(field.getElement()) : ResolveResult.EMPTY_ARRAY;
+                decl = SectionToggle.getRoutineForwardDeclaration(routine);
+                return decl != null ? createResults(decl) : ResolveResult.EMPTY_ARRAY;
             }
         }
 

@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -69,6 +70,22 @@ public class SectionToggle {
             return retrieveImplementation(cont, false);
         } else if (routine instanceof PasRoutineImplDecl) {
             return retrieveDeclaration(cont, false);
+        }
+        return null;
+    }
+
+    // Strict
+    public static PsiElement getImplementationOrDeclaration(PascalRoutineImpl routine) {
+        Container cont = calcPrefix(new Container(routine));
+        if (routine instanceof PasExportedRoutine) {
+            return retrieveImplementation(cont, true);
+        } else if (routine instanceof PasRoutineImplDeclImpl) {
+            PsiElement decl = retrieveDeclaration(cont, true);
+            if (decl != null) {
+                return decl;
+            } else {
+                return getRoutineForwardDeclaration((PasRoutineImplDeclImpl) routine);
+            }
         }
         return null;
     }
@@ -215,6 +232,18 @@ public class SectionToggle {
             return block.getBlockBody().getTextOffset();
         }
         return -1;
+    }
+
+    @Nullable
+    public static PsiElement getRoutineForwardDeclaration(@NotNull PasRoutineImplDeclImpl routine) {
+        PasEntityScope parent = routine.getContainingScope();
+        PasField field = null;
+        if (parent instanceof PascalModule) {
+            field = ((PascalModule) parent).getPrivateField(PsiUtil.getFieldName(routine));
+        } else if (parent instanceof PascalRoutineImpl) {
+            field = parent.getField(PsiUtil.getFieldName(routine));
+        }
+        return field != null ? field.getElement() : null;
     }
 
     private static class Container {
