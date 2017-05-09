@@ -7,6 +7,7 @@ import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDeclNested1;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 
 import java.util.ArrayList;
@@ -29,6 +30,12 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testSectionToggleStrict() {
         List<PascalNamedElement> symbols = retrieveSymbols("sectionToggleStrict.pas");
         doTestSectionToggle(symbols, true);
+    }
+
+    public void testRoutinesFwd() {
+        PsiElement ref = myFixture.configureByFile("routinesFwd.pas").findElementAt(95);
+        PsiElement decl = SectionToggle.getRoutineForwardDeclaration((PasRoutineImplDeclImpl) ref.getParent().getParent());
+        assertEquals(46, decl.getTextRange().getStartOffset());
     }
 
     private List<PascalNamedElement> retrieveSymbols(String filename) {
