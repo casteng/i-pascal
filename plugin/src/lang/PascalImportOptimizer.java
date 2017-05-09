@@ -35,6 +35,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,7 +54,12 @@ public class PascalImportOptimizer implements ImportOptimizer {
 
     private static final Pattern RE_UNITNAME_PREFIX = Pattern.compile("[{}!]");
 
+    public static final List<String> EXCLUDED_UNITS = Arrays.asList("CMEM", "HEAPTRC", "CTHREADS", "CWSTRING", "FASTMM4");
+
     static boolean isExcludedFromCheck(PascalQualifiedIdent usedUnitName) {
+        if (EXCLUDED_UNITS.contains(usedUnitName.getName().toUpperCase())) {
+            return true;
+        }
         PsiElement prev = usedUnitName.getPrevSibling();
         return (prev instanceof PsiComment) && "{!}".equals(prev.getText());
     }

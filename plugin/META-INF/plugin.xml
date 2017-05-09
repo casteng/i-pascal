@@ -17,6 +17,7 @@
           <li>make all routine definitions resolve to same element (Issue #48)</li>
           <li>fix nested forward routines (Issue #56)</li>
           <li>clickable file hyperlinks in Heaptrc output (Issue #62)</li>
+          <li>exclude some units from unused unit check (Issue 59#)</li>
         </ul>
         <p>1.24</p>
         <ul>
