@@ -36,6 +36,8 @@ public class PascalCompleteIdent {
                 }
                 DocUtil.adjustDocument(editor, offs, colonStr + DocUtil.PLACEHOLDER_CARET + rparenStr);
             }
+        } else {
+            DocUtil.adjustDocument(editor, typeDecl.getTextRange().getEndOffset(), ";" + DocUtil.PLACEHOLDER_CARET);
         }
     }
 
