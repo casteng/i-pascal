@@ -381,7 +381,7 @@ private rec_section_global  ::= !(".") & rec_section
 private rec_routine         ::= !(EXTERNAL | FORWARD | END) & rec_section & rec_interface
 private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";")
-private rec_struct_field    ::= !(";" | ")" | END | CASE)
+private rec_struct_field    ::= !(";" | ")" | END | CASE | identifier ) & rec_section
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private rec_name            ::= !(identifier | END) & rec_section
@@ -516,7 +516,7 @@ TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringT
 private classForwardDecl    ::= (CLASS | INTERFACE) [ClassParentWORec] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
 
 ClassField                  ::= field
-private classFieldSemi      ::= ClassField ";"
+private classFieldSemi      ::= ClassField ";" {pin=1 recoverWhile=rec_struct_field}
 ClassTypeDecl               ::= [PACKED] classDecl {name="class declaration"}
 private classDecl           ::= CLASS ((classBody END) | [ClassParent]) {pin=1}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
