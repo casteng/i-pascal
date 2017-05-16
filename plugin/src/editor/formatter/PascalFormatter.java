@@ -10,8 +10,10 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
+import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.editor.settings.PascalCodeStyleSettings;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +35,7 @@ public class PascalFormatter implements FormattingModelBuilder {
     @NotNull
     @Override
     public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-        Block block = new PascalBlock(element.getContainingFile().getNode(), settings, null, null);
+        Block block = new PascalBlock(element.getNode(), settings, null, null);
         return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
     }
 
@@ -44,20 +46,67 @@ public class PascalFormatter implements FormattingModelBuilder {
     }
 
     static SpacingBuilder createSpacingBuilder(CodeStyleSettings settings) {
+        final PascalCodeStyleSettings pascalSettings = settings.getCustomSettings(PascalCodeStyleSettings.class);
+        final CommonCodeStyleSettings commonSettings = settings.getCommonSettings(PascalLanguage.INSTANCE);
+        final int spCommaB = commonSettings.SPACE_BEFORE_COMMA ? 1 : 0;
+        final int spCommaA = commonSettings.SPACE_AFTER_COMMA ? 1 : 0;
+        final int spCommaTypeArgA = commonSettings.SPACE_AFTER_COMMA_IN_TYPE_ARGUMENTS ? 1 : 0;
+        final int spColonB = commonSettings.SPACE_BEFORE_COLON ? 1 : 0;
+        final int spColonA = commonSettings.SPACE_AFTER_COLON ? 1 : 0;
+        final int spAssignAr = commonSettings.SPACE_AROUND_ASSIGNMENT_OPERATORS ? 1 : 0;
+        final int spOps = commonSettings.SPACE_AROUND_LOGICAL_OPERATORS ? 1 : 0;
+        final int spSemiA = commonSettings.SPACE_AFTER_SEMICOLON ? 1 : 0;
+        final int spSemiB = commonSettings.SPACE_BEFORE_SEMICOLON ? 1 : 0;
+        final int spBraketWi = commonSettings.SPACE_WITHIN_BRACKETS ? 1 : 0;
+        final int spGroupParenWi = commonSettings.SPACE_WITHIN_PARENTHESES ? 1 : 0;
+        final int spRoutineParenWi = commonSettings.SPACE_WITHIN_METHOD_PARENTHESES ? 1 : 0;
+        final int spCallParenWi = commonSettings.SPACE_WITHIN_METHOD_CALL_PARENTHESES ? 1 : 0;
+
+        final boolean beginNewLine = pascalSettings.BEGIN_ON_NEW_LINE;
+        final int spDeclEqAr = pascalSettings.SPACE_AROUND_EQ_TYPE_DECL ? 1 : 0;
+        final int spRangeAr = pascalSettings.SPACE_AROUND_RANGE ? 1 : 0;
+
         return new SpacingBuilder(settings, PascalLanguage.INSTANCE)
-                .between(PasTypes.COMMA, PasTypes.NAMED_IDENT).spacing(1, 1, 0, true, 1)
-                .between(PasTypes.COMMA, PasTypes.EXPRESSION).spacing(1, 1, 0, true, 1)
-                .between(PasTypes.REF_NAMED_IDENT, PasTypes.LPAREN).spacing(0, 0, 0, true, 1)
-                .after(PasTypes.ASSIGN_OP).spacing(1, 1, 0, true, 1)
-                .before(PasTypes.ASSIGN_PART).spacing(1, 1, 0, true, 1)
+                .afterInside(PasTypes.COMMA, PasTypes.GENERIC_DEFINITION).spacing(spCommaTypeArgA, spCommaTypeArgA, 0, true, 0)
+                .after(PasTypes.COMMA).spacing(spCommaA, spCommaA, 0, true, 1)
+                .before(PasTypes.COMMA).spacing(spCommaB, spCommaB, 0, true, 0)
+                .after(PasTypes.COLON).spacing(spColonA, spColonA, 0, false, 0)
+                .before(PasTypes.COLON).spacing(spColonB, spColonB, 0, false, 0)
 
-                .after(PasTypes.ADD_OP).spacing(1, 1, 0, true, 1)
-                .before(PasTypes.ADD_OP).spacing(1, 1, 0, true, 1)
-                .after(PasTypes.REL_OP).spacing(1, 1, 0, true, 1)
-                .before(PasTypes.REL_OP).spacing(1, 1, 0, true, 1)
-                .after(PasTypes.MUL_OP).spacing(1, 1, 0, true, 1)
-                .before(PasTypes.MUL_OP).spacing(1, 1, 0, true, 1)
+                .after(PasTypes.SEMI).spacing(spSemiA, spSemiA, 0, true, 2)
+                .before(PasTypes.SEMI).spacing(spSemiB, spSemiB, 0, false, 0)
 
+                .after(PasTypes.ASSIGN_OP).spacing(spAssignAr, spAssignAr, 0, true, 0)
+                .before(PasTypes.ASSIGN_PART).spacing(spAssignAr, spAssignAr, 0, true, 0)
+
+                .after(PasTypes.ADD_OP).spacing(spOps, spOps, 0, true, 0)
+                .before(PasTypes.ADD_OP).spacing(spOps, spOps, 0, true, 0)
+                .after(PasTypes.REL_OP).spacing(spOps, spOps, 0, true, 0)
+                .before(PasTypes.REL_OP).spacing(spOps, spOps, 0, true, 0)
+                .after(PasTypes.MUL_OP).spacing(spOps, spOps, 0, true, 0)
+                .before(PasTypes.MUL_OP).spacing(spOps, spOps, 0, true, 0)
+
+                .after(PasTypes.RANGE).spacing(spRangeAr, spRangeAr, 0, false, 0)
+                .before(PasTypes.RANGE).spacing(spRangeAr, spRangeAr, 0, false, 0)
+
+                .after(PasTypes.LBRACK).spacing(spBraketWi, spBraketWi, 0, true, 0)
+                .before(PasTypes.RBRACK).spacing(spBraketWi, spBraketWi, 0, true, 0)
+
+                .afterInside(PasTypes.LPAREN, PasTypes.PAREN_EXPR).spacing(spGroupParenWi, spGroupParenWi, 0, true, 0)
+                .beforeInside(PasTypes.RPAREN, PasTypes.PAREN_EXPR).spacing(spGroupParenWi, spGroupParenWi, 0, true, 0)
+
+                .afterInside(PasTypes.LPAREN, PasTypes.FORMAL_PARAMETER_SECTION).spacing(spRoutineParenWi, spRoutineParenWi, 0, true, 0)
+                .beforeInside(PasTypes.RPAREN, PasTypes.FORMAL_PARAMETER_SECTION).spacing(spRoutineParenWi, spRoutineParenWi, 0, true, 0)
+
+                .afterInside(PasTypes.LPAREN, PasTypes.ARGUMENT_LIST).spacing(spCallParenWi, spCallParenWi, 0, true, 0)
+                .beforeInside(PasTypes.RPAREN, PasTypes.ARGUMENT_LIST).spacing(spCallParenWi, spCallParenWi, 0, true, 0)
+
+                .after(PasTypes.EQ).spacing(spDeclEqAr, spDeclEqAr, 0, true, 0)
+                .before(PasTypes.EQ).spacing(spDeclEqAr, spDeclEqAr, 0, true, 0)
+
+                .before(PasTypes.BEGIN).lineBreakInCodeIf(beginNewLine)
+
+                /*
                 .afterInside(PasTypes.BEGIN, PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
                 .afterInside(PasTypes.VAR, PasTypes.VAR_SECTION).lineBreakInCode()
                 .afterInside(PasTypes.CONST, PasTypes.CONST_SECTION).lineBreakInCode()
@@ -68,17 +117,15 @@ public class PascalFormatter implements FormattingModelBuilder {
                 .beforeInside(PasTypes.TYPE, PasTypes.TYPE_SECTION).blankLines(1)
                 .between(TOKENS_CLASS_DECL, TOKENS_CLASS_DECL).lineBreakInCode()
 
-                .between(PasTypes.COLON, PasTypes.TYPE_DECL).spacing(1, 1, 0, true, 1)
+//                .between(PasTypes.COLON, PasTypes.TYPE_DECL).spacing(1, 1, 0, true, 1)
                 .before(PasTypes.BLOCK_BODY).lineBreakInCode()
                 .before(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
                 .after(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
                 .between(PasTypes.STATEMENT, PasTypes.END).lineBreakInCode()
                 .afterInside(PasTypes.INTERFACE, PasTypes.UNIT_MODULE_HEAD).blankLines(1)
                 .after(PasTypes.IMPLEMENTATION).blankLines(1)
-                .after(PasTypes.BLOCK_BODY).blankLines(1)
+                .after(PasTypes.BLOCK_BODY).blankLines(1)*/
 
-                .after(PasTypes.EQ).spacing(1, 1, 0, true, 1)
-                .before(PasTypes.EQ).spacing(0, 1, 0, true, 1)
                 ;
     }
 }

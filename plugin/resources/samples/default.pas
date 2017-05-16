@@ -19,8 +19,9 @@ implementation
 
 function TSample<T1, T2>.Method(a1, a2: Integer; b1: TSample): TSample;
 var
-    t1, t2: Integer;
+    t1, t2: TArr;
 begin
+    t1[0] := a1;t2[1] := a2;
     Result := b1;
     if -a1 > a2 then
     begin

@@ -72,7 +72,6 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
             consumer.showStandardOptions(
                     "SPACE_AROUND_ASSIGNMENT_OPERATORS",
                     "SPACE_AROUND_LOGICAL_OPERATORS",
-                    "SPACE_AROUND_UNARY_OPERATOR",
 
                     "SPACE_WITHIN_PARENTHESES",
                     "SPACE_WITHIN_METHOD_CALL_PARENTHESES",
@@ -94,12 +93,12 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
             consumer.renameStandardOption("SPACE_AROUND_ASSIGNMENT_OPERATORS", PascalBundle.message("style.settings.spaces.around.assignment"));
             consumer.renameStandardOption("SPACE_AROUND_LOGICAL_OPERATORS", PascalBundle.message("style.settings.spaces.around.operations"));
-            consumer.renameStandardOption("SPACE_AROUND_UNARY_OPERATOR", PascalBundle.message("style.settings.spaces.around.uminus"));
 
             consumer.renameStandardOption("SPACE_WITHIN_METHOD_PARENTHESES", PascalBundle.message("style.settings.spaces.within.routine.decl.paren"));
             consumer.renameStandardOption("SPACE_WITHIN_METHOD_CALL_PARENTHESES", PascalBundle.message("style.settings.spaces.within.routine.call.paren"));
 
-            consumer.showCustomOption(PascalCodeStyleSettings.class, "SPACE_AROUND_EQ_TYPE_DECL", PascalBundle.message("style.settings.spaces.around.typedecleq"), GROUP_AROUND_OPERATORS);
+            consumer.showCustomOption(PascalCodeStyleSettings.class, "SPACE_AROUND_EQ_DECL", PascalBundle.message("style.settings.spaces.around.decleq"), GROUP_AROUND_OPERATORS);
+            consumer.showCustomOption(PascalCodeStyleSettings.class, "SPACE_AROUND_RANGE", PascalBundle.message("style.settings.spaces.around.range"), GROUP_AROUND_OPERATORS);
         } else if (settingsType == SettingsType.WRAPPING_AND_BRACES_SETTINGS) {
             consumer.showStandardOptions(
                     "RIGHT_MARGIN",
