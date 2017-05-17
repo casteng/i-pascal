@@ -7,9 +7,7 @@ import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Date: 3/14/13
@@ -19,14 +17,15 @@ public class PascalClassByNameContributor implements ChooseByNameContributor {
     @NotNull
     @Override
     public String[] getNames(Project project, boolean includeNonProjectItems) {
-        Collection<PascalNamedElement> properties = PascalParserUtil.findClasses(project, "");
+        return new String[0];
+        /*Collection<PascalNamedElement> properties = PascalParserUtil.findClasses(project, "");
         List<String> names = new ArrayList<String>(properties.size());
         for (PascalNamedElement property : properties) {
             if (property.getName().length() > 0) {
                 names.add(property.getName());
             }
         }
-        return names.toArray(new String[names.size()]);
+        return names.toArray(new String[names.size()]);*/
     }
 
     @NotNull
