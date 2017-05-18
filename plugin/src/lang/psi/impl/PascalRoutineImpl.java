@@ -190,7 +190,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         return type != null ? type.getText() : "";
     }
 
-    private boolean isConstructor() {
+    public boolean isConstructor() {
         return getFirstChild().getNode().getElementType() == PasTypes.CONSTRUCTOR;
     }
 
