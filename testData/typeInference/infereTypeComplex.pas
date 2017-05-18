@@ -5,6 +5,7 @@ interface
 type
   TRec = class
     Field: Integer;
+    constructor Create();
   end;
 
 var
@@ -51,4 +52,5 @@ begin
   3.1428;
   2.12345678;
   2.1234567812345678;
+  TRec.Create();
 end.

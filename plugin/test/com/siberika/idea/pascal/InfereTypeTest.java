@@ -91,6 +91,7 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals("Single", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Double", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Extended", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("TRec", PascalExpression.infereType(expressions.get(i++).getExpr()));
     }
 
     private List<PasExpression> getStatementExpressions(String unitName) {

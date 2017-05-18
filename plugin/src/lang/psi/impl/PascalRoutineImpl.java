@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -177,12 +178,20 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
 
     @NotNull
     public String getFunctionTypeStr() {
+        if (isConstructor()) {
+            PasEntityScope scope = getContainingScope();
+            return scope != null ? scope.getName() : "";
+        }
         PasTypeDecl type = findChildByClass(PasTypeDecl.class);
         PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);
         if (typeId != null) {
             return typeId.getFullyQualifiedIdent().getName();
         }
         return type != null ? type.getText() : "";
+    }
+
+    private boolean isConstructor() {
+        return getFirstChild().getNode().getElementType() == PasTypes.CONSTRUCTOR;
     }
 
     @NotNull
