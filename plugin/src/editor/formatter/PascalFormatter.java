@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
  * Date: 01/10/2013
  */
 public class PascalFormatter implements FormattingModelBuilder {
-    private static final TokenSet TOKENS_CLASS_DECL = TokenSet.create(PasTypes.CLASS_FIELD, PasTypes.EXPORTED_ROUTINE, PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD_RESOLUTION, PasTypes.VISIBILITY);
+    private static final TokenSet TOKENS_CLASS_DECL = TokenSet.create(PasTypes.CLASS_FIELD, PasTypes.EXPORTED_ROUTINE, PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD_RESOLUTION);
 
     /*static final TokenSet TOKENS_USED = TokenSet.create(
             PasTypes.COMMA, PasTypes.NAMED_IDENT, PasTypes.LPAREN, PasTypes.ASSIGN_OP, PasTypes.ASSIGN_PART, PasTypes.BEGIN,
@@ -118,18 +118,10 @@ public class PascalFormatter implements FormattingModelBuilder {
 
                 .around(PasTypes.ELSE).spacing(1, 1, commonSettings.ELSE_ON_NEW_LINE ? 1 : 0, keepBreaks, 0)
 
+                .after(TOKENS_CLASS_DECL).lineBreakInCode()
 
-/*                .between(TOKENS_CLASS_DECL, TOKENS_CLASS_DECL).lineBreakInCode()
-
-//                .between(PasTypes.COLON, PasTypes.TYPE_DECL).spacing(1, 1, 0, true, 1)
-                .before(PasTypes.BLOCK_BODY).lineBreakInCode()
-                .before(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
-                .after(PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
-                .between(PasTypes.STATEMENT, PasTypes.END).lineBreakInCode()
                 .afterInside(PasTypes.INTERFACE, PasTypes.UNIT_MODULE_HEAD).blankLines(1)
                 .after(PasTypes.IMPLEMENTATION).blankLines(1)
-                .after(PasTypes.BLOCK_BODY).blankLines(1)*/
-
-                ;
+                .after(PasTypes.BLOCK_BODY).blankLines(1);
     }
 }

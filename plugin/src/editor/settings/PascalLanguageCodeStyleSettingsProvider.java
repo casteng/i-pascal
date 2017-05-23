@@ -114,19 +114,19 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
                     "WRAP_COMMENTS",
 
                     "CALL_PARAMETERS_WRAP",
-                    "ALIGN_MULTILINE_PARAMETERS_IN_CALLS",
+//                    "ALIGN_MULTILINE_PARAMETERS_IN_CALLS",
 
                     "METHOD_PARAMETERS_WRAP",
-                    "ALIGN_MULTILINE_PARAMETERS",
+//                    "ALIGN_MULTILINE_PARAMETERS",
 
                     "METHOD_CALL_CHAIN_WRAP",
-                    "ALIGN_MULTILINE_CHAINED_METHODS",
+//                    "ALIGN_MULTILINE_CHAINED_METHODS",
 
                     "ELSE_ON_NEW_LINE",
 
                     "BINARY_OPERATION_WRAP",
-                    "ALIGN_MULTILINE_BINARY_OPERATION",
-                    "BINARY_OPERATION_SIGN_ON_NEXT_LINE",
+//                    "ALIGN_MULTILINE_BINARY_OPERATION",
+//                    "BINARY_OPERATION_SIGN_ON_NEXT_LINE",
 
                     "ENUM_CONSTANTS_WRAP"
             );
