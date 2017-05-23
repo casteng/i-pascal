@@ -12,11 +12,14 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
+import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
+import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.editor.settings.PascalCodeStyleSettings;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -32,6 +35,10 @@ import java.util.Map;
  * Date: 02/10/2013
  */
 public class PascalBlock extends AbstractBlock implements Block {
+
+    private static final Wrap WRAP_NONE = Wrap.createWrap(WrapType.NONE, true);
+    private static final Wrap WRAP_NORMAL = Wrap.createWrap(WrapType.NORMAL, true);
+    private static final Wrap WRAP_ALWAYS = Wrap.createWrap(WrapType.ALWAYS, true);
 
     private List<Block> mySubBlocks = null;
     private final SpacingBuilder mySpacingBuilder;
@@ -122,14 +129,7 @@ public class PascalBlock extends AbstractBlock implements Block {
     private Block makeSubBlock(@NotNull ASTNode childNode) {
         Indent indent = getBlockIndent(childNode);
 
-/*        Alignment alignment = Alignment.createAlignment(true);
-        if (myParent != null) {
-            alignment = myParent.getAlignment();
-        }*/
-
-        Wrap wrap = Wrap.createWrap(WrapType.NORMAL, false);
-
-        return new PascalBlock(childNode, mySettings, wrap, indent);
+        return new PascalBlock(childNode, mySettings, myWrap, indent);
     }
 
     private Indent getBlockIndent(@Nullable ASTNode childNode) {
@@ -179,19 +179,64 @@ public class PascalBlock extends AbstractBlock implements Block {
     @Nullable
     @Override
     public Spacing getSpacing(@Nullable Block child1, @NotNull Block child2) {
-//        System.out.println("getSpacing: " + block2Str(child1) + ", " + block2Str(child2));
-        if ((child1 instanceof PascalBlock) && (((PascalBlock) child1).getNode().getElementType() == PasTypes.SEMI)) {
+        CommonCodeStyleSettings commonSettings = mySettings.getCommonSettings(PascalLanguage.INSTANCE);
+        if (myNode.getElementType() == PasTypes.COMPOUND_STATEMENT) {
+            boolean singleLine = isSimpleStatement(myNode) &&
+                   (   commonSettings.KEEP_SIMPLE_BLOCKS_IN_ONE_LINE && nodeIs(myNode.getTreeParent(), PasTypes.STATEMENT)
+                    || commonSettings.KEEP_SIMPLE_METHODS_IN_ONE_LINE && nodeIs(myNode.getTreeParent(), PasTypes.BLOCK_BODY));
+            if (blockIs(child1, PasTypes.BEGIN) || blockIs(child2, PasTypes.END)) {
+                return Spacing.createSpacing(1, 1, singleLine ? 0 : 1, true, 1);
+            }
+//            System.out.println("getSpacing: " + block2Str(child1) + ", " + block2Str(child2));
+        }
+        /*if ((child1 instanceof PascalBlock) && (((PascalBlock) child1).getNode().getElementType() == PasTypes.SEMI)) {
             if (!TOKENS_NO_LF_AFTER_SEMI.contains(this.getNode().getElementType())) {
                 if (((PascalBlock) child2).getNode().getElementType() == PasTypes.COMMENT) {
                     return null;
                 }
 //                System.out.println("getSpacing: " + block2Str(this) + " . " + block2Str(child1) + ", " + block2Str(child2));
-                return Spacing.createSpacing(0, 0, 1, true, 1);
+                return Spacing.createSpacing(1, 1, 0, true, 1);
             } else {
                 return Spacing.createSpacing(1, 1, 0, true, 1);
+                //return Spacing.createSpacing(1, 1, 0, true, 1);
             }
-        }
+        }*/
         return mySpacingBuilder.getSpacing(this, child1, child2);
+    }
+
+    private static boolean isSimpleStatement(ASTNode node) {
+        return node.getChildren(TokenSet.create(PasTypes.STATEMENT)).length <= 2;
+    }
+
+    @Nullable
+    @Override
+    public Wrap getWrap() {
+        CommonCodeStyleSettings commonSettings = mySettings.getCommonSettings(PascalLanguage.INSTANCE);
+        final PascalCodeStyleSettings pascalSettings = mySettings.getCustomSettings(PascalCodeStyleSettings.class);
+        if (nodeIs(myNode, PasTypes.COMPOUND_STATEMENT)) {
+            if ((!nodeIs(myNode.getTreeParent(), PasTypes.STATEMENT) && !(isSimpleStatement(myNode) && commonSettings.KEEP_SIMPLE_METHODS_IN_ONE_LINE))
+                || (pascalSettings.BEGIN_ON_NEW_LINE && nodeIs(myNode.getTreeParent(), PasTypes.STATEMENT)
+                    && (!nodeIs(myNode.getTreeParent().getTreeParent(), PasTypes.IF_ELSE_STATEMENT)))
+                    ) {
+                return WRAP_ALWAYS;
+            }
+        } else if (nodeIs(myNode, PasTypes.VISIBILITY)) {
+            return WRAP_ALWAYS;
+        } else if (PascalLexer.SECTION_KEY.contains(myNode.getElementType())) {
+            return WRAP_ALWAYS;
+        }
+        return super.getWrap();
+    }
+
+    private boolean blockIs(Block block, IElementType type) {
+        if (!(block instanceof PascalBlock)) {
+            return false;
+        }
+        return nodeIs(((PascalBlock) block).myNode, type);
+    }
+
+    private static boolean nodeIs(ASTNode node, IElementType type) {
+        return node != null && node.getElementType() == type;
     }
 
     private String block2Str(Block r) {
@@ -219,7 +264,7 @@ public class PascalBlock extends AbstractBlock implements Block {
         if ((childNode != null) && (childNode.getTreeParent() != null)) {
 //            System.out.println("!Enter ind: " + childNode.getTreeParent() + " . " + childNode +
 //                    " | " + FormatterUtil.getPreviousNonWhitespaceSibling(childNode) + " | " + FormatterUtil.getPreviousNonWhitespaceLeaf(childNode));
-            if ((TOKENS_ENTER_INDENTED.contains(childNode.getElementType())) || (childNode.getTreeParent().getElementType() == PasTypes.STATEMENT)) {
+            if ((TOKENS_ENTER_INDENTED.contains(childNode.getElementType())) || (nodeIs(childNode.getTreeParent(), PasTypes.STATEMENT))) {
                 return Indent.getNormalIndent();
             }
             PsiElement psi = childNode.getPsi();

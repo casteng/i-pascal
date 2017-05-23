@@ -107,7 +107,7 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
                     "KEEP_LINE_BREAKS",
                     "KEEP_SIMPLE_BLOCKS_IN_ONE_LINE",
                     "KEEP_SIMPLE_METHODS_IN_ONE_LINE",
-                    "KEEP_SIMPLE_LAMBDAS_IN_ONE_LINE",
+//                    "KEEP_SIMPLE_LAMBDAS_IN_ONE_LINE",
                     "KEEP_MULTIPLE_EXPRESSIONS_IN_ONE_LINE",
 
                     "WRAP_LONG_LINES",
@@ -128,8 +128,6 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
                     "ALIGN_MULTILINE_BINARY_OPERATION",
                     "BINARY_OPERATION_SIGN_ON_NEXT_LINE",
 
-                    "MODIFIER_LIST_WRAP",
-
                     "ENUM_CONSTANTS_WRAP"
             );
 
@@ -140,6 +138,8 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
             consumer.showCustomOption(PascalCodeStyleSettings.class, "BEGIN_ON_NEW_LINE", PascalBundle.message("style.settings.wrap.begin.newline"),
                     null, CodeStyleSettingsCustomizable.OptionAnchor.BEFORE, "WRAP_LONG_LINES");
+            consumer.showCustomOption(PascalCodeStyleSettings.class, "KEEP_SIMPLE_SECTIONS_IN_ONE_LINE", PascalBundle.message("style.settings.wrap.keep.simple.sections"),
+                    "Keep when reformatting", CodeStyleSettingsCustomizable.OptionAnchor.AFTER, "KEEP_SIMPLE_METHODS_IN_ONE_LINE");
         }
         else if (settingsType == SettingsType.BLANK_LINES_SETTINGS) {
             consumer.showStandardOptions(

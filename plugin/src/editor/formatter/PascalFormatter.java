@@ -5,6 +5,8 @@ import com.intellij.formatting.FormattingModel;
 import com.intellij.formatting.FormattingModelBuilder;
 import com.intellij.formatting.FormattingModelProvider;
 import com.intellij.formatting.SpacingBuilder;
+import com.intellij.formatting.Wrap;
+import com.intellij.formatting.WrapType;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -14,6 +16,7 @@ import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.settings.PascalCodeStyleSettings;
+import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +38,9 @@ public class PascalFormatter implements FormattingModelBuilder {
     @NotNull
     @Override
     public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-        Block block = new PascalBlock(element.getNode(), settings, null, null);
+        CommonCodeStyleSettings set = settings.getCommonSettings(PascalLanguage.INSTANCE);
+        Wrap wrap = set.WRAP_LONG_LINES ? Wrap.createWrap(WrapType.NORMAL, true) : Wrap.createWrap(WrapType.NONE, true);
+        Block block = new PascalBlock(element.getNode(), settings, wrap, null);
         return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
     }
 
@@ -62,60 +67,59 @@ public class PascalFormatter implements FormattingModelBuilder {
         final int spRoutineParenWi = commonSettings.SPACE_WITHIN_METHOD_PARENTHESES ? 1 : 0;
         final int spCallParenWi = commonSettings.SPACE_WITHIN_METHOD_CALL_PARENTHESES ? 1 : 0;
 
-        final boolean beginNewLine = pascalSettings.BEGIN_ON_NEW_LINE;
-        final int spDeclEqAr = pascalSettings.SPACE_AROUND_EQ_TYPE_DECL ? 1 : 0;
+        final int spDeclEqAr = pascalSettings.SPACE_AROUND_EQ_DECL ? 1 : 0;
         final int spRangeAr = pascalSettings.SPACE_AROUND_RANGE ? 1 : 0;
 
+        final boolean keepBreaks = commonSettings.KEEP_LINE_BREAKS;
+        final boolean keepSectionsOneLine = pascalSettings.KEEP_SIMPLE_SECTIONS_IN_ONE_LINE;
+
         return new SpacingBuilder(settings, PascalLanguage.INSTANCE)
-                .afterInside(PasTypes.COMMA, PasTypes.GENERIC_DEFINITION).spacing(spCommaTypeArgA, spCommaTypeArgA, 0, true, 0)
-                .after(PasTypes.COMMA).spacing(spCommaA, spCommaA, 0, true, 1)
-                .before(PasTypes.COMMA).spacing(spCommaB, spCommaB, 0, true, 0)
+                .between(PasTypes.SEMI, PasTypes.STATEMENT).lineBreakInCodeIf(!commonSettings.KEEP_MULTIPLE_EXPRESSIONS_IN_ONE_LINE)
+                .afterInside(PasTypes.COMMA, PasTypes.GENERIC_DEFINITION).spacing(spCommaTypeArgA, spCommaTypeArgA, 0, keepBreaks, 0)
+                .after(PasTypes.COMMA).spacing(spCommaA, spCommaA, 0, keepBreaks, 1)
+                .before(PasTypes.COMMA).spacing(spCommaB, spCommaB, 0, keepBreaks, 0)
                 .after(PasTypes.COLON).spacing(spColonA, spColonA, 0, false, 0)
                 .before(PasTypes.COLON).spacing(spColonB, spColonB, 0, false, 0)
 
-                .after(PasTypes.SEMI).spacing(spSemiA, spSemiA, 0, true, 2)
+                .after(PasTypes.SEMI).spacing(spSemiA, spSemiA, 0, keepBreaks, 2)
                 .before(PasTypes.SEMI).spacing(spSemiB, spSemiB, 0, false, 0)
 
-                .after(PasTypes.ASSIGN_OP).spacing(spAssignAr, spAssignAr, 0, true, 0)
-                .before(PasTypes.ASSIGN_PART).spacing(spAssignAr, spAssignAr, 0, true, 0)
+                .after(PasTypes.ASSIGN_OP).spacing(spAssignAr, spAssignAr, 0, keepBreaks, 0)
+                .before(PasTypes.ASSIGN_PART).spacing(spAssignAr, spAssignAr, 0, keepBreaks, 0)
 
-                .after(PasTypes.ADD_OP).spacing(spOps, spOps, 0, true, 0)
-                .before(PasTypes.ADD_OP).spacing(spOps, spOps, 0, true, 0)
-                .after(PasTypes.REL_OP).spacing(spOps, spOps, 0, true, 0)
-                .before(PasTypes.REL_OP).spacing(spOps, spOps, 0, true, 0)
-                .after(PasTypes.MUL_OP).spacing(spOps, spOps, 0, true, 0)
-                .before(PasTypes.MUL_OP).spacing(spOps, spOps, 0, true, 0)
+                .after(PasTypes.ADD_OP).spacing(spOps, spOps, 0, keepBreaks, 0)
+                .before(PasTypes.ADD_OP).spacing(spOps, spOps, 0, keepBreaks, 0)
+                .after(PasTypes.REL_OP).spacing(spOps, spOps, 0, keepBreaks, 0)
+                .before(PasTypes.REL_OP).spacing(spOps, spOps, 0, keepBreaks, 0)
+                .after(PasTypes.MUL_OP).spacing(spOps, spOps, 0, keepBreaks, 0)
+                .before(PasTypes.MUL_OP).spacing(spOps, spOps, 0, keepBreaks, 0)
 
                 .after(PasTypes.RANGE).spacing(spRangeAr, spRangeAr, 0, false, 0)
                 .before(PasTypes.RANGE).spacing(spRangeAr, spRangeAr, 0, false, 0)
 
-                .after(PasTypes.LBRACK).spacing(spBraketWi, spBraketWi, 0, true, 0)
-                .before(PasTypes.RBRACK).spacing(spBraketWi, spBraketWi, 0, true, 0)
+                .after(PasTypes.LBRACK).spacing(spBraketWi, spBraketWi, 0, keepBreaks, 0)
+                .before(PasTypes.RBRACK).spacing(spBraketWi, spBraketWi, 0, keepBreaks, 0)
 
-                .afterInside(PasTypes.LPAREN, PasTypes.PAREN_EXPR).spacing(spGroupParenWi, spGroupParenWi, 0, true, 0)
-                .beforeInside(PasTypes.RPAREN, PasTypes.PAREN_EXPR).spacing(spGroupParenWi, spGroupParenWi, 0, true, 0)
+                .afterInside(PasTypes.LPAREN, PasTypes.PAREN_EXPR).spacing(spGroupParenWi, spGroupParenWi, 0, keepBreaks, 0)
+                .beforeInside(PasTypes.RPAREN, PasTypes.PAREN_EXPR).spacing(spGroupParenWi, spGroupParenWi, 0, keepBreaks, 0)
 
-                .afterInside(PasTypes.LPAREN, PasTypes.FORMAL_PARAMETER_SECTION).spacing(spRoutineParenWi, spRoutineParenWi, 0, true, 0)
-                .beforeInside(PasTypes.RPAREN, PasTypes.FORMAL_PARAMETER_SECTION).spacing(spRoutineParenWi, spRoutineParenWi, 0, true, 0)
+                .afterInside(PasTypes.LPAREN, PasTypes.FORMAL_PARAMETER_SECTION).spacing(spRoutineParenWi, spRoutineParenWi, 0, keepBreaks, 0)
+                .beforeInside(PasTypes.RPAREN, PasTypes.FORMAL_PARAMETER_SECTION).spacing(spRoutineParenWi, spRoutineParenWi, 0, keepBreaks, 0)
 
-                .afterInside(PasTypes.LPAREN, PasTypes.ARGUMENT_LIST).spacing(spCallParenWi, spCallParenWi, 0, true, 0)
-                .beforeInside(PasTypes.RPAREN, PasTypes.ARGUMENT_LIST).spacing(spCallParenWi, spCallParenWi, 0, true, 0)
+                .afterInside(PasTypes.LPAREN, PasTypes.ARGUMENT_LIST).spacing(spCallParenWi, spCallParenWi, 0, keepBreaks, 0)
+                .beforeInside(PasTypes.RPAREN, PasTypes.ARGUMENT_LIST).spacing(spCallParenWi, spCallParenWi, 0, keepBreaks, 0)
 
-                .after(PasTypes.EQ).spacing(spDeclEqAr, spDeclEqAr, 0, true, 0)
-                .before(PasTypes.EQ).spacing(spDeclEqAr, spDeclEqAr, 0, true, 0)
+                .after(PasTypes.EQ).spacing(spDeclEqAr, spDeclEqAr, 0, keepBreaks, 0)
+                .before(PasTypes.EQ).spacing(spDeclEqAr, spDeclEqAr, 0, keepBreaks, 0)
 
-                .before(PasTypes.BEGIN).lineBreakInCodeIf(beginNewLine)
+                .afterInside(PascalLexer.VAR_KEY, PasTypes.VAR_SECTION).spacing(1, 1, keepSectionsOneLine ? 0 : 1, keepBreaks, 0)
+                .afterInside(PascalLexer.CONST_KEY, PasTypes.CONST_SECTION).spacing(1, 1, keepSectionsOneLine ? 0 : 1, keepBreaks, 0)
+                .afterInside(PasTypes.TYPE, PasTypes.TYPE_SECTION).spacing(1, 1, keepSectionsOneLine ? 0 : 1, keepBreaks, 0)
 
-                /*
-                .afterInside(PasTypes.BEGIN, PasTypes.COMPOUND_STATEMENT).lineBreakInCode()
-                .afterInside(PasTypes.VAR, PasTypes.VAR_SECTION).lineBreakInCode()
-                .afterInside(PasTypes.CONST, PasTypes.CONST_SECTION).lineBreakInCode()
-                .afterInside(PasTypes.TYPE, PasTypes.TYPE_SECTION).lineBreakInCode()
+                .around(PasTypes.ELSE).spacing(1, 1, commonSettings.ELSE_ON_NEW_LINE ? 1 : 0, keepBreaks, 0)
 
-                .beforeInside(PasTypes.VAR, PasTypes.VAR_SECTION).blankLines(1)
-                .beforeInside(PasTypes.CONST, PasTypes.CONST_SECTION).blankLines(1)
-                .beforeInside(PasTypes.TYPE, PasTypes.TYPE_SECTION).blankLines(1)
-                .between(TOKENS_CLASS_DECL, TOKENS_CLASS_DECL).lineBreakInCode()
+
+/*                .between(TOKENS_CLASS_DECL, TOKENS_CLASS_DECL).lineBreakInCode()
 
 //                .between(PasTypes.COLON, PasTypes.TYPE_DECL).spacing(1, 1, 0, true, 1)
                 .before(PasTypes.BLOCK_BODY).lineBreakInCode()
