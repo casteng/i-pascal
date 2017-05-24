@@ -82,7 +82,7 @@ public abstract class PascalLexer extends DelegateLexer implements PasTypes {
             CONST, RESOURCESTRING
     );
 
-    public static final TokenSet SECTION_KEY = TokenSet.create(
+    public static final TokenSet DECL_SECTION_KEY = TokenSet.create(
             VAR, CONST, TYPE, THREADVAR, RESOURCESTRING
     );
 

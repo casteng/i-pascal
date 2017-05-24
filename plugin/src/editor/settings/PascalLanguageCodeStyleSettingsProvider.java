@@ -147,7 +147,6 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
                     "KEEP_BLANK_LINES_IN_CODE",
                     "KEEP_BLANK_LINES_BEFORE_RBRACE",
 
-                    "BLANK_LINES_BEFORE_PACKAGE",
                     "BLANK_LINES_AFTER_PACKAGE",
                     "BLANK_LINES_BEFORE_IMPORTS",
                     "BLANK_LINES_AFTER_IMPORTS",
@@ -159,13 +158,10 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
             );
 
             consumer.renameStandardOption("KEEP_BLANK_LINES_BEFORE_RBRACE", PascalBundle.message("style.settings.blanklines.before.end"));
-
-            consumer.renameStandardOption("BLANK_LINES_BEFORE_PACKAGE", PascalBundle.message("style.settings.blanklines.before.modulehead"));
+            
             consumer.renameStandardOption("BLANK_LINES_AFTER_PACKAGE", PascalBundle.message("style.settings.blanklines.after.modulehead"));
-
             consumer.renameStandardOption("BLANK_LINES_BEFORE_IMPORTS", PascalBundle.message("style.settings.blanklines.before.uses"));
             consumer.renameStandardOption("BLANK_LINES_AFTER_IMPORTS", PascalBundle.message("style.settings.blanklines.after.uses"));
-
             consumer.renameStandardOption("BLANK_LINES_AROUND_METHOD", PascalBundle.message("style.settings.blanklines.around.routine.definition"));
             consumer.renameStandardOption("BLANK_LINES_AROUND_METHOD_IN_INTERFACE", PascalBundle.message("style.settings.blanklines.around.routine.declaration"));
         }

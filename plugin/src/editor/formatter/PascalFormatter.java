@@ -13,7 +13,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
-import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.settings.PascalCodeStyleSettings;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
@@ -26,8 +25,6 @@ import org.jetbrains.annotations.Nullable;
  * Date: 01/10/2013
  */
 public class PascalFormatter implements FormattingModelBuilder {
-    private static final TokenSet TOKENS_CLASS_DECL = TokenSet.create(PasTypes.CLASS_FIELD, PasTypes.EXPORTED_ROUTINE, PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD_RESOLUTION);
-
     /*static final TokenSet TOKENS_USED = TokenSet.create(
             PasTypes.COMMA, PasTypes.NAMED_IDENT, PasTypes.LPAREN, PasTypes.ASSIGN_OP, PasTypes.ASSIGN_PART, PasTypes.BEGIN,
             PasTypes.COMPOUND_STATEMENT, PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION,
@@ -74,7 +71,6 @@ public class PascalFormatter implements FormattingModelBuilder {
         final boolean keepSectionsOneLine = pascalSettings.KEEP_SIMPLE_SECTIONS_IN_ONE_LINE;
 
         return new SpacingBuilder(settings, PascalLanguage.INSTANCE)
-                .between(PasTypes.SEMI, PasTypes.STATEMENT).lineBreakInCodeIf(!commonSettings.KEEP_MULTIPLE_EXPRESSIONS_IN_ONE_LINE)
                 .afterInside(PasTypes.COMMA, PasTypes.GENERIC_DEFINITION).spacing(spCommaTypeArgA, spCommaTypeArgA, 0, keepBreaks, 0)
                 .after(PasTypes.COMMA).spacing(spCommaA, spCommaA, 0, keepBreaks, 1)
                 .before(PasTypes.COMMA).spacing(spCommaB, spCommaB, 0, keepBreaks, 0)
@@ -118,10 +114,16 @@ public class PascalFormatter implements FormattingModelBuilder {
 
                 .around(PasTypes.ELSE).spacing(1, 1, commonSettings.ELSE_ON_NEW_LINE ? 1 : 0, keepBreaks, 0)
 
-                .after(TOKENS_CLASS_DECL).lineBreakInCode()
+                .afterInside(PasTypes.INTERFACE, PasTypes.UNIT_INTERFACE).blankLines(commonSettings.BLANK_LINES_BEFORE_IMPORTS)
+                .after(PasTypes.USES_CLAUSE).blankLines(commonSettings.BLANK_LINES_AFTER_IMPORTS)
+                .after(PasTypes.IMPLEMENTATION).blankLines(commonSettings.BLANK_LINES_BEFORE_IMPORTS)
+                .after(PasTypes.BLOCK_BODY).blankLines(1)
 
-                .afterInside(PasTypes.INTERFACE, PasTypes.UNIT_MODULE_HEAD).blankLines(1)
-                .after(PasTypes.IMPLEMENTATION).blankLines(1)
-                .after(PasTypes.BLOCK_BODY).blankLines(1);
+                .around(PasTypes.TYPE_DECLARATION).blankLines(commonSettings.BLANK_LINES_AROUND_CLASS)
+                .around(PascalBlock.DECL_SECTIONS).spacing(1, 1, keepSectionsOneLine ? 0 : 1,
+                        true, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS)
+                .after(PasTypes.EXPORTED_ROUTINE).blankLines(commonSettings.BLANK_LINES_AROUND_METHOD_IN_INTERFACE)
+                .after(PascalBlock.ROUTINE_IMPLS).blankLines(commonSettings.BLANK_LINES_AROUND_METHOD)
+                ;
     }
 }

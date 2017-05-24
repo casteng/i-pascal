@@ -14,6 +14,7 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.formatter.common.AbstractBlock;
+import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.Function;
@@ -52,9 +53,6 @@ public class PascalBlock extends AbstractBlock implements Block {
             PasTypes.ARRAY_TYPE, PasTypes.SUB_RANGE_TYPE,
             PasTypes.ARGUMENT_LIST, PasTypes.ASSIGN_PART);
 
-    private static final TokenSet TOKENS_NO_LF_AFTER_SEMI = TokenSet.create(PasTypes.FORMAL_PARAMETER_SECTION, PasTypes.EXPORTED_ROUTINE,
-            PasTypes.CLASS_PROPERTY_SPECIFIER, PasTypes.PROCEDURE_TYPE);
-
     private static final TokenSet TOKENS_COMMENT = PascalLexer.COMMENTS;
 
     private static final TokenSet TOKENS_ENTER_INDENTED =
@@ -62,6 +60,23 @@ public class PascalBlock extends AbstractBlock implements Block {
                     PasTypes.COMPOUND_STATEMENT, PasTypes.SUM_EXPR, PasTypes.FULLY_QUALIFIED_IDENT, PasTypes.STATEMENT);
 
     private static final TokenSet TOKEN_COMMENT_NORMALINDENT = TokenSet.create(PasTypes.COMPOUND_STATEMENT, PasTypes.USES_CLAUSE);
+
+    private static final TokenSet TOKEN_STATEMENT_OR_DECL = TokenSet.create(PasTypes.STATEMENT,
+            PasTypes.INTERFACE, PasTypes.IMPLEMENTATION, PasTypes.MODULE,
+            PasTypes.BLOCK_LOCAL, PasTypes.TYPE_DECL);
+
+    public static final TokenSet DECL_SECTIONS = TokenSet.create(
+            PasTypes.TYPE_DECLARATION, PasTypes.VAR_DECLARATION, PasTypes.CONST_DECLARATION
+    );
+
+    private static final TokenSet TOKENS_IN_STRUCT_LF_AFTER = TokenSet.create(
+            PasTypes.VISIBILITY, PasTypes.CLASS_PARENT, PasTypes.RECORD,
+            PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD_RESOLUTION,
+            PasTypes.TYPE_DECLARATION, PasTypes.VAR_DECLARATION, PasTypes.CONST_DECLARATION);
+
+    public static final TokenSet ROUTINE_IMPLS = TokenSet.create(
+            PasTypes.ROUTINE_IMPL_DECL, PasTypes.ROUTINE_IMPL_DECL_NESTED_1, PasTypes.ROUTINE_IMPL_DECL_WO_NESTED
+    );
 
     private static final Map<IElementType, IElementType> TOKEN_UNINDENTED_MAP = getTokenUnindentedMap();
 
@@ -180,28 +195,56 @@ public class PascalBlock extends AbstractBlock implements Block {
     @Override
     public Spacing getSpacing(@Nullable Block child1, @NotNull Block child2) {
         CommonCodeStyleSettings commonSettings = mySettings.getCommonSettings(PascalLanguage.INSTANCE);
+        final boolean keepBreaks = commonSettings.KEEP_LINE_BREAKS;
+        final int spSemiA = commonSettings.SPACE_AFTER_SEMICOLON ? 1 : 0;
         if (myNode.getElementType() == PasTypes.COMPOUND_STATEMENT) {
             boolean singleLine = isSimpleStatement(myNode) &&
                    (   commonSettings.KEEP_SIMPLE_BLOCKS_IN_ONE_LINE && nodeIs(myNode.getTreeParent(), PasTypes.STATEMENT)
                     || commonSettings.KEEP_SIMPLE_METHODS_IN_ONE_LINE && nodeIs(myNode.getTreeParent(), PasTypes.BLOCK_BODY));
             if (blockIs(child1, PasTypes.BEGIN) || blockIs(child2, PasTypes.END)) {
-                return Spacing.createSpacing(1, 1, singleLine ? 0 : 1, true, 1);
+                return Spacing.createSpacing(1, 1, singleLine ? 0 : 1, keepBreaks,
+                        blockIs(child2, PasTypes.END) ? commonSettings.KEEP_BLANK_LINES_BEFORE_RBRACE : commonSettings.KEEP_BLANK_LINES_IN_CODE);
             }
 //            System.out.println("getSpacing: " + block2Str(child1) + ", " + block2Str(child2));
         }
-        /*if ((child1 instanceof PascalBlock) && (((PascalBlock) child1).getNode().getElementType() == PasTypes.SEMI)) {
-            if (!TOKENS_NO_LF_AFTER_SEMI.contains(this.getNode().getElementType())) {
-                if (((PascalBlock) child2).getNode().getElementType() == PasTypes.COMMENT) {
-                    return null;
-                }
-//                System.out.println("getSpacing: " + block2Str(this) + " . " + block2Str(child1) + ", " + block2Str(child2));
-                return Spacing.createSpacing(1, 1, 0, true, 1);
+        if (blockIs(child1, PasTypes.SEMI) && blockIs(child2, PasTypes.STATEMENT)) {
+            final int keepLines = child2.getTextRange().getLength() > 0 ? commonSettings.KEEP_BLANK_LINES_IN_CODE : commonSettings.KEEP_BLANK_LINES_BEFORE_RBRACE;
+            return Spacing.createSpacing(spSemiA, spSemiA,
+                    commonSettings.KEEP_MULTIPLE_EXPRESSIONS_IN_ONE_LINE ? 0 : 1, keepBreaks, keepLines);
+        } else if (blockIs(child1, PasTypes.SEMI)) {
+            if (blockIs(child2, PasTypes.CLASS_FIELD)) {
+                return Spacing.createSpacing(spSemiA, spSemiA, commonSettings.BLANK_LINES_AROUND_FIELD + 1,
+                        keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
+            } else if (nodeIs(myNode.getTreeParent(), PasTypes.TYPE_DECL)) {
+                return Spacing.createSpacing(spSemiA, spSemiA, 1, keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
             } else {
-                return Spacing.createSpacing(1, 1, 0, true, 1);
-                //return Spacing.createSpacing(1, 1, 0, true, 1);
+                return Spacing.createSpacing(spSemiA, spSemiA, 0, keepBreaks, getKeepLines(myNode));
             }
-        }*/
+        } else if (blockIs(child1, TOKENS_IN_STRUCT_LF_AFTER) && nodeIs(myNode.getTreeParent(), PasTypes.TYPE_DECL)) {
+            return Spacing.createSpacing(spSemiA, spSemiA, commonSettings.BLANK_LINES_AROUND_FIELD + 1,
+                    keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
+        } else if (blockIs(child2, PasTypes.UNIT_INTERFACE) || blockIs(child2, PasTypes.UNIT_IMPLEMENTATION)) {
+            return Spacing.createSpacing(1, 1, commonSettings.BLANK_LINES_AFTER_PACKAGE + 1,
+                    keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
+        }
         return mySpacingBuilder.getSpacing(this, child1, child2);
+    }
+
+    private static boolean nodeIs(ASTNode node, TokenSet tokenSet) {
+        return node != null && tokenSet.contains(node.getElementType());
+    }
+
+    private static boolean blockIs(Block block, TokenSet tokenSet) {
+        if (!(block instanceof PascalBlock)) {
+            return false;
+        }
+        return nodeIs(((PascalBlock) block).myNode, tokenSet);
+    }
+
+    private int getKeepLines(ASTNode node) {
+        ASTNode parent = TreeUtil.findParent(node, TOKEN_STATEMENT_OR_DECL);
+        CommonCodeStyleSettings commonSettings = mySettings.getCommonSettings(PascalLanguage.INSTANCE);
+        return nodeIs(parent, PasTypes.STATEMENT) ? commonSettings.KEEP_BLANK_LINES_IN_CODE : commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS;
     }
 
     private static boolean isSimpleStatement(ASTNode node) {
@@ -222,13 +265,13 @@ public class PascalBlock extends AbstractBlock implements Block {
             }
         } else if (nodeIs(myNode, PasTypes.VISIBILITY)) {
             return WRAP_ALWAYS;
-        } else if (PascalLexer.SECTION_KEY.contains(myNode.getElementType())) {
+        } else if (nodeIs(myNode, PascalLexer.DECL_SECTION_KEY) && nodeIs(myNode.getTreeParent(), DECL_SECTIONS)) {
             return WRAP_ALWAYS;
         }
         return super.getWrap();
     }
 
-    private boolean blockIs(Block block, IElementType type) {
+    private static boolean blockIs(Block block, IElementType type) {
         if (!(block instanceof PascalBlock)) {
             return false;
         }
