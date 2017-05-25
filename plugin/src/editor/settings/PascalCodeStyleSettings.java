@@ -10,6 +10,7 @@ import com.intellij.psi.codeStyle.CustomCodeStyleSettings;
 public class PascalCodeStyleSettings extends CustomCodeStyleSettings {
     public boolean SPACE_AROUND_EQ_DECL = true;
     public boolean BEGIN_ON_NEW_LINE = true;
+    public boolean INDENT_BEGIN_END = false;
     public boolean SPACE_AROUND_RANGE = false;
     public boolean KEEP_SIMPLE_SECTIONS_IN_ONE_LINE = false;
 

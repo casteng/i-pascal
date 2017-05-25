@@ -138,6 +138,8 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
             consumer.showCustomOption(PascalCodeStyleSettings.class, "BEGIN_ON_NEW_LINE", PascalBundle.message("style.settings.wrap.begin.newline"),
                     null, CodeStyleSettingsCustomizable.OptionAnchor.BEFORE, "WRAP_LONG_LINES");
+            consumer.showCustomOption(PascalCodeStyleSettings.class, "INDENT_BEGIN_END", PascalBundle.message("style.settings.wrap.begin.indent"),
+                    null, CodeStyleSettingsCustomizable.OptionAnchor.BEFORE, "WRAP_LONG_LINES");
             consumer.showCustomOption(PascalCodeStyleSettings.class, "KEEP_SIMPLE_SECTIONS_IN_ONE_LINE", PascalBundle.message("style.settings.wrap.keep.simple.sections"),
                     "Keep when reformatting", CodeStyleSettingsCustomizable.OptionAnchor.AFTER, "KEEP_SIMPLE_METHODS_IN_ONE_LINE");
         }

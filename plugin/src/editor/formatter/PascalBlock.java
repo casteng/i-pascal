@@ -37,8 +37,6 @@ import java.util.Map;
  */
 public class PascalBlock extends AbstractBlock implements Block {
 
-    private static final Wrap WRAP_NONE = Wrap.createWrap(WrapType.NONE, true);
-    private static final Wrap WRAP_NORMAL = Wrap.createWrap(WrapType.NORMAL, true);
     private static final Wrap WRAP_ALWAYS = Wrap.createWrap(WrapType.ALWAYS, true);
 
     private List<Block> mySubBlocks = null;
@@ -46,18 +44,28 @@ public class PascalBlock extends AbstractBlock implements Block {
     private final CodeStyleSettings mySettings;
     private final Indent myIndent;
 
-    private static final TokenSet TOKENS_PARENT_INDENTED = TokenSet.create(PasTypes.STATEMENT, PasTypes.VAR_DECLARATION, PasTypes.CONST_DECLARATION, PasTypes.TYPE_DECLARATION,
-            PasTypes.CLASS_TYPE_DECL, PasTypes.RECORD_DECL, PasTypes.OBJECT_DECL, PasTypes.CLASS_HELPER_DECL, PasTypes.INTERFACE_TYPE_DECL, PasTypes.RECORD_HELPER_DECL,
+    private final static TokenSet TOKENS_INDENT_CHILD_NON_RELATIVE = TokenSet.create(
+            PasTypes.STATEMENT,
+            PasTypes.CLASS_TYPE_DECL, PasTypes.RECORD_DECL, PasTypes.OBJECT_DECL,
+            PasTypes.CLASS_HELPER_DECL, PasTypes.INTERFACE_TYPE_DECL, PasTypes.RECORD_HELPER_DECL
+    );
+    private final static TokenSet TOKENS_INDENT_CHILD = TokenSet.create(
+            PasTypes.VAR_DECLARATION, PasTypes.CONST_DECLARATION, PasTypes.TYPE_DECLARATION,
             PasTypes.CLASS_FIELD, PasTypes.EXPORTED_ROUTINE, PasTypes.CLASS_PROPERTY, PasTypes.CLASS_METHOD_RESOLUTION, PasTypes.USES_CLAUSE, PasTypes.RECORD_VARIANT,
-            PasTypes.ENUM_TYPE, PasTypes.TYPE_DECL, PasTypes.FORMAL_PARAMETER_SECTION, PasTypes.FORMAL_PARAMETER,
+            PasTypes.TYPE_DECL,
+            PasTypes.FORMAL_PARAMETER_SECTION, PasTypes.FORMAL_PARAMETER,
             PasTypes.ARRAY_TYPE, PasTypes.SUB_RANGE_TYPE,
-            PasTypes.ARGUMENT_LIST, PasTypes.ASSIGN_PART);
+            PasTypes.ARGUMENT_LIST, PasTypes.ASSIGN_PART
+    );
+    private final static TokenSet TOKENS_INDENT_BLOCK = TokenSet.create(
+            PasTypes.CASE_ITEM, PasTypes.HANDLER, PasTypes.ENUM_TYPE
+    );
 
     private static final TokenSet TOKENS_COMMENT = PascalLexer.COMMENTS;
 
-    private static final TokenSet TOKENS_ENTER_INDENTED =
-            TokenSet.create(PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION, PasTypes.USES_CLAUSE,
-                    PasTypes.COMPOUND_STATEMENT, PasTypes.SUM_EXPR, PasTypes.FULLY_QUALIFIED_IDENT, PasTypes.STATEMENT);
+    private static final TokenSet TOKENS_ENTER_INDENTED = TokenSet.create(
+            PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION, PasTypes.USES_CLAUSE,
+            PasTypes.COMPOUND_STATEMENT, PasTypes.SUM_EXPR, PasTypes.FULLY_QUALIFIED_IDENT, PasTypes.STATEMENT);
 
     private static final TokenSet TOKEN_COMMENT_NORMALINDENT = TokenSet.create(PasTypes.COMPOUND_STATEMENT, PasTypes.USES_CLAUSE);
 
@@ -82,7 +90,7 @@ public class PascalBlock extends AbstractBlock implements Block {
 
     private static Map<IElementType, IElementType> getTokenUnindentedMap() {
         Map<IElementType, IElementType> result = new HashMap<IElementType, IElementType>();
-        result.put(PasTypes.STATEMENT, PasTypes.COMPOUND_STATEMENT);
+//        result.put(PasTypes.STATEMENT, PasTypes.COMPOUND_STATEMENT);
         result.put(PasTypes.USES_CLAUSE, PasTypes.USES);
         return result;
     }
@@ -145,41 +153,6 @@ public class PascalBlock extends AbstractBlock implements Block {
         Indent indent = getBlockIndent(childNode);
 
         return new PascalBlock(childNode, mySettings, myWrap, indent);
-    }
-
-    private Indent getBlockIndent(@Nullable ASTNode childNode) {
-        if (childNode != null) {
-            if (TOKENS_COMMENT.contains(childNode.getElementType())) {
-                // Not move at leftmost position, indent usually, not indent in already indented contexts such as statement
-                Indent commentIndent = Indent.getAbsoluteNoneIndent();
-                int curInd = getCurrentIndent(childNode);
-                if (curInd > 0) {
-                    if (TOKEN_COMMENT_NORMALINDENT.contains(myNode.getElementType())) {
-                        commentIndent = Indent.getNormalIndent(false);
-                    } else {
-                        commentIndent = Indent.getContinuationIndent();
-                    }
-                }
-                return commentIndent;
-            }
-        }
-        if (TOKENS_PARENT_INDENTED.contains(myNode.getElementType()) && (childNode != null)) {
-            if (TOKEN_UNINDENTED_MAP.get(myNode.getElementType()) != childNode.getElementType()) {
-//                System.out.println("Parent ind: " + myNode + " . " + childNode);
-                return Indent.getNormalIndent();
-            }
-        }
-        return Indent.getNoneIndent();
-    }
-
-    private int getCurrentIndent(ASTNode childNode) {
-        ASTNode prev = childNode.getTreePrev();
-        if (prev instanceof PsiWhiteSpace) {
-            String text = prev.getText();
-            int pos = Math.min(text.length(), text.length() - text.lastIndexOf('\n') - 1);
-            return pos;
-        }
-        return 0;
     }
 
     @Override
@@ -317,6 +290,48 @@ public class PascalBlock extends AbstractBlock implements Block {
             }
         }
         return Indent.getNoneIndent();
+    }
+
+    private Indent getBlockIndent(@Nullable ASTNode childNode) {
+        if (childNode != null) {
+            if (TOKENS_COMMENT.contains(childNode.getElementType())) {
+                // Not move at leftmost position, indent usually, not indent in already indented contexts such as statement
+                Indent commentIndent = Indent.getAbsoluteNoneIndent();
+                int curInd = getCurrentIndent(childNode);
+                if (curInd > 0) {
+                    if (TOKEN_COMMENT_NORMALINDENT.contains(myNode.getElementType())) {
+                        commentIndent = Indent.getNormalIndent(false);
+                    } else {
+                        commentIndent = Indent.getContinuationIndent();
+                    }
+                }
+                return commentIndent;
+            }
+        }
+
+        if (nodeIs(childNode, TOKENS_INDENT_BLOCK)) {
+            return Indent.getNormalIndent(true);
+        } else if (TOKENS_INDENT_CHILD_NON_RELATIVE.contains(myNode.getElementType()) && (childNode != null)) {
+            final PascalCodeStyleSettings pascalSettings = mySettings.getCustomSettings(PascalCodeStyleSettings.class);
+            if (!nodeIs(myNode, PasTypes.STATEMENT) || !nodeIs(childNode, PasTypes.COMPOUND_STATEMENT) || (pascalSettings.INDENT_BEGIN_END )) {
+                return Indent.getNormalIndent();
+            }
+        } else if (TOKENS_INDENT_CHILD.contains(myNode.getElementType()) && (childNode != null)) {
+            if (TOKEN_UNINDENTED_MAP.get(myNode.getElementType()) != childNode.getElementType()) {
+                return Indent.getNormalIndent(true);
+            }
+        }
+        return Indent.getNoneIndent();
+    }
+
+    private static int getCurrentIndent(ASTNode childNode) {
+        ASTNode prev = childNode.getTreePrev();
+        if (prev instanceof PsiWhiteSpace) {
+            String text = prev.getText();
+            int pos = Math.min(text.length(), text.length() - text.lastIndexOf('\n') - 1);
+            return pos;
+        }
+        return 0;
     }
 
 }
