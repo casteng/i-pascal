@@ -5,6 +5,7 @@ interface
 type
     TTest = class
         constructor Create(ac1, ac2: Integer);
+        constructor Init(ac1: Integer);
         destructor Destroy(); override;
         class procedure test1();
         procedure test2_invalid();
@@ -27,6 +28,10 @@ implementation
 { TTest }
 
 constructor TTest.Create;
+begin
+end;
+
+constructor TTest.Init(ac1: Integer);
 begin
 end;
 

@@ -179,8 +179,13 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
     @NotNull
     public String getFunctionTypeStr() {
         if (isConstructor()) {
-            PasEntityScope scope = getContainingScope();
-            return scope != null ? scope.getName() : "";
+            if (this instanceof PasExportedRoutine) {
+                PasEntityScope scope = getContainingScope();
+                return scope != null ? scope.getName() : "";
+            } else {
+                String ns = getNamespace();
+                return ns.substring(ns.lastIndexOf('.') + 1);
+            }
         }
         PasTypeDecl type = findChildByClass(PasTypeDecl.class);
         PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);
