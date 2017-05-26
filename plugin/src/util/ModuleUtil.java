@@ -132,7 +132,7 @@ public class ModuleUtil {
 
             Module module = com.intellij.openapi.module.ModuleUtil.findModuleForFile(referencing, project);
 
-            return module != null ? trySearchPath(name, GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false)) : null;
+            return module != null ? trySearchPath(name, GlobalSearchScope.moduleWithDependenciesScope(module)) : null;
         } else {                                                                               // often lexer can't determine which virtual file is referencing the include
             return trySearchPath(name, GlobalSearchScope.projectScope(project));
         }
