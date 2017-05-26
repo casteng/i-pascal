@@ -133,7 +133,7 @@ public class FPCSdkType extends BasePascalSdkType {
         super.configureOptions(sdk, data, target);
         File file = PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath() != null ? sdk.getHomePath() : "");
         data.setValue(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey(), file.getAbsolutePath());
-        StrBuilder sb = new StrBuilder();
+        StrBuilder sb = new StrBuilder("-Mdelphi ");
         if (SystemUtils.IS_OS_WINDOWS) {
             sb.append("-dMSWINDOWS ");
         } else {
