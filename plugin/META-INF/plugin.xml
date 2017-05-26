@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.30</version>
+    <version>1.31</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -11,8 +11,9 @@
     <change-notes><![CDATA[
         <p>1.30</p>
         <ul>
-            <li>code style settings (Issue #51)</li>
-            <li>default indent set to 2 (Issue #19)</li>
+          <li>code style settings (Issue #51)</li>
+          <li>default indent set to 2 (Issue #19)</li>
+          <li>FPC SDK defaults to Delphi mode (Issue #68)</li>
         </ul>
         <p>1.26</p>
         <ul>

@@ -8,7 +8,7 @@ type TEnum = (Value1,Value2,Value3,  Value4);
         function Modifiers(a, b: TEnum): TEnum; virtual; abstract; register;
     end;
 
-// very long comment very long comment very long comment very long comment very long comment
+// comment
 procedure TSample<T1, T2>.Method(arg1, arg2: Integer; arg3: TEnum);
 var t1, t2: Integer;
 begin

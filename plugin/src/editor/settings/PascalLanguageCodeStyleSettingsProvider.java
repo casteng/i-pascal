@@ -111,24 +111,24 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
                     "KEEP_MULTIPLE_EXPRESSIONS_IN_ONE_LINE",
 
                     "WRAP_LONG_LINES",
-                    "WRAP_COMMENTS",
+//                    "WRAP_COMMENTS",
 
-                    "CALL_PARAMETERS_WRAP",
+//                    "CALL_PARAMETERS_WRAP",
 //                    "ALIGN_MULTILINE_PARAMETERS_IN_CALLS",
 
-                    "METHOD_PARAMETERS_WRAP",
+//                    "METHOD_PARAMETERS_WRAP",
 //                    "ALIGN_MULTILINE_PARAMETERS",
 
-                    "METHOD_CALL_CHAIN_WRAP",
+//                    "METHOD_CALL_CHAIN_WRAP",
 //                    "ALIGN_MULTILINE_CHAINED_METHODS",
 
-                    "ELSE_ON_NEW_LINE",
+                    "ELSE_ON_NEW_LINE"
 
-                    "BINARY_OPERATION_WRAP",
+//                    "BINARY_OPERATION_WRAP",
 //                    "ALIGN_MULTILINE_BINARY_OPERATION",
 //                    "BINARY_OPERATION_SIGN_ON_NEXT_LINE",
 
-                    "ENUM_CONSTANTS_WRAP"
+//                    "ENUM_CONSTANTS_WRAP"
             );
 
             consumer.renameStandardOption("KEEP_SIMPLE_METHODS_IN_ONE_LINE", PascalBundle.message("style.settings.wrap.keep.simple.routines"));

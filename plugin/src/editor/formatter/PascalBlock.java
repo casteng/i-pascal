@@ -55,17 +55,17 @@ public class PascalBlock extends AbstractBlock implements Block {
             PasTypes.TYPE_DECL,
             PasTypes.FORMAL_PARAMETER_SECTION, PasTypes.FORMAL_PARAMETER,
             PasTypes.ARRAY_TYPE, PasTypes.SUB_RANGE_TYPE,
-            PasTypes.ARGUMENT_LIST, PasTypes.ASSIGN_PART
+            PasTypes.ARGUMENT_LIST, PasTypes.ASSIGN_PART, PasTypes.ENUM_TYPE
     );
     private final static TokenSet TOKENS_INDENT_BLOCK = TokenSet.create(
-            PasTypes.CASE_ITEM, PasTypes.HANDLER, PasTypes.ENUM_TYPE
+            PasTypes.CASE_ITEM, PasTypes.HANDLER
     );
 
     private static final TokenSet TOKENS_COMMENT = PascalLexer.COMMENTS;
 
     private static final TokenSet TOKENS_ENTER_INDENTED = TokenSet.create(
             PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION, PasTypes.USES_CLAUSE,
-            PasTypes.COMPOUND_STATEMENT, PasTypes.SUM_EXPR, PasTypes.FULLY_QUALIFIED_IDENT, PasTypes.STATEMENT);
+            PasTypes.COMPOUND_STATEMENT, PasTypes.SUM_EXPR, PasTypes.FULLY_QUALIFIED_IDENT, PasTypes.STATEMENT, PasTypes.EXPRESSION);
 
     private static final TokenSet TOKEN_COMMENT_NORMALINDENT = TokenSet.create(PasTypes.COMPOUND_STATEMENT, PasTypes.USES_CLAUSE);
 
