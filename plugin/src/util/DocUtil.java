@@ -118,7 +118,7 @@ public class DocUtil {
             public void run() {
                 PsiManager manager = element.getManager();
                 if (manager != null) {
-                    CodeStyleManager.getInstance(manager).reformat(element, true);
+                    CodeStyleManager.getInstance(manager).reformatNewlyAddedElement(element.getParent().getNode(), element.getNode());
                 }
             }
         };
