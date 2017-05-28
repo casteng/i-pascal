@@ -17,6 +17,8 @@ public interface PascalStructType extends PasEntityScope {
     @NotNull
     Collection<PasField> getAllFields();
 
+    @Nullable
+    PasClassParent getClassParent();
     @NotNull
     List<PasVisibility> getVisibilityList();
     @NotNull

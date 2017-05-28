@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.31</p>
+        <ul>
+          <li>Improve positioning of created identifiers in create actions</li>
+        </ul>
         <p>1.30</p>
         <ul>
           <li>code style settings (Issue #51)</li>

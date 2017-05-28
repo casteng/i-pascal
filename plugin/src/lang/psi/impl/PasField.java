@@ -10,12 +10,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -41,10 +36,33 @@ public class PasField {
     public static final Set<FieldType> TYPES_STATIC = EnumSet.of(FieldType.UNIT, FieldType.TYPE, FieldType.CONSTANT, FieldType.ROUTINE);
     public static final Set<FieldType> TYPES_LOCAL = EnumSet.of(FieldType.VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE, FieldType.PSEUDO_VARIABLE);
 
-    public enum Visibility {INTERNAL, STRICT_PRIVATE, PRIVATE, STRICT_PROTECTED, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED}
+    public enum Visibility {
+        INTERNAL("INTERNAL"), STRICT_PRIVATE("STRICT PRIVATE"), PRIVATE("PRIVATE"),
+        STRICT_PROTECTED("STRICT PROTECTED"), PROTECTED("PROTECTED"), PUBLIC("PUBLIC"), PUBLISHED("PUBLISHED"), AUTOMATED("AUTOMATED");
 
-    public static final List<String> VISIBILITY_STR = Arrays.asList("INTERNAL", "STRICT PRIVATE", "PRIVATE", "STRICT PROTECTED", "PROTECTED", "PUBLIC", "PUBLISHED", "AUTOMATED");
-    public static final Map<String, Visibility> VISIBILITY_MAP = getVisibilityMap();
+        private final String key;
+
+        Visibility(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public static Visibility byKey(String key) {
+            for (Visibility visibility : values()) {
+                if (visibility.getKey().equals(key)) {
+                    return visibility;
+                }
+            }
+            throw new IllegalArgumentException("Invalid visibility key: " + key);
+        }
+
+        public boolean moreStrictThan(Visibility visibility) {
+            return this.compareTo(visibility) < 0;
+        }
+    }
 
     public static final ValueType INTEGER = new ValueType(null, Kind.INTEGER, null, null);
     public static final ValueType FLOAT = new ValueType(null, Kind.FLOAT, null, null);
@@ -53,19 +71,6 @@ public class PasField {
     public static final ValueType POINTER = new ValueType(null, Kind.POINTER, null, null);
 
     private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null, null);
-
-    private static Map<String, Visibility> getVisibilityMap() {
-        Map<String, Visibility> res = new HashMap<String, Visibility>();
-        res.put("INTERNAL", Visibility.INTERNAL);
-        res.put("STRICT PRIVATE", Visibility.STRICT_PRIVATE);
-        res.put("PRIVATE", Visibility.PRIVATE);
-        res.put("STRICT PROTECTED", Visibility.STRICT_PROTECTED);
-        res.put("PROTECTED", Visibility.PROTECTED);
-        res.put("PUBLIC", Visibility.PUBLIC);
-        res.put("PUBLISHED", Visibility.PUBLISHED);
-        res.put("AUTOMATED", Visibility.AUTOMATED);
-        return Collections.unmodifiableMap(res);
-    }
 
     public static boolean isAllowed(Visibility check, Visibility minAllowed) {
         return check.compareTo(minAllowed) >= 0;

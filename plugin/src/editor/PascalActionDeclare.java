@@ -253,7 +253,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     // Fills data parent and offset and returns True if section for new member already exists
-    private static boolean fillMemberPlace(PsiElement scope, FixActionData data, int targetVisibility, PasField.FieldType type, Class<? extends PsiElement> sectionClass, Class<? extends PsiElement> sectionItemClass) {
+    private static boolean fillMemberPlace(PsiElement scope, FixActionData data, PasField.Visibility targetVisibility, PasField.FieldType type, Class<? extends PsiElement> sectionClass, Class<? extends PsiElement> sectionItemClass) {
         if (scope instanceof PascalStructType) {
             data.text = "\n" + PLACEHOLDER_DATA;
             data.parent = scope;
@@ -359,7 +359,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
-            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
+            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE, PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
                 prefix = "\nvar ";
             }
             String type = defaultType != null ? defaultType : calcType(data);
@@ -398,12 +398,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             if (data == varData) {
-                if (fillMemberPlace(scope, data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
+                if (fillMemberPlace(scope, data, PasField.Visibility.PRIVATE, PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
                     data.text = data.text.replace(PLACEHOLDER_DATA, String.format("F%s: $%s$;", StringUtil.capitalize(data.element.getName()), TPL_VAR_TYPE));
                     data.dataType = FixActionData.DataType.COMPLEX_TEMPLATE;
                 }
             } else {
-                if (fillMemberPlace(scope, data, PasField.Visibility.PUBLIC.ordinal(), PasField.FieldType.PROPERTY, PasVarSection.class, null)) {
+                if (fillMemberPlace(scope, data, PasField.Visibility.PUBLIC, PasField.FieldType.PROPERTY, PasVarSection.class, null)) {
                     data.text = data.text.replace(PLACEHOLDER_DATA, String.format("property %1$s: $%2$s$ read F%1$s write F%1$s;", StringUtil.capitalize(data.element.getName()), TPL_VAR_TYPE));
                 }
             }
@@ -433,7 +433,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
-            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.CONSTANT, PasConstSection.class, PasConstDeclaration.class)) {
+            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE, PasField.FieldType.CONSTANT, PasConstSection.class, PasConstDeclaration.class)) {
                 prefix = "\nconst ";
             }
             if (data.parent != null) {
@@ -496,7 +496,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String prefix = "";
-            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE.ordinal(), PasField.FieldType.TYPE, PasTypeSection.class, PasTypeDeclaration.class)) {
+            if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE, PasField.FieldType.TYPE, PasTypeSection.class, PasTypeDeclaration.class)) {
                 prefix = "\ntype ";
             }
             if (data.parent != null) {
@@ -583,7 +583,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
 
         private void addToInterface(FixActionData data, String returnType) {
-            fillMemberPlace(scope, data, PasField.Visibility.PUBLIC.ordinal(), PasField.FieldType.ROUTINE, null, null);
+            fillMemberPlace(scope, data, PasField.Visibility.PUBLIC, PasField.FieldType.ROUTINE, null, null);
             Pair<String, Map<String, String>> arguments;
             if (spec != null) {
                 if (PsiUtil.isPropertyGetter(spec)) {
