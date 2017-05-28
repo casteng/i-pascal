@@ -38,7 +38,7 @@ public class PascalRoutineActions {
         void calcData(final PsiFile file, final FixActionData data) {
             PasRoutineImplDeclImpl routine = (PasRoutineImplDeclImpl) data.element;
 
-            String prefix = routine.getNamespace() + ".";
+            String prefix = routine.getNamespace() + "<.*>\\.";
             PasProcBodyBlock block = routine.getProcBodyBlock();
             int endoffs = block != null ? block.getStartOffsetInParent() : routine.getTextLength();
             data.text = "\n" + routine.getText().substring(0, endoffs);

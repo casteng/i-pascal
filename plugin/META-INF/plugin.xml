@@ -12,6 +12,7 @@
         <p>1.31</p>
         <ul>
           <li>Improve positioning of created identifiers in create actions</li>
+          <li>Improve generics support in declare/implement actions</li>
         </ul>
         <p>1.30</p>
         <ul>

@@ -43,7 +43,7 @@ public class SectionToggle {
     public static void getStructTarget(Collection<PsiElement> targets, PsiElement element) {
         PascalStructType struct = PsiUtil.getStructByElement(element);
         if (struct != null) {
-            Container cont = calcPrefix(new Container(struct));
+            Container cont = calcPrefix(new Container(struct), false);
             retrieveFirstImplementations(targets, cont);
         }
     }
@@ -65,7 +65,7 @@ public class SectionToggle {
 
     // Non-strict
     public static PsiElement getRoutineTarget(PascalRoutineImpl routine) {
-        Container cont = calcPrefix(new Container(routine));
+        Container cont = calcPrefix(new Container(routine), false);
         if (routine instanceof PasExportedRoutine) {
             return retrieveImplementation(cont, false);
         } else if (routine instanceof PasRoutineImplDecl) {
@@ -76,7 +76,7 @@ public class SectionToggle {
 
     // Strict
     public static PsiElement getImplementationOrDeclaration(PascalRoutineImpl routine) {
-        Container cont = calcPrefix(new Container(routine));
+        Container cont = calcPrefix(new Container(routine), false);
         if (routine instanceof PasExportedRoutine) {
             return retrieveImplementation(cont, true);
         } else if (routine instanceof PasRoutineImplDeclImpl) {
@@ -92,7 +92,7 @@ public class SectionToggle {
 
     @Nullable
     public static PsiElement retrieveImplementation(PascalRoutineImpl routine, boolean strict) {
-        return retrieveImplementation(calcPrefix(new Container(routine)), strict);
+        return retrieveImplementation(calcPrefix(new Container(routine), false), strict);
     }
 
     @Nullable
@@ -162,7 +162,7 @@ public class SectionToggle {
         if (!PsiUtil.isNotNestedRoutine(routine)) {           // Filter out nested routines
             return null;
         }
-        return retrieveDeclaration(calcPrefix(new Container(routine)), strict);
+        return retrieveDeclaration(calcPrefix(new Container(routine), false), strict);
     }
 
     @Nullable
@@ -198,15 +198,15 @@ public class SectionToggle {
     }
 
     public static String getPrefix(PasEntityScope scope) {
-        return calcPrefix(new Container(scope)).prefix;
+        return calcPrefix(new Container(scope), true).prefix;
     }
 
-    private static Container calcPrefix(Container current) {
+    private static Container calcPrefix(Container current, boolean genericAware) {
         while ((current.scope != null) && !(current.scope instanceof PascalModuleImpl)) {
             current.scope = findOwner(current.scope);
             if (current.scope instanceof PascalStructType) {
                 PsiElement nameEl = current.scope.getNameIdentifier();
-                if (nameEl instanceof PasGenericTypeIdent) {
+                if (!genericAware && (nameEl instanceof PasGenericTypeIdent)) {
                     current.prefix = ((PasGenericTypeIdent) nameEl).getRefNamedIdent().getName() + "." + current.prefix;
                 } else {
                     current.prefix = current.scope.getName() + "." + current.prefix;
@@ -272,11 +272,11 @@ public class SectionToggle {
             }
             // starting from the index search for implementations
             for (int i = ind - 1; (i >= 0) && (res < 0); i--) {
-                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i))), false);
+                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i)), false), false);
                 res = impl != null ? impl.getTextRange().getEndOffset() : -1;
             }
             for (int i = ind + 1; (i < decls.size()) && (res < 0); i++) {
-                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i))), false);
+                PsiElement impl = retrieveImplementation(calcPrefix(new Container(decls.get(i)), false), false);
                 if (impl != null) {
                     res = impl.getTextRange().getStartOffset();
                 }
@@ -320,7 +320,7 @@ public class SectionToggle {
         int member = -1;                        // To be used if right place will not be found
 
         final PasEntityScope scope = routine.getContainingScope();
-        Container cont = calcPrefix(new Container(routine));
+        Container cont = calcPrefix(new Container(routine), false);
         Collection<PasField> fields;
         if (cont.scope instanceof PascalModule) {
             fields = ((PascalModule) cont.scope).getPrivateFields();
@@ -347,11 +347,11 @@ public class SectionToggle {
         }
         // starting from the index search for declarations
         for (int i = ind - 1; (i >= 0) && (res < 0); i--) {
-            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))), false);
+            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i)), false), false);
             res = decl != null ? decl.getTextRange().getEndOffset() : -1;
         }
         for (int i = ind + 1; (i < impls.size()) && (res < 0); i++) {
-            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i))), false);
+            PsiElement decl = retrieveDeclaration(calcPrefix(new Container(impls.get(i)), false), false);
             if (decl != null) {
                 res = decl.getTextRange().getStartOffset();
             }
