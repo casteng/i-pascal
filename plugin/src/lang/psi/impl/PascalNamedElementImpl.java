@@ -7,6 +7,7 @@ import com.intellij.openapi.roots.FileIndexFacade;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.tree.TokenSet;
@@ -21,6 +22,7 @@ import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -123,6 +125,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public SearchScope getUseScope() {
+        if (PsiUtil.isLocalDeclaration(this)) {
+            return GlobalSearchScope.fileScope(this.getContainingFile());
+        }
         return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));
     }
 

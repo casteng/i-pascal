@@ -30,6 +30,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
+import com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -865,5 +866,17 @@ public class PsiUtil {
 
     public static boolean isNotNestedRoutine(PascalRoutineImpl routine) {
         return routine.getClass() == PasRoutineImplDeclImpl.class;
+    }
+
+    public static boolean isLocalDeclaration(PascalNamedElementImpl element) {
+        PsiElement parent = element.getParent();
+        if (parent instanceof PasFormalParameter) {
+            return true;
+        } else if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration) {
+            PsiElement scope = parent.getParent().getParent();
+            return (scope instanceof PasImplDeclSection || scope instanceof PasBlockGlobal || scope instanceof PasBlockLocal);
+        } else {
+            return false;
+        }
     }
 }

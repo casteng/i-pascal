@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>1.31</p>
         <ul>
+          <li>Optimization of find usages and rename for local identifiers</li>
           <li>Improve positioning of created identifiers in create actions</li>
           <li>Improve generics support in declare/implement actions</li>
         </ul>
