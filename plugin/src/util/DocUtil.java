@@ -97,7 +97,7 @@ public class DocUtil {
                 el = PsiUtil.skipToExpressionParent(el);
                 PsiManager manager = el != null ? el.getManager() : null;
                 if ((el != null) && (manager != null)) {
-                    CodeStyleManager.getInstance(manager).reformat(el, true);
+                    CodeStyleManager.getInstance(manager).reformatRange(file, el.getTextRange().getStartOffset(), el.getTextRange().getEndOffset(), true);
                 }
             }
         });

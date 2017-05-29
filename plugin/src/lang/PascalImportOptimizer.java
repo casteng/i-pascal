@@ -256,7 +256,8 @@ public class PascalImportOptimizer implements ImportOptimizer {
                 }
             }
         }
-        Document doc = PsiDocumentManager.getInstance(module.getProject()).getDocument(module.getContainingFile());
+        final PsiFile file = module.getContainingFile();
+        Document doc = PsiDocumentManager.getInstance(module.getProject()).getDocument(file);
         if (doc != null) {
             DocUtil.adjustDocument(doc, offs, content);
             PsiDocumentManager.getInstance(module.getProject()).commitDocument(doc);
@@ -267,7 +268,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                 for (PasUsesClause usesClause : PsiTreeUtil.findChildrenOfType(module, PasUsesClause.class)) {
                     PsiManager manager = usesClause.getManager();
                     if (manager != null) {
-                        CodeStyleManager.getInstance(manager).reformat(usesClause, true);
+                        CodeStyleManager.getInstance(manager).reformatRange(file, usesClause.getTextRange().getStartOffset(), usesClause.getTextRange().getEndOffset(), true);
                     }
                 }
             }

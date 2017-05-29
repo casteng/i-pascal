@@ -55,7 +55,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
             }
         }
         if (el != null) {
-            CodeStyleManager.getInstance(el.getManager()).reformat(el, true);
+            CodeStyleManager.getInstance(el.getManager()).reformatRange(psiFile, el.getTextRange().getStartOffset(), el.getTextRange().getEndOffset(), true);
         }
         return true;
     }
