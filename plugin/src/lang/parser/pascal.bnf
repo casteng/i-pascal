@@ -337,7 +337,10 @@
 external pascal             ::= parsePascal Module
 Module                      ::= [prolog] (moduleUnit | moduleLibrary | modulePackage | moduleProgram | include_impl | include_intf)
                             {extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
-                             implements="com.siberika.idea.pascal.lang.psi.impl.PascalModule"}
+                             implements="com.siberika.idea.pascal.lang.psi.impl.PascalModule"
+                             stubClass="com.siberika.idea.pascal.lang.stub.PasModuleStub"
+                             elementTypeClass="com.siberika.idea.pascal.lang.stub.PasModuleStubElementType"}
+
 private include_impl        ::= [intUsesClause] declSection+ [unitBlock] {recoverWhile=rec_module_start}
 private include_intf        ::= [intUsesClause] interfaceDecl+ {recoverWhile=rec_module_start}
 

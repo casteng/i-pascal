@@ -12,6 +12,7 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
@@ -40,7 +41,7 @@ import java.util.concurrent.Callable;
  * Author: George Bakhtadze
  * Date: 07/09/2013
  */
-public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntityScope {
+public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasEntityScope {
 
     public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
 
@@ -75,7 +76,7 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
                 PasClassHelperDeclImpl.class, PasClassTypeDeclImpl.class, PasInterfaceTypeDeclImpl.class, PasObjectDeclImpl.class, PasRecordHelperDeclImpl.class, PasRecordDeclImpl.class);
     }
 
-    @Override
+//    @Override
     @Nullable
     @SuppressWarnings("unchecked")
     protected PsiElement getNameElement() {
@@ -276,6 +277,48 @@ public abstract class PasStructTypeImpl extends PasScopeImpl implements PasEntit
             }
         }
 
+    }
+
+
+
+// Copied from PascalNamedElementImpl as we can't extend that class. TODO: Move to another place
+
+    private volatile String myCachedName;
+
+    @Override
+    public void subtreeChanged() {
+        super.subtreeChanged();
+        myCachedName = null;
+    }
+
+    @NotNull
+    @Override
+    synchronized public String getName() {
+        if ((myCachedName == null) || (myCachedName.length() == 0)) {
+            myCachedName = PascalNamedElementImpl.calcName(getNameElement());
+        }
+        return myCachedName;
+    }
+
+    @Override
+    public String getNamespace() {
+        return "";
+    }
+
+    @Override
+    public String getNamePart() {
+        return getName();
+    }
+
+    @Nullable
+    @Override
+    public PsiElement getNameIdentifier() {
+        return getNameElement();
+    }
+
+    @Override
+    public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+        return null;
     }
 
 }

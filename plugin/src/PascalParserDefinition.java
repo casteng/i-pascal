@@ -12,6 +12,7 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
+import com.siberika.idea.pascal.lang.parser.PascalFileElementType;
 import com.siberika.idea.pascal.lang.parser.PascalParser;
 import com.siberika.idea.pascal.lang.parser.impl.PascalFileImpl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
@@ -23,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PascalParserDefinition implements ParserDefinition {
 
-    public static final IFileElementType PAS_FILE_ELEMENT_TYPE = new IFileElementType("PAS_FILE", PascalLanguage.INSTANCE);
+    public static final IFileElementType PAS_FILE_ELEMENT_TYPE = new PascalFileElementType("PAS_FILE", PascalLanguage.INSTANCE);
     public static final TokenSet WS = TokenSet.create(TokenType.WHITE_SPACE);
     public static final TokenSet LITERALS = TokenSet.create(PasTypes.STRING_FACTOR, PasTypes.STRING_FACTOR);
 

@@ -10,7 +10,6 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
-import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.PascalReference;
@@ -35,7 +34,6 @@ import java.util.Iterator;
  */
 public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
     private static final int MAX_SHORT_TEXT_LENGTH = 32;
-    private static final TokenSet NAME_TYPE_SET = TokenSet.create(PasTypes.NAME, PasTypes.KEYWORD_IDENT, PasTypes.ESCAPED_IDENT);
     private volatile String myCachedName;
 
     public PascalNamedElementImpl(ASTNode node) {
@@ -50,14 +48,14 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @NotNull
     @Override
-    public String getName() {                                                      // TODO: synchronize?
+    synchronized public String getName() {
         if ((myCachedName == null) || (myCachedName.length() == 0)) {
             myCachedName = calcName(getNameElement());
         }
         return myCachedName;
     }
 
-    private static String calcName(PsiElement nameElement) {
+    public static String calcName(PsiElement nameElement) {
         if ((nameElement != null) && (nameElement.getClass() == PasClassQualifiedIdentImpl.class)) {
             Iterator<PasSubIdent> it = ((PasClassQualifiedIdent) nameElement).getSubIdentList().iterator();
             StringBuilder sb = new StringBuilder(it.next().getName());
@@ -188,9 +186,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
         if (getParent() != that.getParent()) return false;
         if (!getName().equalsIgnoreCase(that.getName())) return false;
-        if ((this instanceof PascalRoutineImpl) && (this != that)) {
+        /*if ((this instanceof PascalRoutineImpl) && (this != that)) {
             return false;
-        }
+        }*/
 
         return true;
     }

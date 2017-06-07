@@ -426,5 +426,7 @@
         <compileServer.plugin classpath="jps-plugin.jar"/>
         <postStartupActivity implementation="com.siberika.idea.pascal.PostStartupActivity"/>
 
+        <stubElementTypeHolder class="com.siberika.idea.pascal.lang.psi.PasTypes"/>
+
     </extensions>
 </idea-plugin>
