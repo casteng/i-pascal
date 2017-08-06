@@ -402,7 +402,10 @@ private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
 
-ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
+ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"
+                             stubClass="com.siberika.idea.pascal.lang.stub.PasRoutineStub"
+                             elementTypeClass="com.siberika.idea.pascal.lang.stub.PasRoutineStubElementType"}
+
 private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=2}
 private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=2}
