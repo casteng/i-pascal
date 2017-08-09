@@ -69,27 +69,31 @@ public class PascalSdkUtil {
                 binDir = sdkHomeDir;
             }
         }
-        if (!binDir.exists() && "bin".equals(dir)) {                  // Default directory where fpc and ppudump executables are located
-            LOG.info(binDir.getAbsolutePath() + " not found, trying default executable path...");
-            for (String defaultBinDir : DEFAULT_BIN_UNIX) {
-                File executable = new File(defaultBinDir, exe);
-                if (executable.exists() && executable.canExecute()) {
+        if (binDir.exists()) {
+            LOG.info("Binary directory found at " + binDir.getAbsolutePath());
+            for (File targetDir : FileUtil.listDirs(binDir)) {
+                File executable = getExecutable(targetDir.getAbsolutePath(), exe);
+                if (executable.canExecute()) {
+                    target = targetDir.getName();
+                    LOG.info("Found target " + target);
                     return executable;
                 }
             }
-            LOG.info("Binary directory not found");
-            throw new RuntimeException("SDK not found");
-        }
-        LOG.info("Binary directory found at " + binDir.getAbsolutePath());
-        for (File targetDir : FileUtil.listDirs(binDir)) {
-            File executable = getExecutable(targetDir.getAbsolutePath(), exe);
-            if (executable.canExecute()) {
-                target = targetDir.getName();
-                LOG.info("Found target " + target);
+            File executable = getExecutable(binDir.getAbsolutePath(), exe);
+            if (executable.exists() && executable.canExecute()) {
                 return executable;
             }
         }
-        return getExecutable(binDir.getAbsolutePath(), exe);
+        // Default directory where fpc and ppudump executables are located
+        LOG.info(binDir.getAbsolutePath() + " not found, trying default executable path...");
+        for (String defaultBinDir : DEFAULT_BIN_UNIX) {
+            File executable = new File(defaultBinDir, exe);
+            if (executable.exists() && executable.canExecute()) {
+                return executable;
+            }
+        }
+        LOG.info("Binary directory not found");
+        throw new RuntimeException("SDK not found");
     }
 
     @Nullable
