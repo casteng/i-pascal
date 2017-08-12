@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.xdebugger.frame.XStackFrame;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiParser;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
@@ -20,10 +21,10 @@ import java.util.List;
  */
 public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
     private static final Logger LOG = Logger.getInstance(GdbProcessAdapter.class);
-    private final GdbXDebugProcess process;
+    private final PascalXDebugProcess process;
     private GdbSuspendContext suspendContext;
 
-    GdbProcessAdapter(GdbXDebugProcess xDebugProcess) {
+    GdbProcessAdapter(PascalXDebugProcess xDebugProcess) {
         this.process = xDebugProcess;
     }
 

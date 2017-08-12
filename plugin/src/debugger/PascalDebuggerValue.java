@@ -6,7 +6,6 @@ import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalIcons;
-import com.siberika.idea.pascal.debugger.gdb.GdbXDebugProcess;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.jetbrains.annotations.NotNull;
@@ -19,14 +18,14 @@ import javax.swing.*;
  */
 public class PascalDebuggerValue extends XValue {
 
-    private final GdbXDebugProcess debugProcess;
+    private final PascalXDebugProcess debugProcess;
     private final String name;
     private final String type;
     private final String value;
     private final Integer childrenCount;
     private final PasField.FieldType fieldType;
 
-    public PascalDebuggerValue(GdbXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount, PasField.FieldType fieldType) {
+    public PascalDebuggerValue(PascalXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount, PasField.FieldType fieldType) {
         this.debugProcess = debugProcess;
         this.name = name;
         this.type = type;
@@ -35,7 +34,7 @@ public class PascalDebuggerValue extends XValue {
         this.fieldType = fieldType;
     }
 
-    public PascalDebuggerValue(GdbXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount) {
+    public PascalDebuggerValue(PascalXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount) {
         this(debugProcess, name, type, value, childrenCount, PasField.FieldType.VARIABLE);
     }
 

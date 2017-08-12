@@ -13,6 +13,7 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
+import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
@@ -34,7 +35,7 @@ import java.util.concurrent.ConcurrentMap;
  * Date: 01/04/2017
  */
 public class GdbStackFrame extends XStackFrame {
-    private final GdbXDebugProcess process;
+    private final PascalXDebugProcess process;
     private final GdbExecutionStack executionStack;
     private final GdbMiResults frame;
     private final int level;
@@ -102,7 +103,7 @@ public class GdbStackFrame extends XStackFrame {
         return name + "()";
     }
 
-    PasField resolveIdentifierName(final String name, final Set<PasField.FieldType> types) {
+    public PasField resolveIdentifierName(final String name, final Set<PasField.FieldType> types) {
         if (!process.options.resolveNames() || (null == sourcePosition)) {
             return null;
         }

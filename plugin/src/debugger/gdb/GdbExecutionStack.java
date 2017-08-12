@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.debugger.gdb;
 
 import com.intellij.xdebugger.frame.XExecutionStack;
 import com.intellij.xdebugger.frame.XStackFrame;
+import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public class GdbExecutionStack extends XExecutionStack {
 
     private final GdbSuspendContext context;
-    private final GdbXDebugProcess process;
+    private final PascalXDebugProcess process;
     private final GdbMiLine response;
     private final String threadId;
 
@@ -38,7 +39,7 @@ public class GdbExecutionStack extends XExecutionStack {
         context.getProcess().sendCommand("-stack-list-frames");
     }
 
-    public GdbXDebugProcess getProcess() {
+    public PascalXDebugProcess getProcess() {
         return process;
     }
 

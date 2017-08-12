@@ -4,7 +4,6 @@ import com.intellij.openapi.ui.MessageType;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
 import com.siberika.idea.pascal.PascalBundle;
-import com.siberika.idea.pascal.debugger.gdb.GdbXDebugProcess;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,10 +15,10 @@ import java.util.Map;
  * Date: 26/03/2017
  */
 public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<PascalLineBreakpointProperties>> {
-    private final GdbXDebugProcess debugProcess;
+    private final PascalXDebugProcess debugProcess;
     final Map<PascalLineBreakpointProperties, Integer> breakIndexMap = new HashMap<PascalLineBreakpointProperties, Integer>();
 
-    public PascalLineBreakpointHandler(GdbXDebugProcess debugProcess) {
+    public PascalLineBreakpointHandler(PascalXDebugProcess debugProcess) {
         super(PascalLineBreakpointType.class);
         this.debugProcess = debugProcess;
     }
