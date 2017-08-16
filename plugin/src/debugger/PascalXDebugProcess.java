@@ -68,11 +68,12 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     protected LogConsoleImpl outputConsole;
     protected Map<String, GdbVariableObject> variableObjectMap;
     protected File outputFile;
+    protected ExecutionEnvironment environment;
+
     protected Sdk sdk;
-
     private static final String VAR_PREFIX_LOCAL = "l%";
-    private static final String VAR_PREFIX_WATCHES = "w%";
 
+    private static final String VAR_PREFIX_WATCHES = "w%";
     private final XBreakpointHandler<?>[] MY_BREAKPOINT_HANDLERS = new XBreakpointHandler[] {new PascalLineBreakpointHandler(this)};
     private XCompositeNode lastQueriedVariablesCompositeNode;
     private XCompositeNode lastParentNode;
@@ -84,10 +85,13 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
+        this.environment = environment;
         RunProfile conf = environment.getRunProfile();
         if (conf instanceof PascalRunConfiguration) {
             Module module = ((PascalRunConfiguration) conf).getConfigurationModule().getModule();
             sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
+        } else {
+            LOG.warn("Invalid run configuration class: " + (conf != null ? conf.getClass().getName() : "<null>"));
         }
         if (null == sdk) {
             sdk = ProjectRootManager.getInstance(environment.getProject()).getProjectSdk();

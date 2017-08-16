@@ -17,15 +17,7 @@ package com.siberika.idea.pascal.run;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
-import com.intellij.execution.configurations.CommandLineState;
-import com.intellij.execution.configurations.ConfigurationFactory;
-import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.configurations.ModuleBasedConfiguration;
-import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.execution.configurations.RunConfigurationModule;
-import com.intellij.execution.configurations.RunConfigurationWithSuppressedDefaultDebugAction;
-import com.intellij.execution.configurations.RunProfileState;
-import com.intellij.execution.configurations.SearchScopeProvider;
+import com.intellij.execution.configurations.*;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.CapturingProcessHandler;
@@ -40,10 +32,9 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.siberika.idea.pascal.PascalBundle;
-import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
+import com.siberika.idea.pascal.debugger.PascalDebugFactory;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
-import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -128,24 +119,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                     Sdk sdk = getConfigurationModule().getModule() != null ?
                             ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() :
                             ProjectRootManager.getInstance(getProject()).getProjectSdk();
-
-                    PascalSdkData data = sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
-                    String command = BasePascalSdkType.getDebuggerCommand(sdk, "gdb");
-                    commandLine.setExePath(command);
-                    if (!data.getBoolean(PascalSdkData.Keys.DEBUGGER_USE_GDBINIT)) {
-                        commandLine.addParameters("-n");
-                        commandLine.addParameters("-fullname");
-                        commandLine.addParameters("-nowindows");
-                        commandLine.addParameters("-interpreter=mi");
-                    }
-
-                    if (data.getValue(PascalSdkData.Keys.DEBUGGER_OPTIONS.getKey()) != null) {
-                        String[] compilerOptions = data.getString(PascalSdkData.Keys.DEBUGGER_OPTIONS).split("\\s+");
-                        commandLine.addParameters(compilerOptions);
-                    }
-
-                    commandLine.addParameters("--args");
-                    commandLine.addParameters(executable);
+                    PascalDebugFactory.adjustCommand(sdk, commandLine, executable);
                 } else {
                     if (executable != null) {
                         commandLine.setExePath(executable);

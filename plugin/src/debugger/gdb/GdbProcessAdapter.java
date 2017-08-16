@@ -24,7 +24,7 @@ public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
     private final PascalXDebugProcess process;
     private GdbSuspendContext suspendContext;
 
-    GdbProcessAdapter(PascalXDebugProcess xDebugProcess) {
+    public GdbProcessAdapter(PascalXDebugProcess xDebugProcess) {
         this.process = xDebugProcess;
     }
 

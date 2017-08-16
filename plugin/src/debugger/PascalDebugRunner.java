@@ -15,7 +15,6 @@ import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugProcessStarter;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerManager;
-import com.siberika.idea.pascal.debugger.gdb.GdbXDebugProcess;
 import com.siberika.idea.pascal.run.PascalRunConfiguration;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +38,7 @@ public class PascalDebugRunner extends GenericProgramRunner {
             @NotNull
             @Override
             public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-                return new GdbXDebugProcess(session, environment, executionResult);
+                return PascalDebugFactory.createXDebugProcess(session, environment, executionResult);
             }
         }).getRunContentDescriptor();
     }
