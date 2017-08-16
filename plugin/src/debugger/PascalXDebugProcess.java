@@ -86,6 +86,17 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
         this.environment = environment;
+        this.sdk = retrieveSdk(environment);
+        this.executionResult = executionResult;
+        try {
+            init(environment);
+        } catch (Exception e) {
+            LOG.warn("Error launching debug process", e);
+        }
+    }
+
+    static Sdk retrieveSdk(ExecutionEnvironment environment) {
+        Sdk sdk = null;
         RunProfile conf = environment.getRunProfile();
         if (conf instanceof PascalRunConfiguration) {
             Module module = ((PascalRunConfiguration) conf).getConfigurationModule().getModule();
@@ -93,15 +104,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         } else {
             LOG.warn("Invalid run configuration class: " + (conf != null ? conf.getClass().getName() : "<null>"));
         }
-        if (null == sdk) {
-            sdk = ProjectRootManager.getInstance(environment.getProject()).getProjectSdk();
-        }
-        this.executionResult = executionResult;
-        try {
-            init(environment);
-        } catch (Exception e) {
-            LOG.warn("Error launching debug process", e);
-        }
+        return sdk != null ? sdk : ProjectRootManager.getInstance(environment.getProject()).getProjectSdk();
     }
 
     protected void createOutputConsole(Project project) {
@@ -362,6 +365,10 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     }
 
     public PascalSdkData getData() {
+        return getData(sdk);
+    }
+
+    public static PascalSdkData getData(Sdk sdk) {
         return sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
     }
 

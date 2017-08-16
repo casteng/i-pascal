@@ -5,6 +5,8 @@ import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
+import com.siberika.idea.pascal.jps.util.FileUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -32,7 +34,10 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
             line = props.getLine();
             filename = props.getFilename();
         }
-        debugProcess.sendCommand(String.format("-break-insert %s -f %s:%d", debugProcess.isInferiorRunning() ? "-h" : "", filename, line));
+        if (!PascalXDebugProcess.getData(PascalXDebugProcess.retrieveSdk(debugProcess.environment)).getBoolean(PascalSdkData.Keys.DEBUGGER_BREAK_FULL_NAME)) {
+            filename = FileUtil.getFilename(filename);
+        }
+        debugProcess.sendCommand(String.format("-break-insert %s -f %s:%d", debugProcess.isInferiorRunning() ? "-h" : "", filename, line + 1));
     }
 
     @Override

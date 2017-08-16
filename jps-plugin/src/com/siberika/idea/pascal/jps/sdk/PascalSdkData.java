@@ -15,10 +15,11 @@ public class PascalSdkData implements SdkAdditionalData {
     public static final PascalSdkData EMPTY = new PascalSdkData();
     public static final String SDK_DATA_TRUE = "1";
     private static final Map<String, Object> DEFAULTS_MAP = new ImmutableMap.Builder<String, Object>()
-            .put(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), "1")
-            .put(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS.getKey(), "1")
-            .put(PascalSdkData.Keys.DEBUGGER_USE_GDBINIT.getKey(), "0")
-            .put(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES.getKey(), "1")
+            .put(Keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), "1")
+            .put(Keys.DEBUGGER_RETRIEVE_CHILDS.getKey(), "1")
+            .put(Keys.DEBUGGER_USE_GDBINIT.getKey(), "0")
+            .put(Keys.DEBUGGER_RESOLVE_NAMES.getKey(), "1")
+            .put(Keys.DEBUGGER_BREAK_FULL_NAME.getKey(), "1")
             .build();
 
     public enum Keys {
@@ -28,9 +29,11 @@ public class PascalSdkData implements SdkAdditionalData {
         DECOMPILER_CACHE("decompilerCache"),
         DECOMPILER_COMMAND("decompilerCommand"),
 
+        DEBUGGER_BACKEND("debuggerBackend"),
         DEBUGGER_COMMAND("debuggerCommand"),
         DEBUGGER_OPTIONS("debuggerOptions"),
         DEBUGGER_REDIRECT_CONSOLE("debuggerRedirectConsole"),
+        DEBUGGER_BREAK_FULL_NAME("debuggerBreakFullName"),
         DEBUGGER_RETRIEVE_CHILDS("debuggerRetrieveChilds"),
         DEBUGGER_USE_GDBINIT("debuggerUseGdbinit"),
         DEBUGGER_RESOLVE_NAMES("debuggerResolveNames"),
