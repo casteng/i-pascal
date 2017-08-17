@@ -79,7 +79,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     private XCompositeNode lastParentNode;
     private boolean inferiorRunning = false;
 
-    protected abstract void init(ExecutionEnvironment environment);
+    protected abstract void init();
 
     protected abstract void doCreateTabLayouter(RunnerLayoutUi ui);
 
@@ -89,7 +89,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         this.sdk = retrieveSdk(environment);
         this.executionResult = executionResult;
         try {
-            init(environment);
+            init();
         } catch (Exception e) {
             LOG.warn("Error launching debug process", e);
         }
@@ -107,19 +107,19 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         return sdk != null ? sdk : ProjectRootManager.getInstance(environment.getProject()).getProjectSdk();
     }
 
-    protected void createOutputConsole(Project project) {
+    protected void createOutputConsole() {
         try {
             outputFile = File.createTempFile("ipas_run_out_", ".tmp");
-            outputConsole = new LogConsoleImpl(project, outputFile, Charset.forName("utf-8"), 0,
-                    PascalBundle.message("debug.output.title"), false, GlobalSearchScope.allScope(project)) {
+            outputConsole = new LogConsoleImpl(environment.getProject(), outputFile, Charset.forName("utf-8"), 0,
+                    PascalBundle.message("debug.output.title"), false, GlobalSearchScope.allScope(environment.getProject())) {
                 @Override
                 public boolean isActive() {
                     return true;
                 }
             };
             outputConsole.activate();
-        } catch (IOException e) {
-            LOG.warn("Error creating output console");
+        } catch (Exception e) {
+            LOG.warn("Error creating output console", e);
         }
     }
 

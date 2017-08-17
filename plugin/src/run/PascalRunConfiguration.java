@@ -19,29 +19,16 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.executors.DefaultDebugExecutor;
-import com.intellij.execution.filters.TextConsoleBuilderFactory;
-import com.intellij.execution.process.CapturingProcessHandler;
-import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.siberika.idea.pascal.PascalBundle;
-import com.siberika.idea.pascal.debugger.PascalDebugFactory;
-import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Author: George Bakhtadze
@@ -75,7 +62,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
         return new PascalRunConfigurationEditor(this);
     }
 
-    private Module findModule(@NotNull ExecutionEnvironment env) {
+    Module findModule(@NotNull ExecutionEnvironment env) {
         Module result = null;
         if ((env.getRunnerAndConfigurationSettings() != null) &&
             (env.getRunnerAndConfigurationSettings().getConfiguration() instanceof PascalRunConfiguration)) {
@@ -94,46 +81,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     @Nullable
     public RunProfileState getState(@NotNull Executor executor, @NotNull final ExecutionEnvironment env) throws ExecutionException {
-        final boolean debug = executor instanceof DefaultDebugExecutor;
-        final String workDirectory = this.workingDirectory;
-        final List<String> params = new ArrayList<String>();
-        if ((parameters != null) && (parameters.length() > 0)) {
-            params.addAll(Arrays.asList(parameters.split("\\s+"))); //TODO: use exec*utils to correctly split params
-        }
-        return new CommandLineState(env) {
-            @NotNull
-            @Override
-            protected ProcessHandler startProcess() throws ExecutionException {
-                Module module = findModule(env);
-                GeneralCommandLine commandLine = new GeneralCommandLine();
-
-                String fileName;
-                if (programFileName != null) {
-                    fileName = FileUtil.getFilename(programFileName);
-                } else {
-                    VirtualFile mainFile = PascalModuleType.getMainFile(module);
-                    fileName = mainFile != null ? mainFile.getNameWithoutExtension() : null;
-                }
-                String executable = PascalRunner.getExecutable(module, fileName);
-                if (debug) {
-                    Sdk sdk = getConfigurationModule().getModule() != null ?
-                            ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() :
-                            ProjectRootManager.getInstance(getProject()).getProjectSdk();
-                    PascalDebugFactory.adjustCommand(sdk, commandLine, executable);
-                } else {
-                    if (executable != null) {
-                        commandLine.setExePath(executable);
-                    } else {
-                        throw new ExecutionException(PascalBundle.message("execution.noExecutable"));
-                    }
-                }
-                commandLine.addParameters(params);
-                commandLine.setWorkDirectory(workDirectory);
-                ProcessHandler handler = new CapturingProcessHandler(commandLine.createProcess(), commandLine.getCharset(), commandLine.getCommandLineString());
-                setConsoleBuilder(TextConsoleBuilderFactory.getInstance().createBuilder(getProject()));
-                return handler;
-            }
-        };
+        return new PascalCommandLineState(this, env, executor instanceof DefaultDebugExecutor, workingDirectory, parameters);
     }
 
     public static void copyParams(PascalRunConfigurationParams from, PascalRunConfigurationParams to) {

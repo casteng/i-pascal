@@ -34,9 +34,9 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
-    protected void init(ExecutionEnvironment environment) {
+    protected void init() {
         if (isOutputConsoleNeeded()) {
-            createOutputConsole(environment.getProject());
+            createOutputConsole();
         }
         console = (ConsoleView) executionResult.getExecutionConsole();
         variableObjectMap = new HashMap<String, GdbVariableObject>();
@@ -69,14 +69,15 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
 
         getProcessHandler().addProcessListener(new GdbProcessAdapter(this));
         sendCommand("-gdb-set target-async on");
+        String runCommand = "-exec-run";
         if (getData().getBoolean(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE)) {
             if (SystemInfo.isWindows) {
                 sendCommand("-gdb-set new-console on");
             } else {
-                sendCommand("-exec-arguments > " + outputFile.getAbsolutePath());
+                runCommand = String.format("-interpreter-exec console \"process launch -o %s\"", outputFile.getAbsolutePath());
             }
         }
-        sendCommand("-exec-run");
+        sendCommand(runCommand);
         getSession().setPauseActionSupported(true);
     }
 

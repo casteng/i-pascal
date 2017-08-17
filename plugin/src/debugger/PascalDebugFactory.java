@@ -36,7 +36,7 @@ public class PascalDebugFactory {
     private static void adjustCommandLldb(Sdk sdk, PascalSdkData data, GeneralCommandLine commandLine, String executable) {
         String command = BasePascalSdkType.getDebuggerCommand(sdk, SystemInfo.isMac ? LLDB_MI_PATH : "lldb-mi");
         commandLine.setExePath(command);
-        commandLine.addParameters(executable);
+        commandLine.addParameter(executable);
     }
 
     private static void adjustCommandGdb(Sdk sdk, PascalSdkData data, GeneralCommandLine commandLine, String executable) {

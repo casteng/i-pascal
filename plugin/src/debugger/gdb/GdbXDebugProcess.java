@@ -33,9 +33,9 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
-    protected void init(ExecutionEnvironment environment) {
+    protected void init() {
         try {
-            createGdbProcess(environment);
+            createGdbProcess();
         } catch (ExecutionException e) {
             LOG.warn("Error running GDB", e);
         }
@@ -60,9 +60,9 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
         ui.addContent(gdbConsoleContent, 2, PlaceInGrid.bottom, false);
     }
 
-    private void createGdbProcess(ExecutionEnvironment env) throws ExecutionException {
+    private void createGdbProcess() throws ExecutionException {
         if (isOutputConsoleNeeded()) {
-            createOutputConsole(env.getProject());
+            createOutputConsole();
         }
         console = (ConsoleView) executionResult.getExecutionConsole();
         variableObjectMap = new HashMap<String, GdbVariableObject>();
