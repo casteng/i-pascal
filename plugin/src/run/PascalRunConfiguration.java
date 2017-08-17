@@ -23,6 +23,9 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.siberika.idea.pascal.module.PascalModuleType;
 import org.jetbrains.annotations.NotNull;
@@ -120,5 +123,11 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     // 2016.3 compatibility
     public GlobalSearchScope getSearchScope() {
         return SearchScopeProvider.createSearchScope(getModules());
+    }
+
+    public Sdk getSdk() {
+        return getConfigurationModule().getModule() != null ?
+                ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() :
+                ProjectRootManager.getInstance(getProject()).getProjectSdk();
     }
 }

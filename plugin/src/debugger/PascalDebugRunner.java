@@ -34,11 +34,13 @@ public class PascalDebugRunner extends GenericProgramRunner {
 
         final ExecutionResult executionResult = state.execute(environment.getExecutor(), this);
 
+        final PascalRunConfiguration conf = (PascalRunConfiguration) environment.getRunProfile();
+
         return xDebuggerManager.startSession(environment, new XDebugProcessStarter() {
             @NotNull
             @Override
             public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-                return PascalDebugFactory.createXDebugProcess(session, environment, executionResult);
+                return PascalDebugFactory.createXDebugProcess(conf.getSdk(), session, environment, executionResult);
             }
         }).getRunContentDescriptor();
     }

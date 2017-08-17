@@ -10,8 +10,6 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.PascalDebugFactory;
@@ -58,9 +56,7 @@ public class PascalCommandLineState extends CommandLineState {
         }
         String executable = PascalRunner.getExecutable(module, fileName);
         if (debug) {
-            Sdk sdk = runConfiguration.getConfigurationModule().getModule() != null ?
-                    ModuleRootManager.getInstance(runConfiguration.getConfigurationModule().getModule()).getSdk() :
-                    ProjectRootManager.getInstance(runConfiguration.getProject()).getProjectSdk();
+            Sdk sdk = runConfiguration.getSdk();
             PascalDebugFactory.adjustCommand(sdk, commandLine, executable);
         } else {
             if (executable != null) {

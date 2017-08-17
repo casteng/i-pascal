@@ -41,7 +41,7 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
         console = (ConsoleView) executionResult.getExecutionConsole();
         variableObjectMap = new HashMap<String, GdbVariableObject>();
 
-//        sendCommand("-break-delete");
+        sendCommand("-interpreter-exec console \"br delete\"");
     }
 
     @Override
