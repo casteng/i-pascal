@@ -74,7 +74,7 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
             if (SystemInfo.isWindows) {
                 sendCommand("-gdb-set new-console on");
             } else {
-                runCommand = String.format("-interpreter-exec console \"process launch -o %s\"", outputFile.getAbsolutePath());
+                runCommand = String.format("-interpreter-exec console \"process launch --stdout %1$s --stderr %1$s\"", outputFile.getAbsolutePath());
             }
         }
         sendCommand(runCommand);
