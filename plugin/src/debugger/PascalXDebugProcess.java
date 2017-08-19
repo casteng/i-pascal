@@ -9,7 +9,11 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.execution.ui.RunnerLayoutUi;
+import com.intellij.execution.ui.layout.PlaceInGrid;
+import com.intellij.icons.AllIcons;
+import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -23,6 +27,7 @@ import com.intellij.openapi.util.SystemInfo;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testFramework.LightVirtualFile;
+import com.intellij.ui.content.Content;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerUtil;
@@ -80,8 +85,6 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     private boolean inferiorRunning = false;
 
     protected abstract void init();
-
-    protected abstract void doCreateTabLayouter(RunnerLayoutUi ui);
 
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
@@ -230,7 +233,21 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         return new XDebugTabLayouter() {
             @Override
             public void registerAdditionalContent(@NotNull RunnerLayoutUi ui) {
-                doCreateTabLayouter(ui);
+                if (!isOutputConsoleNeeded()) {
+                    return;
+                }
+                Content gdbConsoleContent = ui.createContent("PascalDebugConsoleContent", outputConsole.getComponent(),
+                        PascalBundle.message("debug.output.title"), AllIcons.Debugger.Console, outputConsole.getPreferredFocusableComponent());
+                gdbConsoleContent.setCloseable(false);
+
+                DefaultActionGroup consoleActions = new DefaultActionGroup();
+                AnAction[] actions = outputConsole.getConsole() != null ? outputConsole.getConsole().createConsoleActions() : EMPTY_ACTIONS;
+                for (AnAction action : actions) {
+                    consoleActions.add(action);
+                }
+                gdbConsoleContent.setActions(consoleActions, ActionPlaces.DEBUGGER_TOOLBAR, outputConsole.getPreferredFocusableComponent());
+
+                ui.addContent(gdbConsoleContent, 2, PlaceInGrid.bottom, false);
             }
         };
     }
