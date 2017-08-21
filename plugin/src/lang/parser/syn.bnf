@@ -48,6 +48,7 @@
 
         CLASS="regexp:(?i)class"
         CLASS_="regexp:(?i)&class"
+        OBJC_CLASS="regexp:(?i)objcclass"
         DISPINTERFACE="regexp:(?i)dispinterface"
         DISPINTERFACE_="regexp:(?i)&dispinterface"
 
@@ -513,12 +514,12 @@ TypeID                      ::=	FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
-private classForwardDecl    ::= (CLASS | INTERFACE) [ClassParentWORec] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
+private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS) [ClassParentWORec] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
 
 ClassField                  ::= field
 private classFieldSemi      ::= ClassField ";" {pin=1 recoverWhile=rec_struct_field}
 ClassTypeDecl               ::= [PACKED] classDecl {name="class declaration"}
-private classDecl           ::= CLASS ((classBody END) | [ClassParent]) {pin=1}
+private classDecl           ::= (CLASS | OBJC_CLASS) ((classBody END) | [ClassParent]) {pin=1}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 
 ClassHelperDecl             ::= CLASS HELPER classHelperBody END {name="class helper declaration"}
