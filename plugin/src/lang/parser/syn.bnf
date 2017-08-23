@@ -597,7 +597,7 @@ SubRangeType        ::= RangeBound RANGE RangeBound
 RangeBound          ::= ConstExpressionOrd
 EnumType            ::= "(" enumEl enumRest* ")" {pin=1}
 private enumRest    ::= "," enumEl {pin=1}
-private enumEl      ::= NamedIdent ["=" Expression] {}
+private enumEl      ::= NamedIdent [(EQ | ASSIGN) Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
                                   | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | NUMBER_OCT | NUMBER_BIN | identifier | '^' | END "." | '[' | '('
