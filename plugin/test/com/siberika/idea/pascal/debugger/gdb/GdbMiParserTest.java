@@ -52,7 +52,6 @@ public class GdbMiParserTest {
         assertEquals("SIGINT", res.getResults().getValue("signal-name"));
         assertEquals("Interrupt", res.getResults().getValue("signal-meaning"));
     }
-
     @Test
     public void testBreakpointInsert() throws Exception {
         String s = "^done,bkpt={number=\"5\",type=\"breakpoint\",disp=\"keep\",enabled=\"y\",addr=\"0x000000000046a15b\",func=\"GETATTRIBUTEDATASIZE\",file=\"test.pas\",fullname=\"~/src/test/test.pas\",line=\"608\",thread-groups=[\"i1\"],times=\"0\",original-location=\"~/src/test/test.pas:608\"}";
@@ -62,6 +61,19 @@ public class GdbMiParserTest {
         assertEquals(Integer.valueOf(5), bp.getInteger("number"));
         assertEquals("breakpoint", bp.getString("type"));
         assertEquals("608", bp.getValue("line"));
+    }
+
+
+    @Test
+    public void testBreakpointInsert2() throws Exception {
+        String s = "^done,bkpt={number=\"1\",type=\"breakpoint\",disp=\"keep\",enabled=\"y\",addr=\"0x0000000000011c40\",func=\"::\"-[TMyWindow update]\"(SEL)\",file=\"test.pas\",fullname=\"~/src/test/test.pas\",line=\"243\",pending=[\"test.pas:243\"],times=\"0\",original-location=\"test.pas:243\"}";
+        GdbMiLine res = GdbMiParser.parseLine(s);
+        assertEquals(GdbMiLine.Type.RESULT_RECORD, res.getType());
+        GdbMiResults bp = res.getResults().getTuple("bkpt");
+        assertEquals(Integer.valueOf(1), bp.getInteger("number"));
+        assertEquals("breakpoint", bp.getString("type"));
+        assertEquals("::'-[TMyWindow update]'(SEL)", bp.getString("func"));
+        assertEquals("243", bp.getValue("line"));
     }
 
     @Test
@@ -104,6 +116,5 @@ public class GdbMiParserTest {
         GdbMiResults child = childRes.getTuple("child");
         assertEquals("app.TOBJECT", child.getString("name"));
         assertEquals(Integer.valueOf(1), child.getInteger("numchild"));
-
     }
 }

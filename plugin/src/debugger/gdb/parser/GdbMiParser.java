@@ -4,6 +4,7 @@ import com.intellij.util.SmartList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -16,8 +17,10 @@ public class GdbMiParser {
     private int pos = 0;
     private char lastChar;
 
+    public static final Pattern A = Pattern.compile("::\"-\\[(.*?)\\]\"");
+
     public GdbMiParser(@NotNull String input) {
-        this.input = input;
+        this.input = A.matcher(input).replaceAll("::'-[$1]'");
         this.end = input.length();
     }
 

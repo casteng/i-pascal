@@ -13,7 +13,7 @@ public abstract class PascalConsoleProcessAdapter extends ProcessAdapter {
     public void onTextAvailable(ProcessEvent event, Key outputType) {
         String str = event.getText();
         sb.append(str);
-        if (str.endsWith("\n")) {
+        if (str.endsWith("\r\n") || str.endsWith("\n")) {
             doProcessLine();
         }
     }
