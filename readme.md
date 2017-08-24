@@ -71,6 +71,12 @@ Developer environment configuration
 Instructions
 https://www.jetbrains.com/help/idea/2016.3/plugin-development-guidelines.html
 
+Lexer and parser classes are generated with [Grammar Kit plugin](https://plugins.jetbrains.com/plugin/6606-grammar-kit).
+
+To generate _PascalLexer class open pascal.flex, right click and choose "Rin JFlex generator".
+
+To generate parser classes open pascal.bnf, right click and choose "Generate parser code".
+
 Other information
 -----------------
 Information on how to install and use the plugin is available at `I-Pascal homepage <http://www.siberika.com/ipascal.htm>`_.
