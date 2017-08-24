@@ -113,6 +113,8 @@ NUM_OCT         = \&[0-7]+
     "dispinterface"     { return getElement(DISPINTERFACE); }
     "&dispinterface"     { return getElement(DISPINTERFACE_); }
     "objcclass"        { return getElement(OBJC_CLASS); }
+    "objcprotocol"        { return getElement(OBJC_PROTOCOL); }
+    "objccategory"        { return getElement(OBJC_CATEGORY); }
 
     "program"           { return getElement(PROGRAM); }
     "&program"           { return getElement(PROGRAM_); }

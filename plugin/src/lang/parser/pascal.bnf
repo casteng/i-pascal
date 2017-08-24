@@ -52,6 +52,8 @@
         OBJC_CLASS="objcclass"
         DISPINTERFACE="dispinterface"
         DISPINTERFACE_="&dispinterface"
+        OBJC_PROTOCOL="objcprotocol"
+        OBJC_CATEGORY="objccategory"
 
         TRY="try"
         TRY_="&try"
@@ -505,13 +507,14 @@ TypeID                      ::=	FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
-private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS) [ClassParentWORec] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
+private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS | OBJC_PROTOCOL) [ClassParentWORec] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
 
 ClassField                  ::= field
 private classFieldSemi      ::= ClassField ";" {pin=1 recoverWhile=rec_struct_field}
 ClassTypeDecl               ::= [PACKED] classDecl {name="class declaration"}
-private classDecl           ::= (CLASS | OBJC_CLASS) ((classBody END) | [ClassParent]) {pin=1}
+private classDecl           ::= (CLASS | objc_decl) ((classBody END) | [ClassParent]) {pin=1}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
+private objc_decl           ::= OBJC_CLASS | OBJC_CATEGORY [EXTERNAL [externalSpecifier]]
 
 ClassHelperDecl             ::= CLASS HELPER classHelperBody END {name="class helper declaration"}
 private classHelperBody     ::= FOR TypeID structItem* {pin=2 recoverWhile=rec_struct_outer}
@@ -543,7 +546,7 @@ ClassParent         ::= "(" TypeID? ("," TypeID)* ")" {pin=1 recoverWhile=rec_cl
 ClassParentWORec    ::= "(" TypeID? ("," TypeID)* ")"
 
 private interfaceGuid       ::= "[" quotedString "]" {pin=1}
-private interfaceKey        ::= INTERFACE | DISPINTERFACE
+private interfaceKey        ::= INTERFACE | DISPINTERFACE | (OBJC_PROTOCOL [EXTERNAL [externalSpecifier]])
 
 ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
 
