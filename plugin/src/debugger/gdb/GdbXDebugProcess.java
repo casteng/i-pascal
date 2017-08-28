@@ -25,6 +25,16 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
+    protected String getVarFrame() {
+        return "@";
+    }
+
+    @Override
+    protected String getVarNameQuoteChar() {
+        return "\"";
+    }
+
+    @Override
     protected void init() {
         try {
             createGdbProcess();

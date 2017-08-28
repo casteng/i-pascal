@@ -65,24 +65,33 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     private static final Logger LOG = Logger.getInstance(PascalXDebugProcess.class);
 
+    private final String VAR_FRAME = getVarFrame();
+
+    private final String VAR_NAME_QUOTE_CHAR = getVarNameQuoteChar();
+
     public final Options options = new Options();
 
     protected static final AnAction[] EMPTY_ACTIONS = new AnAction[0];
+
     protected final ExecutionResult executionResult;
+
     protected ConsoleView console;
     protected LogConsoleImpl outputConsole;
     protected Map<String, GdbVariableObject> variableObjectMap;
     protected File outputFile;
     protected ExecutionEnvironment environment;
-
     protected Sdk sdk;
     private static final String VAR_PREFIX_LOCAL = "l%";
 
     private static final String VAR_PREFIX_WATCHES = "w%";
     private final XBreakpointHandler<?>[] MY_BREAKPOINT_HANDLERS = new XBreakpointHandler[] {new PascalLineBreakpointHandler(this)};
+
     private XCompositeNode lastQueriedVariablesCompositeNode;
     private XCompositeNode lastParentNode;
     private boolean inferiorRunning = false;
+
+    protected abstract String getVarFrame();
+    protected abstract String getVarNameQuoteChar();
 
     protected abstract void init();
 
@@ -267,15 +276,15 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     }
 
     public void evaluate(String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
-        String key = VAR_PREFIX_WATCHES + expression;
+        String key = VAR_PREFIX_WATCHES + expression.replace(' ', '_');
         GdbVariableObject var = variableObjectMap.get(key);
         if (null == var) {
             variableObjectMap.put(key, new GdbVariableObject(key, expression, callback));
-            sendCommand(String.format("-var-create \"%s\" @ \"%s\"", key, expression));
+            sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, VAR_FRAME, expression, VAR_NAME_QUOTE_CHAR));
         } else {
             var.setCallback(callback);
             updateVariableObjectUI(var);
-            sendCommand(String.format("-var-update --all-values \"%s\"", key));
+            sendCommand(String.format("-var-update --all-values %2$s%s%2$s", key, VAR_NAME_QUOTE_CHAR));
         }
     }
 
@@ -331,16 +340,17 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                         res = res.getTuple("child");
                     }
                     String varName = res.getString("name");
-                    String varKey = (children ? "" : VAR_PREFIX_LOCAL) + varName;
+                    String varKey = (children ? "" : VAR_PREFIX_LOCAL) + varName.replace(' ', '_');
                     if (varName.startsWith(VAR_PREFIX_LOCAL) || varName.startsWith(VAR_PREFIX_WATCHES)) {
                         varName = varName.substring(2);
                     }
+                    String varNameResolved = varName;
                     PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
                     XStackFrame frame = getSession().getCurrentStackFrame();
                     if (frame instanceof GdbStackFrame) {
                         PasField field = ((GdbStackFrame) frame).resolveIdentifierName(varName, PasField.TYPES_LOCAL);
                         if (field != null) {
-                            varName = formatVariableName(field);
+                            varNameResolved = formatVariableName(field);
                             fieldType = field.fieldType;
                         }
                     }
@@ -348,17 +358,17 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                     if (null != var) {
                         var.updateFromResult(res);
                         if (!children) {
-                            sendCommand(String.format("-var-update --all-values \"%s\"", varKey));
+                            sendCommand(String.format("-var-update --all-values %2$s%s%2$s", varKey, VAR_NAME_QUOTE_CHAR));
                         }
                     } else {
-                        var = new GdbVariableObject(varKey, varName, null, res);
+                        var = new GdbVariableObject(varKey, varNameResolved, null, res);
                         variableObjectMap.put(varKey, var);
                         if (!children) {
-                            sendCommand(String.format("-var-create \"%s\" @ \"%s\"", varKey, varName));
+                            sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, VAR_FRAME, varName, VAR_NAME_QUOTE_CHAR));
                         }
                     }
 
-                    childrenList.add(varName.substring(varName.lastIndexOf('.')+1),
+                    childrenList.add(varNameResolved.substring(varNameResolved.lastIndexOf('.')+1),
                             new PascalDebuggerValue(this, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount(), fieldType));
                 } else {
                     node.setErrorMessage("Invalid variables list entry");

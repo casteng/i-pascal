@@ -26,6 +26,16 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
+    protected String getVarFrame() {
+        return "*";
+    }
+
+    @Override
+    protected String getVarNameQuoteChar() {
+        return "";
+    }
+
+    @Override
     protected void init() {
         if (isOutputConsoleNeeded()) {
             createOutputConsole();
