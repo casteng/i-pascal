@@ -288,6 +288,7 @@
         LBRACK="["
         RBRACK="]"
         LTEQ="<="
+        GTEQ=">="
         EQ="="
         LT="<"
         GT=">"
@@ -389,7 +390,7 @@ private assemblyAttribute   ::= "[" "assembly" ":" CustomAttributeDecl "]" {pin=
 ExportsSection              ::= EXPORTS RefNamedIdent exportItem ("," RefNamedIdent exportItem)* ";" {pin=1}
 private exportItem          ::= [FormalParameterSection] [INDEX Expression] ["name" Expression] ["resident"]
 
-private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LTEQ | LT | GT | "<>" | IN | "explicit"
+private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LTEQ | GTEQ | LT | GT | "<>" | IN | "explicit"
 private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
@@ -735,7 +736,7 @@ private expr_relOrd ::= expr_sumOrd (relOp expr_sumOrd)*
 private expr_sumOrd ::= expr_productOrd (addOp expr_productOrd)*
 private expr_productOrd ::= primaryOrd (mulOp primaryOrd)* */
 // **********************************************************************
-relOp                       ::= (GT EQ) | LTEQ | LT | GT | NE | EQ | IN | IS
+relOp                       ::= GTEQ | LTEQ | LT | GT | NE | EQ | IN | IS
 addOp                       ::=	PLUS | MINUS | OR | XOR
 mulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | (">"">") | AS
 unaryOp                     ::= "+" | "-" | "@" | NOT

@@ -351,6 +351,7 @@ NUM_OCT         = \&[0-7]+
     "<"             { return getElement(LT); }
     "<>"            { return getElement(NE); }
     "<="             { return getElement(LTEQ); }
+    ">="             { return getElement(GTEQ); }
 
     ":"             { return getElement(COLON); }
     ","             { return getElement(COMMA); }
