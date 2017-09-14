@@ -8,12 +8,17 @@ import org.jetbrains.annotations.Nullable;
  * Date: 26/03/2017
  */
 public class PascalLineBreakpointProperties extends XBreakpointProperties<PascalLineBreakpointProperties> {
-    private final String filename;
-    private final int line;
+    private String filename;
+    private int line;
+    private boolean moving;
+
+    public PascalLineBreakpointProperties() {
+    }
 
     public PascalLineBreakpointProperties(String filename, int line) {
         this.filename = filename;
         this.line = line;
+        this.moving = false;
     }
 
     @Nullable
@@ -32,6 +37,14 @@ public class PascalLineBreakpointProperties extends XBreakpointProperties<Pascal
 
     public int getLine() {
         return line;
+    }
+
+    public boolean isMoving() {
+        return moving;
+    }
+
+    public void setMoving(boolean moving) {
+        this.moving = moving;
     }
 
     @Override
