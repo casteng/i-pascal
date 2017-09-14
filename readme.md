@@ -14,6 +14,8 @@ Compatible with IDEA Community Edition as well as Ultimate Edition from version 
 Pascal-specific features currently implemented
 ----------------------------------------------
 
+* run and debug right in the IDE
+* GDB and LLDB debug backends
 * context-aware completion
 * statements completion
 * compiler defines and directives completion
@@ -38,7 +40,6 @@ Pascal-specific features currently implemented
 * full Object Pascal parser
 * conditional compilation support
 * identifier declaration, references and usages search and highlight
-* program running from the IDE
 * syntax errors highlighting
 * Object Pascal syntax highlighting
 * folding support
@@ -76,6 +77,8 @@ Lexer and parser classes are generated with [Grammar Kit plugin](https://plugins
 To generate _PascalLexer class open pascal.flex, right click and choose "Rin JFlex generator".
 
 To generate parser classes open pascal.bnf, right click and choose "Generate parser code".
+
+**There are JUnit tests. Please ensure the tests passing before creating pull requests.**
 
 Other information
 -----------------

@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.31</version>
+    <version>1.40</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,8 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>1.31</p>
+        <p>1.40</p>
         <ul>
+          <li>LLDB debug backend</li>
+          <li>Objective Pascal syntax support</li>
           <li>Optimization of find usages and rename for local identifiers</li>
           <li>Improve positioning of created identifiers in create actions</li>
           <li>Improve generics support in declare/implement actions</li>
