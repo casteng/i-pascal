@@ -30,7 +30,7 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
 
     @Override
     protected boolean setupConfigurationFromContext(PascalRunConfiguration configuration, ConfigurationContext context, Ref<PsiElement> sourceElement) {
-        if (isProgramElement(sourceElement.get())) {
+        if (isProgramLeafElement(sourceElement.get())) {
             setupConf(context, configuration, true);
             return true;
         }
@@ -42,14 +42,6 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
         return (configuration.getConfigurationModule().getModule() == context.getModule()) &&
                 (context.getPsiLocation() != null) &&
                 (configuration.getProgramFileName().equals(getMainFile(context.getPsiLocation()).getPath()));
-    }
-
-    static boolean isProgramElement(PsiElement element) {
-        if (element instanceof PasProgramModuleHead || element instanceof PasBlockBody && element.getParent() instanceof PasBlockGlobal) {
-            PasModule module = PsiUtil.getElementPasModule(element);
-            return module != null && module.getModuleType() == PascalModule.ModuleType.PROGRAM;
-        }
-        return false;
     }
 
     private void setupConf(ConfigurationContext context, RunConfiguration conf, boolean setupModule) {
@@ -84,4 +76,14 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
         return mainFile != null ? mainFile.getVirtualFile() : null;
     }
 
+    public static boolean isProgramLeafElement(PsiElement element) {
+        if ((element.getFirstChild() == null) && (element.getParent().getFirstChild() == element) &&
+                (element.getParent() instanceof PasProgramModuleHead
+                        || element.getParent().getParent() instanceof PasBlockBody && element.getParent().getParent().getParent() instanceof PasBlockGlobal)
+                ) {
+            PasModule module = PsiUtil.getElementPasModule(element);
+            return module != null && module.getModuleType() == PascalModule.ModuleType.PROGRAM;
+        }
+        return false;
+    }
 }

@@ -83,11 +83,15 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         return PascalBundle.message(key);
     }
 
-    static  <T extends PsiElement> LineMarkerInfo<T> createLineMarkerInfo(@NotNull T element, Icon icon, final String tooltip,
-                                                           @NotNull GutterIconNavigationHandler<T> handler) {
-        return new LineMarkerInfo<T>(element, element.getTextRange(),
+    static LineMarkerInfo<PsiElement> createLineMarkerInfo(@NotNull PsiElement element, Icon icon, final String tooltip,
+                                                           @NotNull GutterIconNavigationHandler<PsiElement> handler) {
+        PsiElement el = element;
+        while (el.getFirstChild() != null) {
+            el = el.getFirstChild();
+        }
+        return new LineMarkerInfo<PsiElement>(el, el.getTextRange(),
                 icon, Pass.UPDATE_OVERRIDDEN_MARKERS,
-                new ConstantFunction<T, String>(tooltip), handler,
+                new ConstantFunction<PsiElement, String>(tooltip), handler,
                 GutterIconRenderer.Alignment.RIGHT);
     }
 
@@ -115,8 +119,8 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         }
     }
 
-    static  <T extends PsiElement> GutterIconNavigationHandler<T> getHandler(final String title, @NotNull final Collection<T> targets) {
-        return new GutterIconNavigationHandler<T>() {
+    static GutterIconNavigationHandler<PsiElement> getHandler(final String title, @NotNull final Collection<? extends PsiElement> targets) {
+        return new GutterIconNavigationHandler<PsiElement>() {
             @Override
             public void navigate(MouseEvent e, PsiElement elt) {
                 EditorUtil.navigateTo(e, title, null, targets);

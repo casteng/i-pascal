@@ -19,6 +19,7 @@ import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.util.EditorUtil;
+import com.siberika.idea.pascal.util.PsiUtil;
 import gnu.trove.THashSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,14 +69,16 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
         }
     }
 
-    static  <T extends PasEntityScope> GutterIconNavigationHandler<T> getHandler(final String title) {
-        return new GutterIconNavigationHandler<T>() {
+    static GutterIconNavigationHandler<PsiElement> getHandler(final String title) {
+        return new GutterIconNavigationHandler<PsiElement>() {
             @Override
-            public void navigate(MouseEvent e, final PasEntityScope elt) {
+            public void navigate(MouseEvent e, final PsiElement elt) {
                 if (DumbService.isDumb(elt.getProject())) {
                     DumbService.getInstance(elt.getProject()).showDumbModeNotification(PascalBundle.message("navigate.subclassed.impossible.reindex"));
                     return;
                 }
+
+                final PasEntityScope scope = PsiUtil.getNearestAffectingScope(elt);
 
                 final PsiElementProcessor.CollectElementsWithLimit<PasEntityScope> collectProcessor = new PsiElementProcessor.CollectElementsWithLimit<PasEntityScope>(100, new THashSet<PasEntityScope>());
                 if (!ProgressManager.getInstance().runProcessWithProgressSynchronously(new Runnable() {
@@ -84,7 +87,7 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
                         ApplicationManager.getApplication().runReadAction(new Runnable() {
                             @Override
                             public void run() {
-                                Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations((elt).getNameIdentifier(), 100, 0);
+                                Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations((scope).getNameIdentifier(), 100, 0);
                                 for (PasEntityScope impl : impls) {
                                     collectProcessor.execute(impl);
                                 }
@@ -100,53 +103,5 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
             }
         };
     }
-
-    /*private static class SubclassUpdater extends ListBackgroundUpdaterTask {
-        private final PasEntityScope myClass;
-        private final PsiElementListCellRenderer myRenderer;
-
-        public SubclassUpdater(PasEntityScope aClass, PsiElementListCellRenderer renderer) {
-            super(aClass.getProject(), "Searching...");
-            myClass = aClass;
-            myRenderer = renderer;
-        }
-
-        @Override
-        public String getCaption(int size) {
-            return "---getCaption";
-        }
-
-        @Override
-        public void run(@NotNull final ProgressIndicator indicator) {
-            super.run(indicator);
-            ClassInheritorsSearch.search(myClass, ApplicationManager.getApplication().runReadAction(new Computable<SearchScope>() {
-                @Override
-                public SearchScope compute() {
-                    return myClass.getUseScope();
-                }
-            }), true).forEach(new CommonProcessors.CollectProcessor<PsiClass>() {
-                @Override
-                public boolean process(final PsiClass o) {
-                    if (!updateComponent(o, myRenderer.getComparator())) {
-                        indicator.cancel();
-                    }
-                    indicator.checkCanceled();
-                    return super.process(o);
-                }
-            });
-
-            FunctionalExpressionSearch.search(myClass).forEach(new CommonProcessors.CollectProcessor<PsiFunctionalExpression>() {
-                @Override
-                public boolean process(final PsiFunctionalExpression expr) {
-                    if (!updateComponent(expr, myRenderer.getComparator())) {
-                        indicator.cancel();
-                    }
-                    indicator.checkCanceled();
-                    return super.process(expr);
-                }
-            });
-        }
-
-    }*/
 
 }

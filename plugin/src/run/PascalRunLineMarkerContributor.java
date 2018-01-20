@@ -22,7 +22,7 @@ public class PascalRunLineMarkerContributor extends RunLineMarkerContributor {
     @Nullable
     @Override
     public Info getInfo(PsiElement element) {
-        if (PascalRunContextConfigurationProducer.isProgramElement(element)) {
+        if (PascalRunContextConfigurationProducer.isProgramLeafElement(element)) {
             return new Info(AllIcons.General.Run, TOOLTIP_PROVIDER, ExecutorAction.getActions(0));
         }
         return null;
