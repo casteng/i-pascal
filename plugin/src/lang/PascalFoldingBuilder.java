@@ -65,7 +65,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         foldRoutines(root, descriptors);
 
         if (!quick) {
-            foldComments(root, descriptors);
+            foldComments(root, descriptors, document);
         }
 
         return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
@@ -185,7 +185,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         }
     }
 
-    private void foldComments(PsiElement root, List<FoldingDescriptor> descriptors) {
+    private void foldComments(PsiElement root, List<FoldingDescriptor> descriptors, Document document) {
         final Collection<PsiComment> comments = PsiTreeUtil.findChildrenOfType(root, PsiComment.class);
         TextRange commentRange = null;
         PsiComment lastComment = null;
@@ -194,10 +194,15 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                 lastComment = comment;
                 final String endSymbol = getEndSymbol(lastComment);
                 commentRange = comment.getTextRange();
+                int commentEndLine = document.getLineNumber(commentRange.getEndOffset());
                 // Merge sibling comments
                 PsiElement sibling = PsiUtil.getNextSibling(comment);
                 while (sibling instanceof PsiComment) {
-                    commentRange = commentRange.union(sibling.getTextRange());
+                    TextRange nextRange = sibling.getTextRange();
+                    if ((document.getLineNumber(nextRange.getStartOffset()) - commentEndLine) < 2) {
+                        commentRange = commentRange.union(nextRange);
+                    }
+                    commentEndLine = document.getLineNumber(commentRange.getEndOffset());
                     sibling = PsiUtil.getNextSibling(sibling);
                 }
 
