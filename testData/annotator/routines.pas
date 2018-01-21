@@ -31,6 +31,16 @@ function test1();
 begin
 end;
 
+procedure proc();
+begin
+    <error descr="Undeclared identifier">Result</error> := 1;
+end;
+
+function strFunc(): string;
+begin
+  Result := '';
+end;
+
 procedure proc4; external 'kernel32.dll' index 'proc4';
 procedure proc5; external kernel index 'proc5';
 procedure proc6; external index 'proc6';

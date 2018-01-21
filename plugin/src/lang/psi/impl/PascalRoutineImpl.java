@@ -7,6 +7,7 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
@@ -39,6 +40,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntityScope, PasDeclSection {
 
     private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
+
+    private static final TokenSet FUNCTION_KEYWORDS = TokenSet.create(PasTypes.FUNCTION, PasTypes.OPERATOR);
 
     private ReentrantLock parentLock = new ReentrantLock();
     private boolean parentBuilding = false;
@@ -150,9 +153,13 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PasEntit
         for (PasNamedIdent parameter : params) {
             addField(res, parameter, PasField.FieldType.VARIABLE);
         }
-        if (!res.all.containsKey(BUILTIN_RESULT.toUpperCase())) {
+        if (routine.isFunction() && !res.all.containsKey(BUILTIN_RESULT.toUpperCase())) {
             res.all.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, routine, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
         }
+    }
+
+    private boolean isFunction() {
+        return findChildByFilter(FUNCTION_KEYWORDS) != null;
     }
 
     private void addSelf(Members res) {
