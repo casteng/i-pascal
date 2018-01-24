@@ -53,4 +53,8 @@ public class PascalConfigurationType implements ConfigurationType, DumbAware {
     public ConfigurationFactory[] getConfigurationFactories() {
         return new ConfigurationFactory[]{myFactory};
     }
+
+    public boolean isDumbAware() {
+        return true;
+    }
 }
