@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ import java.util.Map;
  * Date: 02/10/2013
  */
 public class PascalBlock extends AbstractBlock implements Block {
+
+    private static final TokenSet ATOMIC_TOKENS = TokenSet.create(PasTypes.REL_OP);
 
     private static final Wrap WRAP_ALWAYS = Wrap.createWrap(WrapType.ALWAYS, true);
 
@@ -116,6 +119,9 @@ public class PascalBlock extends AbstractBlock implements Block {
 
     @Override
     protected List<Block> buildChildren() {
+        if (ATOMIC_TOKENS.contains(myNode.getElementType())) {
+            return Collections.emptyList();
+        }
         if (mySubBlocks == null) {
             mySubBlocks = ContainerUtil.mapNotNull(myNode.getChildren(null), new Function<ASTNode, Block>() {
                 @Override
