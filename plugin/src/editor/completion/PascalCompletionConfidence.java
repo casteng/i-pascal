@@ -42,6 +42,6 @@ public class PascalCompletionConfidence extends CompletionConfidence {
     }
 
     private boolean isName(IElementType type) {
-        return (type == PasTypes.SUB_IDENT) || (type == PasTypes.NAME) || (type != PasTypes.CALL_EXPR);
+        return (type == PasTypes.SUB_IDENT) || (type == PasTypes.NAME) || (type == PasTypes.CALL_EXPR);
     }
 }

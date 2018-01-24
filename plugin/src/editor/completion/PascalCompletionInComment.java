@@ -78,7 +78,7 @@ class PascalCompletionInComment {
                         result.addElement(withTexts(define.name + (needClose ? "}" : ""), define.name, getDesc(comment.getProject(), define)));
                     }
                 } else {
-                    Directive dir = retrieveDirectives(comment).get(id);
+                    Directive dir = retrieveDirectives(comment).get(id.toUpperCase());
                     if ((dir != null) && (dir.values != null)) {
                         for (String value : dir.values) {
                             result.addElement(withTexts(value + (needClose ? "}" : ""), value, null));

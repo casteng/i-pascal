@@ -73,7 +73,7 @@ class DirectivesParser {
             dirs = new HashMap<String, Directive>();
         }
         for (String id : ids) {
-            dirs.put(id, directive);
+            dirs.put(id.toUpperCase(), directive);
         }
         directives.put(version, dirs);
     }
