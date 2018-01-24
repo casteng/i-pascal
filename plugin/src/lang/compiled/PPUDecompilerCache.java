@@ -13,6 +13,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalException;
+import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
@@ -37,10 +38,10 @@ import java.util.concurrent.TimeUnit;
 public class PPUDecompilerCache {
     private static final Logger LOG = Logger.getInstance(PPUDecompilerCache.class);
 
-    public static final String PPUDUMP_OPTIONS_COMMON = "-Vhisd";
-    public static final String PPUDUMP_OPTIONS_FORMAT = "-Fx";
-    public static final String PPUDUMP_OPTIONS_VERSION = "-V";
-    public static final String PPUDUMP_VERSION_MIN = "2.7.1";
+    private static final String PPUDUMP_OPTIONS_COMMON = "-Vhisd";
+    private static final String PPUDUMP_OPTIONS_FORMAT = "-Fx";
+    private static final String PPUDUMP_OPTIONS_VERSION = "-V";
+    private static final String PPUDUMP_VERSION_MIN = "2.7.1";
 
     private final Module module;
     private final LoadingCache<String, PPUDumpParser.Section> cache;
@@ -69,28 +70,20 @@ public class PPUDecompilerCache {
 
     private class Loader extends CacheLoader<String, PPUDumpParser.Section> {
         @Override
-        public PPUDumpParser.Section load(@NotNull String key) throws Exception {
-            Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
-            if (null == sdk) { return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.sdk")); }
-            if ((sdk.getHomePath() == null) || !(sdk.getSdkType() instanceof FPCSdkType)) {
-                return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.sdktype"));
-            }
-            Collection<VirtualFile> files = ModuleUtil.getCompiledByNameNoCase(module, key, PPUFileType.INSTANCE);
-            if (files.isEmpty()) {
-                return new PPUDumpParser.Section(PascalBundle.message("decompile.file.notfound", key));
-            }
-            File ppuDump = BasePascalSdkType.getDecompilerCommand(sdk, PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath() != null ? sdk.getHomePath() : ""));
+        public PPUDumpParser.Section load(@NotNull String key) {
+            File ppuDump = null;
             String xml = "";
             try {
-                if (!ppuDump.isFile() || !ppuDump.canExecute()) {
-                    return new PPUDumpParser.Section(PascalBundle.message("decompile.wrong.ppudump", ppuDump.getCanonicalPath()));
-                }
-                xml = SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
+                ppuDump = retrievePpuDump(key);
+                xml = retrieveXml(key, ppuDump);
                 if (xml != null) {
                     return PPUDumpParser.parse(xml, PPUDecompilerCache.this);
                 } else {
                     return new PPUDumpParser.Section(PascalBundle.message("decompile.empty.result"));
                 }
+            } catch (PascalRTException e) {
+                LOG.info("Exception: " + e.getMessage(), e);
+                return new PPUDumpParser.Section(e.getMessage());
             } catch (IOException e) {
                 LOG.info("I/O error: " + e.getMessage(), e);
                 return new PPUDumpParser.Section(PascalBundle.message("decompile.io.error"));
@@ -113,7 +106,29 @@ public class PPUDecompilerCache {
         }
     }
 
-    static String getPPUDumpVersion(File ppuDump) {
+    String retrieveXml(String key, File ppuDump) throws IOException, PascalException {
+        Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
+        Collection<VirtualFile> files = ModuleUtil.getCompiledByNameNoCase(module, key, PPUFileType.INSTANCE);
+        if (files.isEmpty()) {
+            throw new PascalRTException(PascalBundle.message("decompile.file.notfound", key));
+        }
+        return SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
+    }
+
+    File retrievePpuDump(String key) throws IOException {
+        Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
+        if (null == sdk) { throw new PascalRTException(PascalBundle.message("decompile.wrong.sdk")); }
+        if ((sdk.getHomePath() == null) || !(sdk.getSdkType() instanceof FPCSdkType)) {
+            throw new PascalRTException(PascalBundle.message("decompile.wrong.sdktype"));
+        }
+        File ppuDump = BasePascalSdkType.getDecompilerCommand(sdk, PascalSdkUtil.getPPUDumpExecutable(sdk.getHomePath() != null ? sdk.getHomePath() : ""));
+        if (!ppuDump.isFile() || !ppuDump.canExecute()) {
+            throw new PascalRTException(PascalBundle.message("decompile.wrong.ppudump", ppuDump.getCanonicalPath()));
+        }
+        return ppuDump;
+    }
+
+    private static String getPPUDumpVersion(File ppuDump) {
         String res = "";
         try {
             res = SysUtils.runAndGetStdOut(ppuDump.getParent(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_VERSION);
@@ -140,10 +155,7 @@ public class PPUDecompilerCache {
     PPUDumpParser.Section getContents(@NotNull String unitName, @Nullable VirtualFile virtualFile) {
         VirtualFile file = virtualFile;
         if (null == file) {
-            Collection<VirtualFile> files = ModuleUtil.getCompiledByNameNoCase(module, unitName, PPUFileType.INSTANCE);
-            if (!files.isEmpty()) {
-                file = files.iterator().next();
-            }
+            file = retrieveFile(module, unitName);
         }
         if (file != null) {
             try {
@@ -167,6 +179,14 @@ public class PPUDecompilerCache {
             }
         }
         return new PPUDumpParser.Section(PascalBundle.message("decompile.unit.not.found", unitName));
+    }
+
+    VirtualFile retrieveFile(Module module, String unitName) {
+        Collection<VirtualFile> files = ModuleUtil.getCompiledByNameNoCase(module, unitName, PPUFileType.INSTANCE);
+        if (!files.isEmpty()) {
+            return files.iterator().next();
+        }
+        return null;
     }
 
     private String getKey(String unitName) {

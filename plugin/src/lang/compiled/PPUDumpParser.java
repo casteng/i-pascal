@@ -260,6 +260,8 @@ public class PPUDumpParser {
                 } else if ("/ptr".equalsIgnoreCase(sec.type)) {
                     sec.sb.append("^");
                     appendReference(sec, sec.sb.length(), "ptr", "", "", UNRESOLVED_INTERNAL);
+                } else if ("/type".equalsIgnoreCase(sec.type)) {
+                    appendReference(sec, sec.sb.length(), "ref", "", "", UNRESOLVED_INTERNAL);
                 } else if ("/set".equalsIgnoreCase(sec.type)) {
                     sec.sb.append("set");
                     appendReference(sec, sec.sb.length(), "eltype", " of ", "", UNRESOLVED_INTERNAL);
