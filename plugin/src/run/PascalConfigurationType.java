@@ -5,6 +5,7 @@ import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunConfigurationModule;
 import com.intellij.openapi.extensions.Extensions;
+import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.PascalIcons;
@@ -16,7 +17,7 @@ import javax.swing.*;
  * Author: George Bakhtadze
  * Date: 12/5/12
  */
-public class PascalConfigurationType implements ConfigurationType {
+public class PascalConfigurationType implements ConfigurationType, DumbAware {
     private final ConfigurationFactory myFactory;
 
     public PascalConfigurationType() {

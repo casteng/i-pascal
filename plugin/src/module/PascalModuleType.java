@@ -50,7 +50,6 @@ public class PascalModuleType extends ModuleType<PascalModuleBuilder> {
         return getName();
     }
 
-    @Override
     public Icon getBigIcon() {
         return PascalIcons.GENERAL;
     }
