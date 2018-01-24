@@ -19,6 +19,9 @@ public class PascalCompletionConfidence extends CompletionConfidence {
     @NotNull
     @Override
     public ThreeState shouldSkipAutopopup(@NotNull PsiElement contextElement, @NotNull PsiFile psiFile, int offset) {
+        if (PascalLexer.NUMBERS.contains(contextElement.getNode().getElementType())) {
+            return ThreeState.YES;
+        }
         if ((contextElement.getPrevSibling() != null) && (contextElement.getPrevSibling().getNode() != null)) {
 
             /*System.out.println("===*** shouldSkipAutopopup: " + contextElement + ", sib: " + contextElement.getPrevSibling()
