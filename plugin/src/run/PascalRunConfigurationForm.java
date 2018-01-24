@@ -16,6 +16,7 @@ public class PascalRunConfigurationForm implements PascalRunConfigurationParams 
     private JPanel rootPanel;
     private JTextField parametersEdit;
     private TextFieldWithBrowseButton workingDirEdit;
+    private JCheckBox fixIOBufferingCBox;
 
     public PascalRunConfigurationForm(PascalRunConfiguration runConfiguration) {
         assert runConfiguration != null;
@@ -37,6 +38,11 @@ public class PascalRunConfigurationForm implements PascalRunConfigurationParams 
     }
 
     @Override
+    public boolean getFixIOBuffering() {
+        return fixIOBufferingCBox.isSelected();
+    }
+
+    @Override
     public void setParameters(String parameters) {
         this.parametersEdit.setText(parameters);
     }
@@ -44,6 +50,11 @@ public class PascalRunConfigurationForm implements PascalRunConfigurationParams 
     @Override
     public void setWorkingDirectory(String workingDirectory) {
         workingDirEdit.setText(workingDirectory);
+    }
+
+    @Override
+    public void setFixIOBuffering(boolean value) {
+        fixIOBufferingCBox.setSelected(value);
     }
 
     {
@@ -62,7 +73,7 @@ public class PascalRunConfigurationForm implements PascalRunConfigurationParams 
      */
     private void $$$setupUI$$$() {
         rootPanel = new JPanel();
-        rootPanel.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
+        rootPanel.setLayout(new GridLayoutManager(5, 1, new Insets(0, 0, 0, 0), -1, -1));
         final JLabel label1 = new JLabel();
         label1.setText("Parameters:");
         rootPanel.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -73,6 +84,10 @@ public class PascalRunConfigurationForm implements PascalRunConfigurationParams 
         rootPanel.add(label2, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         workingDirEdit = new TextFieldWithBrowseButton();
         rootPanel.add(workingDirEdit, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        fixIOBufferingCBox = new JCheckBox();
+        fixIOBufferingCBox.setSelected(true);
+        fixIOBufferingCBox.setText("Workaround buffered I/O");
+        rootPanel.add(fixIOBufferingCBox, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

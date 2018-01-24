@@ -7,6 +7,8 @@ package com.siberika.idea.pascal.run;
 public interface PascalRunConfigurationParams {
     String getParameters();
     String getWorkingDirectory();
+    boolean getFixIOBuffering();
     void setParameters(String parameters);
     void setWorkingDirectory(String workingDirectory);
+    void setFixIOBuffering(boolean value);
 }

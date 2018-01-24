@@ -10,6 +10,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.PascalDebugFactory;
@@ -29,12 +30,15 @@ public class PascalCommandLineState extends CommandLineState {
     private final PascalRunConfiguration runConfiguration;
     private final boolean debug;
     private final String workDirectory;
+    private final boolean fixIOBuffering;
 
-    public PascalCommandLineState(PascalRunConfiguration runConfiguration, ExecutionEnvironment env, boolean debug, String workDirectory, String parameters) {
+    public PascalCommandLineState(PascalRunConfiguration runConfiguration, ExecutionEnvironment env, boolean debug,
+                                  String workDirectory, String parameters, boolean fixIOBuffering) {
         super(env);
         this.runConfiguration = runConfiguration;
         this.debug = debug;
         this.workDirectory = workDirectory;
+        this.fixIOBuffering = fixIOBuffering;
         params = new ArrayList<String>();
         if ((parameters != null) && (parameters.length() > 0)) {
             params.addAll(Arrays.asList(parameters.split("\\s+"))); //TODO: use exec*utils to correctly split params
@@ -60,7 +64,15 @@ public class PascalCommandLineState extends CommandLineState {
             PascalDebugFactory.adjustCommand(sdk, commandLine, executable);
         } else {
             if (executable != null) {
-                commandLine.setExePath(executable);
+                if (fixIOBuffering && SystemInfo.isLinux) {
+                    commandLine.setExePath("script");
+                    commandLine.addParameters("-q", "-c", executable, "/dev/null");
+                } else if (fixIOBuffering && (SystemInfo.isUnix || SystemInfo.isMac)) {
+                    commandLine.setExePath("script");
+                    commandLine.addParameters("-q", "/dev/null", executable);
+                } else {
+                    commandLine.setExePath(executable);
+                }
             } else {
                 throw new ExecutionException(PascalBundle.message("execution.noExecutable"));
             }

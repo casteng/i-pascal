@@ -17,7 +17,13 @@ package com.siberika.idea.pascal.run;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
-import com.intellij.execution.configurations.*;
+import com.intellij.execution.configurations.ConfigurationFactory;
+import com.intellij.execution.configurations.ModuleBasedConfiguration;
+import com.intellij.execution.configurations.RunConfiguration;
+import com.intellij.execution.configurations.RunConfigurationModule;
+import com.intellij.execution.configurations.RunConfigurationWithSuppressedDefaultDebugAction;
+import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.configurations.SearchScopeProvider;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
@@ -43,6 +49,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     private String parameters;
     private String workingDirectory;
     private String programFileName;
+    private boolean fixIOBuffering = true;
 
     public PascalRunConfiguration(String name, RunConfigurationModule configurationModule, ConfigurationFactory factory) {
         super(name, configurationModule, factory);
@@ -84,12 +91,13 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     @Nullable
     public RunProfileState getState(@NotNull Executor executor, @NotNull final ExecutionEnvironment env) throws ExecutionException {
-        return new PascalCommandLineState(this, env, executor instanceof DefaultDebugExecutor, workingDirectory, parameters);
+        return new PascalCommandLineState(this, env, executor instanceof DefaultDebugExecutor, workingDirectory, parameters, fixIOBuffering);
     }
 
     public static void copyParams(PascalRunConfigurationParams from, PascalRunConfigurationParams to) {
         to.setParameters(from.getParameters());
         to.setWorkingDirectory(from.getWorkingDirectory());
+        to.setFixIOBuffering(from.getFixIOBuffering());
     }
 
     @Override
@@ -103,6 +111,11 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     }
 
     @Override
+    public boolean getFixIOBuffering() {
+        return fixIOBuffering;
+    }
+
+    @Override
     public void setParameters(String parameters) {
         this.parameters = parameters;
     }
@@ -110,6 +123,11 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     @Override
     public void setWorkingDirectory(String workingDirectory) {
         this.workingDirectory = workingDirectory;
+    }
+
+    @Override
+    public void setFixIOBuffering(boolean value) {
+        fixIOBuffering = value;
     }
 
     public String getProgramFileName() {
