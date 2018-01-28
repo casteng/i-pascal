@@ -49,6 +49,8 @@ public class PsiUtil {
 
     private static final Logger LOG = Logger.getInstance(PsiUtil.class.getName());
 
+    public static final Class[] ELEMENT_WS_COMMENTS = {PsiWhiteSpace.class, PsiComment.class};
+
     private static final int MAX_NON_BREAKING_NAMESPACES = 2;
     private static final long MIN_REPARSE_INTERVAL = 2000;
     public static final String TYPE_UNTYPED_NAME = "<untyped>";
@@ -144,8 +146,8 @@ public class PsiUtil {
     @Nullable
     public static PsiElement findElementAt(@NotNull PsiElement parent, int offset) {
         PsiElement result = parent.findElementAt(offset);
-        if (PsiTreeUtil.instanceOf(result, PsiWhiteSpace.class, PsiComment.class)) {
-            result = PsiTreeUtil.skipSiblingsForward(result, PsiWhiteSpace.class, PsiComment.class);
+        if (PsiTreeUtil.instanceOf(result, ELEMENT_WS_COMMENTS)) {
+            result = PsiTreeUtil.skipSiblingsForward(result, ELEMENT_WS_COMMENTS);
         }
         return result;
     }

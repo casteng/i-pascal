@@ -388,6 +388,8 @@
 
         <runLineMarkerContributor language="Pascal" implementationClass="com.siberika.idea.pascal.run.PascalRunLineMarkerContributor"/>
 
+        <statementUpDownMover implementation="com.siberika.idea.pascal.lang.PascalStatementMover"/>
+
         <codeInsight.parameterNameHints language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterNameHints"/>
 
         <internalFileTemplate name="PascalUnit"/>

@@ -19,6 +19,7 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.FileContentUtil;
 import com.intellij.util.SmartList;
@@ -239,5 +240,12 @@ public class DocUtil {
 
     public static boolean isSingleLine(@NotNull Document document, @NotNull PsiElement element) {
         return document.getLineNumber(element.getTextRange().getStartOffset()) == document.getLineNumber(element.getTextRange().getEndOffset());
+    }
+
+    public static boolean isLineEmpty(Document document, PsiFile file, int line) {
+        int start = document.getLineStartOffset(line);
+        int end = document.getLineEndOffset(line);
+        PsiElement startEl = file.findElementAt(start);
+        return (startEl instanceof PsiWhiteSpace) && (startEl == file.findElementAt(end));
     }
 }
