@@ -500,7 +500,7 @@ private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= classForwardDecl ";"
 
-GenericTypeIdent    ::= RefNamedIdent [GenericDefinition] {recoverWhile=rec_typeId}
+GenericTypeIdent    ::= "generic"? RefNamedIdent [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
 private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {}             //TODO use meta rule
 private identsRest          ::= "," NamedIdent {recoverWhile=rec_generic_def}
@@ -512,7 +512,7 @@ private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
 GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"               // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
-TypeID                      ::=	FullyQualifiedIdent [GenericPostfix]
+TypeID                      ::=	"specialize"? FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
