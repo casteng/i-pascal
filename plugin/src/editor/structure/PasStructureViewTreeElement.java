@@ -41,7 +41,7 @@ public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> 
             return Collections.emptyList();
         }
         Collection<PasField> fields = element.getAllFields();
-        Collection<StructureViewTreeElement> res = new ArrayList<StructureViewTreeElement>();
+        Collection<StructureViewTreeElement> res = new ArrayList<StructureViewTreeElement>(fields.size());
         for (PasField field : fields) {
             if (PasField.TYPES_STRUCTURE.contains(field.fieldType)) {
                 if (field.fieldType == PasField.FieldType.TYPE) {

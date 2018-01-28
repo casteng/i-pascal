@@ -570,7 +570,8 @@ public class PPUDumpParser {
                             sec.name = NAME_SUB.get(txt);
                         }
                     } else {
-                        sec.name = txt;
+                        int pos = txt.indexOf('$');
+                        sec.name = pos < 1 ? txt : txt.substring(0, pos);
                     }
                     if (!path.endsWith(sec.type + "/name")) {
                         LOG.info("ERROR: ! name for section: " + sec.type + ", path: " + path);
