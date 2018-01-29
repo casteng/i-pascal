@@ -24,6 +24,7 @@ import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiContext;
@@ -61,7 +62,7 @@ public class PascalAnnotator implements Annotator {
             List<PsiElement> scopes = new SmartList<PsiElement>();
             Collection<PasField> refs = PasReferenceUtil.resolveExpr(scopes, NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
 
-            if (refs.isEmpty()) {
+            if (refs.isEmpty() && !isVariantField(scopes)) {
                 Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
                 PsiContext context = PsiUtil.getContext(namedElement);
                 Set<AddFixType> fixes = EnumSet.of(AddFixType.VAR, AddFixType.TYPE, AddFixType.CONST, AddFixType.ROUTINE); // [*] => var type const routine
@@ -178,6 +179,10 @@ public class PascalAnnotator implements Annotator {
         if ((element instanceof PascalNamedElement) && PsiUtil.isUsedUnitName(element.getParent())) {
             annotateUnit(holder, (PascalQualifiedIdent) element.getParent());
         }
+    }
+
+    private boolean isVariantField(List<PsiElement> scopes) {
+        return !scopes.isEmpty() && scopes.get(0) instanceof PasVariantScope;
     }
 
     private PsiElement adjustScope(PsiElement scope) {

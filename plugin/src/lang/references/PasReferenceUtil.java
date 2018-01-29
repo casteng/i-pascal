@@ -49,6 +49,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasStringTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubRangeTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
@@ -283,6 +284,9 @@ public class PasReferenceUtil {
             try {
                 if (!field.isTypeResolved()) {
                     field.setValueType(resolveFieldType(field, true, recursionCount));
+                }
+                if (field.getValueType() == PasField.VARIANT) {
+                    return new PasVariantScope(field.getElement());
                 }
                 return field.getValueType() != null ? field.getValueType().getTypeScope() : null;
             } finally {

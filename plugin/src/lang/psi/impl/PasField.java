@@ -24,7 +24,7 @@ public class PasField {
 
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY, PSEUDO_VARIABLE}
 
-    public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY}
+    public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY, VARIANT}
 
     public static final Set<FieldType> TYPES_ALL = EnumSet.allOf(FieldType.class);
     public static final Set<FieldType> TYPES_LEFT_SIDE = EnumSet.of(FieldType.UNIT, FieldType.VARIABLE, FieldType.PSEUDO_VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE);
@@ -69,6 +69,7 @@ public class PasField {
     public static final ValueType STRING = new ValueType(null, Kind.STRING, null, null);
     public static final ValueType BOOLEAN = new ValueType(null, Kind.BOOLEAN, null, null);
     public static final ValueType POINTER = new ValueType(null, Kind.POINTER, null, null);
+    public static final ValueType VARIANT = new ValueType(null, Kind.VARIANT, null, null);
 
     private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null, null);
 
@@ -204,14 +205,17 @@ public class PasField {
                 return POINTER;
             case STRING:
                 return STRING;
+            case VARIANT:
+                return VARIANT;
             default:
                 return null;
         }
     }
 
     private static Kind getKindByName(String value) {
+        String valueUpper = value != null ? value.toUpperCase() : null;
         for (Kind kind : Kind.values()) {
-            if (kind.name().equalsIgnoreCase(value)) {
+            if (kind.name().equals(valueUpper)) {
                 return kind;
             }
         }

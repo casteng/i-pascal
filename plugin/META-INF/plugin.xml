@@ -1,14 +1,24 @@
-<idea-plugin version="2">
+<idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.40</version>
+    <version>1.50</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
-      Pascal support for IDEA.<br>
+      Object Pascal support for IDEA.<br>
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.50</p>
+        <ul>
+          <li>Move statements or declarations up/down as a whole</li>
+          <li>Run configuration option to workaround Write() buffering issue on Linux and Mac (Issue #18)</li>
+          <li>Format ">=" correctly (Issue #12)</li>
+          <li>FPC generics syntax (Issue #13)</li>
+          <li>Improve .ppu decompilation</li>
+          <li>No undeclared identifier errors for members of a variant (Issue #19)</li>
+          <li>Compatibility with latest IDEA version</li>
+        </ul>
         <p>1.40</p>
         <ul>
           <li>LLDB debug backend</li>

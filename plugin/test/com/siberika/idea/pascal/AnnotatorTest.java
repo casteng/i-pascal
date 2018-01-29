@@ -167,4 +167,9 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("fpcGenerics.pas");
         myFixture.checkHighlighting(true, false, false);
     }
+
+    public void testVariant() throws Exception {
+        myFixture.configureByFiles("variant.pas");
+        myFixture.checkHighlighting(true, false, false);
+    }
 }
