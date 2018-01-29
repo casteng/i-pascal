@@ -8,8 +8,11 @@ import com.intellij.openapi.editor.LogicalPosition;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
+import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
+import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 public class PascalStatementMover extends LineMover {
     @Override
     public boolean checkAvailable(@NotNull Editor editor, @NotNull PsiFile file, @NotNull MoveInfo info, boolean down) {
-        if (super.checkAvailable(editor, file, info, down)) {
+        if ((file instanceof PascalFile) && super.checkAvailable(editor, file, info, down)) {
             info.indentTarget = false;
             PsiElement el = getFirstElementOnLine(editor, file, info.toMove.startLine);
             Document d = editor.getDocument();
@@ -112,6 +115,6 @@ public class PascalStatementMover extends LineMover {
     }
 
     private boolean isStopper(PsiElement parent) {
-        return PsiUtil.isInstanceOfAny(parent, PasBlockGlobal.class, PasImplDeclSection.class);
+        return PsiUtil.isInstanceOfAny(parent, PasBlockLocal.class, PasBlockGlobal.class, PasImplDeclSection.class, PasProcBodyBlock.class);
     }
 }
