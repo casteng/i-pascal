@@ -41,7 +41,12 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
     public boolean isConfigurationFromContext(PascalRunConfiguration configuration, ConfigurationContext context) {
         return (configuration.getConfigurationModule().getModule() == context.getModule()) &&
                 (context.getPsiLocation() != null) &&
-                (configuration.getProgramFileName().equals(getMainFile(context.getPsiLocation()).getPath()));
+                (configuration.getProgramFileName().equals(getProgramFileName(context)));
+    }
+
+    private String getProgramFileName(@NotNull ConfigurationContext context) {
+        VirtualFile mainFile = context.getPsiLocation() != null ? getMainFile(context.getPsiLocation()) : null;
+        return mainFile != null ? mainFile.getNameWithoutExtension() : null;
     }
 
     private void setupConf(ConfigurationContext context, RunConfiguration conf, boolean setupModule) {
@@ -50,11 +55,12 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
             Module module = context.getModule();
             if (PascalModuleType.isPascalModule(module) && context.getPsiLocation() != null) {
                 conf.setName(module.getName());
-                ((PascalRunConfiguration) conf).setModule(module);
+                PascalRunConfiguration pasConf = (PascalRunConfiguration) conf;
+                pasConf.setModule(module);
+                pasConf.setProgramFileName(getProgramFileName(context));
                 VirtualFile mainFile = getMainFile(context.getPsiLocation());
                 if (mainFile != null) {
                     conf.setName(String.format("[%s] %s", module.getName(), mainFile.getNameWithoutExtension()));
-                    ((PascalRunConfiguration) conf).setProgramFileName(mainFile.getNameWithoutExtension());
                     if (setupModule) {
                         PascalModuleType.setMainFile(module, mainFile);
                     }
@@ -66,9 +72,7 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
     @Nullable
     @Override
     public ConfigurationFromContext createConfigurationFromContext(ConfigurationContext context) {
-        ConfigurationFromContext conf = super.createConfigurationFromContext(context);
-        setupConf(context, conf != null ? conf.getConfiguration() : null, true);
-        return conf;
+        return isProgramLeafElement(context.getPsiLocation()) ? super.createConfigurationFromContext(context) : null;
     }
 
     private static VirtualFile getMainFile(@NotNull PsiElement element) {

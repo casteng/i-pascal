@@ -5,6 +5,7 @@ import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.icons.AllIcons;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.Function;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -21,7 +22,7 @@ public class PascalRunLineMarkerContributor extends RunLineMarkerContributor {
 
     @Nullable
     @Override
-    public Info getInfo(PsiElement element) {
+    public Info getInfo(@NotNull PsiElement element) {
         if (PascalRunContextConfigurationProducer.isProgramLeafElement(element)) {
             return new Info(AllIcons.General.Run, TOOLTIP_PROVIDER, ExecutorAction.getActions(0));
         }

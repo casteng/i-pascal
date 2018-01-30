@@ -32,8 +32,11 @@ import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.InvalidDataException;
+import com.intellij.openapi.util.WriteExternalException;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.siberika.idea.pascal.module.PascalModuleType;
+import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,6 +48,8 @@ import java.util.Collection;
  */
 public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigurationModule>
         implements PascalRunConfigurationParams, RunConfigurationWithSuppressedDefaultRunAction, RunConfigurationWithSuppressedDefaultDebugAction {
+
+    private static final String ATTR_PROGRAM_FILE_NAME = "program_file_name";
 
     private String parameters;
     private String workingDirectory;
@@ -148,4 +153,17 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                 ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() :
                 ProjectRootManager.getInstance(getProject()).getProjectSdk();
     }
+
+    public void readExternal(Element element) throws InvalidDataException {
+        super.readExternal(element);
+        setProgramFileName(element.getAttributeValue(ATTR_PROGRAM_FILE_NAME));
+    }
+
+    public void writeExternal(Element element) throws WriteExternalException {
+        super.writeExternal(element);
+        if (programFileName != null) {
+            element.setAttribute(ATTR_PROGRAM_FILE_NAME, programFileName);
+        }
+    }
+
 }
