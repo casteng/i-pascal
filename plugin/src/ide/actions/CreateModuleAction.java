@@ -34,7 +34,7 @@ import java.util.Properties;
 public class CreateModuleAction extends CreateTemplateInPackageAction<PsiFile> {
     private static final String PASCAL_TEMPLATE_PREFIX = "Pascal";
 
-    public CreateModuleAction() {
+    CreateModuleAction() {
         super(PascalBundle.message("action.create.new.module"),
                 PascalBundle.message("action.create.new.module"),
                 PascalIcons.GENERAL,
@@ -55,10 +55,10 @@ public class CreateModuleAction extends CreateTemplateInPackageAction<PsiFile> {
     @Override
     protected void buildDialog(Project project, PsiDirectory directory, CreateFileFromTemplateDialog.Builder builder) {
         builder.setTitle(PascalBundle.message("action.create.new.module"));
-        for (FileTemplate fileTemplate : getApplicableTemplates()) {
+        for (FileTemplate fileTemplate : getApplicableTemplates(directory.getProject())) {
             final String templateName = fileTemplate.getName();
             final String shortName = getTemplateShortName(templateName);
-            final Icon icon = getTemplateIcon(templateName);
+            final Icon icon = getTemplateIcon();
             builder.addKind(shortName, icon, templateName);
         }
     }
@@ -87,17 +87,17 @@ public class CreateModuleAction extends CreateTemplateInPackageAction<PsiFile> {
 
     private static PsiElement createClass(String className, String packageName, PsiDirectory directory, String templateName, @Nullable java.lang.ClassLoader classLoader)
             throws Exception {
-        final Properties props = new Properties(FileTemplateManager.getInstance().getDefaultProperties(directory.getProject()));
+        final Properties props = new Properties(FileTemplateManager.getInstance(directory.getProject()).getDefaultProperties());
         props.setProperty(FileTemplate.ATTRIBUTE_NAME, className);
         props.setProperty(FileTemplate.ATTRIBUTE_PACKAGE_NAME, packageName);
 
-        final FileTemplate template = FileTemplateManager.getInstance().getInternalTemplate(templateName);
+        final FileTemplate template = FileTemplateManager.getInstance(directory.getProject()).getInternalTemplate(templateName);
 
         return FileTemplateUtil.createFromTemplate(template, className, props, directory, classLoader);
     }
 
-    public static List<FileTemplate> getApplicableTemplates() {
-        return getApplicableTemplates(new Condition<FileTemplate>() {
+    private static List<FileTemplate> getApplicableTemplates(Project project) {
+        return getApplicableTemplates(project, new Condition<FileTemplate>() {
             @Override
             public boolean value(FileTemplate fileTemplate) {
                 return PascalFileType.INSTANCE.getDefaultExtension().equals(fileTemplate.getExtension());
@@ -105,14 +105,14 @@ public class CreateModuleAction extends CreateTemplateInPackageAction<PsiFile> {
         });
     }
 
-    public static List<FileTemplate> getApplicableTemplates(Condition<FileTemplate> filter) {
+    private static List<FileTemplate> getApplicableTemplates(Project project, Condition<FileTemplate> filter) {
         List<FileTemplate> applicableTemplates = new SmartList<FileTemplate>();
-        applicableTemplates.addAll(ContainerUtil.findAll(FileTemplateManager.getInstance().getInternalTemplates(), filter));
-        applicableTemplates.addAll(ContainerUtil.findAll(FileTemplateManager.getInstance().getAllTemplates(), filter));
+        applicableTemplates.addAll(ContainerUtil.findAll(FileTemplateManager.getInstance(project).getInternalTemplates(), filter));
+        applicableTemplates.addAll(ContainerUtil.findAll(FileTemplateManager.getInstance(project).getAllTemplates(), filter));
         return applicableTemplates;
     }
 
-    public static String getTemplateShortName(String templateName) {
+    private static String getTemplateShortName(String templateName) {
         if (templateName.startsWith(PASCAL_TEMPLATE_PREFIX)) {
             return templateName.substring(PASCAL_TEMPLATE_PREFIX.length());
         }
@@ -120,7 +120,7 @@ public class CreateModuleAction extends CreateTemplateInPackageAction<PsiFile> {
     }
 
     @NotNull
-    public static Icon getTemplateIcon(String name) {
+    private static Icon getTemplateIcon() {
         return PascalIcons.GENERAL;
     }
 

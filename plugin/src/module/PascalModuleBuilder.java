@@ -15,6 +15,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -88,7 +89,7 @@ public class PascalModuleBuilder extends ModuleBuilder {
 
     @Nullable
     @Override
-    public ModuleWizardStep modifySettingsStep(SettingsStep settingsStep) {
+    public ModuleWizardStep modifySettingsStep(@NotNull SettingsStep settingsStep) {
         return StdModuleTypes.JAVA.modifySettingsStep(settingsStep, this);
     }
 }

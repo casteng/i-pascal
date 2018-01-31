@@ -126,13 +126,12 @@ public class ModuleUtil {
                 if (res != null) {
                     return res;
                 }
-            } else {
-                //System.out.println(String.format("*** Parent of file %s is null", referencing.getName()));
             }
 
             Module module = com.intellij.openapi.module.ModuleUtil.findModuleForFile(referencing, project);
 
-            return module != null ? trySearchPath(name, GlobalSearchScope.moduleWithDependenciesScope(module)) : null;
+//            return module != null ? trySearchPath(name, GlobalSearchScope.moduleWithDependenciesScope(module)) : null;
+            return module != null ? trySearchPath(name, GlobalSearchScope.projectScope(project)) : null;
         } else {                                                                               // often lexer can't determine which virtual file is referencing the include
             return trySearchPath(name, GlobalSearchScope.projectScope(project));
         }
