@@ -219,7 +219,10 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             String key = name.toUpperCase();
             getActualDefines().add(key);
             defines.add(Pair.create(pos, key));
-            getAllDefines().put(key, new Define(name, virtualFile, pos));
+            Map<String, Define> defs = getAllDefines();
+            if (!BasePascalSdkType.DEFINE_BUILTIN_IDE.equals(key) || !defs.containsKey(key)) {
+                defs.put(key, new Define(name, virtualFile, pos));
+            }
             //if (incremental)System.out.println("Define: " + name);
         }
     }

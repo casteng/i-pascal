@@ -207,6 +207,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
             BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.Keys.DECOMPILER_CACHE.getKey(), null);
             invalidateCompiledCache();
         }
+        BasePascalSdkType.invalidateSdkCaches();
     }
 
     private Object getValue(JComponent control) {

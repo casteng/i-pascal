@@ -1,5 +1,7 @@
 package com.siberika.idea.pascal.sdk;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.intellij.codeInspection.SmartHashMap;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -21,6 +23,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Author: George Bakhtadze
@@ -31,6 +35,11 @@ public abstract class BasePascalSdkType extends SdkType {
     private static final Logger LOG = Logger.getInstance(BasePascalSdkType.class.getName());
     private static final String[] EMPTY_ARGS = new String[0];
     private final String compilerFamily;
+
+    public static final String DEFINE_BUILTIN_IDE = "_IDE_PARSER_";
+
+    private static final Cache<String, Map<String, Define>> definesCache = CacheBuilder.newBuilder().softValues().build();
+    private static final Cache<String, Map<String, Directive>> directivesCache = CacheBuilder.newBuilder().softValues().build();
 
     private Map<String, Map<String, Directive>> directives;
     private Map<String, Map<String, Define>> defines;
@@ -86,8 +95,9 @@ public abstract class BasePascalSdkType extends SdkType {
 
     /**
      * Retrieves compiler defines from compiler command line parameters specified in SDK options
-     * @param defines    collection of defines to append defines to
-     * @param options    command line specified in SDK
+     *
+     * @param defines collection of defines to append defines to
+     * @param options command line specified in SDK
      */
     public static void getDefinesFromCmdLine(Map<String, Define> defines, @Nullable String options) {
         if (null == options) {
@@ -102,38 +112,66 @@ public abstract class BasePascalSdkType extends SdkType {
     }
 
     public static Map<String, Define> getDefaultDefines(@NotNull Sdk sdk, String version) {
-        SdkTypeId id = sdk.getSdkType();
+        final SdkTypeId id = sdk.getSdkType();
         if (id instanceof BasePascalSdkType) {
-            SdkAdditionalData data = sdk.getSdkAdditionalData();
-            Map<String, Define> result = new HashMap<String, Define>();
-            if (data instanceof PascalSdkData) {
-                String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey());
-                getDefinesFromCmdLine(result, options);
+            String key = sdk.getName() + version;
+            try {
+                return definesCache.get(key, new Callable<Map<String, Define>>() {
+                    @Override
+                    public Map<String, Define> call() {
+                        LOG.info("Loading defines");
+                        Map<String, Define> result = new HashMap<String, Define>();
+                        final SdkAdditionalData data = sdk.getSdkAdditionalData();
+                        result.put(DEFINE_BUILTIN_IDE, new Define(DEFINE_BUILTIN_IDE, BuiltinsParser.getBuiltinsSource(), 176));
+                        if (data instanceof PascalSdkData) {
+                            String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey());
+                            getDefinesFromCmdLine(result, options);
+                        }
+                        Map<String, Map<String, Define>> compilerDefines = ((BasePascalSdkType) id).defines;
+                        for (Map.Entry<String, Map<String, Define>> entry : compilerDefines.entrySet()) {
+                            if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
+                                result.putAll(entry.getValue());
+                            }
+                        }
+                        return result;
+                    }
+                });
+            } catch (ExecutionException e) {
+                LOG.info("Error getting default defines", e);
             }
-            Map<String, Map<String, Define>> compilerDefines = ((BasePascalSdkType) id).defines;
-            for (Map.Entry<String, Map<String, Define>> entry : compilerDefines.entrySet()) {
-                if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
-                    result.putAll(entry.getValue());
-                }
-            }
-            return result;
         }
         return new SmartHashMap<String, Define>();
     }
 
     public static Map<String, Directive> getDirectives(@NotNull Sdk sdk, String version) {
-        SdkTypeId id = sdk.getSdkType();
+        final SdkTypeId id = sdk.getSdkType();
         if (id instanceof BasePascalSdkType) {
-            Map<String, Map<String, Directive>> directives = ((BasePascalSdkType) id).directives;
-            Map<String, Directive> result = new HashMap<String, Directive>();
-            for (Map.Entry<String, Map<String, Directive>> entry : directives.entrySet()) {
-                if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
-                    result.putAll(entry.getValue());
-                }
+            String key = sdk.getName() + version;
+            try {
+                return directivesCache.get(key, new Callable<Map<String, Directive>>() {
+                    @Override
+                    public Map<String, Directive> call() {
+                        LOG.info("Loading directives");
+                        Map<String, Map<String, Directive>> directives = ((BasePascalSdkType) id).directives;
+                        Map<String, Directive> result = new HashMap<String, Directive>();
+                        for (Map.Entry<String, Map<String, Directive>> entry : directives.entrySet()) {
+                            if (StrUtil.isVersionLessOrEqual(entry.getKey(), version)) {
+                                result.putAll(entry.getValue());
+                            }
+                        }
+                        return result;
+                    }
+                });
+            } catch (ExecutionException e) {
+                LOG.info("Error getting compiler directives", e);
             }
-            return result;
         }
         return new SmartHashMap<String, Directive>();
+    }
+
+    public static void invalidateSdkCaches() {
+        definesCache.invalidateAll();
+        directivesCache.invalidateAll();
     }
 
     protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {
@@ -143,9 +181,9 @@ public abstract class BasePascalSdkType extends SdkType {
     public void saveAdditionalData(@NotNull final SdkAdditionalData additionalData, @NotNull final Element additional) {
         if (additionalData instanceof PascalSdkData) {
             for (PascalSdkData.Keys key : PascalSdkData.Keys.values()) {
-                Object val = ((PascalSdkData)additionalData).getValue(key.getKey());
+                Object val = ((PascalSdkData) additionalData).getValue(key.getKey());
                 if (val instanceof String) {
-                    additional.setAttribute(key.getKey(), val != null ? (String) val : "");
+                    additional.setAttribute(key.getKey(), (String) val);
                 }
             }
             additional.setAttribute(PascalSdkData.Keys.COMPILER_FAMILY.getKey(), compilerFamily);

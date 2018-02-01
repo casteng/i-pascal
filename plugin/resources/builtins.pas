@@ -4,6 +4,7 @@ You may edit this file but any modifications will be discarded after IDE restart
 Feel free to suggest additions to this file.
 }
 unit $builtins;
+{$DEFINE _IDE_PARSER_}  // This define is always defined in I-Pascal and can be used to fix include-related parsing issues
 
 interface
 
