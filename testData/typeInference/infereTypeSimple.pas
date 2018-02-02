@@ -4,6 +4,7 @@ interface
 
 type
   TArr = array[0..1] of Integer;
+  TDatetime = TDatetime;
 
 type
   TEnum = (V1, V2);
@@ -14,6 +15,7 @@ var
   enum: TEnum;
   enumPtr: PEnum;
   arrArr: array of TArr;
+  d: TDatetime;
 
 implementation
 
@@ -28,4 +30,5 @@ begin
   'test';
   True;
   Nil;
+  d;
 end.

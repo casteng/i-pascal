@@ -33,6 +33,7 @@ import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -195,6 +196,9 @@ public class PasReferenceUtil {
         } else {
             if ((element != null) && PsiUtil.isTypeDeclPointingToSelf(element)) {
                 res = PasField.getValueType(element.getName());
+                if (null == res) {
+                    res = new PasField.ValueType(null, PasField.Kind.VARIANT, null, ((PasTypeDeclaration) element.getParent()).getTypeDecl());
+                }
             } else {
                 res = retrieveAnonymousType(PsiUtil.getTypeDeclaration(element), includeLibrary, recursionCount);
             }

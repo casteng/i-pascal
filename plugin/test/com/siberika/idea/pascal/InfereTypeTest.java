@@ -36,6 +36,7 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals("String", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Boolean", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Pointer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("TDatetime", PascalExpression.infereType(expressions.get(i++).getExpr()));
     }
 
     public void testPath() throws Exception {
