@@ -486,8 +486,8 @@ private label               ::= RefNamedIdent | NUMBER_INT | NUMBER_HEX
 
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section" recoverWhile=rec_block_local_end}
 private varKey	            ::=	VAR | THREADVAR
-VarDeclaration	            ::=	customAttributes* identList ":" TypeDecl [varValueSpec] hintingDirective* ";" {pin=2 recoverWhile=rec_name}
-private varValueSpec	    ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
+VarDeclaration	            ::=	customAttributes* identList ":" TypeDecl [VarValueSpec] hintingDirective* ";" {pin=2 recoverWhile=rec_name}
+VarValueSpec	            ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_block_local_end}
 private constKey            ::= CONST |	RESOURCESTRING

@@ -848,7 +848,9 @@ public class PsiUtil {
     public static boolean isAssignLeftPart(PascalNamedElement element) {
         PsiElement expr = PsiUtil.skipToExpression(element);
         if (expr instanceof PasReferenceExpr) {
-            return (expr.getParent() instanceof PasExpression) && (expr.getParent().getParent() instanceof PasStatement);
+            if (expr.getParent() instanceof PasExpression) {
+                return PsiTreeUtil.skipSiblingsForward(expr.getParent(), PsiUtil.ELEMENT_WS_COMMENTS) instanceof PasAssignPart;
+            }
         }
         return false;
     }
