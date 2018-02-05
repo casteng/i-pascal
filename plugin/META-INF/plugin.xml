@@ -9,6 +9,13 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.51</p>
+        <ul>
+          <li>Inplace rename with smart suggestions</li>
+          <li>Highlight differently read and write access to identifier at cursor</li>
+          <li>Add source of dependent modules in search path</li>
+          <li>Fix run configurations duplication on run from gutter icon</li>
+        </ul>
         <p>1.50</p>
         <ul>
           <li>Move statements or declarations up/down as a whole</li>
@@ -366,6 +373,7 @@
         <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
         <gotoClassContributor implementation="com.siberika.idea.pascal.lang.references.PascalClassByNameContributor"/>
 
+        <lang.refactoringSupport language="Pascal" implementationClass="com.siberika.idea.pascal.editor.refactoring.PascalRefactoringSupport"/>
         <renamePsiElementProcessor implementation="com.siberika.idea.pascal.lang.references.impl.PascalRenameProcessor"/>
         <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
                                  implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
@@ -375,6 +383,7 @@
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalLineMarkerProvider"/>
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalHeavyLineMarkerProvider"/>
         <codeInsight.parameterInfo language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterInfoHandler"/>
+        <nameSuggestionProvider implementation="com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider"/>
 
         <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionContributor"/>
         <completion.confidence language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionConfidence"/>

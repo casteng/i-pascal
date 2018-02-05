@@ -7,7 +7,7 @@ import com.intellij.openapi.roots.FileIndexFacade;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.tree.TokenSet;
@@ -126,7 +126,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     public SearchScope getUseScope() {
         if (PsiUtil.isLocalDeclaration(this)) {
-            return GlobalSearchScope.fileScope(this.getContainingFile());
+            return new LocalSearchScope(this.getContainingFile());
         }
         return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));
     }
