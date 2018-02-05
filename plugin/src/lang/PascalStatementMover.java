@@ -23,22 +23,23 @@ public class PascalStatementMover extends LineMover {
         if ((file instanceof PascalFile) && super.checkAvailable(editor, file, info, down)) {
             info.indentTarget = false;
             PsiElement el = getFirstElementOnLine(editor, file, info.toMove.startLine);
-            Document d = editor.getDocument();
-            int endLine = info.toMove.endLine;
-            if ((el != null) && !DocUtil.isSingleLine(editor.getDocument(), el)) {
-                endLine = d.getLineNumber(el.getTextRange().getEndOffset()) + 1;
+            if (el != null) {
+                Document d = editor.getDocument();
+                int endLine = info.toMove.endLine;
+                if (!DocUtil.isSingleLine(editor.getDocument(), el)) {
+                    endLine = d.getLineNumber(el.getTextRange().getEndOffset()) + 1;
+                }
+                info.toMove = new LineRange(info.toMove.startLine, endLine);
+                if (down) {
+                    info.toMove2 = findLineRangeDown(editor, file, endLine);
+                } else {
+                    info.toMove2 = findLineRangeUp(editor, file, info.toMove2.startLine);
+                }
+                expandRanges(editor.getDocument(), file, info, down);
+                return true;
             }
-            info.toMove = new LineRange(info.toMove.startLine, endLine);
-            if (down) {
-                info.toMove2 = findLineRangeDown(editor, file, endLine);
-            } else {
-                info.toMove2 = findLineRangeUp(editor, file, info.toMove2.startLine);
-            }
-            expandRanges(editor.getDocument(), file, info, down);
-            return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     private void expandRanges(Document document, PsiFile file, MoveInfo info, boolean down) {
@@ -53,7 +54,7 @@ public class PascalStatementMover extends LineMover {
     @Override
     public void afterMove(@NotNull Editor editor, @NotNull PsiFile file, @NotNull MoveInfo info, boolean down) {
         super.afterMove(editor, file, info, down);
-        DocUtil.reparsePsi(file.getProject(), file.getVirtualFile());
+        file.subtreeChanged();
     }
 
     private LineRange findLineRangeUp(Editor editor, PsiFile file, int startLine) {
