@@ -23,6 +23,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.HashMap;
 import com.intellij.util.io.BaseInputStreamReader;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.Define;
 import com.siberika.idea.pascal.util.StrUtil;
@@ -220,7 +221,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             getActualDefines().add(key);
             defines.add(Pair.create(pos, key));
             Map<String, Define> defs = getAllDefines();
-            if (!BasePascalSdkType.DEFINE_BUILTIN_IDE.equals(key) || !defs.containsKey(key)) {
+            if (!BasePascalSdkType.DEFINE_IDE_PARSER.equals(key) || !defs.containsKey(key)) {
                 defs.put(key, new Define(name, virtualFile, pos));
             }
             //if (incremental)System.out.println("Define: " + name);
@@ -244,7 +245,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         allDefines = new HashMap<String, Define>();
         if ((project != null)) {
             final Sdk sdk = getSdk(project, virtualFile);
-            allDefines = (sdk != null) && (sdk.getVersionString() != null) ? BasePascalSdkType.getDefaultDefines(sdk, sdk.getVersionString()) : allDefines;
+            if ((sdk != null) && (sdk.getVersionString() != null)) {
+                allDefines.putAll(BasePascalSdkType.getDefaultDefines(sdk, sdk.getVersionString()));
+            }
             for (Map.Entry<String, Define> entry : allDefines.entrySet()) {
                 actualDefines.add(entry.getKey());
             }
@@ -252,6 +255,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private IElementType doHandleIfDef(int pos, CharSequence sequence, boolean negate) {
+        if (isConditionalsDisabled()) {
+            return PasTypes.COMMENT;
+        }
         String name = extractDefineName(sequence);
         curLevel++;
         if (StringUtils.isNotEmpty(name) && (!getActualDefines().contains(name.toUpperCase()) ^ negate) && (!isInactive())) {
@@ -261,10 +267,6 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         }
         pushLevels(pos);
         return CT_DEFINE;
-    }
-
-    private void pushLevels(int pos) {
-        levels.add((long) (pos) << 32 + curLevel << 16 + inactiveLevel);
     }
 
     @Override
@@ -289,6 +291,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
 
     @Override
     public IElementType handleElse(int pos) {
+        if (isConditionalsDisabled()) {
+            return PasTypes.COMMENT;
+        }
         if (curLevel <= 0) { return TokenType.BAD_CHARACTER; }
         if (isInactive()) {
             if (curLevel == inactiveLevel) {
@@ -304,6 +309,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
 
     @Override
     public IElementType handleEndIf(int pos) {
+        if (isConditionalsDisabled()) {
+            return PasTypes.COMMENT;
+        }
         if (curLevel <= 0) { return TokenType.BAD_CHARACTER; }
         if (curLevel == inactiveLevel) {
             yybegin(YYINITIAL);
@@ -333,6 +341,14 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             }
         }
         return INCLUDE;
+    }
+
+    private boolean isConditionalsDisabled() {
+        return getActualDefines().contains(BasePascalSdkType.DEFINE_IDE_DISABLE_CONDITIONALS_);
+    }
+
+    private void pushLevels(int pos) {
+        levels.add((long) (pos) << 32 + curLevel << 16 + inactiveLevel);
     }
 
     // Process the file and return the new instance of lexer which processed it

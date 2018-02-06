@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -36,7 +37,8 @@ public abstract class BasePascalSdkType extends SdkType {
     private static final String[] EMPTY_ARGS = new String[0];
     private final String compilerFamily;
 
-    public static final String DEFINE_BUILTIN_IDE = "_IDE_PARSER_";
+    public static final String DEFINE_IDE_PARSER = "_IDE_PARSER_";
+    public static final String DEFINE_IDE_DISABLE_CONDITIONALS_ = "_IDE_DISABLE_CONDITIONALS_";
 
     private static final Cache<String, Map<String, Define>> definesCache = CacheBuilder.newBuilder().softValues().build();
     private static final Cache<String, Map<String, Directive>> directivesCache = CacheBuilder.newBuilder().softValues().build();
@@ -122,7 +124,7 @@ public abstract class BasePascalSdkType extends SdkType {
                         LOG.info("Loading defines");
                         Map<String, Define> result = new HashMap<String, Define>();
                         final SdkAdditionalData data = sdk.getSdkAdditionalData();
-                        result.put(DEFINE_BUILTIN_IDE, new Define(DEFINE_BUILTIN_IDE, BuiltinsParser.getBuiltinsSource(), 176));
+                        result.put(DEFINE_IDE_PARSER, new Define(DEFINE_IDE_PARSER, BuiltinsParser.getBuiltinsSource(), 176));
                         if (data instanceof PascalSdkData) {
                             String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey());
                             getDefinesFromCmdLine(result, options);
@@ -133,7 +135,7 @@ public abstract class BasePascalSdkType extends SdkType {
                                 result.putAll(entry.getValue());
                             }
                         }
-                        return result;
+                        return Collections.unmodifiableMap(result);
                     }
                 });
             } catch (ExecutionException e) {
