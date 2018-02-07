@@ -7,14 +7,26 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.stubs.IStubElementType;
+import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.psi.*;
+import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import com.siberika.idea.pascal.lang.stub.PasRoutineStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +42,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Author: George Bakhtadze
  * Date: 06/09/2013
  */
-public abstract class PascalRoutineImpl extends PasStubScopeImpl<PasRoutineStub> implements PasEntityScope, PasDeclSection {
+public abstract class PascalRoutineImpl<T extends StubElement> extends PasStubScopeImpl<T> implements PasEntityScope, PasDeclSection {
 
     private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
 
@@ -46,6 +58,10 @@ public abstract class PascalRoutineImpl extends PasStubScopeImpl<PasRoutineStub>
 
     public PascalRoutineImpl(ASTNode node) {
         super(node);
+    }
+
+    public PascalRoutineImpl(T stub, IStubElementType nodeType) {
+        super(stub, nodeType);
     }
 
     @Override
@@ -216,7 +232,7 @@ public abstract class PascalRoutineImpl extends PasStubScopeImpl<PasRoutineStub>
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
-                LOG.warn("Error occured during building parents for: " + this, e.getCause());
+                LOG.warn("Error occured during building parents for: " + this, e);
                 invalidateCaches(getKey());
                 return Collections.emptyList();
             }

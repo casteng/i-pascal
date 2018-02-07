@@ -36,4 +36,15 @@ public class PasVariantScope extends PasScopeImpl {
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
         return Collections.emptyList();
     }
+
+    @Nullable
+    @Override
+    public PasEntityScope getContainingScope() {
+        return null;
+    }
+
+    @Override
+    public String getKey() {
+        return "";
+    }
 }
