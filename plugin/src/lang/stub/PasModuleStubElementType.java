@@ -20,13 +20,16 @@ import java.io.IOException;
  */
 public class PasModuleStubElementType extends ILightStubElementType<PasModuleStub, PascalModule> {
 
+    public static PasModuleStubElementType INSTANCE;
+
     public PasModuleStubElementType(String debugName) {
         super(debugName, PascalLanguage.INSTANCE);
+        INSTANCE = this;
     }
 
     @Override
     public PasModuleStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasModuleStubImpl(parentStub, this);
+        return new PasModuleStubImpl(parentStub, "-", null);
     }
 
     @Override
@@ -37,7 +40,7 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
     @NotNull
     @Override
     public PasModuleStub createStub(@NotNull PascalModule psi, StubElement parentStub) {
-        return new PasModuleStubImpl(parentStub, this);
+        return new PasModuleStubImpl(parentStub, psi.getName(), psi.getModuleType());
     }
 
     @NotNull
@@ -49,18 +52,21 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
     @Override
     public void serialize(@NotNull PasModuleStub stub, @NotNull StubOutputStream dataStream) throws IOException {
         System.out.println("PasModuleStubElementType.serialize");
-        //dataStream.writeName(stub.getName());
+        dataStream.writeName(stub.getName());
+        dataStream.writeName(stub.getModuleType().name());
     }
 
     @NotNull
     @Override
     public PasModuleStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
         System.out.println("PasModuleStubElementType.deserialize");
-        return new PasModuleStubImpl(parentStub, this);
+        String name = StubUtil.readName(dataStream);
+        PascalModule.ModuleType type = StubUtil.readEnum(dataStream, PascalModule.ModuleType.class);
+        return new PasModuleStubImpl(parentStub, name, type);
     }
 
     @Override
     public void indexStub(@NotNull PasModuleStub stub, @NotNull IndexSink sink) {
-        System.out.println("PasModuleStubElementType.indexStub");
+        //System.out.println("PasModuleStubElementType.indexStub");
     }
 }

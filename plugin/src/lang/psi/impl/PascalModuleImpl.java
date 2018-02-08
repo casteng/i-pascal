@@ -70,6 +70,15 @@ public class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> implements
 
     @Override
     public ModuleType getModuleType() {
+        PasModuleStub stub = getStub();
+        if (stub != null) {
+            return stub.getModuleType();
+        } else {
+            return resolveModuleType();
+        }
+    }
+
+    private ModuleType resolveModuleType() {
         PasModule pm = (PasModule) this;
         if (pm.getUnitModuleHead() != null) {
             return ModuleType.UNIT;
