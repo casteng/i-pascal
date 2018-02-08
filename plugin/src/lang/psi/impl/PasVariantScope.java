@@ -43,8 +43,4 @@ public class PasVariantScope extends PasScopeImpl {
         return null;
     }
 
-    @Override
-    public String getKey() {
-        return "";
-    }
 }

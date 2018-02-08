@@ -7,11 +7,7 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
-import com.intellij.psi.stubs.IStubElementType;
-import com.intellij.psi.stubs.StubElement;
-import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
@@ -19,13 +15,11 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -42,11 +36,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * Author: George Bakhtadze
  * Date: 06/09/2013
  */
-public abstract class PascalRoutineImpl<T extends StubElement> extends PasStubScopeImpl<T> implements PasEntityScope, PasDeclSection {
+public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRoutine, PasDeclSection {
 
     private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
-
-    private static final TokenSet FUNCTION_KEYWORDS = TokenSet.create(PasTypes.FUNCTION, PasTypes.OPERATOR);
 
     private ReentrantLock parentLock = new ReentrantLock();
     private boolean parentBuilding = false;
@@ -58,10 +50,6 @@ public abstract class PascalRoutineImpl<T extends StubElement> extends PasStubSc
 
     public PascalRoutineImpl(ASTNode node) {
         super(node);
-    }
-
-    public PascalRoutineImpl(T stub, IStubElementType nodeType) {
-        super(stub, nodeType);
     }
 
     @Override
@@ -99,6 +87,16 @@ public abstract class PascalRoutineImpl<T extends StubElement> extends PasStubSc
                 return EMPTY_MEMBERS;
             }
         }
+    }
+
+    @Override
+    public String getCanonicalName() {
+        return PsiUtil.normalizeRoutineName(this);
+    }
+
+    @Override
+    public PasField.Visibility getVisibility() {
+        return PasField.Visibility.PUBLIC;         // TODO: implement
     }
 
     @Nullable
@@ -167,8 +165,31 @@ public abstract class PascalRoutineImpl<T extends StubElement> extends PasStubSc
         }
     }
 
-    private boolean isFunction() {
-        return findChildByFilter(FUNCTION_KEYWORDS) != null;
+    public boolean isConstructor() {
+        return RoutineUtil.isConstructor(this);
+    }
+
+    public boolean isFunction() {
+        return findChildByFilter(RoutineUtil.FUNCTION_KEYWORDS) != null;
+    }
+
+    @NotNull
+    public String getFunctionTypeStr() {
+        if (isConstructor()) {                                 // Return namespace part of constructor implementation name as type name
+            String ns = getNamespace();
+            return ns.substring(ns.lastIndexOf('.') + 1);
+        }
+        PasTypeDecl type = findChildByClass(PasTypeDecl.class);
+        PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);
+        if (typeId != null) {
+            return typeId.getFullyQualifiedIdent().getName();
+        }
+        return type != null ? type.getText() : "";
+    }
+
+    @Nullable
+    public PasTypeID getFunctionTypeIdent() {
+        return PsiTreeUtil.findChildOfType(findChildByClass(PasTypeDecl.class), PasTypeID.class);
     }
 
     private void addSelf(Members res) {
@@ -184,35 +205,6 @@ public abstract class PascalRoutineImpl<T extends StubElement> extends PasStubSc
     private void addField(Members res, PascalNamedElement element, PasField.FieldType fieldType) {
         PasField field = new PasField(this, element, element.getName(), fieldType, PasField.Visibility.STRICT_PRIVATE);
         res.all.put(field.name.toUpperCase(), field);
-    }
-
-    @Nullable
-    public PasTypeID getFunctionTypeIdent() {
-        PasTypeDecl type = findChildByClass(PasTypeDecl.class);
-        return PsiTreeUtil.findChildOfType(type, PasTypeID.class);
-    }
-
-    @NotNull
-    public String getFunctionTypeStr() {
-        if (isConstructor()) {
-            if (this instanceof PasExportedRoutine) {
-                PasEntityScope scope = getContainingScope();
-                return scope != null ? scope.getName() : "";
-            } else {
-                String ns = getNamespace();
-                return ns.substring(ns.lastIndexOf('.') + 1);
-            }
-        }
-        PasTypeDecl type = findChildByClass(PasTypeDecl.class);
-        PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);
-        if (typeId != null) {
-            return typeId.getFullyQualifiedIdent().getName();
-        }
-        return type != null ? type.getText() : "";
-    }
-
-    public boolean isConstructor() {
-        return getFirstChild().getNode().getElementType() == PasTypes.CONSTRUCTOR;
     }
 
     @NotNull
@@ -267,64 +259,6 @@ public abstract class PascalRoutineImpl<T extends StubElement> extends PasStubSc
 
             return res;
         }
-    }
-
-
-
-// Copied from PascalNamedElementImpl as we can't extend that class. TODO: Move to another place
-
-    private volatile String myCachedName;
-
-    @Override
-    public void subtreeChanged() {
-        super.subtreeChanged();
-        myCachedName = null;
-    }
-
-    @NotNull
-    @Override
-    synchronized public String getName() {
-        if ((myCachedName == null) || (myCachedName.length() == 0)) {
-            myCachedName = PascalNamedElementImpl.calcName(getNameElement());
-        }
-        return myCachedName;
-    }
-
-    @Override
-    public String getNamespace() {
-        return "";
-    }
-
-    @Override
-    public String getNamePart() {
-        return getName();
-    }
-
-    @Nullable
-    @Override
-    public PsiElement getNameIdentifier() {
-        return getNameElement();
-    }
-
-    @Override
-    public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
-        return null;
-    }
-
-    @Nullable
-    private PsiElement getNameElement() {
-        if ((this instanceof PasNamespaceIdent) || (this instanceof PascalQualifiedIdent)) {
-            return this;
-        }
-        PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
-        if (null == result) {
-            PascalNamedElement namedChild = PsiTreeUtil.getChildOfType(this, PascalNamedElement.class);
-            result = namedChild != null ? namedChild.getNameIdentifier() : null;
-        }
-        if (null == result) {
-            result = findChildByType(NAME_TYPE_SET);
-        }
-        return result;
     }
 
 }

@@ -31,7 +31,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -184,7 +183,7 @@ public class PsiUtil {
         PascalPsiElement parent = getParentDeclRoot(element);
         if (isNamedIdent(element) &&
                 // Make routine itself belong to parent root
-                ((parent instanceof PascalRoutineImpl) && (element.getParent() == parent))
+                ((parent instanceof PascalRoutine) && (element.getParent() == parent))
                 // Make class parent belong to parent root
                 || ((parent instanceof PasEntityScope) && (element.getParent().getParent().getClass() == PasClassParentImpl.class))) {
             return getNearestAffectingDeclarationsRoot(parent);
@@ -202,7 +201,7 @@ public class PsiUtil {
     @SuppressWarnings("unchecked")
     private static PascalPsiElement getParentDeclRoot(PsiElement element) {   // TODO: remove blocks?
         return PsiTreeUtil.getParentOfType(element,
-                PascalRoutineImpl.class, PasFormalParameterSection.class,
+                PascalRoutine.class, PasFormalParameterSection.class,
                 PasClosureExpr.class,
                 PasUnitImplementation.class,
                 PasBlockGlobal.class,
@@ -252,7 +251,7 @@ public class PsiUtil {
     }
 
     public static boolean isRoutineName(@NotNull PascalNamedElement element) {
-        return element.getParent() instanceof PascalRoutineImpl;
+        return element.getParent() instanceof PascalRoutine;
     }
 
     public static boolean isUsedUnitName(@NotNull PsiElement element) {
@@ -450,14 +449,14 @@ public class PsiUtil {
             }
         } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {                                    // type declaration case
             return entityDecl;
-        } else if (entityDecl.getParent() instanceof PascalRoutineImpl) {                                     // routine declaration case
-            PasTypeID type = ((PascalRoutineImpl) entityDecl.getParent()).getFunctionTypeIdent();
+        } else if (entityDecl.getParent() instanceof PascalRoutine) {                                     // routine declaration case
+            PasTypeID type = ((PascalRoutine) entityDecl.getParent()).getFunctionTypeIdent();
             return type != null ? type.getFullyQualifiedIdent() : null;
         }
         return null;
     }
 
-    public static boolean isForwardProc(PascalRoutineImpl decl) {
+    public static boolean isForwardProc(PascalRoutine decl) {
         return PsiTreeUtil.findChildOfType(decl, PasProcForwardDecl.class) != null;
     }
 
@@ -571,7 +570,7 @@ public class PsiUtil {
     @Nullable
     public static PasTypeDecl getTypeDeclaration(PascalNamedElement element) {
         PasTypeDecl typeDecl;
-        if ((element instanceof PascalRoutineImpl) && (element.getFirstChild() != null)) {                      // resolve function type
+        if ((element instanceof PascalRoutine) && (element.getFirstChild() != null)) {                      // resolve function type
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getFirstChild(), PasTypeDecl.class);
         } else {
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
@@ -599,8 +598,8 @@ public class PsiUtil {
     }
 
     public static String getFieldName(PascalNamedElement element) {
-        if (element instanceof PascalRoutineImpl) {
-            return normalizeRoutineName((PascalRoutineImpl) element);
+        if (element instanceof PascalRoutine) {
+            return normalizeRoutineName((PascalRoutine) element);
         } else {
             return element.getName();
         }
@@ -613,7 +612,7 @@ public class PsiUtil {
         return vFile != null ? vFile.getPath() : "";
     }
 
-    public static String normalizeRoutineName(PascalRoutineImpl routine) {
+    public static String normalizeRoutineName(PascalRoutine routine) {
         StringBuilder res = new StringBuilder(routine.getName());
         PasFormalParameterSection params = routine.getFormalParameterSection();
         if (params != null) {
@@ -855,7 +854,7 @@ public class PsiUtil {
         return false;
     }
 
-    public static boolean hasParameters(PascalRoutineImpl routine) {
+    public static boolean hasParameters(PascalRoutine routine) {
         PasFormalParameterSection params = routine.getFormalParameterSection();
         return (params != null) && !params.getFormalParameterList().isEmpty();
     }
@@ -868,7 +867,7 @@ public class PsiUtil {
         return el1.getTextRange().getStartOffset() < el2.getTextRange().getStartOffset();
     }
 
-    public static boolean isNotNestedRoutine(PascalRoutineImpl routine) {
+    public static boolean isNotNestedRoutine(PascalRoutine routine) {
         return routine.getClass() == PasRoutineImplDeclImpl.class;
     }
 
