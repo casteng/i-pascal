@@ -43,7 +43,6 @@ import com.siberika.idea.pascal.lang.psi.*;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -360,7 +359,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private void handleStructured(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
         if (pos instanceof PasClassField || originalPos instanceof PasClassTypeDecl
-         || (pos instanceof PasExportedRoutine && isMethod((PascalRoutineImpl) pos))) {
+         || (pos instanceof PasExportedRoutine && isMethod((PascalRoutine) pos))) {
             if (DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition())) {
                 appendTokenSet(result, PascalLexer.VISIBILITY);
                 appendTokenSet(result, TokenSet.andNot(PascalLexer.STRUCT_DECLARATIONS, TS_CLASS));
@@ -393,7 +392,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             if ((scope instanceof PasUnitImplementation) || (pos instanceof PasUnitImplementation)) {
                 appendTokenSetUnique(result, PascalLexer.UNIT_SECTIONS, scope.getParent());
             }
-            if (scope instanceof PascalRoutineImpl) {
+            if (scope instanceof PascalRoutine) {
                 if (DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition())) {
                     appendTokenSet(result, DECLARATIONS_LOCAL);
                 }
@@ -508,7 +507,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(PsiUtil.getFieldName(field.getElement()));
         if (field.fieldType == PasField.FieldType.ROUTINE) {
             PascalNamedElement el = field.getElement();
-            final String content = (el instanceof PascalRoutineImpl && PsiUtil.hasParameters((PascalRoutineImpl) el)) ? "(" + DocUtil.PLACEHOLDER_CARET + ")" : "()" + DocUtil.PLACEHOLDER_CARET;
+            final String content = (el instanceof PascalRoutine && PsiUtil.hasParameters((PascalRoutine) el)) ? "(" + DocUtil.PLACEHOLDER_CARET + ")" : "()" + DocUtil.PLACEHOLDER_CARET;
             res = res.withInsertHandler(new InsertHandler<LookupElement>() {
                 @Override
                 public void handleInsert(InsertionContext context, LookupElement item) {
@@ -556,8 +555,8 @@ public class PascalCompletionContributor extends CompletionContributor {
         if (DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition())) {
             return;
         }
-        if (pos instanceof PascalRoutineImpl) {
-            if (isMethod((PascalRoutineImpl) pos)) {
+        if (pos instanceof PascalRoutine) {
+            if (isMethod((PascalRoutine) pos)) {
                 if (pos instanceof PasExportedRoutine) {                   // Directives should appear in the class declaration only, not in the defining declaration
                     appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
                 }
@@ -567,7 +566,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private static boolean isMethod(PascalRoutineImpl routine) {
+    private static boolean isMethod(PascalRoutine routine) {
         return routine.getContainingScope() instanceof PascalStructType;
     }
 

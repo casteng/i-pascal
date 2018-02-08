@@ -11,11 +11,11 @@ import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -57,12 +57,12 @@ public class PascalRoutineActions {
     public static class ActionDeclareAll extends ActionDeclare implements LowPriorityAction {
         public ActionDeclareAll(String name, PascalNamedElement element) {
             super(name, element);
-            PascalRoutineImpl routine = (PascalRoutineImpl) element;
+            PascalRoutine routine = (PascalRoutine) element;
             PasEntityScope scope = routine.getContainingScope();
             PasModule module = PsiUtil.getElementPasModule(routine);
             if (null != module) {
-                List<PascalRoutineImpl> fields = SectionToggle.collectFields(module.getPrivateFields(), PasField.FieldType.ROUTINE, null);
-                for (PascalRoutineImpl field : fields) {
+                List<PascalRoutine> fields = SectionToggle.collectFields(module.getPrivateFields(), PasField.FieldType.ROUTINE, null);
+                for (PascalRoutine field : fields) {
                     if ((field != routine) && (field.getContainingScope() == scope) && (null == SectionToggle.retrieveDeclaration(field, true))) {
                         addData(new FixActionData(field));
                     }
@@ -78,7 +78,7 @@ public class PascalRoutineActions {
 
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            PascalRoutineImpl routine = (PascalRoutineImpl) data.element;
+            PascalRoutine routine = (PascalRoutine) data.element;
             String prefix = SectionToggle.getPrefix(routine);
 
             data.text = data.element.getText();
@@ -117,7 +117,7 @@ public class PascalRoutineActions {
     public static class ActionImplementAll extends ActionImplement implements LowPriorityAction {
         public ActionImplementAll(String name, PascalNamedElement element) {
             super(name, element);
-            PascalRoutineImpl routine = (PascalRoutineImpl) element;
+            PascalRoutine routine = (PascalRoutine) element;
             List<PasExportedRoutineImpl> fields = SectionToggle.collectFields(SectionToggle.getDeclFields(routine.getContainingScope()),
                     PasField.FieldType.ROUTINE, new Filter<PasField>() {
                 @Override

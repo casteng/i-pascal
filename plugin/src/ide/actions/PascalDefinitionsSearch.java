@@ -11,8 +11,8 @@ import com.intellij.util.Processor;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +43,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
 
     public static Collection<PasEntityScope> findImplementations(PsiElement element, Integer limit, int rCnt) {
         Collection<PasEntityScope> targets = new LinkedHashSet<PasEntityScope>();
-        PascalRoutineImpl routine = element instanceof PascalRoutineImpl ? (PascalRoutineImpl) element : PsiTreeUtil.getParentOfType(element, PascalRoutineImpl.class);
+        PascalRoutine routine = element instanceof PascalRoutine ? (PascalRoutine) element : PsiTreeUtil.getParentOfType(element, PascalRoutine.class);
         if (routine != null) {
             findImplementingMethods(targets, routine, limit, 0);
         } else {
@@ -52,13 +52,13 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
         return targets;
     }
 
-    public static void findImplementingMethods(Collection<PasEntityScope> targets, PascalRoutineImpl routine, Integer limit, int rCnt) {
+    public static void findImplementingMethods(Collection<PasEntityScope> targets, PascalRoutine routine, Integer limit, int rCnt) {
         Collection<PasEntityScope> found = new LinkedHashSet<PasEntityScope>();
         Collection<PasEntityScope> scopes = new LinkedHashSet<PasEntityScope>();
         if (routine instanceof PasRoutineImplDecl) {
             PsiElement el = SectionToggle.retrieveDeclaration(routine, false);
             if (el instanceof PasExportedRoutine) {
-                routine = (PascalRoutineImpl) el;
+                routine = (PascalRoutine) el;
             } else {
                 return;
             }

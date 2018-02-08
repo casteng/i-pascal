@@ -34,6 +34,7 @@ import com.siberika.idea.pascal.lang.psi.PasUnaryExpr;
 import com.siberika.idea.pascal.lang.psi.PasUnaryOp;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -257,11 +258,11 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         }
         Collection<PasField> routines = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(ref), PasField.TYPES_ROUTINE, true, 0);
 
-        PascalRoutineImpl suitable = null;
+        PascalRoutine suitable = null;
         for (PasField routine : routines) {
             PascalNamedElement el = routine.getElement();
-            if (el instanceof PascalRoutineImpl) {
-                suitable = (PascalRoutineImpl) el;
+            if (el instanceof PascalRoutine) {
+                suitable = (PascalRoutine) el;
                 PasFormalParameterSection params = suitable.getFormalParameterSection();
                 // TODO: make type check and handle overload
                 if (params != null && params.getFormalParameterList().size() == expression.getArgumentList().getExprList().size()) {

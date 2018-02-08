@@ -6,9 +6,9 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDeclNested1;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,25 +52,25 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
 
     private void doTestSectionToggle(List<PascalNamedElement> symbols, boolean strict) {
         Collection<PasExportedRoutineImpl> decls = getDecls(symbols);
-        List<PascalRoutineImpl> impls = new ArrayList<PascalRoutineImpl>();
+        List<PascalRoutine> impls = new ArrayList<PascalRoutine>();
         for (PascalNamedElement symbol : symbols) {
             if (symbol instanceof PasRoutineImplDeclNested1) {
-                impls.add((PascalRoutineImpl) symbol);
+                impls.add((PascalRoutine) symbol);
             }
         }
         for (PasExportedRoutineImpl decl : decls) {
             boolean invalid = isInvalid(decl);
-            PascalRoutineImpl impl = (PascalRoutineImpl) SectionToggle.retrieveImplementation(decl, strict);
+            PascalRoutine impl = (PascalRoutine) SectionToggle.retrieveImplementation(decl, strict);
             assertTrue(String.format("Implementation of %s not found", decl.getName()), invalid || impl != null);
             assertTrue(String.format("Implementation of %s found but should not", decl.getName()), !invalid || (impl == null));
             printElement("Impl: " + decl.getName(), impl);
             assertTrue(String.format("Wrong implementation of %s found", decl.getName()), invalid || impl.getName().endsWith(decl.getName()));
-            impls.add((PascalRoutineImpl) SectionToggle.retrieveImplementation(decl, false));
+            impls.add((PascalRoutine) SectionToggle.retrieveImplementation(decl, false));
         }
 
-        for (PascalRoutineImpl impl : impls) {
+        for (PascalRoutine impl : impls) {
             boolean invalid = isInvalid(impl);
-            PascalRoutineImpl decl = (PascalRoutineImpl) SectionToggle.retrieveDeclaration(impl, strict);
+            PascalRoutine decl = (PascalRoutine) SectionToggle.retrieveDeclaration(impl, strict);
             assertTrue(String.format("Declaration of %s not found", impl.getName()), invalid || (decl != null));
             assertTrue(String.format("Declaration of %s found but should not", impl.getName()), !invalid || (decl == null));
             printElement("Decl: " + impl.getName(), decl);
@@ -78,7 +78,7 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
         }
     }
 
-    private boolean isInvalid(PascalRoutineImpl impl) {
+    private boolean isInvalid(PascalRoutine impl) {
         return impl.getName().endsWith("invalid");
     }
 
