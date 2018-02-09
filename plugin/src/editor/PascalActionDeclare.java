@@ -472,7 +472,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             PasEnumType enumType = (PasEnumType) scope;
-            PsiElement last = PsiUtil.sortByStart(Iterables.getLast(enumType.getNamedIdentList(), null), Iterables.getLast(enumType.getExpressionList(), null), false).getFirst();
+            PsiElement last = PsiUtil.sortByStart(Iterables.getLast(enumType.getNamedIdentDeclList(), null), Iterables.getLast(enumType.getExpressionList(), null), false).getFirst();
             data.parent = enumType;
             data.offset = -1;
             if (last != null) {

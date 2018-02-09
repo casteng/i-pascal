@@ -9,7 +9,6 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -61,7 +60,7 @@ public class PascalRenameProcessor extends RenamePsiElementProcessor {
                 if (routine instanceof PascalRoutineImpl) {
                     PasFormalParameterSection pars = ((PascalRoutineImpl) routine).getFormalParameterSection();
                     if (pars != null) for (PasFormalParameter parameter : pars.getFormalParameterList()) {
-                        for (PasNamedIdent ident : parameter.getNamedIdentList()) {
+                        for (PascalNamedElement ident : parameter.getNamedIdentDeclList()) {
                             if (name.equalsIgnoreCase(ident.getName())) {
                                 allRenames.put(ident, newName);
                             }

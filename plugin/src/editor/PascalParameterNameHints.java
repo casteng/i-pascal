@@ -11,7 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasLiteralExpr;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -73,7 +73,7 @@ public class PascalParameterNameHints implements InlayParameterHintsProvider {
                 if (parameters != null) {
                     List<String> params = new SmartList<String>();
                     for (PasFormalParameter parameter : parameters.getFormalParameterList()) {
-                        for (PasNamedIdent pasNamedIdent : parameter.getNamedIdentList()) {
+                        for (PascalNamedElement pasNamedIdent : parameter.getNamedIdentDeclList()) {
                             params.add(pasNamedIdent.getName());
                         }
                     }

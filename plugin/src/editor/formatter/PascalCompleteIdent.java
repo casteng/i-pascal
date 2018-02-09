@@ -4,9 +4,9 @@ import com.google.common.collect.Iterables;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.util.DocUtil;
 
@@ -28,7 +28,7 @@ public class PascalCompleteIdent {
             int colonPos = getChildEndOffset(PasTypes.COLON, el);
             String colonStr = colonPos >= 0 ? "" : ": ";
             String rparenStr = ";";
-            PasNamedIdent last = Iterables.getLast(el.getNamedIdentList(), null);
+            PascalNamedElement last = Iterables.getLast(el.getNamedIdentDeclList(), null);
             if (last != null) {
                 int offs = colonPos >= 0 ? colonPos + 1 : last.getTextRange().getEndOffset();
                 if ((colonPos >= 0) && (typeDecl != null)) {

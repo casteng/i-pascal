@@ -14,7 +14,7 @@ public interface PascalVariableDeclaration extends PascalPsiElement {
     List<PasCustomAttributeDecl> getCustomAttributeDeclList();
 
     @NotNull
-    List<PasNamedIdent> getNamedIdentList();
+    List<? extends PascalNamedElement> getNamedIdentDeclList();
 
     @Nullable
     PasTypeDecl getTypeDecl();

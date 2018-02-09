@@ -11,10 +11,10 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -149,7 +149,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     private void collectFormalParameters(Members res) {
         PascalRoutineImpl routine = this;
-        List<PasNamedIdent> params = PsiUtil.getFormalParameters(getFormalParameterSection());
+        List<PascalNamedElement> params = PsiUtil.getFormalParameters(getFormalParameterSection());
         if (params.isEmpty() && (this instanceof PasRoutineImplDecl)) {         // If this is implementation with formal parameters omitted take formal parameters from routine declaration
             PsiElement decl = SectionToggle.retrieveDeclaration(this, true);
             if (decl instanceof PascalRoutineImpl) {
@@ -157,7 +157,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
                 params = PsiUtil.getFormalParameters(routine.getFormalParameterSection());
             }
         }
-        for (PasNamedIdent parameter : params) {
+        for (PascalNamedElement parameter : params) {
             addField(res, parameter, PasField.FieldType.VARIABLE);
         }
         if (routine.isFunction() && !res.all.containsKey(BUILTIN_RESULT.toUpperCase())) {

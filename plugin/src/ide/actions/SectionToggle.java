@@ -12,13 +12,13 @@ import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
+import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PosUtil;
@@ -207,7 +207,7 @@ public class SectionToggle {
             if (current.scope instanceof PascalStructType) {
                 PsiElement nameEl = current.scope.getNameIdentifier();
                 if (!genericAware && (nameEl instanceof PasGenericTypeIdent)) {
-                    current.prefix = ((PasGenericTypeIdent) nameEl).getRefNamedIdent().getName() + "." + current.prefix;
+                    current.prefix = ((PasGenericTypeIdent) nameEl).getNamedIdentDecl().getName() + "." + current.prefix;
                 } else {
                     current.prefix = current.scope.getName() + "." + current.prefix;
                 }

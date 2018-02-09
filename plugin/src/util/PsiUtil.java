@@ -368,11 +368,11 @@ public class PsiUtil {
     }
 
     @NotNull
-    public static List<PasNamedIdent> getFormalParameters(PasFormalParameterSection paramsSection) {
+    public static List<PascalNamedElement> getFormalParameters(PasFormalParameterSection paramsSection) {
         if (paramsSection != null) {
-            List<PasNamedIdent> result = new SmartList<PasNamedIdent>();
+            List<PascalNamedElement> result = new SmartList<PascalNamedElement>();
             for (PasFormalParameter parameter : paramsSection.getFormalParameterList()) {
-                for (PasNamedIdent ident : parameter.getNamedIdentList()) {
+                for (PascalNamedElement ident : parameter.getNamedIdentDeclList()) {
                     result.add(ident);
                 }
             }
@@ -466,7 +466,7 @@ public class PsiUtil {
     }
 
     public static boolean isStructureMember(PsiElement element) {
-        return (element.getParent() != null) && (element.getParent() instanceof PasStructTypeImpl);
+        return (element.getParent() != null) && (element.getParent() instanceof PascalStructType);
     }
 
     public static PascalStructType getStructTypeByName(PsiElement name) {
@@ -476,7 +476,7 @@ public class PsiUtil {
 
     public static String getQualifiedMethodName(PsiNamedElement element) {
         if (PsiUtil.isStructureMember(element)) {
-            PasStructTypeImpl owner = PasStructTypeImpl.findOwnerStruct(element);
+            PascalStructType owner = PasStructTypeImpl.findOwnerStruct(element);
             if (null != owner) {
                 return getQualifiedMethodName(owner) + "." + element.getName();
             }
@@ -624,7 +624,7 @@ public class PsiUtil {
                 if (td != null) {
                     typeStr = td.getText();
                 }
-                for (int i = 0; i < param.getNamedIdentList().size(); i++) {
+                for (int i = 0; i < param.getNamedIdentDeclList().size(); i++) {
                     res.append(nonFirst ? "," : "").append(typeStr);
                     nonFirst = true;
                 }
@@ -836,9 +836,9 @@ public class PsiUtil {
             }
         }
         if (res.length() > 0) {
-            res.insert(0, "<").insert(0, ident.getRefNamedIdent().getName()).append(">");
+            res.insert(0, "<").insert(0, ident.getNamedIdentDecl().getName()).append(">");
         } else {
-            return ident.getRefNamedIdent().getName();
+            return ident.getNamedIdentDecl().getName();
         }
         return res.toString();
     }

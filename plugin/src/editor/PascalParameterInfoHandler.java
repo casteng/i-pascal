@@ -13,8 +13,8 @@ import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -136,7 +136,7 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
     private List<PsiElement> getIdentList(PasFormalParameterSection p) {
         SmartList<PsiElement> res = new SmartList<PsiElement>();
         for (PasFormalParameter paramSec : p.getFormalParameterList()) {
-            for (PasNamedIdent pasNamedIdent : paramSec.getNamedIdentList()) {
+            for (PascalNamedElement pasNamedIdent : paramSec.getNamedIdentDeclList()) {
                 res.add(pasNamedIdent);
             }
         }

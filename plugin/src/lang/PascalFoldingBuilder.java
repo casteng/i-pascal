@@ -19,7 +19,7 @@ import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
@@ -168,7 +168,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                         public String getPlaceholderText() {
                             StringBuilder sb = new StringBuilder(" = (");
                             boolean first = true;
-                            for (PasNamedIdent ident : enumType.getNamedIdentList()) {
+                            for (PasNamedIdentDecl ident : enumType.getNamedIdentDeclList()) {
                                 if (!first) {
                                     sb.append(", ").append(ident.getName());
                                 } else {

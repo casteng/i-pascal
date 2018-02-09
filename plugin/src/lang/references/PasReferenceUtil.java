@@ -31,7 +31,7 @@ import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -475,7 +475,7 @@ public class PasReferenceUtil {
 
     // Advances fqn
     private static Collection<PasField> collectEnumFields(Collection<PasField> result, PasField field, PasEnumType enumDecl, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
-        for (PasNamedIdent ident : enumDecl.getNamedIdentList()) {
+        for (PasNamedIdentDecl ident : enumDecl.getNamedIdentDeclList()) {
             PasField enumField = new PasField(field.owner, ident, ident.getName(), PasField.FieldType.CONSTANT, field.visibility);
             if (isFieldMatches(enumField, fqn, fieldTypes)) {
                 result.add(enumField);
