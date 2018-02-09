@@ -1,10 +1,9 @@
-package com.siberika.idea.pascal.lang.psi.impl;
+package com.siberika.idea.pascal.lang.psi;
 
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.StubBasedPsiElement;
-import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

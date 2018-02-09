@@ -1,6 +1,4 @@
-package com.siberika.idea.pascal.lang.psi.impl;
-
-import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+package com.siberika.idea.pascal.lang.psi;
 
 /**
  * Author: George Bakhtadze

@@ -2,7 +2,7 @@ package com.siberika.idea.pascal.lang.stub;
 
 import com.intellij.psi.stubs.StubBase;
 import com.intellij.psi.stubs.StubElement;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
+import com.siberika.idea.pascal.lang.psi.PascalModule;
 
 /**
  * Author: George Bakhtadze
