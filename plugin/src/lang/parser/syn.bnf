@@ -334,19 +334,22 @@
   implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ClassHelperDecl|ClassTypeDecl|InterfaceTypeDecl|ObjectDecl|RecordHelperDecl|RecordDecl")="com.siberika.idea.pascal.lang.psi.PascalStructType,com.siberika.idea.pascal.lang.psi.PascalNamedElement"
-  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.impl.PasDeclSection"
+  implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.PasDeclSection"
   extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
   extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
   extends("ClassTypeDecl|ObjectDecl|ClassHelperDecl|InterfaceTypeDecl|RecordDecl|RecordHelperDecl")="com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl"
   extends("ExportedRoutine|RoutineImplDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"
   extends(".*Expr")=Expr
-  implements(".*Op")="com.siberika.idea.pascal.lang.psi.impl.PascalOperation"
+  implements(".*Op")="com.siberika.idea.pascal.lang.psi.PascalOperation"
 }
 
 //external pascal             ::= parsePascal Module
 Module                      ::= [prolog] (moduleUnit | moduleLibrary | modulePackage | moduleProgram | include_impl | include_intf)
                             {extends="com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl"
-                             implements="com.siberika.idea.pascal.lang.psi.impl.PascalModule"}
+                             implements="com.siberika.idea.pascal.lang.psi.PascalModule"
+                             stubClass="com.siberika.idea.pascal.lang.stub.PasModuleStub"
+                             elementTypeClass="com.siberika.idea.pascal.lang.stub.PasModuleStubElementType"}
+
 private include_impl        ::= [intUsesClause] declSection+ [unitBlock] {recoverWhile=rec_module_start}
 private include_intf        ::= [intUsesClause] interfaceDecl+ {recoverWhile=rec_module_start}
 
@@ -408,7 +411,10 @@ private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
 
-ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PasEntityScope"}
+ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PascalExportedRoutine"
+                             stubClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub"
+                             elementTypeClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStubElementType"}
+
 private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=2}
 private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=2}
@@ -486,14 +492,22 @@ LabelDeclSection	        ::=	LABEL label labelsRest* ";" {pin=1 name="label decl
 private labelsRest          ::= "," label {}
 private label               ::= RefNamedIdent | NUMBER_INT | NUMBER_HEX
 
+private identListDecl       ::= identListDeclItem identListDeclRest*
+private identListDeclRest   ::= "," identListDeclItem {pin=1}
+private identListDeclItem   ::= NamedIdentDecl
+
 VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section" recoverWhile=rec_block_local_end}
 private varKey	            ::=	VAR | THREADVAR
-VarDeclaration	            ::=	customAttributes* identList ":" TypeDecl [VarValueSpec] hintingDirective* ";" {pin=2 recoverWhile=rec_name}
+VarDeclaration	            ::=	customAttributes* identListDecl ":" TypeDecl [VarValueSpec] hintingDirective* ";" {pin=2 recoverWhile=rec_name}
 VarValueSpec	            ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_block_local_end}
 private constKey            ::= CONST |	RESOURCESTRING
-ConstDeclaration            ::= customAttributes* NamedIdent [":" TypeDecl] "=" ConstExpression hintingDirective* ";" {pin=4 recoverWhile=rec_name}
+ConstDeclaration            ::= customAttributes* NamedIdentDecl [":" TypeDecl] "=" ConstExpression hintingDirective* ";" {pin=4 recoverWhile=rec_name}
+NamedIdentDecl              ::= identifier {extends="com.siberika.idea.pascal.lang.psi.impl.PascalIdentDeclImpl"
+                                            implements="com.siberika.idea.pascal.lang.psi.PascalIdentDecl"
+                                            stubClass="com.siberika.idea.pascal.lang.stub.PasIdentStub"
+                                            elementTypeClass="com.siberika.idea.pascal.lang.stub.PasIdentStubElementType"}
 NamedIdent                  ::= identifier
 
 TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section" recoverWhile=rec_block_local_end}
@@ -502,7 +516,7 @@ private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= classForwardDecl ";"
 
-GenericTypeIdent    ::= "generic"? RefNamedIdent [GenericDefinition] {recoverWhile=rec_typeId}
+GenericTypeIdent    ::= "generic"? NamedIdentDecl [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
 private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {}             //TODO use meta rule
 private identsRest          ::= "," NamedIdent {recoverWhile=rec_generic_def}
@@ -522,7 +536,13 @@ private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS | OBJC_PROTOCOL)
 
 ClassField                  ::= field
 private classFieldSemi      ::= ClassField ";" {pin=1 recoverWhile=rec_struct_field}
-ClassTypeDecl               ::= [PACKED] classDecl {name="class declaration"}
+ClassTypeDecl               ::= [PACKED] classDecl
+                            {name="class declaration"
+                             extends="com.siberika.idea.pascal.lang.psi.impl.PascalClassDeclImpl"
+                             implements="com.siberika.idea.pascal.lang.psi.PascalClassDecl"
+                             stubClass="com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStub"
+                             elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStubElementType"}
+
 private classDecl           ::= (CLASS | objc_decl) ((classBody END) | [ClassParent]) {pin=1}
 private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
 private objc_decl           ::= OBJC_CLASS | OBJC_CATEGORY [EXTERNAL [externalSpecifier]]
@@ -544,7 +564,7 @@ private recordBody          ::= [ClassParent] structItem* [ClassField] {recoverW
 private variantRecord       ::= [PACKED | "bitpacked"] RECORD varRecDecl END
 private varRecDecl          ::= [ClassParent] structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
 private varRecDeclInner     ::= (field ";")* [field] [recordVariantSection] {recoverWhile=rec_struct_field}
-private field               ::= customAttributes* identList ":" TypeDecl hintingDirective* {pin=2 recoverWhile=rec_struct_field}
+private field               ::= customAttributes* identListDecl ":" TypeDecl hintingDirective* {pin=2 recoverWhile=rec_struct_field}
 private recordVariantSection ::= CASE [NamedIdent ":"] TypeDecl OF recordVariants {pin=1}
 private recordVariants      ::= (RecordVariant ";")* [RecordVariant]
 RecordVariant               ::= Expression ("," Expression)* ":" "(" varRecDeclInner ")" {pin=4}  // rethink expression, separate simpler expressions?
@@ -563,7 +583,7 @@ ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="meta
 
 Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
-ClassProperty ::= customAttributes* [CLASS] PROPERTY NamedIdent [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] hintingDirective* [";"] {pin=3 recoverWhile=rec_routine}
+ClassProperty ::= customAttributes* [CLASS] PROPERTY NamedIdentDecl [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] hintingDirective* [";"] {pin=3 recoverWhile=rec_routine}
 ClassPropertyArray ::= "[" formalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
 ClassPropertySpecifier ::= classPropertyReadWrite | classPropertyDispInterface | "stored" Expression
@@ -602,7 +622,7 @@ SubRangeType        ::= RangeBound RANGE RangeBound
 RangeBound          ::= ConstExpressionOrd
 EnumType            ::= "(" enumEl enumRest* ")" {pin=1}
 private enumRest    ::= "," enumEl {pin=1}
-private enumEl      ::= NamedIdent [(EQ | ASSIGN) Expression] {}
+private enumEl      ::= NamedIdentDecl [(EQ | ASSIGN) Expression] {}
 
     private rec__stmt_start          ::= REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | BEGIN | BREAK | CONTINUE | EXIT | GOTO | INHERITED
                                   | NUMBER_INT | NUMBER_HEX | NUMBER_REAL | NUMBER_OCT | NUMBER_BIN | identifier | '^' | END "." | '[' | '('
@@ -781,7 +801,8 @@ literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_O
 // **********************************************************************
 FormalParameterSection      ::= "(" [ formalParameterList ] ")" {pin=1}
 private formalParameterList ::= FormalParameter (";" FormalParameter)*
-FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" TypeDecl ] [ "=" ConstExpression ] {pin=3 recoverWhile=rec_formal_param}
+FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" TypeDecl ] [ "=" ConstExpression ] {pin=3 recoverWhile=rec_formal_param
+                                                        mixin="com.siberika.idea.pascal.lang.psi.impl.PasFormalParameterMixin"}
 ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 
 AttributeParamList	        ::= Expression (COMMA Expression)*

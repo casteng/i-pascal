@@ -8,7 +8,7 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.siberika.idea.pascal.PascalLanguage;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModule;
+import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,7 +51,8 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
 
     @Override
     public void serialize(@NotNull PasModuleStub stub, @NotNull StubOutputStream dataStream) throws IOException {
-        System.out.println("PasModuleStubElementType.serialize");
+        StubUtil.printStub("PasModuleStub.serialize", stub);
+
         dataStream.writeName(stub.getName());
         dataStream.writeName(stub.getModuleType().name());
     }

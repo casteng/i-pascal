@@ -53,7 +53,8 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
 
     @Override
     public void serialize(@NotNull PasExportedRoutineStub stub, @NotNull StubOutputStream dataStream) throws IOException {
-        System.out.println("PasModuleStubElementType.serialize");
+        StubUtil.printStub("PasExpRoutineStub.serialize", stub);
+
         dataStream.writeName(stub.getName());
         dataStream.writeName(stub.getCanonicalName());
         dataStream.writeName(stub.getVisibility().name());
