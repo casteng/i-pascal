@@ -11,6 +11,8 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.stubs.IStubElementType;
+import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
@@ -38,13 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-/**
- * Author: George Bakhtadze
- * Date: 07/09/2013
- */
-public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasEntityScope {
+public abstract class PasStubStructTypeImpl<B extends StubElement> extends PasStubScopeImpl<B> implements PasEntityScope {
 
-    public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
+    public static final Logger LOG = Logger.getInstance(PasStubStructTypeImpl.class.getName());
 
     private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
 
@@ -65,8 +63,12 @@ public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasE
         assert STR_TO_VIS.size() == PasField.Visibility.values().length;
     }
 
-    public PasStructTypeImpl(ASTNode node) {
+    public PasStubStructTypeImpl(ASTNode node) {
         super(node);
+    }
+
+    public PasStubStructTypeImpl(final B stub, IStubElementType noteType) {
+        super(stub, noteType);
     }
 
     // Returns structured type owning the field
@@ -149,7 +151,7 @@ public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasE
         @Override
         public Members call() throws Exception {
             if (null == getContainingFile()) {
-                PascalPsiImplUtil.logNullContainingFile(PasStructTypeImpl.this);
+                PascalPsiImplUtil.logNullContainingFile(PasStubStructTypeImpl.this);
                 return null;
             }
             Members res = new Members();
@@ -173,7 +175,7 @@ public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasE
                     visibility = getVisibility(child);
                 } else if (child.getClass() == PasRecordVariantImpl.class) {
                     addFields(res, child, PasField.FieldType.VARIABLE, visibility);
-                } else if ((child instanceof PasNamedIdent) && (PasStructTypeImpl.this instanceof PasRecordDecl)) {
+                } else if ((child instanceof PasNamedIdent) && (PasStubStructTypeImpl.this instanceof PasRecordDecl)) {
                     addField(res, (PascalNamedElement) child, PasField.FieldType.VARIABLE, visibility);
                 }
                 child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
@@ -242,7 +244,7 @@ public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasE
         @Override
         public Parents call() throws Exception {
             if (null == getContainingFile()) {
-                PascalPsiImplUtil.logNullContainingFile(PasStructTypeImpl.this);
+                PascalPsiImplUtil.logNullContainingFile(PasStubStructTypeImpl.this);
                 return null;
             }
             Parents res = new Parents();
@@ -253,18 +255,18 @@ public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasE
                 for (PasTypeID typeID : parent.getTypeIDList()) {
                     NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
                     PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
-                    if (scope != PasStructTypeImpl.this) {
+                    if (scope != PasStubStructTypeImpl.this) {
                         addScope(res, scope);
                     }
                 }
             } else {
                 PasEntityScope defEntity = null;
-                if (PasStructTypeImpl.this instanceof PasClassTypeDecl) {
-                    defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStructTypeImpl.this, "system.TObject"), true);
-                } else if (PasStructTypeImpl.this instanceof PasInterfaceTypeDecl) {
-                    defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStructTypeImpl.this, "system.IInterface"), true);
+                if (PasStubStructTypeImpl.this instanceof PasClassTypeDecl) {
+                    defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStubStructTypeImpl.this, "system.TObject"), true);
+                } else if (PasStubStructTypeImpl.this instanceof PasInterfaceTypeDecl) {
+                    defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStubStructTypeImpl.this, "system.IInterface"), true);
                 }
-                if (defEntity != PasStructTypeImpl.this) {
+                if (defEntity != PasStubStructTypeImpl.this) {
                     addScope(res, defEntity);
                 }
             }
