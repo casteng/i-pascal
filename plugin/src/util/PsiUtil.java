@@ -508,7 +508,8 @@ public class PsiUtil {
     }
 
     public static boolean isForwardClassDecl(PascalNamedElement element) {
-        LeafPsiElement leaf1 = getLeafSiblingOfType(element, LeafPsiElement.class);
+        PsiElement el = element instanceof PasNamedIdentDecl ? element.getParent() : element;
+        LeafPsiElement leaf1 = getLeafSiblingOfType(el, LeafPsiElement.class);
         LeafPsiElement leaf2 = leaf1 != null ? getLeafSiblingOfType(leaf1, LeafPsiElement.class) : null;
         return ((leaf2 != null) && ((leaf2.getElementType() == PasTypes.CLASS) || (leaf2.getElementType() == PasTypes.INTERFACE)));
     }
@@ -710,7 +711,7 @@ public class PsiUtil {
 
     public static PsiElement skipToExpressionParent(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
-                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamespaceIdent.class, PasGenericTypeIdent.class,
+                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasNamespaceIdent.class, PasGenericTypeIdent.class,
                 PasExpression.class, PascalExpression.class, PasExpressionOrd.class, PasConstExpression.class,
                 PsiWhiteSpace.class, PsiErrorElement.class,
                 PasUnitModuleHead.class);
@@ -718,7 +719,7 @@ public class PsiUtil {
 
     public static PsiElement skipToExpression(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
-                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasGenericTypeIdent.class,
+                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
                 PsiWhiteSpace.class, PsiErrorElement.class,
                 PasUnitModuleHead.class);
     }

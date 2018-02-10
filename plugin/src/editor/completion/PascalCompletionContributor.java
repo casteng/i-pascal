@@ -381,7 +381,8 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private void handleDeclarations(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
-        if (PsiUtil.isInstanceOfAny(PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class), PasGenericTypeIdent.class, PasNamedIdent.class)) {
+        if (PsiUtil.isInstanceOfAny(PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class),
+                PasGenericTypeIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class)) {
             return;                                                                                                       // Inside type declaration
         }
         if (PsiUtil.isInstanceOfAny(pos, PasUnitInterface.class, PasUnitImplementation.class,
