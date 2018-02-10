@@ -59,10 +59,10 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PosUtil;
@@ -284,7 +284,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     public static class ActionCreateParameter extends PascalActionDeclare {
 
         private FixActionData otherSectionData = null;
-        private PascalRoutineImpl routine;
+        private PascalRoutine routine;
 
         public ActionCreateParameter(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
@@ -292,12 +292,12 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
         @Override
         protected void onInvoke() {
-            if (scope instanceof PascalRoutineImpl) {
-                routine = (PascalRoutineImpl) scope;
-                PsiElement other = SectionToggle.retrieveDeclaration((PascalRoutineImpl) scope, true);
-                if (other instanceof PascalRoutineImpl) {
-                    if (!SectionToggle.hasParametersOrReturnType((PascalRoutineImpl) scope) && SectionToggle.hasParametersOrReturnType((PascalRoutineImpl) other)) {
-                        routine = (PascalRoutineImpl) other;
+            if (scope instanceof PascalRoutine) {
+                routine = (PascalRoutine) scope;
+                PsiElement other = SectionToggle.retrieveDeclaration((PascalRoutine) scope, true);
+                if (other instanceof PascalRoutine) {
+                    if (!SectionToggle.hasParametersOrReturnType((PascalRoutine) scope) && SectionToggle.hasParametersOrReturnType((PascalRoutine) other)) {
+                        routine = (PascalRoutine) other;
                     } else {
                         otherSectionData = new FixActionData(fixActionDataArray.get(0).element);
                         otherSectionData.parent = other;
@@ -314,7 +314,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             }
             final String tpl = "%s: $%s$";
             if (data == otherSectionData) {
-                routine = (PascalRoutineImpl) data.parent;
+                routine = (PascalRoutine) data.parent;
             }
             PasFormalParameterSection section = routine.getFormalParameterSection();
             if (section != null) {
@@ -563,7 +563,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             if (scope instanceof PasRoutineImplDecl) {
                 block = scope;
             } else {
-                block = (callScope instanceof PascalRoutineImpl) ? callScope : PsiTreeUtil.getParentOfType(data.element, PasBlockBody.class);
+                block = (callScope instanceof PascalRoutine) ? callScope : PsiTreeUtil.getParentOfType(data.element, PasBlockBody.class);
             }
             block = block != null ? block : PsiTreeUtil.getParentOfType(data.element, PasCompoundStatement.class);
             if (block != null) {
@@ -646,17 +646,17 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             try {
                 if (data.parent != null) {
                     PsiElement routine = PsiUtil.findElementAt(data.parent, data.offset - data.parent.getTextRange().getStartOffset());
-                    if (!(routine instanceof PascalRoutineImpl)) {
+                    if (!(routine instanceof PascalRoutine)) {
                         routine = routine != null ? routine.getParent() : null;
                     }
                     if (scope instanceof PascalStructType) {
                         if (null == callScope) {                   // Scope specified as FQN part
-                            if (routine instanceof PascalRoutineImpl) {
+                            if (routine instanceof PascalRoutine) {
                                 PascalRoutineActions.ActionImplement act = new PascalRoutineActions.ActionImplement(message("action.implement"), (PascalNamedElement) routine);
                                 act.invoke(editor.getProject(), editor, routine.getContainingFile());
                             }
                         } else {                                                                            // Called within method
-                            if (routine instanceof PascalRoutineImpl) {
+                            if (routine instanceof PascalRoutine) {
                                 PascalRoutineActions.ActionDeclare act = new PascalRoutineActions.ActionDeclare(message("action.declare.routine"), (PascalNamedElement) routine);
                                 act.invoke(editor.getProject(), editor, routine.getContainingFile());
                             }

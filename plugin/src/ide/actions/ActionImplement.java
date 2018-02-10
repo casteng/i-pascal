@@ -19,9 +19,9 @@ import com.siberika.idea.pascal.editor.PascalRoutineActions;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.ui.TreeViewStruct;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
@@ -45,10 +45,10 @@ public class ActionImplement extends PascalAction {
     @Override
     public void doActionPerformed(AnActionEvent e) {
         PsiElement el = getElement(e);
-        PascalRoutineImpl methodImpl = null;
+        PascalRoutine methodImpl = null;
         PasEntityScope scope = PsiTreeUtil.getParentOfType(el, PasEntityScope.class);
-        if (scope instanceof PascalRoutineImpl) {
-            methodImpl = (PascalRoutineImpl) scope;
+        if (scope instanceof PascalRoutine) {
+            methodImpl = (PascalRoutine) scope;
             scope = scope.getContainingScope();
         }
         if (!(scope instanceof PascalStructType)) {
@@ -85,7 +85,7 @@ public class ActionImplement extends PascalAction {
     }
 
     // if methodImpl = null assuming interface part
-    private void doOverride(final Editor editor, final PasEntityScope scope, final PsiElement el, PascalRoutineImpl methodImpl, final List<PasField> selected) {
+    private void doOverride(final Editor editor, final PasEntityScope scope, final PsiElement el, PascalRoutine methodImpl, final List<PasField> selected) {
         PsiElement prevMethod = getPrevMethod(el, methodImpl);
         final AtomicInteger offs = new AtomicInteger();
         if (prevMethod != null) {
@@ -134,7 +134,7 @@ public class ActionImplement extends PascalAction {
         return text.replace("virtual", "override").replaceAll("abstract\\s*;", "");
     }
 
-    private PsiElement getPrevMethod(PsiElement el, PascalRoutineImpl methodImpl) {
+    private PsiElement getPrevMethod(PsiElement el, PascalRoutine methodImpl) {
         if (methodImpl != null) {
             return SectionToggle.retrieveDeclaration(methodImpl, false);
         }

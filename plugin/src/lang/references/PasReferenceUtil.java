@@ -37,6 +37,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeTypeDeclImpl;
@@ -53,7 +54,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -189,9 +189,9 @@ public class PasReferenceUtil {
         PasField.ValueType res = null;
         if (element instanceof PasClassProperty) {
             typeId = resolvePropertyType(field, (PasClassProperty) element);
-        } else if (element instanceof PascalRoutineImpl) {                                     // routine declaration case
-            typeId = ((PascalRoutineImpl) element).getFunctionTypeIdent();
-        } else if ((element != null) && (element.getParent() instanceof PasHandler)) {                                     // exception handler case
+        } else if (element instanceof PascalRoutine) {                                          // routine declaration case
+            typeId = ((PascalRoutine) element).getFunctionTypeIdent();
+        } else if ((element != null) && (element.getParent() instanceof PasHandler)) {          // exception handler case
             typeId = ((PasHandler) element.getParent()).getTypeID();
         } else {
             if ((element != null) && PsiUtil.isTypeDeclPointingToSelf(element)) {

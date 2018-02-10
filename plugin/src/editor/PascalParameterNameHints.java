@@ -13,7 +13,6 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasLiteralExpr;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.NotNull;
@@ -68,8 +67,8 @@ public class PascalParameterNameHints implements InlayParameterHintsProvider {
     private List<InlayInfo> getParameters(PasCallExpr callExpr) {
         int count = callExpr.getArgumentList().getExprList().size();
         if (count > 0) for (PasField field : PasReferenceUtil.resolveRoutines(callExpr)) {
-            if (field.getElement() instanceof PascalRoutineImpl) {
-                PasFormalParameterSection parameters = ((PascalRoutineImpl) field.getElement()).getFormalParameterSection();
+            if (field.getElement() instanceof PascalRoutine) {
+                PasFormalParameterSection parameters = ((PascalRoutine) field.getElement()).getFormalParameterSection();
                 if (parameters != null) {
                     List<String> params = new SmartList<String>();
                     for (PasFormalParameter parameter : parameters.getFormalParameterList()) {

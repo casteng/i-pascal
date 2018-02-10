@@ -10,7 +10,7 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,10 +55,10 @@ public class PascalRenameProcessor extends RenamePsiElementProcessor {
         String name = ((PascalNamedElement) element).getName();
         if (element.getParent() instanceof PasFormalParameter) {
             PsiElement r = element.getParent().getParent().getParent();
-            if (r instanceof PascalRoutineImpl) {
-                PsiElement routine = SectionToggle.getImplementationOrDeclaration((PascalRoutineImpl) r);
-                if (routine instanceof PascalRoutineImpl) {
-                    PasFormalParameterSection pars = ((PascalRoutineImpl) routine).getFormalParameterSection();
+            if (r instanceof PascalRoutine) {
+                PsiElement routine = SectionToggle.getImplementationOrDeclaration((PascalRoutine) r);
+                if (routine instanceof PascalRoutine) {
+                    PasFormalParameterSection pars = ((PascalRoutine) routine).getFormalParameterSection();
                     if (pars != null) for (PasFormalParameter parameter : pars.getFormalParameterList()) {
                         for (PascalNamedElement ident : parameter.getNamedIdentDeclList()) {
                             if (name.equalsIgnoreCase(ident.getName())) {

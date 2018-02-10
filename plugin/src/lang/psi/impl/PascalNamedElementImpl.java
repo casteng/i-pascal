@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -167,7 +168,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     @NotNull
     public PsiReference[] getReferences() {
-        if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent) || (this.getParent() instanceof PascalRoutineImpl)) {
+        if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent) || (this.getParent() instanceof PascalRoutine)) {
             if ((getNameElement() != null) && getTextRange().intersects(getNameElement().getTextRange())) {
                 return new PsiReference[]{
                         new PascalReference(this, new TextRange(0, getName().length()))

@@ -6,7 +6,7 @@ import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -30,12 +30,12 @@ public class PascalImplementationTextSelectioner implements ImplementationTextSe
 
     private PsiElement findElement(PsiElement element) {
         if (element instanceof PasExportedRoutine) {
-            PsiElement impl = SectionToggle.retrieveImplementation((PascalRoutineImpl) element, true);
+            PsiElement impl = SectionToggle.retrieveImplementation((PascalRoutine) element, true);
             return impl != null ? impl : element;
         } else if ((element instanceof PasGenericTypeIdent) && (element.getParent() instanceof PasTypeDeclaration)) {
             return element.getParent();
         } else if (element.getParent() instanceof PasExportedRoutine) {
-            PsiElement impl = SectionToggle.retrieveImplementation((PascalRoutineImpl) element.getParent(), true);
+            PsiElement impl = SectionToggle.retrieveImplementation((PascalRoutine) element.getParent(), true);
             return impl != null ? impl : element;
         }
         return element;

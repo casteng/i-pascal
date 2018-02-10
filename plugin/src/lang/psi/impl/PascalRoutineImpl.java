@@ -148,12 +148,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     private void collectFormalParameters(Members res) {
-        PascalRoutineImpl routine = this;
+        PascalRoutine routine = this;
         List<PascalNamedElement> params = PsiUtil.getFormalParameters(getFormalParameterSection());
         if (params.isEmpty() && (this instanceof PasRoutineImplDecl)) {         // If this is implementation with formal parameters omitted take formal parameters from routine declaration
             PsiElement decl = SectionToggle.retrieveDeclaration(this, true);
-            if (decl instanceof PascalRoutineImpl) {
-                routine = (PascalRoutineImpl) decl;
+            if (decl instanceof PascalRoutine) {
+                routine = (PascalRoutine) decl;
                 params = PsiUtil.getFormalParameters(routine.getFormalParameterSection());
             }
         }

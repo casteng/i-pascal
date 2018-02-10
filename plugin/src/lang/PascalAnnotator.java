@@ -20,12 +20,12 @@ import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiContext;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -70,14 +70,14 @@ public class PascalAnnotator implements Annotator {
                     fixes.add(AddFixType.UNIT);
                 }
                 PsiElement scope = scopes.isEmpty() ? null : scopes.get(0);
-                if (scope instanceof PasEnumType) {                                                         // TEnum.* => -* +enum
+                if (scope instanceof PasEnumType) {                                                          // TEnum.* => -* +enum
                     fixes = EnumSet.of(AddFixType.ENUM);
-                } else if (scope instanceof PascalRoutineImpl) {                                            // [inRoutine] => +parameter
+                } else if (scope instanceof PascalRoutine) {                                                 // [inRoutine] => +parameter
                     fixes.add(AddFixType.PARAMETER);
                 }
                 if (context == PsiContext.TYPE_ID) {                                                         // [TypeIdent] => -* +type
                     fixes = EnumSet.of(AddFixType.TYPE);
-                } else if (PsiTreeUtil.getParentOfType(namedElement, PasConstExpression.class) != null) {   // [part of const expr] => -* +const +enum
+                } else if (PsiTreeUtil.getParentOfType(namedElement, PasConstExpression.class) != null) {    // [part of const expr] => -* +const +enum
                     fixes = EnumSet.of(AddFixType.CONST);
                 } else if (context == PsiContext.EXPORT) {
                     fixes = EnumSet.of(AddFixType.ROUTINE);
@@ -186,8 +186,8 @@ public class PascalAnnotator implements Annotator {
     }
 
     private PsiElement adjustScope(PsiElement scope) {
-        if (scope instanceof PascalRoutineImpl) {
-            PasEntityScope struct = ((PascalRoutineImpl) scope).getContainingScope();
+        if (scope instanceof PascalRoutine) {
+            PasEntityScope struct = ((PascalRoutine) scope).getContainingScope();
             if (struct instanceof PascalStructType) {
                 return struct;
             }

@@ -28,6 +28,7 @@ import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
@@ -36,8 +37,8 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -90,7 +91,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
                 return true;
             }
-        }, PascalStructType.class, PasConstDeclaration.class, PascalRoutineImpl.class, PasNamedIdent.class, PasGenericTypeIdent.class);
+        }, PascalStructType.class, PasConstDeclaration.class, PascalRoutine.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class);
         return new ArrayList<PascalNamedElement>(result);
     }
 
@@ -138,7 +139,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             }
             if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection,
                     PasClassTypeDecl.class, PasClassHelperDecl.class, PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordDecl.class, PasRecordHelperDecl.class,
-                    PasClosureExpr.class, PascalRoutineImpl.class)) {
+                    PasClosureExpr.class, PascalRoutine.class)) {
                 return false;
             }
             innerSection = PsiUtil.getNearestAffectingDeclarationsRoot(innerSection);
@@ -177,7 +178,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     private static void addDeclarations(Collection<PascalNamedElement> result, PsiElement section, String name) {
         if (section != null) {
             result.addAll(retrieveEntitiesFromSection(section, name, getEndOffset(section),
-                    PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class));
+                    PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class, PasNamespaceIdent.class));
         }
     }
 
@@ -273,7 +274,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             @Nullable
             @Override
             public String getPresentableText() {
-                if (element instanceof PascalRoutineImpl) {
+                if (element instanceof PascalRoutine) {
                     return element.getText();
                 }
                 return element.getName() + getType(element);

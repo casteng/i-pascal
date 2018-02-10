@@ -17,6 +17,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -103,7 +104,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         if (null == section) {
             return;
         }
-        for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, PasNamedIdent.class, PasGenericTypeIdent.class, PasNamespaceIdent.class, PasClassQualifiedIdent.class)) {
+        for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, PasNamedIdent.class, PasNamedIdentDeclImpl.class, PasGenericTypeIdent.class, PasNamespaceIdent.class, PasClassQualifiedIdent.class)) {
             if (PsiUtil.isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
                 if (!PsiUtil.isFormalParameterName(namedElement) && !PsiUtil.isUsedUnitName(namedElement)) {
                     if (PsiUtil.isRoutineName(namedElement)) {
@@ -145,7 +146,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         PasField.FieldType type = PasField.FieldType.VARIABLE;
         if (PsiUtil.isTypeName(namedElement)) {
             type = PasField.FieldType.TYPE;
-        } else if (namedElement instanceof PascalRoutineImpl) {
+        } else if (namedElement instanceof PascalRoutine) {
             type = PasField.FieldType.ROUTINE;
         } else if (PsiUtil.isConstDecl(namedElement) || PsiUtil.isEnumDecl(namedElement)) {
             type = PasField.FieldType.CONSTANT;

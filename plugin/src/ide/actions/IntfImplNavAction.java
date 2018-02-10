@@ -7,7 +7,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 
@@ -28,7 +28,7 @@ public class IntfImplNavAction extends PascalAction {
             return;
         }
         PsiElement target;
-        target = SectionToggle.getRoutineTarget(PsiTreeUtil.getParentOfType(el, PascalRoutineImpl.class));
+        target = SectionToggle.getRoutineTarget(PsiTreeUtil.getParentOfType(el, PascalRoutine.class));
         if (null == target) {
             target = SectionToggle.getUsesTarget(PsiTreeUtil.getParentOfType(el, PasUsesClause.class));
         }
