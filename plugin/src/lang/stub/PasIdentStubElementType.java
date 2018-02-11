@@ -9,6 +9,8 @@ import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PasScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalIdentDeclImpl;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +27,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
 
     @Override
     public PasIdentStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, "-");
+        return new PasIdentStubImpl(parentStub, "-", PasField.FieldType.VARIABLE);
     }
 
     @Override
@@ -36,7 +38,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @NotNull
     @Override
     public PasIdentStub createStub(@NotNull PascalIdentDecl psi, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, psi.getName());
+        return new PasIdentStubImpl(parentStub, psi.getName(), PasScopeImpl.getFieldType(psi));
     }
 
     @NotNull
@@ -50,6 +52,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         StubUtil.printStub("PasIdentStub.serialize", stub);
 
         dataStream.writeName(stub.getName());
+        dataStream.writeName(stub.getType().name());
     }
 
     @NotNull
@@ -57,7 +60,8 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     public PasIdentStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
         System.out.println("PasIdentStubElementType.deserialize");
         String name = StubUtil.readName(dataStream);
-        return new PasIdentStubImpl(parentStub, name);
+        PasField.FieldType type = StubUtil.readEnum(dataStream, PasField.FieldType.class);
+        return new PasIdentStubImpl(parentStub, name, type);
     }
 
     @Override

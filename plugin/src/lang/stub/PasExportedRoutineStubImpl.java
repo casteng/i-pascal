@@ -34,6 +34,11 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
     }
 
     @Override
+    public PasField.FieldType getType() {
+        return PasField.FieldType.ROUTINE;
+    }
+
+    @Override
     public String getCanonicalName() {
         return canonicalName;
     }

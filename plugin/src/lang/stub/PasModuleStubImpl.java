@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.stub;
 import com.intellij.psi.stubs.StubBase;
 import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 
 /**
  * Author: George Bakhtadze
@@ -22,6 +23,11 @@ public class PasModuleStubImpl extends StubBase<PascalModule> implements PasModu
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public PasField.FieldType getType() {
+        return PasField.FieldType.UNIT;
     }
 
     @Override
