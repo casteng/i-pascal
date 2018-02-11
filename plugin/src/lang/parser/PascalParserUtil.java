@@ -40,6 +40,7 @@ import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -63,7 +64,7 @@ import java.util.regex.Pattern;
 public class PascalParserUtil extends GeneratedParserUtilBase {
     private static final Logger LOG = Logger.getInstance(PascalParserUtil.class);
 
-    public static final Collection<String> EXPLICIT_UNITS = Arrays.asList("system", "$builtins");
+    public static final Collection<String> EXPLICIT_UNITS = Arrays.asList("system", BuiltinsParser.UNIT_NAME_BUILTINS);
     public static final int MAX_STRUCT_TYPE_RESOLVE_RECURSION = 1000;
 
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {

@@ -7,6 +7,7 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -118,6 +119,10 @@ public class PasField {
     public PasField(@Nullable PasEntityScope owner, @Nullable PascalNamedElement element, String name, FieldType fieldType,
                     @NotNull Visibility visibility) {
         this(owner, element, name, fieldType, visibility, null, NOT_INITIALIZED);
+    }
+
+    public PasField(PasNamedStub stub) {
+        this((PasEntityScope) stub.getPsi(), null, stub.getName(), stub.getType(), Visibility.PUBLIC, null, null);
     }
 
     @Nullable

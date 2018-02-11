@@ -31,6 +31,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl;
+import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -305,7 +306,7 @@ public class PsiUtil {
      */
     @Nullable
     public static PsiElement getModuleInterfaceSection(@NotNull PsiElement section) {
-        assert (section instanceof PasModule) || (section instanceof PsiFile);
+        assert (section instanceof PascalModule) || (section instanceof PsiFile);
         return PsiTreeUtil.findChildOfType(section, PasUnitInterface.class);
     }
 
@@ -504,7 +505,7 @@ public class PsiUtil {
     }
 
     public static boolean isFromBuiltinsUnit(PsiElement element) {
-        return (element.getContainingFile() != null) && "$builtins.pas".equalsIgnoreCase(element.getContainingFile().getName());
+        return (element.getContainingFile() != null) && BuiltinsParser.UNIT_NAME_BUILTINS.equalsIgnoreCase(element.getContainingFile().getName());
     }
 
     public static boolean isForwardClassDecl(PascalNamedElement element) {

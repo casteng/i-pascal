@@ -7,7 +7,6 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
@@ -43,7 +42,7 @@ import java.util.concurrent.Callable;
  * Author: George Bakhtadze
  * Date: 14/09/2013
  */
-public class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> implements PascalModule {
+public class PascalModuleImpl extends PascalModuleImplStub {
 
     private static final UnitMembers EMPTY_MEMBERS = new UnitMembers();
     private static final Idents EMPTY_IDENTS = new Idents();
@@ -110,10 +109,28 @@ public class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> implements
     @Override
     @Nullable
     public final PasField getField(final String name) {
+        if (getStub() != null) {
+            return getFieldStub(name);
+        }
         PasField result = getPublicField(name);
         if (null == result) {
             result = getPrivateField(name);
         }
+        return result;
+    }
+
+    @NotNull
+    @Override
+    public Collection<PasField> getAllFields() {
+        if (getStub() != null) {
+            return getAllFieldsStub();
+        }
+        if (!PsiUtil.checkeElement(this)) {
+            invalidateCaches(getKey());
+        }
+        Collection<PasField> result = new LinkedHashSet<PasField>();
+        result.addAll(getPubicFields());
+        result.addAll(getPrivateFields());
         return result;
     }
 
@@ -274,31 +291,23 @@ public class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> implements
         }
     }
 
-    @NotNull
-    @Override
-    public Collection<PasField> getAllFields() {
-        if (!PsiUtil.checkeElement(this)) {
-            invalidateCaches(getKey());
-        }
-        Collection<PasField> result = new LinkedHashSet<PasField>();
-        result.addAll(getPubicFields());
-        result.addAll(getPrivateFields());
-        return result;
-    }
-
     @SuppressWarnings("unchecked")
     private List<SmartPsiElementPointer<PasEntityScope>> retrieveUsedUnits(PsiElement section) {
         List<SmartPsiElementPointer<PasEntityScope>> result;
         List<PascalQualifiedIdent> usedNames = PsiUtil.getUsedUnits(section);
         result = new ArrayList<SmartPsiElementPointer<PasEntityScope>>(usedNames.size());
-        List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
+        //List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
         Project project = section.getProject();
         for (PascalQualifiedIdent ident : usedNames) {
-            addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, ident.getName()), project);
+            //addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, ident.getName()), project);
+            Collection<PascalModule> units = PasReferenceUtil.findUnitFilesStub(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), ident.getName());
+            if (!units.isEmpty()) {
+                addUnit(result, units.iterator().next(), project);
+            }
         }
         for (String unitName : PascalParserUtil.EXPLICIT_UNITS) {
             if (!unitName.equalsIgnoreCase(getName())) {
-                addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, unitName), project);
+                //addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, unitName), project);
             }
         }
         return result;

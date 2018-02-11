@@ -142,7 +142,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         return new PasField(owner, namedElement, name, fieldType, visibility);
     }
 
-    private static PasField.FieldType getFieldType(PascalNamedElement namedElement) {
+    public static PasField.FieldType getFieldType(PascalNamedElement namedElement) {
         PasField.FieldType type = PasField.FieldType.VARIABLE;
         if (PsiUtil.isTypeName(namedElement)) {
             type = PasField.FieldType.TYPE;

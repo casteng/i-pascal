@@ -15,6 +15,12 @@ public class PascalFileElementType extends IStubFileElementType<PsiFileStub<Pasc
 
     @Override
     public int getStubVersion() {
+        return getStubIndexVersion();
+    }
+
+    public static int getStubIndexVersion() {
         return 0;
     }
+
+
 }

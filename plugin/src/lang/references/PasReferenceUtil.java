@@ -12,6 +12,7 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
+import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.StringLenComparator;
@@ -36,6 +37,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
+import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -54,6 +56,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.lang.stub.PascalModuleIndex;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -147,6 +150,19 @@ public class PasReferenceUtil {
         }
         virtualFiles.add(BuiltinsParser.getBuiltinsSource());
         return virtualFiles;
+    }
+    @NotNull
+    public static Collection<PascalModule> findUnitFilesStub(@NotNull Project project, @Nullable final Module module, String key) {
+        final Collection<PascalModule> modules = new SmartList<PascalModule>();
+        if (module != null) {          //TODO: check module belonging?
+            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, GlobalSearchScope.allScope(project), PascalModule.class));
+        } else {
+            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, ProjectScope.getLibrariesScope(project), PascalModule.class));
+        }
+        if (BuiltinsParser.UNIT_NAME_BUILTINS.equalsIgnoreCase(key)) {
+            modules.add(BuiltinsParser.getBuiltinsModule(project));
+        }
+        return modules;
     }
 
     // Returns True if the file is the file of a module with the given name
