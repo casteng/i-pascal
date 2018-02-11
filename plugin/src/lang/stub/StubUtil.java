@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.stub;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.util.io.StringRef;
+import com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStub;
 
 import java.io.IOException;
 
@@ -25,6 +26,8 @@ public class StubUtil {
             stubStr = "[R]" + ((PasExportedRoutineStub) stub).getName();
         } else if (stub instanceof PasIdentStub) {
             stubStr = "[I]" + ((PasIdentStub) stub).getName();
+        } else if (stub instanceof PasClassDeclStub) {
+            stubStr = "[C]" + ((PasClassDeclStub) stub).getName();
         }
         StubElement parent = stub.getParentStub();
         String parentStr = " - ";
@@ -32,6 +35,8 @@ public class StubUtil {
             parentStr = "[M]" + ((PasModuleStub) parent).getName();
         } else if (parent instanceof PasExportedRoutineStub) {
             parentStr = "[R]" + ((PasExportedRoutineStub) parent).getName();
+        } else if (parent instanceof PasClassDeclStub) {
+            parentStr = "[C]" + ((PasClassDeclStub) parent).getName();
         }
         System.out.println(String.format(msg + ": %s ^ %s", stubStr, parentStr));
     }

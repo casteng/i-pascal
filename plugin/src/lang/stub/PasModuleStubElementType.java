@@ -68,6 +68,6 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
 
     @Override
     public void indexStub(@NotNull PasModuleStub stub, @NotNull IndexSink sink) {
-        //System.out.println("PasModuleStubElementType.indexStub");
+        sink.occurrence(PascalModuleIndex.KEY, stub.getName());
     }
 }

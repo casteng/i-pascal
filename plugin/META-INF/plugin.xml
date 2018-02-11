@@ -427,6 +427,7 @@
         <postStartupActivity implementation="com.siberika.idea.pascal.PostStartupActivity"/>
 
         <stubElementTypeHolder class="com.siberika.idea.pascal.lang.psi.PasTypes"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalModuleIndex"/>
 
     </extensions>
 </idea-plugin>
