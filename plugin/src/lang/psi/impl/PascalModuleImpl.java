@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -109,29 +108,31 @@ public class PascalModuleImpl extends PascalModuleImplStub {
     @Override
     @Nullable
     public final PasField getField(final String name) {
-        if (getStub() != null) {
+        if (getGreenStub() != null) {
             return getFieldStub(name);
         }
-        PasField result = getPublicField(name);
+        return null; //TODO: restore
+        /*PasField result = getPublicField(name);
         if (null == result) {
             result = getPrivateField(name);
         }
-        return result;
+        return result;*/
     }
 
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        if (getStub() != null) {
+        if (getGreenStub() != null) {
             return getAllFieldsStub();
         }
-        if (!PsiUtil.checkeElement(this)) {
+        return Collections.emptyList(); //TODO: restore
+        /*if (!PsiUtil.checkeElement(this)) {
             invalidateCaches(getKey());
         }
         Collection<PasField> result = new LinkedHashSet<PasField>();
         result.addAll(getPubicFields());
         result.addAll(getPrivateFields());
-        return result;
+        return result;*/
     }
 
     @Override
