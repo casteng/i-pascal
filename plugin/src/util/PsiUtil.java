@@ -318,7 +318,7 @@ public class PsiUtil {
      */
     @NotNull
     public static PsiElement getModuleImplementationSection(@NotNull PsiElement section) {
-        assert (section instanceof PasModule) || (section instanceof PsiFile);
+        assert (section instanceof PascalModule) || (section instanceof PsiFile);
         PsiElement result = PsiTreeUtil.findChildOfType(section, PasUnitImplementation.class);
         if (result == null) {
             result = section;

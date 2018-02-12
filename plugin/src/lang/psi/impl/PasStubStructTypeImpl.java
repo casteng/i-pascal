@@ -12,7 +12,6 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.stubs.IStubElementType;
-import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
@@ -29,6 +28,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public abstract class PasStubStructTypeImpl<B extends StubElement> extends PasStubScopeImpl<B> implements PasEntityScope {
+public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extends PasNamedStub<T>>
+        extends PascalStubStructTypeImpl<B> implements PasEntityScope {
 
     public static final Logger LOG = Logger.getInstance(PasStubStructTypeImpl.class.getName());
 
@@ -67,8 +68,8 @@ public abstract class PasStubStructTypeImpl<B extends StubElement> extends PasSt
         super(node);
     }
 
-    public PasStubStructTypeImpl(final B stub, IStubElementType noteType) {
-        super(stub, noteType);
+    public PasStubStructTypeImpl(final B stub, IStubElementType nodeType) {
+        super(stub, nodeType);
     }
 
     // Returns structured type owning the field
@@ -121,13 +122,21 @@ public abstract class PasStubStructTypeImpl<B extends StubElement> extends PasSt
     @Nullable
     @Override
     public PasField getField(String name) {
-        return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
+        if (getGreenStub() != null) {
+            return getFieldStub(name);
+        }
+        return null; //TODO: restore
+        //return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
     }
 
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        return getMembers(cache, MEMBER_BUILDER).all.values();
+        if (getGreenStub() != null) {
+            return getAllFieldsStub();
+        }
+        return Collections.emptyList(); //TODO: restore
+//        return getMembers(cache, MEMBER_BUILDER).all.values();
     }
 
     private PasField.Visibility getVisibility(PsiElement element) {

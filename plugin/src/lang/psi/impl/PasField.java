@@ -122,7 +122,16 @@ public class PasField {
     }
 
     public PasField(PasNamedStub stub) {
-        this((PasEntityScope) stub.getPsi(), null, stub.getName(), stub.getType(), Visibility.PUBLIC, null, null);
+        this(getScope(stub), null, stub.getName(), stub.getType(), Visibility.PUBLIC, null, null);
+    }
+
+    private static PasEntityScope getScope(PasNamedStub stub) {
+        PsiElement psi = stub.getPsi();
+        if (psi instanceof PasEntityScope) {
+            return (PasEntityScope) psi;
+        } else {
+            return null;
+        }
     }
 
     @Nullable

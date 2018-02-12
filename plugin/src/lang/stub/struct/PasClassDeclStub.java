@@ -1,9 +1,8 @@
 package com.siberika.idea.pascal.lang.stub.struct;
 
-import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
+import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 
-public interface PasClassDeclStub extends StubElement<PascalClassDecl> {
-    String getName();
+public interface PasClassDeclStub extends PasNamedStub<PascalClassDecl> {
 
 }
