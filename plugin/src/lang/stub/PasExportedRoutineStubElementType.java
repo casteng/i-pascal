@@ -66,7 +66,6 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @NotNull
     @Override
     public PasExportedRoutineStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
-        System.out.println("PasRoutineStubElementType.deserialize");
         String name = StubUtil.readName(dataStream);
         String canonicalName = StubUtil.readName(dataStream);
         PasField.Visibility visibility = StubUtil.readEnum(dataStream, PasField.Visibility.class);

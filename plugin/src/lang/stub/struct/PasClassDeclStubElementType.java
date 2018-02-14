@@ -56,7 +56,6 @@ public class PasClassDeclStubElementType extends ILightStubElementType<PasClassD
     @NotNull
     @Override
     public PasClassDeclStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
-        System.out.println("PasClassDeclStubElementType.deserialize");
         String name = StubUtil.readName(dataStream);
         return new PasClassDeclStubImpl(parentStub, name);
     }

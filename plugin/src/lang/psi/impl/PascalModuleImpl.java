@@ -14,6 +14,7 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
+import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -33,8 +34,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -53,6 +56,9 @@ public class PascalModuleImpl extends PascalModuleImplStub {
     private final Callable<? extends Members> PRIVATE_BUILDER = this.new PrivateBuilder();
     private final Callable<? extends Members> PUBLIC_BUILDER = this.new PublicBuilder();
     private final Callable<Idents> IDENTS_BUILDER = this.new IdentsBuilder();
+
+    private Set<String> usedUnitsPublic = new SmartHashSet<>();
+    private Set<String> usedUnitsPrivate = new SmartHashSet<>();
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -111,12 +117,12 @@ public class PascalModuleImpl extends PascalModuleImplStub {
         if (getGreenStub() != null) {
             return getFieldStub(name);
         }
-        return null; //TODO: restore
-        /*PasField result = getPublicField(name);
+        //return null; //TODO: restore
+        PasField result = getPublicField(name);
         if (null == result) {
             result = getPrivateField(name);
         }
-        return result;*/
+        return result;
     }
 
     @NotNull
@@ -125,14 +131,14 @@ public class PascalModuleImpl extends PascalModuleImplStub {
         if (getGreenStub() != null) {
             return getAllFieldsStub();
         }
-        return Collections.emptyList(); //TODO: restore
-        /*if (!PsiUtil.checkeElement(this)) {
+//        return Collections.emptyList(); //TODO: restore
+        if (!PsiUtil.checkeElement(this)) {
             invalidateCaches(getKey());
         }
         Collection<PasField> result = new LinkedHashSet<PasField>();
         result.addAll(getPubicFields());
         result.addAll(getPrivateFields());
-        return result;*/
+        return result;
     }
 
     @Override
@@ -203,6 +209,28 @@ public class PascalModuleImpl extends PascalModuleImplStub {
             }
         }
         return res;
+    }
+
+    @NotNull
+    @Override
+    synchronized public Set<String> getUsedUnitsPublic() {
+        if (null == usedUnitsPublic) {
+            for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceSection(this))) {
+                usedUnitsPublic.add(ident.getName());
+            }
+        }
+        return usedUnitsPublic;
+    }
+
+    @NotNull
+    @Override
+    synchronized public Set<String> getUsedUnitsPrivate() {
+        if (null == usedUnitsPrivate) {
+            for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationSection(this))) {
+                usedUnitsPrivate.add(ident.getName());
+            }
+        }
+        return usedUnitsPrivate;
     }
 
     public static void invalidate(String key) {
@@ -294,9 +322,8 @@ public class PascalModuleImpl extends PascalModuleImplStub {
 
     @SuppressWarnings("unchecked")
     private List<SmartPsiElementPointer<PasEntityScope>> retrieveUsedUnits(PsiElement section) {
-        List<SmartPsiElementPointer<PasEntityScope>> result;
         List<PascalQualifiedIdent> usedNames = PsiUtil.getUsedUnits(section);
-        result = new ArrayList<SmartPsiElementPointer<PasEntityScope>>(usedNames.size());
+        List<SmartPsiElementPointer<PasEntityScope>> result = new ArrayList<SmartPsiElementPointer<PasEntityScope>>(usedNames.size());
         //List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
         Project project = section.getProject();
         for (PascalQualifiedIdent ident : usedNames) {

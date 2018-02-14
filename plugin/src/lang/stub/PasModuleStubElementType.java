@@ -13,6 +13,8 @@ import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -29,7 +31,7 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
 
     @Override
     public PasModuleStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasModuleStubImpl(parentStub, "-", null);
+        return new PasModuleStubImpl(parentStub, "-", null, Collections.emptySet(), Collections.emptySet());
     }
 
     @Override
@@ -40,7 +42,7 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
     @NotNull
     @Override
     public PasModuleStub createStub(@NotNull PascalModule psi, StubElement parentStub) {
-        return new PasModuleStubImpl(parentStub, psi.getName(), psi.getModuleType());
+        return new PasModuleStubImpl(parentStub, psi.getName(), psi.getModuleType(), psi.getUsedUnitsPublic(), psi.getUsedUnitsPrivate());
     }
 
     @NotNull
@@ -55,15 +57,18 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
 
         dataStream.writeName(stub.getName());
         dataStream.writeName(stub.getModuleType().name());
+        StubUtil.writeStringSet(dataStream, stub.getUsedUnitsPublic());
+        StubUtil.writeStringSet(dataStream, stub.getUsedUnitsPrivate());
     }
 
     @NotNull
     @Override
     public PasModuleStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
-        System.out.println("PasModuleStubElementType.deserialize");
         String name = StubUtil.readName(dataStream);
         PascalModule.ModuleType type = StubUtil.readEnum(dataStream, PascalModule.ModuleType.class);
-        return new PasModuleStubImpl(parentStub, name, type);
+        Set<String> usedUnitsPublic = StubUtil.readStringSet(dataStream);
+        Set<String> usedUnitsPrivate = StubUtil.readStringSet(dataStream);
+        return new PasModuleStubImpl(parentStub, name, type, usedUnitsPublic, usedUnitsPrivate);
     }
 
     @Override
