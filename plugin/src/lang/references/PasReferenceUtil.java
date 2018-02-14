@@ -14,8 +14,10 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
 import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Processor;
 import com.intellij.util.SmartList;
 import com.intellij.util.StringLenComparator;
+import com.intellij.util.containers.SmartHashSet;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.DCUFileType;
 import com.siberika.idea.pascal.PPUFileType;
@@ -153,13 +155,22 @@ public class PasReferenceUtil {
     }
     @NotNull
     public static Collection<PascalModule> findUnitFilesStub(@NotNull Project project, @Nullable final Module module, String key) {
-        final Collection<PascalModule> modules = new SmartList<PascalModule>();
-        if (module != null) {          //TODO: check module belonging?
-            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, GlobalSearchScope.allScope(project), PascalModule.class));
+        final Collection<PascalModule> modules = new SmartHashSet<>();
+        final GlobalSearchScope scope = module != null ? GlobalSearchScope.allScope(project) : ProjectScope.getLibrariesScope(project);
+        //TODO: check module belonging?
+        if (key != null) {
+            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, scope, PascalModule.class));
         } else {
-            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, ProjectScope.getLibrariesScope(project), PascalModule.class));
+            Processor<String> processor = new Processor<String>() {
+                @Override
+                public boolean process(String key) {
+                    modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, scope, PascalModule.class));
+                    return true;
+                }
+            };
+            StubIndex.getInstance().processAllKeys(PascalModuleIndex.KEY, processor, scope, null);
         }
-        if (BuiltinsParser.UNIT_NAME_BUILTINS.equalsIgnoreCase(key)) {
+        if ((null == key) || BuiltinsParser.UNIT_NAME_BUILTINS.equalsIgnoreCase(key)) {
             modules.add(BuiltinsParser.getBuiltinsModule(project));
         }
         return modules;
@@ -196,7 +207,7 @@ public class PasReferenceUtil {
 
 //-------------------------------------------------------------------
 
-    private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
+    static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
         final PascalNamedElement element = field.getElement();
         if (recursionCount > PascalParserUtil.MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
             throw new PascalRTException("Too much recursion during resolving type for: " + element);
@@ -303,7 +314,8 @@ public class PasReferenceUtil {
         if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
                 if (!field.isTypeResolved()) {
-                    field.setValueType(resolveFieldType(field, true, recursionCount));
+//                    field.setValueType(resolveFieldType(field, true, recursionCount));
+                    field.setValueType(ResolveUtil.resolveFieldType(field, true, recursionCount));
                 }
                 if (field.getValueType() == PasField.VARIANT) {
                     return new PasVariantScope(field.getElement());
@@ -448,7 +460,7 @@ public class PasReferenceUtil {
                         continue;
                     }
                     for (PasField pasField : namespace.getAllFields()) {
-                        if ((pasField.getElementPtr() != null) && isFieldMatches(pasField, fqn, fieldTypes) &&
+                        if (isFieldMatches(pasField, fqn, fieldTypes) &&
                                 !result.contains(pasField) &&
                                 isVisibleWithinUnit(pasField, fqn)) {
                             saveScope(resultScope, namespace, false);

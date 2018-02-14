@@ -6,18 +6,18 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
-import com.siberika.idea.pascal.lang.psi.PasEscapedIdent;
-import com.siberika.idea.pascal.lang.psi.PasKeywordIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
+import com.siberika.idea.pascal.lang.stub.PasIdentStubElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PascalIdentDeclImpl extends StubBasedPsiElementBase<PasIdentStub> implements PascalIdentDecl {
+public abstract class PascalIdentDeclImpl extends StubBasedPsiElementBase<PasIdentStub> implements PascalIdentDecl {
 
     public PascalIdentDeclImpl(ASTNode node) {
         super(node);
@@ -25,24 +25,33 @@ public class PascalIdentDeclImpl extends StubBasedPsiElementBase<PasIdentStub> i
 
     public PascalIdentDeclImpl(PasIdentStub stub, IStubElementType nodeType) {
         super(stub, nodeType);
+        myCachedType = stub.getTypeString();
     }
 
-    private volatile String myCachedName;
+    public static PascalIdentDecl create(PasIdentStub stub, PasIdentStubElementType elementType) {
+        return new PasNamedIdentDeclImpl(stub, elementType);
+    }
 
-    @Override
+    private volatile String myCachedType;
+
     @Nullable
-    public PasEscapedIdent getEscapedIdent() {
-        return findChildByClass(PasEscapedIdent.class);
-    }
-
     @Override
-    @Nullable
-    public PasKeywordIdent getKeywordIdent() {
-        return findChildByClass(PasKeywordIdent.class);
+    public PasIdentStub getStub() {      //===*** TODO: remove
+        return getGreenStub();
     }
 
+    @Nullable
+    @Override
+    synchronized public String getTypeString() {
+        if ((myCachedType == null) || (myCachedType.length() == 0)) {
+            myCachedType = ResolveUtil.getDeclarationTypeString(this);
+        }
+        return myCachedType;
+    }
 
     // From PascalNamedElementImpl
+    private volatile String myCachedName;
+
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();

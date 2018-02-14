@@ -435,28 +435,6 @@ public class PsiUtil {
         return (entityDecl.getParent() instanceof PasEnumType);
     }
 
-    /**
-     * Returns type identifier element by entity declaration
-     */
-    @Nullable
-    public static PascalNamedElement getEntityType(PascalNamedElement entityDecl) {
-        if (PsiUtil.isVariableDecl(entityDecl) || PsiUtil.isFieldDecl(entityDecl) || PsiUtil.isPropertyDecl(entityDecl)) { // variable declaration case
-            PascalPsiElement varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeDecl.class);
-            if (null == varDecl) {
-                varDecl = PsiTreeUtil.getNextSiblingOfType(entityDecl, PasTypeID.class);
-            }
-            if (varDecl != null) {
-                return PsiTreeUtil.findChildOfType(varDecl, PascalQualifiedIdent.class, true);
-            }
-        } else if (entityDecl.getParent() instanceof PasTypeDeclaration) {                                    // type declaration case
-            return entityDecl;
-        } else if (entityDecl.getParent() instanceof PascalRoutine) {                                     // routine declaration case
-            PasTypeID type = ((PascalRoutine) entityDecl.getParent()).getFunctionTypeIdent();
-            return type != null ? type.getFullyQualifiedIdent() : null;
-        }
-        return null;
-    }
-
     public static boolean isForwardProc(PascalRoutine decl) {
         return PsiTreeUtil.findChildOfType(decl, PasProcForwardDecl.class) != null;
     }
