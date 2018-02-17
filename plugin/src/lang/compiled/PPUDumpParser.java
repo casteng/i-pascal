@@ -585,11 +585,11 @@ public class PPUDumpParser {
                     }
                 } else if ("id".equalsIgnoreCase(qName) && (sec.name != null)) {
                     if (null == sec.dataPrefix) {
-                        idNameMap.put(txt.toString(), sec.name);
+                        idNameMap.put(txt, sec.name);
                     }
                 } else if ("symid".equalsIgnoreCase(qName) && (sec.name != null)) {
                     if (null == sec.dataPrefix) {
-                        symidNameMap.put(txt.toString(), sec.name);
+                        symidNameMap.put(txt, sec.name);
                     }
                 } else if ("value".equalsIgnoreCase(qName)) {
                     if ("/units".equalsIgnoreCase(sec.type)) {
@@ -598,7 +598,15 @@ public class PPUDumpParser {
                         sec.putData(sec.type + "/" + txt, "");
                     }
                     if (null == sec.dataPrefix) {
-                        sec.sb.append(txt);
+                        if (sec.data.get(sec.type + "/isString") != null) {
+                            sec.sb.append('\'').append(txt.replaceAll("'", "''").replaceAll("\n", "'#13#10'")).append('\'');
+                        } else {
+                            sec.sb.append(txt);
+                        }
+                    }
+                } else if ("valtype".equalsIgnoreCase(qName)) {
+                    if ("string".equalsIgnoreCase(txt)) {
+                        sec.putData(sec.type + "/isString", Boolean.TRUE);
                     }
                 }
                 if (txt.length() > 0) {
