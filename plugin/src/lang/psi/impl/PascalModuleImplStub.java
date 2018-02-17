@@ -31,7 +31,7 @@ public abstract class PascalModuleImplStub extends PasStubScopeImpl<PasModuleStu
 
     Collection<PasField> getAllFieldsStub() {
         Collection<PasField> res = new SmartList<PasField>();
-        for (StubElement stubElement : getGreenStub().getChildrenStubs()) {       // TODO: return to getStub()
+        for (StubElement stubElement : getStub().getChildrenStubs()) {       // TODO: return to getStub()
             res.add(new PasField((PasNamedStub) stubElement));
         }
         return res;

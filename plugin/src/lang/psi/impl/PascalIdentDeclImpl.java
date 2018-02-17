@@ -37,7 +37,8 @@ public abstract class PascalIdentDeclImpl extends StubBasedPsiElementBase<PasIde
     @Nullable
     @Override
     public PasIdentStub getStub() {      //===*** TODO: remove
-        return getGreenStub();
+        PasIdentStub stub = super.getStub();
+        return stub != null ? stub : getGreenStub();
     }
 
     @Nullable

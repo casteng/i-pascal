@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,15 +28,15 @@ public class PasField {
 
     public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY, VARIANT}
 
-    public static final Set<FieldType> TYPES_ALL = EnumSet.allOf(FieldType.class);
-    public static final Set<FieldType> TYPES_LEFT_SIDE = EnumSet.of(FieldType.UNIT, FieldType.VARIABLE, FieldType.PSEUDO_VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE);
-    public static final Set<FieldType> TYPES_TYPE = EnumSet.of(FieldType.TYPE);
-    public static final Set<FieldType> TYPES_TYPE_UNIT = EnumSet.of(FieldType.UNIT, FieldType.TYPE);
-    public static final Set<FieldType> TYPES_ROUTINE = EnumSet.of(FieldType.ROUTINE);
-    public static final Set<FieldType> TYPES_PROPERTY_SPECIFIER = EnumSet.of(FieldType.ROUTINE, FieldType.VARIABLE);
-    public static final Set<FieldType> TYPES_STRUCTURE = EnumSet.of(FieldType.TYPE, FieldType.VARIABLE, FieldType.CONSTANT, FieldType.PROPERTY, FieldType.ROUTINE);
-    public static final Set<FieldType> TYPES_STATIC = EnumSet.of(FieldType.UNIT, FieldType.TYPE, FieldType.CONSTANT, FieldType.ROUTINE);
-    public static final Set<FieldType> TYPES_LOCAL = EnumSet.of(FieldType.VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE, FieldType.PSEUDO_VARIABLE);
+    public static final Set<FieldType> TYPES_ALL = Collections.unmodifiableSet(EnumSet.allOf(FieldType.class));
+    public static final Set<FieldType> TYPES_LEFT_SIDE = Collections.unmodifiableSet(EnumSet.of(FieldType.UNIT, FieldType.VARIABLE, FieldType.PSEUDO_VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_TYPE = Collections.unmodifiableSet(EnumSet.of(FieldType.TYPE));
+    public static final Set<FieldType> TYPES_TYPE_UNIT = Collections.unmodifiableSet(EnumSet.of(FieldType.UNIT, FieldType.TYPE));
+    public static final Set<FieldType> TYPES_ROUTINE = Collections.unmodifiableSet(EnumSet.of(FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_PROPERTY_SPECIFIER = Collections.unmodifiableSet(EnumSet.of(FieldType.ROUTINE, FieldType.VARIABLE));
+    public static final Set<FieldType> TYPES_STRUCTURE = Collections.unmodifiableSet(EnumSet.of(FieldType.TYPE, FieldType.VARIABLE, FieldType.CONSTANT, FieldType.PROPERTY, FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_STATIC = Collections.unmodifiableSet(EnumSet.of(FieldType.UNIT, FieldType.TYPE, FieldType.CONSTANT, FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_LOCAL = Collections.unmodifiableSet(EnumSet.of(FieldType.VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE, FieldType.PSEUDO_VARIABLE));
 
     public enum Visibility {
         INTERNAL("INTERNAL"), STRICT_PRIVATE("STRICT PRIVATE"), PRIVATE("PRIVATE"),

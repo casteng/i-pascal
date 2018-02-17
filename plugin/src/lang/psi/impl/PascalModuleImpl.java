@@ -115,31 +115,31 @@ public class PascalModuleImpl extends PascalModuleImplStub {
     @Override
     @Nullable
     public final PasField getField(final String name) {
-        if (getGreenStub() != null) {
+        if (getStub() != null) {
             return getFieldStub(name);
+        } else {
+            PasField result = getPublicField(name);
+            if (null == result) {
+                result = getPrivateField(name);
+            }
+            return result;
         }
-        //return null; //TODO: restore
-        PasField result = getPublicField(name);
-        if (null == result) {
-            result = getPrivateField(name);
-        }
-        return result;
     }
 
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        if (getGreenStub() != null) {
+        if (getStub() != null) {
             return getAllFieldsStub();
+        } else {
+            if (!PsiUtil.checkeElement(this)) {
+                invalidateCaches(getKey());
+            }
+            Collection<PasField> result = new LinkedHashSet<PasField>();
+            result.addAll(getPubicFields());
+            result.addAll(getPrivateFields());
+            return result;
         }
-//        return Collections.emptyList(); //TODO: restore
-        if (!PsiUtil.checkeElement(this)) {
-            invalidateCaches(getKey());
-        }
-        Collection<PasField> result = new LinkedHashSet<PasField>();
-        result.addAll(getPubicFields());
-        result.addAll(getPrivateFields());
-        return result;
     }
 
     @Override
@@ -335,7 +335,12 @@ public class PascalModuleImpl extends PascalModuleImplStub {
         }
         for (String unitName : PascalParserUtil.EXPLICIT_UNITS) {
             if (!unitName.equalsIgnoreCase(getName())) {
-                //addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, unitName), project);
+//                List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
+//                addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, unitName), project);
+                Collection<PascalModule> units = PasReferenceUtil.findUnitFilesStub(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), unitName);
+                if (!units.isEmpty()) {
+                    addUnit(result, units.iterator().next(), project);
+                }
             }
         }
         return result;

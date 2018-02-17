@@ -122,21 +122,21 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @Nullable
     @Override
     public PasField getField(String name) {
-        if (getGreenStub() != null) {
+        if (getStub() != null) {
             return getFieldStub(name);
+        } else {
+            return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
         }
-        return null; //TODO: restore
-        //return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
     }
 
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        if (getGreenStub() != null) {
+        if (getStub() != null) {
             return getAllFieldsStub();
+        } else {
+            return getMembers(cache, MEMBER_BUILDER).all.values();
         }
-        return Collections.emptyList(); //TODO: restore
-//        return getMembers(cache, MEMBER_BUILDER).all.values();
     }
 
     private PasField.Visibility getVisibility(PsiElement element) {

@@ -552,6 +552,8 @@ public class PsiUtil {
         PasTypeDecl typeDecl;
         if ((element instanceof PascalRoutine) && (element.getFirstChild() != null)) {                      // resolve function type
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getFirstChild(), PasTypeDecl.class);
+        } else if ((element instanceof PascalIdentDecl) && (element.getParent() instanceof PasGenericTypeIdent)) {
+            typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getParent(), PasTypeDecl.class);
         } else {
             typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
         }

@@ -59,6 +59,13 @@ public abstract class PasStubScopeImpl<B extends StubElement> extends StubBasedP
         super(stub, noteType);
     }
 
+    @Nullable
+    @Override
+    public B getStub() {      //===*** TODO: remove
+        B stub = super.getStub();
+        return stub != null ? stub : getGreenStub();
+    }
+
     public final String getKey() {
         String key = cachedKey;
         if (null == key) {
