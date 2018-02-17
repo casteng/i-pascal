@@ -43,6 +43,7 @@ import com.siberika.idea.pascal.lang.psi.*;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
@@ -161,8 +162,9 @@ public class PascalCompletionContributor extends CompletionContributor {
                     NamespaceRec namespace = NamespaceRec.fromFQN(pos, pos.getText().replace(PasField.DUMMY_IDENTIFIER, "")); // TODO: refactor
                     namespace.setIgnoreVisibility(true);
                     namespace.clearTarget();
-                    entities.addAll(PasReferenceUtil.resolve(null, PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) ((PsiFile) pos).getVirtualFile()).getContextElement()),
-                            namespace, PasField.TYPES_ALL, false, 0));
+                    ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) ((PsiFile) pos).getVirtualFile()).getContextElement()),
+                            PasField.TYPES_ALL, false, null);
+                    entities.addAll(PasReferenceUtil.resolve(namespace, resolveContext, 0));
                     addEntitiesToResult(result, entities, parameters);
                     result.stopHere();
                     return;
@@ -548,7 +550,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
         namespace.clearTarget();
-        result.addAll(PasReferenceUtil.resolveExpr(null, namespace, fieldTypes, true, 0));
+        result.addAll(PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0));
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {

@@ -19,6 +19,7 @@ import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -143,7 +144,7 @@ public class GdbStackFrame extends XStackFrame {
         }
         namespace.clearTarget();
         namespace.setIgnoreVisibility(true);
-        fields = PasReferenceUtil.resolveExpr(null, namespace, PasField.TYPES_LOCAL, true, 0);
+        fields = PasReferenceUtil.resolveExpr(namespace, new ResolveContext(PasField.TYPES_LOCAL, true), 0);
         fieldsMap.put(name, fields);
         return fields;
     }

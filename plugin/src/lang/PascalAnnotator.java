@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.util.PsiContext;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
@@ -60,7 +61,8 @@ public class PascalAnnotator implements Annotator {
             //noinspection ConstantConditions
             PascalNamedElement namedElement = (PascalNamedElement) element;
             List<PsiElement> scopes = new SmartList<PsiElement>();
-            Collection<PasField> refs = PasReferenceUtil.resolveExpr(scopes, NamespaceRec.fromElement(element), PasField.TYPES_ALL, true, 0);
+            ResolveContext resolveContext = new ResolveContext(null, PasField.TYPES_ALL, true, scopes);
+            Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(element), resolveContext, 0);
 
             if (refs.isEmpty() && !isVariantField(scopes)) {
                 Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));

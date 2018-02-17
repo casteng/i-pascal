@@ -25,6 +25,7 @@ import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -250,7 +251,7 @@ public class PascalModuleImpl extends PascalModuleImplStub {
             //noinspection unchecked
             for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(PascalModuleImpl.this, PasSubIdentImpl.class, PasRefNamedIdentImpl.class)) {
                 if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
-                    Collection<PasField> refs = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(namedElement), PasField.TYPES_ALL, true, 0);
+                    Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(namedElement), new ResolveContext(PasField.TYPES_ALL, true), 0);
                     if (!refs.isEmpty()) {
                         String name = (PsiUtil.belongsToInterface(namedElement) ? INTERFACE_PREFIX : "") + PsiUtil.getUniqueName(namedElement);
                         res.idents.put(name, refs.iterator().next());
@@ -324,7 +325,6 @@ public class PascalModuleImpl extends PascalModuleImplStub {
     private List<SmartPsiElementPointer<PasEntityScope>> retrieveUsedUnits(PsiElement section) {
         List<PascalQualifiedIdent> usedNames = PsiUtil.getUsedUnits(section);
         List<SmartPsiElementPointer<PasEntityScope>> result = new ArrayList<SmartPsiElementPointer<PasEntityScope>>(usedNames.size());
-        //List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
         Project project = section.getProject();
         for (PascalQualifiedIdent ident : usedNames) {
             //addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, ident.getName()), project);

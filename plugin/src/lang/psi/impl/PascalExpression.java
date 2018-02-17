@@ -38,6 +38,7 @@ import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -105,7 +106,8 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     private static PasField.ValueType resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
-        final Collection<PasField> references = PasReferenceUtil.resolve(null, scope, NamespaceRec.fromElement(fullyQualifiedIdent), PasField.TYPES_ALL, true, 0);
+        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null);
+        final Collection<PasField> references = PasReferenceUtil.resolve(NamespaceRec.fromElement(fullyQualifiedIdent), context, 0);
         if (!references.isEmpty()) {
             PasField field = references.iterator().next();
             PasReferenceUtil.retrieveFieldTypeScope(field);
@@ -257,7 +259,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         if (null == ref) {
             return null;
         }
-        Collection<PasField> routines = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(ref), PasField.TYPES_ROUTINE, true, 0);
+        Collection<PasField> routines = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(ref), new ResolveContext(PasField.TYPES_ROUTINE, true), 0);
 
         PascalRoutine suitable = null;
         for (PasField routine : routines) {

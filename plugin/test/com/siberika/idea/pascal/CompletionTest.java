@@ -12,6 +12,7 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.util.PsiUtil;
 
 import java.util.ArrayList;
@@ -303,7 +304,8 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(el);
         NamespaceRec fqn = NamespaceRec.fromFQN(myFixture.getFile(), "");
         fqn.setIgnoreVisibility(true);
-        Collection<PasField> fields = PasReferenceUtil.resolve(null, scope, fqn, EnumSet.of(PasField.FieldType.VARIABLE), false, 0);
+        ResolveContext context = new ResolveContext(scope, EnumSet.of(PasField.FieldType.VARIABLE), false, null);
+        Collection<PasField> fields = PasReferenceUtil.resolve(fqn, context, 0);
         assertTrue(fields.iterator().hasNext());
         assertTrue("local".equals(fields.iterator().next().name));
     }

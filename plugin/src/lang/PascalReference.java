@@ -15,6 +15,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -73,7 +74,8 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
                 return resolveRoutineImpl((PasRoutineImplDeclImpl) named.getParent());
             }
 
-            final Collection<PasField> references = PasReferenceUtil.resolveExpr(null, NamespaceRec.fromElement(named), PasField.TYPES_ALL, true, 0);
+            final Collection<PasField> references = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(named),
+                    new ResolveContext(PasField.TYPES_ALL, true), 0);
             // return only first reference
             for (PasField el : references) {
                 if (el != null) {
