@@ -1,9 +1,26 @@
 package com.siberika.idea.pascal.lang.references;
 
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.StubBasedPsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.ProjectScope;
+import com.intellij.psi.stubs.StubElement;
+import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Processor;
+import com.intellij.util.SmartList;
+import com.intellij.util.containers.SmartHashSet;
+import com.siberika.idea.pascal.PascalRTException;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
@@ -12,14 +29,48 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.stub.PasModuleStub;
+import com.siberika.idea.pascal.lang.stub.PasNamedStub;
+import com.siberika.idea.pascal.lang.stub.PascalModuleIndex;
+import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ResolveUtil {
+
+    private static final Logger LOG = Logger.getInstance(ResolveUtil.class);
+
+    // Find Pascal modules by key using stub index. If key is not specified return all modules.
+    @NotNull
+    public static Collection<PascalModule> findUnitsWithStub(@NotNull Project project, @Nullable final Module module, @Nullable String key) {
+        final Collection<PascalModule> modules = new SmartHashSet<>();
+        final GlobalSearchScope scope = module != null ? GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false) : ProjectScope.getAllScope(project);
+        if (key != null) {
+            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, scope, PascalModule.class));
+        } else {
+            Processor<String> processor = new Processor<String>() {
+                @Override
+                public boolean process(String key) {
+                    modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, scope, PascalModule.class));
+                    return true;
+                }
+            };
+            StubIndex.getInstance().processAllKeys(PascalModuleIndex.KEY, processor, scope, null);
+        }
+        if ((null == key) || BuiltinsParser.UNIT_NAME_BUILTINS.equalsIgnoreCase(key)) {
+            modules.add(BuiltinsParser.getBuiltinsModule(project));
+        }
+        return modules;
+    }
 
     @Nullable
     public static String getDeclarationTypeString(@NotNull PascalNamedElement el) {
@@ -69,7 +120,7 @@ public class ResolveUtil {
             PascalNamedElement typeEl = null;
             String type = getDeclarationTypeString(element);
             if (type != null) {
-                Collection<PascalModule> units = PasReferenceUtil.findUnitFilesStub(element.getProject(), ModuleUtilCore.findModuleForPsiElement(element), null);
+                Collection<PascalModule> units = findUnitsWithStub(element.getProject(), ModuleUtilCore.findModuleForPsiElement(element), null);
                 for (PascalModule unit : units) {
                     PasField field = unit.getField(type);
                     if ((field != null) && (field.fieldType == PasField.FieldType.TYPE)) {
@@ -81,4 +132,160 @@ public class ResolveUtil {
         }
         return null;
     }
+
+    /**
+     *  for each entry in FQN before target:
+     *    find entity corresponding to NS in current scope
+     *    if the entity represents a namespace - retrieve and make current
+     *  for namespace of target entry add all its entities
+     */
+    public static Collection<PasField> resolveWithStubs(final NamespaceRec fqn, ResolveContext context, final int recursionCount) {
+        assert(context.scope instanceof StubBasedPsiElement);
+        StubElement stub = ((StubBasedPsiElement) context.scope).getStub();
+        assert(stub instanceof PasNamedStub);
+        PasEntityScope scope = context.scope;
+        ProgressManager.checkCanceled();
+        if (recursionCount > PasReferenceUtil.MAX_RECURSION_COUNT) {
+            throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
+        }
+
+        // First entry in FQN
+        List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
+        Collection<PasField> result = new HashSet<PasField>();
+
+        Set<PasField.FieldType> fieldTypes = EnumSet.copyOf(context.fieldTypes);
+
+        try {
+            // Retrieve all namespaces affecting first FQN level
+            while (scope != null) {
+                addFirstNamespaces(namespaces, scope, context.includeLibrary);
+                stub = stub.getParentStub();
+                PsiElement parentScope = stub.getPsi();
+                scope = fqn.isFirst() && (parentScope instanceof PasEntityScope) ? (PasEntityScope) parentScope : null;
+            }
+
+            List<PasEntityScope> newNs = PasReferenceUtil.checkUnitScope(result, namespaces, fqn);
+            if (newNs != null) {
+                namespaces = newNs;
+                fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first
+            }
+
+            while (fqn.isBeforeTarget() && (namespaces != null)) {
+                PasField field = null;
+                // Scan namespaces and get one matching field
+                for (PasEntityScope namespace : namespaces) {
+                    field = namespace.getField(fqn.getCurrentName());        // TODO: optimize?
+                    if (field != null) {
+                        break;
+                    }
+                }
+                namespaces = null;
+                if (field != null) {
+                    PasEntityScope newNS;
+                        newNS = PasReferenceUtil.retrieveFieldTypeScope(field, recursionCount);    // TODO: add flag to resolve only with stubs
+                        boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
+                        if ((fqn.getRestLevels() == 1) && ((null == newNs) || isDefault)         // "default" type pseudo value
+                                && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member
+                            if (isDefault) {
+                                fqn.next();
+                                PasField defaultField = new PasField(field.owner, field.getElement(), "default", PasField.FieldType.CONSTANT, field.visibility);
+                                if (PasReferenceUtil.isFieldMatches(defaultField, fqn, fieldTypes)) {
+                                    result.add(defaultField);
+                                }
+//                                saveScope(context.resultScope, newNS, true);
+                                return result;
+                            }
+                            /*if (field.getValueType() != null) {
+                                SmartPsiElementPointer<PasTypeDecl> typePtr = field.getValueType().declaration;
+                                PasTypeDecl enumType = typePtr != null ? typePtr.getElement() : null;
+                                PasEnumType enumDecl = enumType != null ? _PsiTreeUtil.findChildOfType(enumType, PasEnumType.class) : null;
+                                if (enumDecl != null) {
+                                    fqn.next();
+//                                    saveScope(context.resultScope, enumDecl, true);
+                                    return collectEnumFields(result, field, enumDecl, fqn, fieldTypes);
+                                }
+                            }*/
+                    }
+
+                    namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
+                    if (newNS instanceof PascalStructType) {
+                        addParentNamespaces(namespaces, (PascalStructType) newNS);
+                    }
+                }
+                fqn.next();
+                fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first in FQN
+                fieldTypes.remove(PasField.FieldType.PSEUDO_VARIABLE);                                                   // Pseudo variables can be only first in FQN
+            }
+
+            if (!fqn.isComplete() && (namespaces != null)) {
+                for (PasEntityScope namespace : namespaces) {
+                    if (null == namespace) {
+                        LOG.info(String.format("===*** null namespace! %s", fqn));
+                        continue;
+                    }
+                    for (PasField pasField : namespace.getAllFields()) {
+                        if (PasReferenceUtil.isFieldMatches(pasField, fqn, fieldTypes) &&
+                                !result.contains(pasField) &&
+                                isVisibleWithinUnit(pasField, fqn)) {
+//                            saveScope(context.resultScope, namespace, false);
+                            result.add(pasField);
+                            if (!PasReferenceUtil.isCollectingAll(fqn)) {
+                                break;
+                            }
+                        }
+                    }
+                    if (!result.isEmpty() && !PasReferenceUtil.isCollectingAll(fqn)) {
+                        break;
+                    }
+                }
+                if (result.isEmpty() && (context.resultScope != null)) {
+                    context.resultScope.clear();
+                    context.resultScope.addAll(namespaces);
+                }
+            }
+        } catch (PasInvalidScopeException e) {
+            /*if (namespaces != null) {
+                for (PasEntityScope namespace : namespaces) {
+                    namespace.invalidateCache();
+                }
+            }*/
+        /*} catch (Throwable e) {
+            //LOG.error(String.format("Error parsing scope %s, file %s", scope, scope != null ? scope.getContainingFile().getName() : ""), e);
+            throw e;*/
+        }
+        return result;
+    }
+
+    private static boolean isVisibleWithinUnit(PasField field, NamespaceRec fqn) {
+        return fqn.isIgnoreVisibility() || (field.fieldType == PasField.FieldType.ROUTINE) || PasField.isAllowed(field.visibility, PasField.Visibility.STRICT_PROTECTED);
+    }
+
+    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope scope, boolean includeLibrary) {
+        namespaces.add(scope);
+        if (scope instanceof PascalModule) {
+            addUnitNamespaces(namespaces, (PascalModule) scope);
+        }
+        if (scope instanceof PascalStructType) {
+            addParentNamespaces(namespaces, (PascalStructType) scope);
+        }
+    }
+
+    private static void addUnitNamespaces(List<PasEntityScope> namespaces, PascalModule scope) {
+        PasModuleStub stub = scope.getStub();
+        if (null == stub) {
+            LOG.info("Stub is null" + scope);
+            return;
+        }
+        for (String unitName : stub.getUsedUnitsPublic()) {
+            namespaces.addAll(findUnitsWithStub(scope.getProject(), null, unitName));
+        }
+    }
+
+    private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @Nullable PascalStructType scope) {
+        if ((null == namespaces) || (namespaces.size() > PasReferenceUtil.MAX_NAMESPACES)) {
+            return;
+        }
+        // TODO: add all parents and implemented interfaces scopes
+    }
+
 }

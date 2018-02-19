@@ -12,12 +12,9 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
-import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.Processor;
 import com.intellij.util.SmartList;
 import com.intellij.util.StringLenComparator;
-import com.intellij.util.containers.SmartHashSet;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.DCUFileType;
 import com.siberika.idea.pascal.PPUFileType;
@@ -39,7 +36,6 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
-import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -58,7 +54,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
-import com.siberika.idea.pascal.lang.stub.PascalModuleIndex;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -83,8 +78,8 @@ public class PasReferenceUtil {
 
     private static final Logger LOG = Logger.getInstance(PasReferenceUtil.class.getName());
 
-    private static final int MAX_RECURSION_COUNT = 1000;
-    private static final int MAX_NAMESPACES = 300;
+    static final int MAX_RECURSION_COUNT = 1000;
+    static final int MAX_NAMESPACES = 300;
 
     /**
      * Finds and returns unit in path by name
@@ -152,28 +147,6 @@ public class PasReferenceUtil {
         }
         virtualFiles.add(BuiltinsParser.getBuiltinsSource());
         return virtualFiles;
-    }
-    @NotNull
-    public static Collection<PascalModule> findUnitFilesStub(@NotNull Project project, @Nullable final Module module, String key) {
-        final Collection<PascalModule> modules = new SmartHashSet<>();
-        final GlobalSearchScope scope = module != null ? GlobalSearchScope.allScope(project) : ProjectScope.getLibrariesScope(project);
-        //TODO: check module belonging?
-        if (key != null) {
-            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, scope, PascalModule.class));
-        } else {
-            Processor<String> processor = new Processor<String>() {
-                @Override
-                public boolean process(String key) {
-                    modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, scope, PascalModule.class));
-                    return true;
-                }
-            };
-            StubIndex.getInstance().processAllKeys(PascalModuleIndex.KEY, processor, scope, null);
-        }
-        if ((null == key) || BuiltinsParser.UNIT_NAME_BUILTINS.equalsIgnoreCase(key)) {
-            modules.add(BuiltinsParser.getBuiltinsModule(project));
-        }
-        return modules;
     }
 
     // Returns True if the file is the file of a module with the given name
@@ -311,7 +284,7 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, int recursionCount) {
+    static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, int recursionCount) {
         if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
                 if (!field.isTypeResolved()) {
@@ -515,13 +488,11 @@ public class PasReferenceUtil {
         return result;
     }
 
-    private static List<PasEntityScope> checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {
-        ArrayList<PasEntityScope> sorted = new ArrayList<PasEntityScope>(namespaces.size());
+    static List<PasEntityScope> checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {
+        List<PasEntityScope> sorted = new ArrayList<PasEntityScope>(namespaces.size());
         for (PasEntityScope namespace : namespaces) {
-            if (namespace instanceof PasModule) {
-                if (!StringUtils.isEmpty(namespace.getName())) {
-                    sorted.add(namespace);
-                }
+            if ((namespace instanceof PasModule) && !StringUtils.isEmpty(namespace.getName())) {
+                sorted.add(namespace);
             }
         }
         // sort namespaces by name length in reverse order to check longer named namespaces first
@@ -569,11 +540,11 @@ public class PasReferenceUtil {
         }
     }
 
-    private static boolean isCollectingAll(NamespaceRec fqn) {
+    static boolean isCollectingAll(NamespaceRec fqn) {
         return "".equals(fqn.getCurrentName());
     }
 
-    private static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
+    static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
         return (!fqn.isTarget() || fieldTypes.contains(field.fieldType)) &&
                 (isCollectingAll(fqn) || field.name.equalsIgnoreCase(fqn.getCurrentName()));
     }

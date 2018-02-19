@@ -26,6 +26,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -328,7 +329,7 @@ public class PascalModuleImpl extends PascalModuleImplStub {
         Project project = section.getProject();
         for (PascalQualifiedIdent ident : usedNames) {
             //addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, ident.getName()), project);
-            Collection<PascalModule> units = PasReferenceUtil.findUnitFilesStub(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), ident.getName());
+            Collection<PascalModule> units = ResolveUtil.findUnitsWithStub(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), ident.getName());
             if (!units.isEmpty()) {
                 addUnit(result, units.iterator().next(), project);
             }
@@ -337,7 +338,7 @@ public class PascalModuleImpl extends PascalModuleImplStub {
             if (!unitName.equalsIgnoreCase(getName())) {
 //                List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
 //                addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, unitName), project);
-                Collection<PascalModule> units = PasReferenceUtil.findUnitFilesStub(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), unitName);
+                Collection<PascalModule> units = ResolveUtil.findUnitsWithStub(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), unitName);
                 if (!units.isEmpty()) {
                     addUnit(result, units.iterator().next(), project);
                 }

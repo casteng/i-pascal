@@ -21,7 +21,7 @@ public abstract class PascalModuleImplStub extends PasStubScopeImpl<PasModuleStu
     }
 
     PasField getFieldStub(String name) {
-        for (StubElement stubElement : getGreenStub().getChildrenStubs()) {       // TODO: return to getStub()
+        for (StubElement stubElement : getStub().getChildrenStubs()) {
             if (name.equalsIgnoreCase(((PasNamedStub) stubElement).getName())) {
                 return new PasField((PasNamedStub) stubElement);
             }
@@ -31,7 +31,7 @@ public abstract class PascalModuleImplStub extends PasStubScopeImpl<PasModuleStu
 
     Collection<PasField> getAllFieldsStub() {
         Collection<PasField> res = new SmartList<PasField>();
-        for (StubElement stubElement : getStub().getChildrenStubs()) {       // TODO: return to getStub()
+        for (StubElement stubElement : getStub().getChildrenStubs()) {
             res.add(new PasField((PasNamedStub) stubElement));
         }
         return res;
