@@ -318,11 +318,11 @@ type
         procedure SetValue(Index: __CollectionIndexType; const e: _VectorValueType);
         procedure SetCapacity(const ACapacity: __CollectionIndexType);
         // Increases the capacity of the list to ensure that it can hold at least the number of elements specified
-        procedure EnsureCapacity(ACount: __CollectionIndexType);
+        procedure EnsureCapacity(ASize: __CollectionIndexType);
         // Returns the number of elements in the collection
-        function GetCount(): __CollectionIndexType;
+        function GetSize(): __CollectionIndexType;
         // Sets the number of elements in the collection
-        procedure SetCount(const ACount: __CollectionIndexType);
+        procedure SetSize(const ASize: __CollectionIndexType);
         // Returns True if the collection contains no elements
         function IsEmpty(): Boolean;
         // Returns True if the collection contains the specified element
@@ -367,7 +367,7 @@ type
            or -1 if the list does not contain the element. }
         function LastIndexOf(const e: _VectorValueType): __CollectionIndexType;
         // Number of elements
-        property Count: __CollectionIndexType read FCount write SetCount;
+        property Size: __CollectionIndexType read FSize write SetSize;
         // Values retrieved by index
         property Values[Index: __CollectionIndexType]: _VectorValueType read Get write SetValue; default;
         // Pointer to values retrieved by index
@@ -375,6 +375,8 @@ type
         // Number of elements which the collection able to hold without memory allocations
         property Capacity: __CollectionIndexType read FCapacity write SetCapacity;
     end;
+
+    _HashMapPair = record Key: _HashMapKeyType; Value: _HashMapValueType; end;
 
     _GenHashMap = class(__Parent)
         function GetLoadFactor(): Single;
@@ -390,31 +392,31 @@ type
         // Grow step of bucket array
         FBucketGrowStep: __CollectionIndexType;
         // Number of entries
-        FCount: __CollectionIndexType;
+        FSize: __CollectionIndexType;
         function GetIndexInBucket(const Key: _HashMapKeyType; out BucketIndex: __CollectionIndexType): __CollectionIndexType;
         function GetValue(const Key: _HashMapKeyType): _HashMapValueType;
         procedure SetValue(const Key: _HashMapKeyType; const Value: _HashMapValueType);
         procedure SetCapacity(ACapacity: __CollectionIndexType);
     public
         constructor Create(); overload;
-        // Create a map instance with the specified initial capacity
+        // Create a map instance with the specified initial capacity. It's recommended to specify capacity to avoid expensive resizing of internal data structures.
         constructor Create(Capacity: __CollectionIndexType); overload;
         destructor Destroy(); override;
-        // Returns a forward iterator over map keys collection
-        function GetKeyIterator(): _GenHashMapKeyIterator;
+        // Returns a forward iterator over map
+        function GetIterator(): _GenHashMapIterator;
         // Returns True if the hash map contains the key
-        function ContainsKey(const Key: _HashMapKeyType): Boolean;
+        function Contains(const Key: _HashMapKeyType): Boolean;
         // Returns True if the hash map contains the value
         function ContainsValue(const Value: _HashMapValueType): Boolean;
         // Removes value for the specified key and returns True if there was value for the key
-        function RemoveValue(const Key: _HashMapKeyType): Boolean;
+        function Remove(const Key: _HashMapKeyType): Boolean;
         // Calls a delegate for each value stored in the map
         procedure ForEach(Delegate: _HashMapDelegate; Data: Pointer);
         // Returns True if the collection contains no elements
         function IsEmpty(): Boolean;
         // Removes all elements from the collection
         procedure Clear();
-        // Values retrieved by pointer key
+        // Values retrieved by key
         property Values[const Key: _HashMapKeyType]: _HashMapValueType read GetValue write SetValue; default;
         // Determines hash function values range which is currently used.
         property Capacity: __CollectionIndexType read FCapacity;
@@ -422,22 +424,22 @@ type
         property MaxLoadFactor: Single read FMaxLoadFactor write FMaxLoadFactor;
         // Current number of entries to capacity ratio
         property LoadFactor: Single read GetLoadFactor;
-        // Grow step of bucket array
-        property BucketGrowStep: __CollectionIndexType read FBucketGrowStep write FBucketGrowStep;
         // Number of entries
-        property Count: __CollectionIndexType read FCount write FCount;
+        property Size: __CollectionIndexType read FSize write FSize;
     end;
 
-    _GenHashMapKeyIterator = class(__Parent)
+    _GenHashMapIterator = class(__Parent)
         // Advances the iterator to next item and returns True on success or False if no items left
         function GoToNext(): Boolean;
-        // Returns current item performing no iterator state changes
-        function Current(): _HashMapKeyType;
+        // Returns current key performing no iterator state changes
+        function CurrentKey(): _HashMapKeyType;
+        // Returns current value performing no iterator state changes
+        function CurrentValue(): _HashMapValueType;
         // Returns True if there is more items
         function HasNext(): Boolean;
         // Advances the iterator to next item and returns it.
         // If no items left nil be returned for nullable collection (dsNullable option is defined) or error generated otherwise.
-        function Next(): _HashMapKeyType;
+        function Next(): _HashMapPair;
     end;
 
     _LinkedListNodePTR = ^_LinkedListNode;
@@ -451,7 +453,7 @@ type
     _GenLinkedList = class(__Parent)
     protected
         FFirst, FLast: _LinkedListNodePTR;
-        FCount: __CollectionIndexType;
+        FSize: __CollectionIndexType;
 
         // Returns list value at the specified position
         procedure SetValue(Index: __CollectionIndexType; const e: _LinkedListValueType); // inline
@@ -466,7 +468,7 @@ type
         { Collection interface }
 
         // Returns the number of elements in the collection
-        function GetCount(): __CollectionIndexType; // inline
+        function GetSize(): __CollectionIndexType; // inline
         // Returns True if the collection contains no elements
         function IsEmpty(): Boolean; // inline
         // Returns True if the collection contains the specified element
@@ -484,7 +486,7 @@ type
         // Frees all nodes makes the list empty
         procedure Clear(); // inline
         // Number of elements
-        property Count: __CollectionIndexType read FCount;
+        property Size: __CollectionIndexType read FSize;
 
         { List interface }
 
