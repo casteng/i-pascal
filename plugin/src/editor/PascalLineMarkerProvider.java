@@ -85,14 +85,18 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
 
     static LineMarkerInfo<PsiElement> createLineMarkerInfo(@NotNull PsiElement element, Icon icon, final String tooltip,
                                                            @NotNull GutterIconNavigationHandler<PsiElement> handler) {
-        PsiElement el = element;
-        while (el.getFirstChild() != null) {
-            el = el.getFirstChild();
-        }
+        PsiElement el = getLeaf(element);
         return new LineMarkerInfo<PsiElement>(el, el.getTextRange(),
-                icon, Pass.UPDATE_OVERRIDDEN_MARKERS,
+                icon, Pass.LINE_MARKERS,
                 new ConstantFunction<PsiElement, String>(tooltip), handler,
                 GutterIconRenderer.Alignment.RIGHT);
+    }
+
+    private static PsiElement getLeaf(PsiElement element) {
+        while (element.getFirstChild() != null) {
+            element = element.getFirstChild();
+        }
+        return element;
     }
 
     @Nullable
@@ -100,7 +104,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
         if (element instanceof PasRoutineImplDeclImpl) {
             if (myDaemonSettings.SHOW_METHOD_SEPARATORS) {
-                return LineMarkersPass.createMethodSeparatorLineMarker(element, myColorsManager);
+                return LineMarkersPass.createMethodSeparatorLineMarker(getLeaf(element), myColorsManager);
             }
         }
         return null;
