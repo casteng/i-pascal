@@ -10,6 +10,7 @@ import com.intellij.psi.stubs.StubOutputStream;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalClassDeclImpl;
+import com.siberika.idea.pascal.lang.stub.PascalStructIndex;
 import com.siberika.idea.pascal.lang.stub.StubUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,6 +63,6 @@ public class PasClassDeclStubElementType extends ILightStubElementType<PasClassD
 
     @Override
     public void indexStub(@NotNull PasClassDeclStub stub, @NotNull IndexSink sink) {
-        //System.out.println("PasClassDeclStubElementType.indexStub");
+        sink.occurrence(PascalStructIndex.KEY, stub.getName());
     }
 }

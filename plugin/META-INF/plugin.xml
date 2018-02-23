@@ -428,6 +428,7 @@
 
         <stubElementTypeHolder class="com.siberika.idea.pascal.lang.psi.PasTypes"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalModuleIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalStructIndex"/>
 
     </extensions>
 </idea-plugin>
