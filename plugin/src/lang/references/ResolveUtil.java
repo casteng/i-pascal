@@ -3,7 +3,6 @@ package com.siberika.idea.pascal.lang.references;
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -31,11 +30,13 @@ import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.lang.stub.PascalModuleIndex;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,38 +98,53 @@ public class ResolveUtil {
         return ident != null ? ident.getName() : null;
     }
 
-    static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
-        PascalNamedElement el = field.getElement();
-        if ((el instanceof StubBasedPsiElementBase) && (((StubBasedPsiElementBase) el).getStub() != null)) {
-            PasField.ValueType valueType = resolveTypeWithStub((StubBasedPsiElementBase) el, includeLibrary, recursionCount);
-            valueType.field = field;
-            return valueType;
+    @Nullable
+    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
+        if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
+            try {
+                if (!field.isTypeResolved()) {
+                    PascalNamedElement el = field.getElement();
+                    if ((el instanceof StubBasedPsiElementBase) && (((StubBasedPsiElementBase) el).getStub() != null)) {
+                        PasField.ValueType valueType = resolveTypeWithStub((StubBasedPsiElementBase) el, context, recursionCount);
+                        valueType.field = field;
+                        field.setValueType(valueType);
+                    }
+                }
+                if (field.getValueType() == PasField.VARIANT) {
+                    return new PasVariantScope(field.getElement());
+                }
+                return field.getValueType() != null ? field.getValueType().getTypeScopeStub() : null;
+            } finally {
+                field.getTypeLock().unlock();
+            }
         } else {
-            return PasReferenceUtil.resolveFieldType(field, includeLibrary, recursionCount);
+            return null;
         }
     }
 
-    private static PasField.ValueType resolveTypeWithStub(StubBasedPsiElementBase element, boolean includeLibrary, int recursionCount) {
+    private static PasField.ValueType resolveTypeWithStub(StubBasedPsiElementBase element, ResolveContext context, int recursionCount) {
         if (element instanceof PascalIdentDecl) {
-            return resolveIdentDeclType((PascalIdentDecl) element, includeLibrary, recursionCount);
+            return resolveIdentDeclType((PascalIdentDecl) element, context, recursionCount);
         }
         return null;
     }
 
-    private static PasField.ValueType resolveIdentDeclType(PascalIdentDecl element, boolean includeLibrary, int recursionCount) {
+    private static PasField.ValueType resolveIdentDeclType(PascalIdentDecl element, ResolveContext context, int recursionCount) {
         if (element.getStub().getType() == PasField.FieldType.TYPE) {
-            PascalNamedElement typeEl = null;
             String type = getDeclarationTypeString(element);
             if (type != null) {
-                Collection<PascalModule> units = findUnitsWithStub(element.getProject(), ModuleUtilCore.findModuleForPsiElement(element), null);
-                for (PascalModule unit : units) {
-                    PasField field = unit.getField(type);
-                    if ((field != null) && (field.fieldType == PasField.FieldType.TYPE)) {
-                        typeEl = field.getElement();
+                ResolveContext typeResolveContext = new ResolveContext(PasField.TYPES_TYPE, context.includeLibrary);
+                Collection<PasField> types = resolveWithStubs(NamespaceRec.fromFQN(element, type), typeResolveContext, ++recursionCount);
+                if (!types.isEmpty()) {
+                    for (PasField pasField : types) {
+                        PascalNamedElement el = pasField.getElement();
+                        if (el instanceof PascalStructType) {
+                            return new PasField.ValueType(pasField, PasField.Kind.STRUCT, null, null);
+                        }
                     }
                 }
             }
-            return typeEl instanceof PasTypeDecl ? new PasField.ValueType(null, null, null, (PasTypeDecl) typeEl) : null;
+            return null;
         }
         return null;
     }
@@ -182,7 +198,7 @@ public class ResolveUtil {
                 namespaces = null;
                 if (field != null) {
                     PasEntityScope newNS;
-                        newNS = PasReferenceUtil.retrieveFieldTypeScope(field, recursionCount);    // TODO: add flag to resolve only with stubs
+                        newNS = retrieveFieldTypeScope(field, context, recursionCount);    // TODO: add flag to resolve only with stubs
                         boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
                         if ((fqn.getRestLevels() == 1) && ((null == newNs) || isDefault)         // "default" type pseudo value
                                 && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member

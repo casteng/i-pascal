@@ -15,9 +15,9 @@ var
 
 property PropA: TA;
 
-procedure proc();
+procedure proc(); external;
 
-function func(): TR;
+function func(): TR; external;
 
 begin
 

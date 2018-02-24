@@ -9,9 +9,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
+import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.StringLenComparator;
@@ -54,6 +56,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -288,8 +291,7 @@ public class PasReferenceUtil {
         if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
                 if (!field.isTypeResolved()) {
-//                    field.setValueType(resolveFieldType(field, true, recursionCount));
-                    field.setValueType(ResolveUtil.resolveFieldType(field, true, recursionCount));
+                    field.setValueType(resolveFieldType(field, true, recursionCount));
                 }
                 if (field.getValueType() == PasField.VARIANT) {
                     return new PasVariantScope(field.getElement());
@@ -352,13 +354,20 @@ public class PasReferenceUtil {
         if (recursionCount > MAX_RECURSION_COUNT) {
             throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
         }
+        if (context.scope != null) {
+            if (context.scope instanceof StubBasedPsiElement) {
+                StubElement stub = ((StubBasedPsiElement) context.scope).getStub();
+                if (stub != null) {
+                    return ResolveUtil.resolveWithStubs(fqn, context, recursionCount);
+                }
+            }
+        } else {
+            context.scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
+        }
 
         boolean implAffects = fqn.isFirst()
                 && PsiUtil.isBefore(PsiUtil.getModuleImplementationSection(fqn.getParentIdent().getContainingFile()), fqn.getParentIdent());
 
-        if (null == context.scope) {
-            context.scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
-        }
         // First entry in FQN
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
         Collection<PasField> result = new HashSet<PasField>();
@@ -383,6 +392,11 @@ public class PasReferenceUtil {
                 PasField field = null;
                 // Scan namespaces and get one matching field
                 for (PasEntityScope namespace : namespaces) {
+                    Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
+                    if (fields != null) {
+                        result.addAll(fields);
+                        return result;
+                    }
                     field = namespace.getField(fqn.getCurrentName());
                     if (field != null) {
                         break;
@@ -435,6 +449,11 @@ public class PasReferenceUtil {
                         LOG.info(String.format("===*** null namespace! %s", fqn));
                         continue;
                     }
+                    Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
+                    if (fields != null) {
+                        result.addAll(fields);
+                        return result;
+                    }
                     for (PasField pasField : namespace.getAllFields()) {
                         if (isFieldMatches(pasField, fqn, fieldTypes) &&
                                 !result.contains(pasField) &&
@@ -466,6 +485,17 @@ public class PasReferenceUtil {
             throw e;*/
         }
         return result;
+    }
+
+    private static Collection<PasField> resolveFromStub(NamespaceRec fqn, PasEntityScope namespace, ResolveContext context, int recursionCount) {
+        if (namespace instanceof StubBasedPsiElement) {
+            StubElement stub = ((StubBasedPsiElement) namespace).getStub();
+            if (stub instanceof PasNamedStub) {
+                ResolveContext ctx = new ResolveContext(namespace, context.fieldTypes, context.includeLibrary, context.resultScope);
+                return ResolveUtil.resolveWithStubs(fqn, ctx, ++recursionCount);
+            }
+        }
+        return null;
     }
 
     private static void saveScope(List<PsiElement> resultScope, PsiElement namespace, boolean clear) {

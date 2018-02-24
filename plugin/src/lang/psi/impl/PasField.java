@@ -125,7 +125,7 @@ public class PasField {
     public PasField(PasNamedStub stub) {
         this(getScope(stub),
                 stub.getPsi() instanceof PascalNamedElement ? (PascalNamedElement) stub.getPsi() : null,
-                stub.getName(), stub.getType(), Visibility.PUBLIC, null, null);
+                stub.getName(), stub.getType(), Visibility.PUBLIC, stub.getPsi(), null);
     }
 
     private static PasEntityScope getScope(PasNamedStub stub) {
@@ -275,6 +275,17 @@ public class PasField {
                 return (PasEntityScope) typeDecl.getFirstChild();
             }
             return null;
+        }
+
+        // Searches all type chain for structured type using only stub tree //TODO: check
+        @Nullable
+        public PasEntityScope getTypeScopeStub() {
+            ValueType type = this;
+            while (type.baseType != null) {
+                type = type.baseType;
+            }
+            PascalNamedElement el = type.field.getElement();
+            return el instanceof PasEntityScope ? (PasEntityScope) el : null;
         }
 
     }
