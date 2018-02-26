@@ -29,12 +29,12 @@ public class PascalCommenter implements Commenter {
     @Nullable
     @Override
     public String getCommentedBlockCommentPrefix() {
-        return null;
+        return "(*";
     }
 
     @Nullable
     @Override
     public String getCommentedBlockCommentSuffix() {
-        return null;
+        return "*)";
     }
 }
