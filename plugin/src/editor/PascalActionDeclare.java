@@ -570,6 +570,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 data.offset = block.getTextRange().getStartOffset();
                 data.parent = block.getParent();
                 Pair<String, Map<String, String>> arguments = calcArguments(data);
+                String params = (arguments.second != null) && (arguments.second.size() > 0) ? arguments.first : "";
                 String prefix = scope instanceof PascalStructType ? ((PascalStructType) scope).getName() + "." : "";
                 if (returnType != null) {
                     arguments.getSecond().put(TPL_VAR_RETURN_TYPE, returnType);
@@ -577,7 +578,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                             prefix, data.element.getName(), arguments.getFirst(), TPL_VAR_RETURN_TYPE, TPL_VAR_CODE), arguments.getSecond());
                 } else {
                     data.createTemplate(String.format("\n\nprocedure %s%s(%s);\nbegin\n$%s$\nend;",
-                            prefix, data.element.getName(), arguments.getFirst(), TPL_VAR_CODE), arguments.getSecond());
+                            prefix, data.element.getName(), params, TPL_VAR_CODE), arguments.getSecond());
                 }
             }
         }
