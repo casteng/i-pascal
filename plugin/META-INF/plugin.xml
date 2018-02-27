@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.51</version>
+    <version>1.52</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,12 +9,13 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>1.51</p>
+        <p>1.52</p>
         <ul>
-          <li>Inplace rename with smart suggestions</li>
-          <li>Highlight differently read and write access to identifier at cursor</li>
-          <li>Add source of dependent modules in search path</li>
+          <li>Inplace local identifiers rename with smart suggestions</li>
+          <li>Highlight read and write access to an identifier at cursor with different color</li>
+          <li>Add source path of dependent modules to search path</li>
           <li>Fix run configurations duplication on run from gutter icon</li>
+          <li>Parameter name hint setting to show hints for all parameters</li>
         </ul>
         <p>1.50</p>
         <ul>
