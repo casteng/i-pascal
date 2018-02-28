@@ -46,7 +46,7 @@ import java.util.concurrent.Callable;
  * Author: George Bakhtadze
  * Date: 14/09/2013
  */
-public class PascalModuleImpl extends PascalModuleImplStub {
+public abstract class PascalModuleImpl extends PascalModuleImplStub {
 
     private static final UnitMembers EMPTY_MEMBERS = new UnitMembers();
     private static final Idents EMPTY_IDENTS = new Idents();
@@ -66,7 +66,7 @@ public class PascalModuleImpl extends PascalModuleImplStub {
         super(node);
     }
 
-    public PascalModuleImpl(PasModuleStub stub, IStubElementType nodeType) {
+    public PascalModuleImpl(@NotNull PasModuleStub stub, IStubElementType nodeType) {
         super(stub, nodeType);
     }
 
@@ -378,11 +378,17 @@ public class PascalModuleImpl extends PascalModuleImplStub {
 
     @NotNull
     @Override
-    synchronized public String getName() {
-        if ((myCachedName == null) || (myCachedName.length() == 0)) {
-            myCachedName = PascalNamedElementImpl.calcName(getNameElement());
+    public String getName() {
+        PasModuleStub stub = getStub();
+        if (stub != null) {
+            return stub.getName();
         }
-        return myCachedName;
+        synchronized (this) {
+            if ((myCachedName == null) || (myCachedName.length() == 0)) {
+                myCachedName = PascalNamedElementImpl.calcName(getNameElement());
+            }
+            return myCachedName;
+        }
     }
 
     @Override

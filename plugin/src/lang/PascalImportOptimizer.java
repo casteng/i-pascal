@@ -26,8 +26,7 @@ import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
@@ -65,8 +64,10 @@ public class PascalImportOptimizer implements ImportOptimizer {
     }
 
     public static UsedUnitStatus getUsedUnitStatus(PascalQualifiedIdent usedUnitName, Module module) {
-        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(usedUnitName.getProject(),
-                PasReferenceUtil.findUnitFiles(usedUnitName.getProject(), module), usedUnitName.getName());
+        Collection<PascalModule> units = ResolveUtil.findUnitsWithStub(usedUnitName.getProject(), module, usedUnitName.getName());
+//        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(usedUnitName.getProject(),
+//                PasReferenceUtil.findUnitFiles(usedUnitName.getProject(), module), usedUnitName.getName());
+        PascalModule mod = units.isEmpty() ? null : units.iterator().next();
         if (null == mod) {
             return UsedUnitStatus.UNKNOWN;
         }

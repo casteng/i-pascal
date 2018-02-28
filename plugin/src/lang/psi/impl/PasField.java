@@ -4,9 +4,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -106,7 +108,7 @@ public class PasField {
         this.name = name;
         this.fieldType = fieldType;
         this.visibility = visibility;
-        this.offset = element != null ? element.getTextRange().getStartOffset() : 0;
+        this.offset = (element != null) && !ResolveUtil.isStubPowered(element) ? element.getTextRange().getStartOffset() : 0;
         this.target = target;
         this.valueType = valueType;
         this.cachedHash = updateHashCode();
@@ -129,7 +131,8 @@ public class PasField {
     }
 
     private static PasEntityScope getScope(PasNamedStub stub) {
-        PsiElement psi = stub.getPsi();
+        StubElement parent = stub.getParentStub();
+        PsiElement psi = parent != null ? parent.getPsi() : null;
         if (psi instanceof PasEntityScope) {
             return (PasEntityScope) psi;
         } else {

@@ -9,7 +9,7 @@ import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
-import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -36,7 +36,7 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
 
     @Override
     public PascalModule createPsi(@NotNull PasModuleStub stub) {
-        return new PascalModuleImpl(stub, this);
+        return new PasModuleImpl(stub, this);
     }
 
     @NotNull

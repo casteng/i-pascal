@@ -99,7 +99,7 @@ public class ResolveUtil {
     }
 
     @Nullable
-    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
+    public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
         if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
                 if (!field.isTypeResolved()) {
@@ -198,7 +198,7 @@ public class ResolveUtil {
                 namespaces = null;
                 if (field != null) {
                     PasEntityScope newNS;
-                        newNS = retrieveFieldTypeScope(field, context, recursionCount);    // TODO: add flag to resolve only with stubs
+                        newNS = retrieveFieldTypeScope(field, context, recursionCount);
                         boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
                         if ((fqn.getRestLevels() == 1) && ((null == newNs) || isDefault)         // "default" type pseudo value
                                 && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member
@@ -304,4 +304,7 @@ public class ResolveUtil {
         // TODO: add all parents and implemented interfaces scopes
     }
 
+    public static boolean isStubPowered(PascalNamedElement element) {
+        return (element instanceof StubBasedPsiElementBase) && (((StubBasedPsiElementBase) element).getStub() != null);
+    }
 }
