@@ -4,6 +4,7 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 
 /**
  * Author: George Bakhtadze
@@ -12,6 +13,6 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 public class TestUtil {
     public static PasEntityScope findClass(PasModule module, String name) {
         PasField parentField = module.getField(name);
-        return PasReferenceUtil.retrieveFieldTypeScope(parentField);
+        return PasReferenceUtil.retrieveFieldTypeScope(parentField, new ResolveContext(module, PasField.TYPES_TYPE, true, null));
     }
 }

@@ -478,10 +478,6 @@ public class PsiUtil {
 
 //--------------------------------------------------------------------------------------------------------------
 
-    public static boolean isFromSystemUnit(PsiElement element) {
-        return (element.getContainingFile() != null) && "$system.pas".equalsIgnoreCase(element.getContainingFile().getName());
-    }
-
     public static boolean isFromBuiltinsUnit(PsiElement element) {
         return (element.getContainingFile() != null) && BuiltinsParser.UNIT_NAME_BUILTINS.equalsIgnoreCase(element.getContainingFile().getName());
     }
@@ -518,8 +514,7 @@ public class PsiUtil {
     }
 
     public static PasEntityScope getNearestAffectingScope(PsiElement element) {
-        PasClassParent parent = PsiTreeUtil.getParentOfType(element, PasClassParent.class);
-        if (parent != null) {
+        if (PsiTreeUtil.getParentOfType(element, PasClassParent.class) != null) {                       // Don't search for a struct parent IDs in this struct
             PascalStructType struct = PsiTreeUtil.getParentOfType(element, PascalStructType.class);
             element = struct != null ? struct : element;
         }
@@ -528,22 +523,6 @@ public class PsiUtil {
 
     public static PsiElement getNearestSection(PsiElement element) {
         return PsiTreeUtil.getParentOfType(element, PasEntityScope.class, PasUnitInterface.class, PasUnitImplementation.class, PasBlockGlobal.class);
-    }
-
-    // returns name element of type with which is declared the specified field or routine
-    @Nullable
-    public static PasFullyQualifiedIdent getTypeNameIdent(PascalNamedElement element) {
-        PasTypeDecl typeDecl;
-        if ((element instanceof PasExportedRoutine) && (element.getFirstChild() != null)) {                      // resolve function type
-            typeDecl = PsiTreeUtil.getNextSiblingOfType(element.getFirstChild(), PasTypeDecl.class);
-        } else {
-            typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
-        }
-        PasTypeID typeId = typeDecl != null ? typeDecl.getTypeID() : null;
-        if (null == typeId) {                                                                                    // immediate complex non-structured type
-            typeId = PsiTreeUtil.getChildOfType(typeDecl != null ? typeDecl : element, PasTypeID.class);
-        }
-        return typeId != null ? typeId.getFullyQualifiedIdent() : null;
     }
 
     // returns type declaration for the specified field or routine element

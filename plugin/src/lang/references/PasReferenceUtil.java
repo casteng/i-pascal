@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.references;
 
+import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressManager;
@@ -38,6 +39,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
+import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -94,7 +96,7 @@ public class PasReferenceUtil {
         VirtualFile file = findUnitFile(unitFiles, moduleName);
         if (file != null) {
             PsiFile pascalFile = PsiManager.getInstance(project).findFile(file);
-            PasModule pasModule = PsiTreeUtil.findChildOfType(pascalFile, PasModule.class);
+            PascalModule pasModule = PsiTreeUtil.findChildOfType(pascalFile, PascalModule.class);
             if (pasModule != null) {
                 return pasModule;
             } else {
@@ -240,7 +242,12 @@ public class PasReferenceUtil {
         ResolveContext context = new ResolveContext(PasField.TYPES_TYPE, includeLibrary);
         Collection<PasField> types = resolve(NamespaceRec.fromElement(typeId.getFullyQualifiedIdent()), context, ++recursionCount);
         if (!types.isEmpty()) {
-            return resolveFieldType(types.iterator().next(), includeLibrary, ++recursionCount);          // resolve next type in chain
+            PasField type = types.iterator().next();
+            PascalNamedElement el = type.getElement();
+            if (ResolveUtil.isStubPowered(el)) {
+                return ResolveUtil.resolveTypeWithStub((StubBasedPsiElementBase) el, new ResolveContext(type.owner, PasField.TYPES_TYPE, context.includeLibrary, null), recursionCount);
+            }
+            return resolveFieldType(type, includeLibrary, ++recursionCount);          // resolve next type in chain
         }
         return null;
     }
@@ -287,7 +294,10 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, int recursionCount) {
+    static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
+        if (ResolveUtil.isStubPowered(field.owner)) {
+            return ResolveUtil.retrieveFieldTypeScope(field, context, recursionCount);
+        }
         if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
                 if (!field.isTypeResolved()) {
@@ -306,8 +316,8 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field) {
-        return retrieveFieldTypeScope(field, 0);
+    public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context) {
+        return retrieveFieldTypeScope(field, context, 0);
     }
 
     @Nullable
@@ -409,7 +419,7 @@ public class PasReferenceUtil {
                         newNS = fqn.isFirst() && implAffects && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE) ?
                                 retrieveFieldUnitScope(field, context.includeLibrary) : null;                    // First qualifier can be unit name
                     } else {
-                        newNS = retrieveFieldTypeScope(field, recursionCount);
+                        newNS = retrieveFieldTypeScope(field, context, recursionCount);
                         boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
                         if ((fqn.getRestLevels() == 1) && ((null == newNs) || isDefault)         // "default" type pseudo value
                          && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member
@@ -591,15 +601,15 @@ public class PasReferenceUtil {
       . SELF - in method context
       . RESULT - in routine context
 */
-    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope section, boolean includeLibrary, boolean implAffects) {
-        namespaces.add(section);
-        if (section instanceof PascalModuleImpl) {
+    private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope scope, boolean includeLibrary, boolean implAffects) {
+        namespaces.add(scope);
+        if (scope instanceof PascalModuleImpl) {
             if (implAffects) {
-                addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPrivateUnits(), includeLibrary);
+                addUnitNamespaces(namespaces, ((PascalModuleImpl) scope).getPrivateUnits(), includeLibrary);
             }
-            addUnitNamespaces(namespaces, ((PascalModuleImpl) section).getPublicUnits(), includeLibrary);
+            addUnitNamespaces(namespaces, ((PascalModuleImpl) scope).getPublicUnits(), includeLibrary);
         }
-        addParentNamespaces(namespaces, section, true);
+        addParentNamespaces(namespaces, scope, true);
     }
 
     private static void addUnitNamespaces(List<PasEntityScope> namespaces, List<SmartPsiElementPointer<PasEntityScope>> units, boolean includeLibrary) {
@@ -611,19 +621,19 @@ public class PasReferenceUtil {
         }
     }
 
-    private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @Nullable PasEntityScope section, boolean first) {
+    private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @Nullable PasEntityScope scope, boolean first) {
         if ((null == namespaces) || (namespaces.size() > MAX_NAMESPACES)) {
             return;
         }
-        if (null == section) {
+        if (null == scope) {
             return;
         }
-        for (SmartPsiElementPointer<PasEntityScope> scopePtr : section.getParentScope()) {
-            PasEntityScope scope = scopePtr.getElement();
-            if (first || (scope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
-                if (null != scope) {
-                    namespaces.add(scope);
-                    addParentNamespaces(namespaces, scope, first);
+        for (SmartPsiElementPointer<PasEntityScope> scopePtr : scope.getParentScope()) {
+            PasEntityScope entityScope = scopePtr.getElement();
+            if (first || (entityScope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
+                if (null != entityScope) {
+                    namespaces.add(entityScope);
+                    addParentNamespaces(namespaces, entityScope, first);
                 }
             }
         }
