@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -25,14 +26,14 @@ public abstract class PascalIdentDeclImpl extends StubBasedPsiElementBase<PasIde
 
     public PascalIdentDeclImpl(PasIdentStub stub, IStubElementType nodeType) {
         super(stub, nodeType);
-        myCachedType = stub.getTypeString();
+        myCachedType = Pair.create(stub.getTypeString(), stub.getTypeKind());
     }
 
     public static PascalIdentDecl create(PasIdentStub stub, PasIdentStubElementType elementType) {
         return new PasNamedIdentDeclImpl(stub, elementType);
     }
 
-    private volatile String myCachedType;
+    private volatile Pair<String, PasField.Kind> myCachedType;
 
     @Nullable
     @Override
@@ -43,15 +44,34 @@ public abstract class PascalIdentDeclImpl extends StubBasedPsiElementBase<PasIde
 
     @Nullable
     @Override
-    synchronized public String getTypeString() {
-        if ((myCachedType == null) || (myCachedType.length() == 0)) {
-            myCachedType = ResolveUtil.getDeclarationTypeString(this);
+    public String getTypeString() {
+        PasIdentStub stub = getStub();
+        if (stub != null) {
+            return stub.getTypeString();
         }
-        return myCachedType;
+        ensureTypeResolved();
+        return myCachedType != null ? myCachedType.first : null;
+    }
+
+    @Nullable
+    @Override
+    public PasField.Kind getTypeKind() {
+        PasIdentStub stub = getStub();
+        if (stub != null) {
+            return stub.getTypeKind();
+        }
+        ensureTypeResolved();
+        return myCachedType != null ? myCachedType.second : null;
+    }
+
+    synchronized private void ensureTypeResolved() {
+        if (myCachedType == null) {
+            myCachedType = ResolveUtil.getDeclarationType(this);
+        }
     }
 
     // From PascalNamedElementImpl
-    private volatile String myCachedName;
+    private String myCachedName;
 
     @Override
     public void subtreeChanged() {
@@ -61,11 +81,17 @@ public abstract class PascalIdentDeclImpl extends StubBasedPsiElementBase<PasIde
 
     @NotNull
     @Override
-    synchronized public String getName() {
-        if ((myCachedName == null) || (myCachedName.length() == 0)) {
-            myCachedName = PascalNamedElementImpl.calcName(getNameElement());
+    public String getName() {
+        PasIdentStub stub = getStub();
+        if (stub != null) {
+            return stub.getName();
         }
-        return myCachedName;
+        synchronized (this) {
+            if ((myCachedName == null) || (myCachedName.length() == 0)) {
+                myCachedName = PascalNamedElementImpl.calcName(getNameElement());
+            }
+            return myCachedName;
+        }
     }
 
     @Override

@@ -27,7 +27,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
 
     @Override
     public PasIdentStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, "-", PasField.FieldType.VARIABLE, null);
+        return new PasIdentStubImpl(parentStub, "-", PasField.FieldType.VARIABLE, null, null);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @NotNull
     @Override
     public PasIdentStub createStub(@NotNull PascalIdentDecl psi, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, psi.getName(), PasScopeImpl.getFieldType(psi), psi.getTypeString());
+        return new PasIdentStubImpl(parentStub, psi.getName(), PasScopeImpl.getFieldType(psi), psi.getTypeString(), psi.getTypeKind());
     }
 
     @NotNull
@@ -54,6 +54,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         dataStream.writeName(stub.getName());
         dataStream.writeName(stub.getType().name());
         dataStream.writeName(stub.getTypeString());
+        dataStream.writeName(stub.getTypeKind() != null ? stub.getTypeKind().name() : StubUtil.ENUM_NULL);
     }
 
     @NotNull
@@ -62,7 +63,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         String name = StubUtil.readName(dataStream);
         PasField.FieldType type = StubUtil.readEnum(dataStream, PasField.FieldType.class);
         String typeString = StubUtil.readName(dataStream);
-        return new PasIdentStubImpl(parentStub, name, type, typeString);
+        return new PasIdentStubImpl(parentStub, name, type, typeString, StubUtil.readEnum(dataStream, PasField.Kind.class));
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -74,7 +75,8 @@ public class ResolveUtil {
     }
 
     @Nullable
-    public static String getDeclarationTypeString(@NotNull PascalNamedElement el) {
+    public static Pair<String, PasField.Kind> getDeclarationType(@NotNull PascalNamedElement el) {
+        PasField.Kind kind = null;
         PascalQualifiedIdent ident = null;
         if (PsiUtil.isVariableDecl(el) || PsiUtil.isFieldDecl(el) || PsiUtil.isPropertyDecl(el) || PsiUtil.isConstDecl(el)) {   // variable declaration case
             PascalPsiElement varDecl = PsiTreeUtil.getNextSiblingOfType(el, PasTypeDecl.class);
@@ -95,7 +97,7 @@ public class ResolveUtil {
             PasTypeID type = ((PascalRoutine) el.getParent()).getFunctionTypeIdent();
             ident = type != null ? type.getFullyQualifiedIdent() : null;
         }
-        return ident != null ? ident.getName() : null;
+        return ident != null ? Pair.create(ident.getName(), kind) : null;
     }
 
     @Nullable
@@ -122,7 +124,7 @@ public class ResolveUtil {
         }
     }
 
-    private static PasField.ValueType resolveTypeWithStub(StubBasedPsiElementBase element, ResolveContext context, int recursionCount) {
+    public static PasField.ValueType resolveTypeWithStub(StubBasedPsiElementBase element, ResolveContext context, int recursionCount) {
         if (element instanceof PascalIdentDecl) {
             return resolveIdentDeclType((PascalIdentDecl) element, context, recursionCount);
         }
@@ -131,10 +133,10 @@ public class ResolveUtil {
 
     private static PasField.ValueType resolveIdentDeclType(PascalIdentDecl element, ResolveContext context, int recursionCount) {
         if (element.getStub().getType() == PasField.FieldType.TYPE) {
-            String type = getDeclarationTypeString(element);
+            String type = element.getTypeString();
             if (type != null) {
-                ResolveContext typeResolveContext = new ResolveContext(PasField.TYPES_TYPE, context.includeLibrary);
-                Collection<PasField> types = resolveWithStubs(NamespaceRec.fromFQN(element, type), typeResolveContext, ++recursionCount);
+//                ResolveContext typeResolveContext = new ResolveContext(PasField.TYPES_TYPE, context.includeLibrary);
+                Collection<PasField> types = resolveWithStubs(NamespaceRec.fromFQN(element, type), context, ++recursionCount);
                 if (!types.isEmpty()) {
                     for (PasField pasField : types) {
                         PascalNamedElement el = pasField.getElement();

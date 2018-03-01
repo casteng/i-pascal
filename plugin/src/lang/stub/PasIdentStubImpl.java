@@ -11,12 +11,14 @@ public class PasIdentStubImpl extends StubBase<PascalIdentDecl> implements PasId
     private String name;
     private PasField.FieldType kind;
     private String typeString;
+    private PasField.Kind typeKind;
 
-    public PasIdentStubImpl(StubElement parent, String name, PasField.FieldType kind, String typeString) {
+    public PasIdentStubImpl(StubElement parent, String name, PasField.FieldType kind, String typeString, PasField.Kind typeKind) {
         super(parent, PasIdentStubElementType.INSTANCE);
         this.name = name;
         this.kind = kind;
         this.typeString = typeString;
+        this.typeKind = typeKind;
     }
 
     @Override
@@ -33,5 +35,11 @@ public class PasIdentStubImpl extends StubBase<PascalIdentDecl> implements PasId
     @Override
     public String getTypeString() {
         return typeString;
+    }
+
+    @Nullable
+    @Override
+    public PasField.Kind getTypeKind() {
+        return typeKind;
     }
 }

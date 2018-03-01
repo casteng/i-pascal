@@ -11,9 +11,11 @@ import java.io.IOException;
 import java.util.Set;
 
 public class StubUtil {
+    public static final String ENUM_NULL = "-";
+
     public static <T extends Enum<T>> T readEnum(StubInputStream dataStream, Class<T> clazz) throws IOException {
         String name = readName(dataStream);
-        return name != null ? T.valueOf(clazz, name) : null;
+        return (name != null) && !name.equals(ENUM_NULL) ? T.valueOf(clazz, name) : null;
     }
 
     public static String readName(StubInputStream dataStream) throws IOException {
