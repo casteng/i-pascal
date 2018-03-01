@@ -9,7 +9,7 @@ import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalClassDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeDeclImpl;
 import com.siberika.idea.pascal.lang.stub.PascalStructIndex;
 import com.siberika.idea.pascal.lang.stub.StubUtil;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +32,7 @@ public class PasClassDeclStubElementType extends ILightStubElementType<PasClassD
 
     @Override
     public PascalClassDecl createPsi(@NotNull PasClassDeclStub stub) {
-        return new PascalClassDeclImpl(stub, this);
+        return new PasClassTypeDeclImpl(stub, this);
     }
 
     @NotNull

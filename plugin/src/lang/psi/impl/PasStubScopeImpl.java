@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProcessCanceledException;
@@ -11,7 +10,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
-import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -23,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +38,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Author: George Bakhtadze
  * Date: 07/09/2013
  */
-public abstract class PasStubScopeImpl<B extends StubElement> extends StubBasedPsiElementBase<B> implements PasEntityScope {
+public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNamedStubElement<B> implements PasEntityScope {
 
     protected static final Logger LOG = Logger.getInstance(PasStubScopeImpl.class.getName());
 

@@ -44,7 +44,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
-        myCachedName = null;
+        synchronized (this) {
+            myCachedName = null;
+        }
     }
 
     @NotNull
@@ -80,7 +82,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     public String getNamespace() {
         String name = getName();
         int pos = name.lastIndexOf(".");
-        return pos >= 0 ? name.substring(0, pos) : null;
+        return pos >= 0 ? name.substring(0, pos) : "";
     }
 
     @Override

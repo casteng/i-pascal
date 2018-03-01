@@ -1,10 +1,12 @@
 package com.siberika.idea.pascal.lang.references;
 
 import com.google.common.collect.ImmutableMap;
+import com.intellij.openapi.util.Pair;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.junit.Assert;
 
 import java.util.Collection;
@@ -26,6 +28,7 @@ public class ResolveUtilTest extends LightPlatformCodeInsightFixtureTestCase {
                 .put("CA", "TA")
                 .put("A", "TA")
                 .put("B", "TB")
+                .put("PB", "TB")
                 .put("AA", "TB")
                 .put("PropA", "TA")
                 .put("func", "TR")
@@ -33,11 +36,12 @@ public class ResolveUtilTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("declarationTypes.pas");
         Collection<PascalNamedElement> decls = PsiTreeUtil.findChildrenOfType(myFixture.getFile(), PasNamedIdent.class);
         for (PascalNamedElement decl : decls) {
-            System.out.println(String.format("%s: %s", decl.getName(), ResolveUtil.getDeclarationTypeString(decl)));
+            System.out.println(String.format("%s: %s", decl.getName(), ResolveUtil.getDeclarationType(decl)));
         }
 
         for (PascalNamedElement decl : decls) {
-            Assert.assertEquals(exp.get(decl.getName()), ResolveUtil.getDeclarationTypeString(decl));
+            Pair<String, PasField.Kind> type = ResolveUtil.getDeclarationType(decl);
+            Assert.assertEquals(exp.get(decl.getName()), type != null ? type.first : null);
         }
     }
 }

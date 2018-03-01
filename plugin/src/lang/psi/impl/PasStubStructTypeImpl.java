@@ -13,7 +13,6 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
@@ -80,7 +79,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                 PasClassHelperDeclImpl.class, PasClassTypeDeclImpl.class, PasInterfaceTypeDeclImpl.class, PasObjectDeclImpl.class, PasRecordHelperDeclImpl.class, PasRecordDeclImpl.class);
     }
 
-//    @Override
+    @Override
     @Nullable
     @SuppressWarnings("unchecked")
     protected PsiElement getNameElement() {
@@ -289,48 +288,6 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             }
         }
 
-    }
-
-
-
-// Copied from PascalNamedElementImpl as we can't extend that class. TODO: Move to another place
-
-    private volatile String myCachedName;
-
-    @Override
-    public void subtreeChanged() {
-        super.subtreeChanged();
-        myCachedName = null;
-    }
-
-    @NotNull
-    @Override
-    synchronized public String getName() {
-        if ((myCachedName == null) || (myCachedName.length() == 0)) {
-            myCachedName = PascalNamedElementImpl.calcName(getNameElement());
-        }
-        return myCachedName;
-    }
-
-    @Override
-    public String getNamespace() {
-        return "";
-    }
-
-    @Override
-    public String getNamePart() {
-        return getName();
-    }
-
-    @Nullable
-    @Override
-    public PsiElement getNameIdentifier() {
-        return getNameElement();
-    }
-
-    @Override
-    public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
-        return null;
     }
 
 }

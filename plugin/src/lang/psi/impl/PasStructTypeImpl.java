@@ -42,6 +42,7 @@ import java.util.concurrent.Callable;
  * Author: George Bakhtadze
  * Date: 07/09/2013
  */
+@Deprecated // TODO: move all descendants to PasStubStructTypeImpl
 public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasEntityScope {
 
     public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
@@ -77,7 +78,7 @@ public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasE
                 PasClassHelperDeclImpl.class, PasClassTypeDeclImpl.class, PasInterfaceTypeDeclImpl.class, PasObjectDeclImpl.class, PasRecordHelperDeclImpl.class, PasRecordDeclImpl.class);
     }
 
-//    @Override
+    @Override
     @Nullable
     @SuppressWarnings("unchecked")
     protected PsiElement getNameElement() {

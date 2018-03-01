@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
-public class PascalClassDeclImpl extends PasStubStructTypeImpl<PascalClassDecl, PasClassDeclStub> implements PascalClassDecl {
+public abstract class PascalClassDeclImpl extends PasStubStructTypeImpl<PascalClassDecl, PasClassDeclStub> implements PascalClassDecl {
 
     public PascalClassDeclImpl(ASTNode node) {
         super(node);
