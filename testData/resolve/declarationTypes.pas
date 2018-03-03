@@ -11,10 +11,11 @@ var
   A: TA;
   B: TB;
   PB: ^TB;
-  AA : array[0..1] of TB;
+  AB : array[0..1] of TB;
   R: record
-    y: Integer;
+    y: integer;
   end;
+  AAA : array of array of TA;
 
 property PropA: TA;
 

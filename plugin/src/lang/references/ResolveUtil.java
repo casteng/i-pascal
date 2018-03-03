@@ -18,19 +18,27 @@ import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasArrayType;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasPointerType;
+import com.siberika.idea.pascal.lang.psi.PasProcedureType;
+import com.siberika.idea.pascal.lang.psi.PasSetType;
+import com.siberika.idea.pascal.lang.psi.PasStringType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
-import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeTypeDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasEnumTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PasFileTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasSubRangeTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
@@ -74,30 +82,66 @@ public class ResolveUtil {
         return modules;
     }
 
+    // retrieves type name and kind. Doesn't follow declaration recursively.
     @Nullable
-    public static Pair<String, PasField.Kind> getDeclarationType(@NotNull PascalNamedElement el) {
-        PasField.Kind kind = null;
-        PascalQualifiedIdent ident = null;
+    public static Pair<String, PasField.Kind> retrieveDeclarationType(@NotNull PascalNamedElement el) {
+        PasTypeDecl typeDecl = null;
+        PasTypeID typeId = null;
         if (PsiUtil.isVariableDecl(el) || PsiUtil.isFieldDecl(el) || PsiUtil.isPropertyDecl(el) || PsiUtil.isConstDecl(el)) {   // variable declaration case
-            PascalPsiElement varDecl = PsiTreeUtil.getNextSiblingOfType(el, PasTypeDecl.class);
-            if (null == varDecl) {
-                varDecl = PsiTreeUtil.getNextSiblingOfType(el, PasTypeID.class);
-            }
-            if (varDecl != null) {
-                ident = PsiTreeUtil.findChildOfType(varDecl, PascalQualifiedIdent.class, true);
+            typeDecl = PsiTreeUtil.getNextSiblingOfType(el, PasTypeDecl.class);
+            if (null == typeDecl) {
+                typeId = PsiTreeUtil.getNextSiblingOfType(el, PasTypeID.class);
             }
         } else if (el.getParent() instanceof PasGenericTypeIdent) {                                                             // type declaration case
             el = (PascalNamedElement) el.getParent();
-            PasTypeDecl res = PsiUtil.getTypeDeclaration(el);
-            if (res != null) {
-                PasTypeID typeId = PsiTreeUtil.findChildOfType(res, PasTypeID.class);
-                ident = typeId != null ? typeId.getFullyQualifiedIdent() : null;
-            }
-        } else if (el.getParent() instanceof PascalRoutine) {                                     // routine declaration case
-            PasTypeID type = ((PascalRoutine) el.getParent()).getFunctionTypeIdent();
-            ident = type != null ? type.getFullyQualifiedIdent() : null;
+            typeDecl = PsiUtil.getTypeDeclaration(el);
+        } else if (el.getParent() instanceof PascalRoutine) {                                                                   // routine declaration case
+            typeId = ((PascalRoutine) el.getParent()).getFunctionTypeIdent();
         }
-        return ident != null ? Pair.create(ident.getName(), kind) : null;
+        return retrieveType(typeDecl, typeId);
+    }
+
+    private static Pair<String, PasField.Kind> retrieveType(PasTypeDecl typeDecl, PasTypeID typeId) {
+        if ((null == typeId) && (typeDecl != null)) {
+            typeId = typeDecl.getTypeID();
+        }
+        if (typeId != null) {
+            return Pair.create(typeId.getFullyQualifiedIdent().getName(), PasField.Kind.TYPEREF);
+        } else if (typeDecl != null) {
+            return retrieveAnonymousType(typeDecl);
+        } else {
+            return null;
+        }
+    }
+
+    private static Pair<String, PasField.Kind> retrieveAnonymousType(PasTypeDecl typeDecl) {
+        PsiElement type = typeDecl.getFirstChild();
+        if (type.getClass() == PasClassTypeTypeDeclImpl.class) {
+            return Pair.create(((PasClassTypeTypeDeclImpl) type).getTypeID().getFullyQualifiedIdent().getName(), PasField.Kind.CLASSREF);
+        } else if (type instanceof PascalStructType) {
+            return Pair.create(null, PasField.Kind.STRUCT);
+        } else if (type instanceof PasArrayType) {
+            Pair<String, PasField.Kind> baseType = retrieveType(((PasArrayTypeImpl) type).getTypeDecl(), null);
+            return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.ARRAY);
+        } else if (type instanceof PasSetType) {
+            Pair<String, PasField.Kind> baseType = retrieveType(((PasSetType) type).getTypeDecl(), null);
+            return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.SET);
+        } else if (type.getClass() == PasFileTypeImpl.class) {
+            return Pair.create(null, PasField.Kind.STRUCT);
+        } else if (type instanceof PasPointerType) {
+            Pair<String, PasField.Kind> baseType = retrieveType(((PasPointerType) type).getTypeDecl(), null);
+            return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.POINTER);
+        } else if (type instanceof PasProcedureType) {
+            Pair<String, PasField.Kind> baseType = retrieveType(((PasProcedureType) type).getTypeDecl(), null);
+            return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.PROCEDURE);
+        } else if (type instanceof PasStringType) {
+            return Pair.create(null, PasField.Kind.STRING);
+        } else if (type.getClass() == PasEnumTypeImpl.class) {
+            return Pair.create(null, PasField.Kind.ENUM);
+        } else if (type.getClass() == PasSubRangeTypeImpl.class) {
+            return Pair.create(null, PasField.Kind.SUBRANGE);
+        }
+        return null;
     }
 
     @Nullable

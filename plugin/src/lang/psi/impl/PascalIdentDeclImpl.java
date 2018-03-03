@@ -60,7 +60,7 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
 
     synchronized private void ensureTypeResolved() {
         if (myCachedType == null) {
-            myCachedType = ResolveUtil.getDeclarationType(this);
+            myCachedType = ResolveUtil.retrieveDeclarationType(this);
         }
     }
 
