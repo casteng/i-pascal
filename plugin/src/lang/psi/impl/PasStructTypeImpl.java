@@ -43,7 +43,7 @@ import java.util.concurrent.Callable;
  * Date: 07/09/2013
  */
 @Deprecated // TODO: move all descendants to PasStubStructTypeImpl
-public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasEntityScope {
+public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PascalStructType, PasEntityScope {
 
     public static final Logger LOG = Logger.getInstance(PasStructTypeImpl.class.getName());
 
@@ -64,6 +64,12 @@ public abstract class PasStructTypeImpl extends PasStubScopeImpl implements PasE
         STR_TO_VIS.put("PUBLISHED", PasField.Visibility.PUBLISHED);
         STR_TO_VIS.put("AUTOMATED", PasField.Visibility.AUTOMATED);
         assert STR_TO_VIS.size() == PasField.Visibility.values().length;
+    }
+
+    @NotNull
+    @Override
+    public List<String> getParentNames() {
+        return Collections.emptyList();
     }
 
     public PasStructTypeImpl(ASTNode node) {

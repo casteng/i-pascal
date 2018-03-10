@@ -12,6 +12,7 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.stubs.IStubElementType;
+import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
@@ -27,11 +28,14 @@ import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import com.siberika.idea.pascal.lang.stub.PasNamedStub;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,8 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extends PasNamedStub<T>>
-        extends PascalStubStructTypeImpl<B> implements PasEntityScope {
+public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extends PasStructStub<T>>
+        extends PascalStubStructTypeImpl<B> implements PascalStructType {
 
     public static final Logger LOG = Logger.getInstance(PasStubStructTypeImpl.class.getName());
 
@@ -63,12 +67,33 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         assert STR_TO_VIS.size() == PasField.Visibility.values().length;
     }
 
+    private List<String> parentNames = null;
+
+    private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
+
     public PasStubStructTypeImpl(ASTNode node) {
         super(node);
     }
 
     public PasStubStructTypeImpl(final B stub, IStubElementType nodeType) {
         super(stub, nodeType);
+    }
+
+    @NotNull
+    @Override
+    synchronized public List<String> getParentNames() {
+        if (null == parentNames) {
+            PasClassParent classParent = getClassParent();
+            if (classParent != null) {
+                parentNames = new SmartList<>();
+                for (PasTypeID typeID : classParent.getTypeIDList()) {
+                    parentNames.add(typeID.getFullyQualifiedIdent().getName());
+                }
+            } else {
+                parentNames = Collections.emptyList();
+            }
+        }
+        return parentNames;
     }
 
     // Returns structured type owning the field
@@ -230,6 +255,10 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
+        List<SmartPsiElementPointer<PasEntityScope>> res = retrieveParentScopesStub();
+        if (res != null) {
+            return res;
+        }
         ensureChache(parentCache);
         try {
             return parentCache.get(getKey(), new ParentBuilder()).scopes;
@@ -244,8 +273,34 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         }
     }
 
-    public PasClassParent getClassParent() {
-        return null;
+    synchronized private List<SmartPsiElementPointer<PasEntityScope>> retrieveParentScopesStub() {
+        if (null == parentScopes) {
+            calcParentScopesStub();
+        }
+        return parentScopes;
+    }
+    private void calcParentScopesStub() {
+        // TODO: cache with validation
+        B stub = getStub();
+        if (stub != null) {
+            List<String> parentNames = stub.getParentNames();
+            parentScopes = new ArrayList<>(parentNames.size());
+            StubElement parentStub = stub.getParentStub();
+            PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
+            if (parEl instanceof PascalStructType) {
+                parentScopes.add(SmartPointerManager.createPointer((PasEntityScope) parEl));
+            }
+            for (String parentName : parentNames) {                            // TODO: +TObject
+                Collection<PasField> types = ResolveUtil.resolveWithStubs(NamespaceRec.fromFQN(this, "#" + parentName),
+                        new ResolveContext(this, PasField.TYPES_TYPE, true, null), 0);
+                for (PasField type : types) {
+                    PascalNamedElement el = type.getElement();
+                    if (el instanceof PasEntityScope) {
+                        parentScopes.add(SmartPointerManager.createPointer((PasEntityScope) el));
+                    }
+                }
+            }
+        }
     }
 
     private class ParentBuilder implements Callable<Parents> {

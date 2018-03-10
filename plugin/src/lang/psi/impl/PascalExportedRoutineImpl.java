@@ -2,8 +2,10 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
+import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -22,8 +24,6 @@ import java.util.List;
 public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExportedRoutineStub> implements PasDeclSection, PascalExportedRoutine {
 
     protected static final Logger LOG = Logger.getInstance(PascalExportedRoutineImpl.class);
-
-    private List<SmartPsiElementPointer<PasEntityScope>> parent = Collections.emptyList();
 
     private PasTypeID typeId;
 
@@ -115,8 +115,23 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-//        LOG.info("!!! getParentScope() for " + this.getName());
-        return parent;
+        List<PasEntityScope> res = calcParentScopesStub();
+        if (res != null) {
+            return PsiUtil.packSmartPointers(res);
+        }
+        return Collections.emptyList();
+    }
+
+    private List<PasEntityScope> calcParentScopesStub() {
+        PasExportedRoutineStub stub = getStub();
+        if (stub != null) {
+            StubElement parentStub = stub.getParentStub();
+            PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
+            if (parEl instanceof PasEntityScope) {
+                return Collections.singletonList((PasEntityScope) parEl);
+            }
+        }
+        return null;
     }
 
 }

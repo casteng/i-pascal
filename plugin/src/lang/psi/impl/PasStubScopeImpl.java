@@ -10,6 +10,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
+import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -197,6 +198,14 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     @Nullable
     @Override
     public PasEntityScope getContainingScope() {
+        B stub = getStub();
+        if (stub != null) {
+            StubElement parentStub = stub.getParentStub();
+            PsiElement parent = parentStub.getPsi();
+            if (parent instanceof PasEntityScope) {
+                return (PasEntityScope) parent;
+            }
+        }
         if (SyncUtil.tryLockQuiet(containingScopeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
                 if (null == containingScope) {

@@ -26,4 +26,7 @@ public interface PascalStructType extends PasEntityScope {
     List<PasTypeSection> getTypeSectionList();
     @NotNull
     List<PasExportedRoutine> getExportedRoutineList();
+
+    @NotNull
+    List<String> getParentNames();
 }

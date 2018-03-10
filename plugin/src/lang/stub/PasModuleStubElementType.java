@@ -7,6 +7,7 @@ import com.intellij.psi.stubs.IndexSink;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
+import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
@@ -57,8 +58,8 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
 
         dataStream.writeName(stub.getName());
         dataStream.writeName(stub.getModuleType().name());
-        StubUtil.writeStringSet(dataStream, stub.getUsedUnitsPublic());
-        StubUtil.writeStringSet(dataStream, stub.getUsedUnitsPrivate());
+        StubUtil.writeStringCollection(dataStream, stub.getUsedUnitsPublic());
+        StubUtil.writeStringCollection(dataStream, stub.getUsedUnitsPrivate());
     }
 
     @NotNull
@@ -66,8 +67,10 @@ public class PasModuleStubElementType extends ILightStubElementType<PasModuleStu
     public PasModuleStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
         String name = StubUtil.readName(dataStream);
         PascalModule.ModuleType type = StubUtil.readEnum(dataStream, PascalModule.ModuleType.class);
-        Set<String> usedUnitsPublic = StubUtil.readStringSet(dataStream);
-        Set<String> usedUnitsPrivate = StubUtil.readStringSet(dataStream);
+        Set<String> usedUnitsPublic = new SmartHashSet<>();
+        StubUtil.readStringCollection(dataStream, usedUnitsPublic);
+        Set<String> usedUnitsPrivate = new SmartHashSet<>();
+        StubUtil.readStringCollection(dataStream, usedUnitsPrivate);
         return new PasModuleStubImpl(parentStub, name, type, usedUnitsPublic, usedUnitsPrivate);
     }
 
