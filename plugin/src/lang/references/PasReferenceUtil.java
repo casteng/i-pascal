@@ -52,7 +52,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasPointerTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasProcedureTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSetTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStringTypeImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubRangeTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
@@ -262,7 +261,7 @@ public class PasReferenceUtil {
             } else if (type.getClass() == PasClassTypeTypeDeclImpl.class) {
                 kind = PasField.Kind.CLASSREF;
                 baseType = resolveTypeId(((PasClassTypeTypeDeclImpl) type).getTypeID(), includeLibrary, recursionCount);
-            } else if (type instanceof PasStructTypeImpl) {
+            } else if (type instanceof PascalStructType) {
                 kind = PasField.Kind.STRUCT;
             } else if (type.getClass() == PasArrayTypeImpl.class) {
                 kind = PasField.Kind.ARRAY;
@@ -302,6 +301,7 @@ public class PasReferenceUtil {
             try {
                 if (!field.isTypeResolved()) {
                     field.setValueType(resolveFieldType(field, true, recursionCount));
+                    field.getValueType().field = field;
                 }
                 if (field.getValueType() == PasField.VARIANT) {
                     return new PasVariantScope(field.getElement());
@@ -433,8 +433,8 @@ public class PasReferenceUtil {
                                 return result;
                             }
                             if (field.getValueType() != null) {
-                                SmartPsiElementPointer<PasTypeDecl> typePtr = field.getValueType().declaration;
-                                PasTypeDecl enumType = typePtr != null ? typePtr.getElement() : null;
+                                SmartPsiElementPointer<PsiElement> typePtr = field.getValueType().declaration;
+                                PsiElement enumType = typePtr != null ? typePtr.getElement() : null;
                                 PasEnumType enumDecl = enumType != null ? PsiTreeUtil.findChildOfType(enumType, PasEnumType.class) : null;
                                 if (enumDecl != null) {
                                     fqn.next();
@@ -462,9 +462,7 @@ public class PasReferenceUtil {
                     Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
                     if (fields != null) {
                         result.addAll(fields);
-                        return result;
-                    }
-                    for (PasField pasField : namespace.getAllFields()) {
+                    } else for (PasField pasField : namespace.getAllFields()) {
                         if (isFieldMatches(pasField, fqn, fieldTypes) &&
                                 !result.contains(pasField) &&
                                 isVisibleWithinUnit(pasField, fqn)) {

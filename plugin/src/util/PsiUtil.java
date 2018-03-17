@@ -10,6 +10,7 @@ import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
@@ -26,7 +27,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRefNamedIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PasStructTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasStubStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
@@ -455,7 +456,7 @@ public class PsiUtil {
 
     public static String getQualifiedMethodName(PsiNamedElement element) {
         if (PsiUtil.isStructureMember(element)) {
-            PascalStructType owner = PasStructTypeImpl.findOwnerStruct(element);
+            PascalStructType owner = PasStubStructTypeImpl.findOwnerStruct(element);
             if (null != owner) {
                 return getQualifiedMethodName(owner) + "." + element.getName();
             }
@@ -648,10 +649,20 @@ public class PsiUtil {
         return ind < 0 ? name : name.substring(0, ind);
     }
 
+    @Deprecated  // remove after finish with stubs
     public static <T extends PsiElement> Collection<T> extractSmartPointers(List<SmartPsiElementPointer<T>> smartPtrs) {
         Collection<T> res = new ArrayList<T>(smartPtrs.size());
         for (SmartPsiElementPointer<T> smartPtr : smartPtrs) {
             res.add(smartPtr.getElement());
+        }
+        return res;
+    }
+
+    @Deprecated  // remove after finish with stubs
+    public static <T extends PsiElement> List<SmartPsiElementPointer<T>> packSmartPointers(List<? extends T> elements) {
+        List<SmartPsiElementPointer<T>> res = new ArrayList<SmartPsiElementPointer<T>>(elements.size());
+        for (T element : elements) {
+            res.add(SmartPointerManager.createPointer(element));
         }
         return res;
     }

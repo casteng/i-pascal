@@ -175,6 +175,17 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         return STR_TO_VIS.get(sb.toString());
     }
 
+    @Override
+    public void subtreeChanged() {
+        super.subtreeChanged();
+        invalidateCached();
+    }
+
+    synchronized private void invalidateCached() {
+        parentNames = null;
+        parentScopes = null;
+    }
+
     public static void invalidate(String key) {
         cache.invalidate(key);
         parentCache.invalidate(key);
@@ -279,6 +290,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         }
         return parentScopes;
     }
+
     private void calcParentScopesStub() {
         // TODO: cache with validation
         B stub = getStub();

@@ -40,6 +40,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasFileTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubRangeTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
+import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.lang.stub.PascalModuleIndex;
@@ -52,6 +53,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -175,22 +177,39 @@ public class ResolveUtil {
         return null;
     }
 
-    private static PasField.ValueType resolveIdentDeclType(PascalIdentDecl element, ResolveContext context, int recursionCount) {
-        if (element.getStub().getType() == PasField.FieldType.TYPE) {
-            String type = element.getTypeString();
-            if (type != null) {
-//                ResolveContext typeResolveContext = new ResolveContext(PasField.TYPES_TYPE, context.includeLibrary);
-                Collection<PasField> types = resolveWithStubs(NamespaceRec.fromFQN(element, type), context, ++recursionCount);
-                if (!types.isEmpty()) {
-                    for (PasField pasField : types) {
-                        PascalNamedElement el = pasField.getElement();
-                        if (el instanceof PascalStructType) {
-                            return new PasField.ValueType(pasField, PasField.Kind.STRUCT, null, null);
-                        }
-                    }
-                }
-            }
+    private static PasField.ValueType resolveIdentDeclType(@NotNull PascalIdentDecl element, ResolveContext context, int recursionCount) {
+        if (recursionCount == 1) {
+            LOG.info("Resolving value type for " + element.getName());
+        }
+        PasIdentStub stub = element.getStub();
+        PsiElement scope = stub.getParentStub().getPsi();
+        if (!(scope instanceof PasEntityScope)) {
             return null;
+        }
+        ResolveContext typeResolveContext = new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null);
+        String type = element.getTypeString();
+        if ((type != null) && (element.getTypeKind() == PasField.Kind.TYPEREF)) {
+            Collection<PasField> types = resolveWithStubs(NamespaceRec.fromFQN(element, type), typeResolveContext, ++recursionCount);
+            Iterator<PasField> iterator = types.iterator();
+            if (iterator.hasNext()) {
+                PasField pasField = iterator.next();
+                PascalNamedElement el = pasField.getElement();
+                return el instanceof PascalIdentDecl ? resolveIdentDeclType((PascalIdentDecl) el, typeResolveContext, recursionCount) : null;
+            }
+        } else if (element.getTypeKind() == PasField.Kind.STRUCT) {  // TODO: handle other kinds
+            return retrieveStruct(element.getName(), element, typeResolveContext, ++recursionCount);
+        }
+        return null;
+    }
+
+    private static PasField.ValueType retrieveStruct(String type, PascalIdentDecl element, ResolveContext context, int recursionCount) {
+        Collection<PasField> structs = resolveWithStubs(NamespaceRec.fromFQN(element, "#" + type), context, recursionCount);
+        for (PasField struct : structs) {
+            PascalNamedElement st = struct.getElement();
+            if (st instanceof PasEntityScope) {
+                LOG.info("===*** resolved value type " + type + " to a structure via stubs");
+                return new PasField.ValueType(null, PasField.Kind.STRUCT, null, st);
+            }
         }
         return null;
     }
@@ -343,11 +362,11 @@ public class ResolveUtil {
         }
     }
 
-    private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @Nullable PascalStructType scope) {
+    private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @NotNull PascalStructType scope) {
         if ((null == namespaces) || (namespaces.size() > PasReferenceUtil.MAX_NAMESPACES)) {
             return;
         }
-        // TODO: add all parents and implemented interfaces scopes
+        namespaces.addAll(PsiUtil.extractSmartPointers(scope.getParentScope()));
     }
 
     public static boolean isStubPowered(PascalNamedElement element) {

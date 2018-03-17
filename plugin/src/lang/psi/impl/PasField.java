@@ -28,7 +28,7 @@ public class PasField {
 
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY, PSEUDO_VARIABLE}
 
-    public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY, VARIANT}
+    public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY, VARIANT, TYPEREF}
 
     public static final Set<FieldType> TYPES_ALL = Collections.unmodifiableSet(EnumSet.allOf(FieldType.class));
     public static final Set<FieldType> TYPES_LEFT_SIDE = Collections.unmodifiableSet(EnumSet.of(FieldType.UNIT, FieldType.VARIABLE, FieldType.PSEUDO_VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE));
@@ -250,9 +250,9 @@ public class PasField {
         // base type (TBaseType in TRefType = array of TBaseType)
         public ValueType baseType;
         // type declaration element
-        public SmartPsiElementPointer<PasTypeDecl> declaration;
+        public SmartPsiElementPointer<PsiElement> declaration;
 
-        public ValueType(PasField field, Kind kind, ValueType baseType, PasTypeDecl declaration) {
+        public ValueType(PasField field, Kind kind, ValueType baseType, PsiElement declaration) {
             this.field = field;
             this.kind = kind;
             this.baseType = baseType;
@@ -269,11 +269,15 @@ public class PasField {
         // Searches all type chain for structured type
         @Nullable
         public PasEntityScope getTypeScope() {  //TODO: resolve unresolved types
+            PsiElement el = declaration != null ? declaration.getElement() : null;
+            if (el instanceof PasEntityScope) {
+                return (PasEntityScope) el;
+            }
             ValueType type = this;
             while (type.baseType != null) {
                 type = type.baseType;
             }
-            PasTypeDecl typeDecl = type.declaration != null ? type.declaration.getElement() : null;
+            PasTypeDecl typeDecl = type.declaration != null ? (PasTypeDecl) type.declaration.getElement() : null;
             if ((typeDecl != null) && (typeDecl.getFirstChild() instanceof PasEntityScope)) {
                 return (PasEntityScope) typeDecl.getFirstChild();
             }

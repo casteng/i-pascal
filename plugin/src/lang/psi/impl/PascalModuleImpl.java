@@ -55,8 +55,8 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
     private final Callable<? extends Members> PUBLIC_BUILDER = this.new PublicBuilder();
     private final Callable<Idents> IDENTS_BUILDER = this.new IdentsBuilder();
 
-    private Set<String> usedUnitsPublic = new SmartHashSet<>();
-    private Set<String> usedUnitsPrivate = new SmartHashSet<>();
+    private Set<String> usedUnitsPublic = null;
+    private Set<String> usedUnitsPrivate = null;
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -213,6 +213,7 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
     @Override
     synchronized public Set<String> getUsedUnitsPublic() {
         if (null == usedUnitsPublic) {
+            usedUnitsPublic = new SmartHashSet<>();
             for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceSection(this))) {
                 usedUnitsPublic.add(ident.getName());
             }
@@ -224,6 +225,7 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
     @Override
     synchronized public Set<String> getUsedUnitsPrivate() {
         if (null == usedUnitsPrivate) {
+            usedUnitsPrivate = new SmartHashSet<>();
             for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationSection(this))) {
                 usedUnitsPrivate.add(ident.getName());
             }

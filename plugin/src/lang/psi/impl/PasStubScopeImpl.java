@@ -102,7 +102,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     public void invalidateCaches(String key) {
         PascalModuleImpl.invalidate(key);
         PascalRoutineImpl.invalidate(key);
-        PasStructTypeImpl.invalidate(key);
+        PasStubStructTypeImpl.invalidate(key);
         containingScope = null;
         cachedKey = null;
     }
