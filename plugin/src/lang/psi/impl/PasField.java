@@ -127,7 +127,7 @@ public class PasField {
     public PasField(PasNamedStub stub) {
         this(getScope(stub),
                 stub.getPsi() instanceof PascalNamedElement ? (PascalNamedElement) stub.getPsi() : null,
-                stub.getName(), stub.getType(), Visibility.PUBLIC, stub.getPsi(), null);
+                stub.getName(), stub.getType(), Visibility.PUBLIC, stub.getPsi(), NOT_INITIALIZED);
     }
 
     private static PasEntityScope getScope(PasNamedStub stub) {
@@ -277,7 +277,11 @@ public class PasField {
             while (type.baseType != null) {
                 type = type.baseType;
             }
-            PasTypeDecl typeDecl = type.declaration != null ? (PasTypeDecl) type.declaration.getElement() : null;
+            PsiElement declEl = type.declaration != null ? type.declaration.getElement() : null;
+            if (declEl instanceof PasEntityScope) {
+                return (PasEntityScope) declEl;
+            }
+            PasTypeDecl typeDecl = declEl instanceof PasTypeDecl ? (PasTypeDecl) declEl : null;
             if ((typeDecl != null) && (typeDecl.getFirstChild() instanceof PasEntityScope)) {
                 return (PasEntityScope) typeDecl.getFirstChild();
             }
@@ -291,7 +295,7 @@ public class PasField {
             while (type.baseType != null) {
                 type = type.baseType;
             }
-            PascalNamedElement el = type.field.getElement();
+            PsiElement el = type.declaration != null ? type.declaration.getElement() : null;
             return el instanceof PasEntityScope ? (PasEntityScope) el : null;
         }
 

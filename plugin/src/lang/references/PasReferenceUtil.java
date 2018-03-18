@@ -301,7 +301,6 @@ public class PasReferenceUtil {
             try {
                 if (!field.isTypeResolved()) {
                     field.setValueType(resolveFieldType(field, true, recursionCount));
-                    field.getValueType().field = field;
                 }
                 if (field.getValueType() == PasField.VARIANT) {
                     return new PasVariantScope(field.getElement());

@@ -28,6 +28,7 @@ import com.siberika.idea.pascal.lang.psi.PasSetType;
 import com.siberika.idea.pascal.lang.psi.PasStringType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -40,6 +41,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasFileTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubRangeTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
+import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
@@ -60,6 +62,8 @@ import java.util.Set;
 public class ResolveUtil {
 
     private static final Logger LOG = Logger.getInstance(ResolveUtil.class);
+
+    private static final Set<PasField.Kind> KINDS_FOLLOW_TYPE = EnumSet.of(PasField.Kind.TYPEREF, PasField.Kind.ARRAY, PasField.Kind.POINTER, PasField.Kind.CLASSREF, PasField.Kind.PROCEDURE);
 
     // Find Pascal modules by key using stub index. If key is not specified return all modules.
     @NotNull
@@ -154,8 +158,10 @@ public class ResolveUtil {
                     PascalNamedElement el = field.getElement();
                     if ((el instanceof StubBasedPsiElementBase) && (((StubBasedPsiElementBase) el).getStub() != null)) {
                         PasField.ValueType valueType = resolveTypeWithStub((StubBasedPsiElementBase) el, context, recursionCount);
-                        valueType.field = field;
-                        field.setValueType(valueType);
+                        if (valueType != null) {
+                            valueType.field = field;
+                            field.setValueType(valueType);
+                        }
                     }
                 }
                 if (field.getValueType() == PasField.VARIANT) {
@@ -171,16 +177,28 @@ public class ResolveUtil {
     }
 
     public static PasField.ValueType resolveTypeWithStub(StubBasedPsiElementBase element, ResolveContext context, int recursionCount) {
+        if (recursionCount == 1) {
+            LOG.info("Resolving value type for " + element.getName());
+        }
         if (element instanceof PascalIdentDecl) {
             return resolveIdentDeclType((PascalIdentDecl) element, context, recursionCount);
+        } if (element instanceof PascalExportedRoutine) {
+            return resolveRoutineType((PascalExportedRoutine) element, context, recursionCount);
         }
         return null;
     }
 
-    private static PasField.ValueType resolveIdentDeclType(@NotNull PascalIdentDecl element, ResolveContext context, int recursionCount) {
-        if (recursionCount == 1) {
-            LOG.info("Resolving value type for " + element.getName());
+    private static PasField.ValueType resolveRoutineType(PascalExportedRoutine element, ResolveContext context, int recursionCount) {
+        PasExportedRoutineStub stub = element.getStub();
+        PsiElement scope = stub.getParentStub().getPsi();
+        if (!(scope instanceof PasEntityScope)) {
+            return null;
         }
+        String type = element.getFunctionTypeStr();
+        return resolveTypeForStub(type, element, new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null), recursionCount);
+    }
+
+    private static PasField.ValueType resolveIdentDeclType(@NotNull PascalIdentDecl element, ResolveContext context, int recursionCount) {
         PasIdentStub stub = element.getStub();
         PsiElement scope = stub.getParentStub().getPsi();
         if (!(scope instanceof PasEntityScope)) {
@@ -188,16 +206,21 @@ public class ResolveUtil {
         }
         ResolveContext typeResolveContext = new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null);
         String type = element.getTypeString();
-        if ((type != null) && (element.getTypeKind() == PasField.Kind.TYPEREF)) {
-            Collection<PasField> types = resolveWithStubs(NamespaceRec.fromFQN(element, type), typeResolveContext, ++recursionCount);
-            Iterator<PasField> iterator = types.iterator();
-            if (iterator.hasNext()) {
-                PasField pasField = iterator.next();
-                PascalNamedElement el = pasField.getElement();
-                return el instanceof PascalIdentDecl ? resolveIdentDeclType((PascalIdentDecl) el, typeResolveContext, recursionCount) : null;
-            }
-        } else if (element.getTypeKind() == PasField.Kind.STRUCT) {  // TODO: handle other kinds
+        if ((type != null) && KINDS_FOLLOW_TYPE.contains(element.getTypeKind())) {
+            return resolveTypeForStub(type, element, typeResolveContext, recursionCount);
+        } else if (element.getTypeKind() == PasField.Kind.STRUCT) {
             return retrieveStruct(element.getName(), element, typeResolveContext, ++recursionCount);
+        }
+        return null;
+    }
+
+    private static PasField.ValueType resolveTypeForStub(String type, PsiElement element, ResolveContext context, int recursionCount) {
+        Collection<PasField> types = resolveWithStubs(NamespaceRec.fromFQN(element, type), context, ++recursionCount);
+        Iterator<PasField> iterator = types.iterator();
+        if (iterator.hasNext()) {
+            PasField pasField = iterator.next();
+            PascalNamedElement el = pasField.getElement();
+            return el instanceof PascalIdentDecl ? resolveIdentDeclType((PascalIdentDecl) el, context, recursionCount) : null;
         }
         return null;
     }
