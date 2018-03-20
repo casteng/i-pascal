@@ -41,4 +41,7 @@ public interface PasEntityScope extends PascalNamedElement, NavigatablePsiElemen
 
     String getKey();
 
+    // Name qualified with container unique name
+    String getUniqueName();
+
 }

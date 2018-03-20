@@ -4,11 +4,12 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
-import com.intellij.util.IncorrectOperationException;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.lang.stub.PasIdentStubElementType;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,6 +65,11 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         }
     }
 
+    protected String calcUniqueName() {
+        PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);
+        return (scope != null ? scope.getUniqueName() + "." : "") + PsiUtil.getFieldName(this);
+    }
+
     // From PascalNamedElementImpl
     private String myCachedName;
 
@@ -102,11 +108,6 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     @Override
     public PsiElement getNameIdentifier() {
         return getNameElement();
-    }
-
-    @Override
-    public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
-        return null;                        //TODO: implement?
     }
 
 }

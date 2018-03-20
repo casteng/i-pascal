@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 public class PasIdentStubImpl extends StubBase<PascalIdentDecl> implements PasIdentStub {
 
     private String name;
+    private String uniqueName;
     private PasField.FieldType kind;
     private String typeString;
     private PasField.Kind typeKind;
@@ -16,6 +17,7 @@ public class PasIdentStubImpl extends StubBase<PascalIdentDecl> implements PasId
     public PasIdentStubImpl(StubElement parent, String name, PasField.FieldType kind, String typeString, PasField.Kind typeKind) {
         super(parent, PasIdentStubElementType.INSTANCE);
         this.name = name;
+        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + name;
         this.kind = kind;
         this.typeString = typeString;
         this.typeKind = typeKind;
@@ -29,6 +31,11 @@ public class PasIdentStubImpl extends StubBase<PascalIdentDecl> implements PasId
     @Override
     public PasField.FieldType getType() {
         return kind;
+    }
+
+    @Override
+    public String getUniqueName() {
+        return uniqueName;
     }
 
     @Nullable

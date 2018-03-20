@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
  */
 public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> implements PasExportedRoutineStub {
     private String name;
+    private String uniqueName;
     private String canonicalName;
     private PasField.Visibility visibility;
     private boolean constructor;
@@ -21,6 +22,7 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
                                       boolean constructor, boolean function, String functionTypeStr) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE);
         this.name = name;
+        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + name;
         this.canonicalName = canonicalName;
         this.visibility = visibility;
         this.constructor = constructor;
@@ -36,6 +38,11 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
     @Override
     public PasField.FieldType getType() {
         return PasField.FieldType.ROUTINE;
+    }
+
+    @Override
+    public String getUniqueName() {
+        return uniqueName;
     }
 
     @Override

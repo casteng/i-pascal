@@ -14,7 +14,7 @@ import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalNamedElement {
+public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalNamedElement {
 
     public PascalNamedStubElement(ASTNode node) {
         super(node);
@@ -24,8 +24,9 @@ public class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsi
         super(stub, nodeType);
     }
 
+    private String myCachedUniqueName;
+    
     // Copied from PascalNamedElementImpl as we can't extend that class.
-
     private String myCachedName;
 
     @Override
@@ -33,6 +34,7 @@ public class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsi
         super.subtreeChanged();
         synchronized (this) {
             myCachedName = null;
+            myCachedUniqueName = null;
         }
     }
 
@@ -65,6 +67,22 @@ public class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsi
         return pos >= 0 ? name.substring(pos + 1) : name;
     }
 
+    // Name qualified with container names
+    public String getUniqueName() {
+        B stub = getStub();
+        if (stub != null) {
+            return stub.getUniqueName();
+        }
+        synchronized (this) {
+            if ((myCachedUniqueName == null) || (myCachedUniqueName.length() == 0)) {
+                myCachedUniqueName = calcUniqueName();
+            }
+            return myCachedUniqueName;
+        }
+    }
+
+    protected abstract String calcUniqueName();
+
     @Nullable
     @Override
     public PsiElement getNameIdentifier() {
@@ -73,7 +91,11 @@ public class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsi
 
     @Override
     public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
-        return null;
+        PsiElement element = getNameElement();
+        if (element != null) {
+            element.replace(PasElementFactory.createLeafFromText(getProject(), name));
+        }
+        return this;
     }
 
     @Nullable

@@ -41,6 +41,8 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     protected static final Logger LOG = Logger.getInstance(PasScopeImpl.class.getName());
     protected static final Members EMPTY_MEMBERS = new Members();
 
+    private String myCachedUniqueName;
+
     volatile protected boolean building = false;
     volatile protected String cachedKey;
 
@@ -52,6 +54,21 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     public PasScopeImpl(ASTNode node) {
         super(node);
+    }
+
+    @Override
+    public String getUniqueName() {
+        synchronized (this) {
+            if ((myCachedUniqueName == null) || (myCachedUniqueName.length() == 0)) {
+                myCachedUniqueName = calcUniqueName();
+            }
+            return myCachedUniqueName;
+        }
+    }
+
+    private String calcUniqueName() {
+        PasEntityScope scope = getContainingScope();
+        return (scope != null ? scope.getUniqueName() + "." : "") + PsiUtil.getFieldName(this);
     }
 
     public final String getKey() {

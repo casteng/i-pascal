@@ -67,6 +67,12 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
         return stub != null ? stub : getGreenStub();
     }
 
+    @Override
+    protected String calcUniqueName() {
+        PasEntityScope scope = getContainingScope();
+        return (scope != null ? scope.getUniqueName() + "." : "") + PsiUtil.getFieldName(this);
+    }
+
     public final String getKey() {
         String key = cachedKey;
         if (null == key) {

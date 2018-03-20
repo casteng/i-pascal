@@ -9,6 +9,7 @@ import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 
 import java.util.Collection;
 
+// TODO: merge with PasStubStructTypeImpl
 public abstract class PascalStubStructTypeImpl<B extends PasNamedStub<? extends PascalStructType>> extends PasStubScopeImpl<B> {
     public PascalStubStructTypeImpl(ASTNode node) {
         super(node);

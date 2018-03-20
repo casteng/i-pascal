@@ -67,6 +67,11 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
     }
 
     @Override
+    protected String calcUniqueName() {
+        return getName();
+    }
+
+    @Override
     protected String calcKey() {
         return PsiUtil.getContainingFilePath(this);
     }
