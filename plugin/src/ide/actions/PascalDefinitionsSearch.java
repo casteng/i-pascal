@@ -1,23 +1,36 @@
 package com.siberika.idea.pascal.ide.actions;
 
+import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.openapi.application.QueryExecutorBase;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.DefinitionsScopedSearch;
-import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.stub.PascalStructIndex;
+import com.siberika.idea.pascal.lang.stub.StubUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * Author: George Bakhtadze
@@ -80,24 +93,60 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
             return;
         }
         if (rCnt > MAX_RECURSION) {
-            LOG.error("Max recursion reached");
+            LOG.info("ERROR: Max recursion reached");
             return;
         }
         if ((null == struct) || (null == struct.getNameIdentifier())) {
             return;
         }
-        for (PsiReference psiReference : ReferencesSearch.search(struct.getNameIdentifier())) {
-            if ((limit != null) && (limit <= targets.size())) {
-                return;
-            }
-            if (PsiUtil.isClassParent(psiReference.getElement())) {
-                struct = PsiUtil.getStructByElement(psiReference.getElement());
-                if (PsiUtil.isElementUsable(struct)) {
-                    targets.add(struct);
-                    findDescendingStructs(targets, struct, GotoSuper.calcRemainingLimit(targets, limit), rCnt + 1);
+
+        final String name = struct.getName().replaceAll(ResolveUtil.STRUCT_SUFFIX, "");
+        final Project project = struct.getProject();
+
+        StubIndex index = StubIndex.getInstance();
+
+        index.processAllKeys(PascalStructIndex.KEY, struct.getProject(), new Processor<String>() {
+                    @Override
+                    public boolean process(String s) {
+                        index.processElements(PascalStructIndex.KEY, s, project, GlobalSearchScope.projectScope(project), PascalStructType.class, new Processor<PascalStructType>() {
+                            @Override
+                            public boolean process(PascalStructType type) {
+                                List<String> parents = type.getParentNames();
+                                for (String parent : parents) {
+                                    if (parent.endsWith(name)) {
+                                        PasEntityScope resolved = resolveParent(struct, type, parent);
+                                        if (PsiManager.getInstance(project).areElementsEquivalent(struct, resolved)) {
+                                            targets.add(type);
+                                            findDescendingStructs(targets, type, GotoSuper.calcRemainingLimit(targets, limit), rCnt + 1);
+                                        }
+                                    }
+                                }
+                                return true;
+                            }
+                        });
+                        return ((null == limit) || (limit > targets.size()));
+                    }
+                }
+        );
+    }
+
+    private static PasEntityScope resolveParent(PascalStructType parent, PascalStructType descendant, String name) {
+        ResolveContext ctx = new ResolveContext(descendant, PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null);
+        NamespaceRec rec = NamespaceRec.fromFQN(descendant, name);
+        Collection<PasField> fields = PasReferenceUtil.resolve(rec, ctx, 0);
+        for (PasField field : fields) {
+            PascalNamedElement el = field.getElement();
+            if (el instanceof PasGenericTypeIdent) {
+                return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(el, name), PsiUtil.isFromLibrary(parent));
+            } else if (ResolveUtil.isStubPowered(el)) {          // not tested
+                ctx = new ResolveContext(StubUtil.retrieveScope((StubBasedPsiElementBase) el), PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null);
+                PasField.ValueType types = ResolveUtil.resolveTypeWithStub((StubBasedPsiElementBase) el, ctx, 0);
+                if (types != null) {
+                    return types.getTypeScopeStub();
                 }
             }
         }
+        return null;
     }
 
 }
