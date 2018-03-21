@@ -24,7 +24,7 @@ public interface PasEntityScope extends PascalNamedElement, NavigatablePsiElemen
     @NotNull
     Collection<PasField> getAllFields();
 
-    // owning class for methods, parent classes/interfaces for structured types
+    // owning class for methods, parent classes/interfaces for structured types //TODO: use Set
     @NotNull
     List<SmartPsiElementPointer<PasEntityScope>> getParentScope();
 

@@ -77,6 +77,6 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
 
     @Override
     public void indexStub(@NotNull PasExportedRoutineStub stub, @NotNull IndexSink sink) {
-//        System.out.println("PasRoutineStubElementType.indexStub");
+        sink.occurrence(PascalSymbolIndex.KEY, stub.getName());
     }
 }

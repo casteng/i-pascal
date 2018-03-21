@@ -305,7 +305,7 @@
     ]]></change-notes>
 
     <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
-    <idea-version since-build="133.0"/>
+    <idea-version since-build="134.1050"/>
 
     <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
          on how to target different products -->
@@ -404,6 +404,8 @@
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
         <fileType.fileViewProviderFactory filetype="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
 
+        <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.ClassFileDecompiler"/>-->
+
         <lang.importOptimizer language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalImportOptimizer"/>
 
         <compiler.task implementation="com.siberika.idea.pascal.compiler.Task"/>
@@ -429,6 +431,7 @@
         <stubElementTypeHolder class="com.siberika.idea.pascal.lang.psi.PasTypes"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalModuleIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalStructIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalSymbolIndex"/>
 
     </extensions>
 </idea-plugin>

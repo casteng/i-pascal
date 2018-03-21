@@ -68,6 +68,6 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
 
     @Override
     public void indexStub(@NotNull PasIdentStub stub, @NotNull IndexSink sink) {
-        //System.out.println("PasIdentStubElementType.indexStub");
+        sink.occurrence(PascalSymbolIndex.KEY, stub.getName());
     }
 }
