@@ -20,6 +20,7 @@ import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClosureExpr;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
@@ -27,6 +28,7 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -49,11 +51,9 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 /**
@@ -69,10 +69,15 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {
         PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
-        String filename = "<unknown>";
         if ((file != null) && (file.getVirtualFile() != null)) {
-            //System.out.println("Parse: " + file.getVirtualFile().getName());
-            filename = file.getName();
+            /*try {
+                String name = file.getVirtualFile().getName();
+                if (!name.startsWith("test") && !name.startsWith("$")) {
+                    throw new PascalRTException("===*** Parse: " + name);
+                }
+            } catch (PascalRTException e) {
+                e.printStackTrace();
+            }*/
         }
         //builder_.setDebugMode(true);
         ErrorState state = ErrorState.get(builder_);
@@ -125,12 +130,6 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             }
         }, PascalStructType.class);
         return new ArrayList<PascalNamedElement>(result);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Collection<PascalNamedElement> findTypes(PsiElement element, final String key) {
-        Collection<PascalNamedElement> result = retrieveSortedVisibleEntitiesDecl(element, key, PasGenericTypeIdent.class);
-        return result;
     }
 
     private static boolean isSameAffectingScope(PsiElement innerSection, PsiElement outerSection) {
@@ -228,31 +227,6 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return null;
     }
 
-    /**
-     * Returns list of entities matching the specified key and classes which may be visible from the element
-     * @param element - element which should be affected by returned named entities
-     * @param key - key which should match entities names
-     * @param classes - classes of entities to retrieve
-     * @return list of entities sorted in such a way that entity nearest to element comes first
-     */
-    private static <T extends PascalNamedElement> Collection<PascalNamedElement> retrieveSortedVisibleEntitiesDecl(PsiElement element, String key, Class<? extends T>... classes) {
-        Collection<PascalNamedElement> result = new TreeSet<PascalNamedElement>(new Comparator<PascalNamedElement>() {
-            @Override
-            public int compare(PascalNamedElement o1, PascalNamedElement o2) {
-                return o2.getTextRange().getStartOffset() - o1.getTextRange().getStartOffset();
-            }
-        });
-        if (null == element.getContainingFile()) {
-            return result;
-        }
-        int offset = element.getTextRange().getStartOffset();
-        if (PsiUtil.allowsForwardReference(element)) {
-            offset = element.getContainingFile().getTextLength();
-        }
-        result.addAll(retrieveEntitiesFromSection(PsiUtil.getNearestAffectingDeclarationsRoot(element), key, offset, classes));
-        return result;
-    }
-
     @NotNull
     private static <T extends PascalNamedElement> Collection<PascalNamedElement> retrieveEntitiesFromSection(PsiElement section, String key, int maxOffset, Class<? extends T>...classes) {
         final Set<PascalNamedElement> result = new LinkedHashSet<PascalNamedElement>();
@@ -290,7 +264,28 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             @Nullable
             @Override
             public Icon getIcon(boolean unused) {
-                return PascalIcons.GENERAL;
+                if (element instanceof PasClassTypeDecl) {
+                    return PascalIcons.CLASS;
+                } else if (element instanceof PasRecordDecl) {
+                    return PascalIcons.RECORD;
+                } else if (element instanceof PasInterfaceTypeDecl) {
+                    return PascalIcons.INTERFACE;
+                } else if (element instanceof PasObjectDecl) {
+                    return PascalIcons.OBJECT;
+                } else if (element instanceof PascalRoutine) {
+                    return PascalIcons.ROUTINE;
+                } else if (element instanceof PasGenericTypeIdent) {
+                    return PascalIcons.TYPE;
+                } else if (element instanceof PasConstDeclaration) {
+                    return PascalIcons.CONSTANT;
+                } else if (element instanceof PasClassProperty) {
+                    return PascalIcons.PROPERTY;
+                } else if (element instanceof PasModule) {
+                    return PascalIcons.UNIT;
+                } else {
+                    return PascalIcons.GENERAL;
+                }
+
             }
         };
     }

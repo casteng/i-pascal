@@ -2,10 +2,12 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.lang.ASTNode;
+import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -28,6 +30,11 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     
     // Copied from PascalNamedElementImpl as we can't extend that class.
     private String myCachedName;
+
+    @Override
+    public ItemPresentation getPresentation() {
+        return PascalParserUtil.getPresentation(this);
+    }
 
     @Override
     public void subtreeChanged() {

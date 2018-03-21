@@ -13,7 +13,6 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -55,12 +54,10 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @Override
     protected String calcKey() {
         StringBuilder sb = new StringBuilder(PsiUtil.getFieldName(this));
-        sb.append(PsiUtil.isForwardProc(this) ? "-fwd" : "");
-        if (this instanceof PasExportedRoutine) {
-            sb.append("^intf");
-        } else {
-            sb.append("^impl");
+        if (PsiUtil.isForwardProc(this)) {
+            sb.append("(fwd)");
         }
+        sb.append("(impl)");
 
         PasEntityScope scope = this.getContainingScope();
         sb.append(scope != null ? "." + scope.getKey() : "");

@@ -15,8 +15,8 @@ public class PasStructStubImpl<T extends PascalStructType> extends StubBase<T> i
     private String uniqueName;
     private List<String> parentNames;
 
-    public PasStructStubImpl(StubElement parent, String name, List<String> parentNames) {
-        super(parent, PasClassDeclStubElementType.INSTANCE);
+    public PasStructStubImpl(StubElement parent, String name, List<String> parentNames, PasStructDeclStubElementType elementType) {
+        super(parent, elementType);
         this.name = name;
         this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + name;
         this.parentNames = parentNames;

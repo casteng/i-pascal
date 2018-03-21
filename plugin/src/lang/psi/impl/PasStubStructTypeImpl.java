@@ -82,6 +82,10 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @NotNull
     @Override
     synchronized public List<String> getParentNames() {
+        B stub = getStub();
+        if (stub != null) {
+            return stub.getParentNames();
+        }
         if (null == parentNames) {
             PasClassParent classParent = getClassParent();
             if (classParent != null) {
@@ -296,14 +300,16 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         B stub = getStub();
         if (stub != null) {
             List<String> parentNames = stub.getParentNames();
-            parentScopes = new ArrayList<>(parentNames.size());
             StubElement parentStub = stub.getParentStub();
             PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
             if (parEl instanceof PascalStructType) {
+                parentScopes = ((PascalStructType) parEl).getParentScope();
                 parentScopes.add(SmartPointerManager.createPointer((PasEntityScope) parEl));
+            } else {
+                parentScopes = new ArrayList<>(parentNames.size() + 1);
             }
             for (String parentName : parentNames) {                            // TODO: +TObject
-                Collection<PasField> types = ResolveUtil.resolveWithStubs(NamespaceRec.fromFQN(this, "#" + parentName),
+                Collection<PasField> types = ResolveUtil.resolveWithStubs(NamespaceRec.fromFQN(this, parentName + ResolveUtil.STRUCT_SUFFIX),
                         new ResolveContext(this, PasField.TYPES_TYPE, true, null), 0);
                 for (PasField type : types) {
                     PascalNamedElement el = type.getElement();

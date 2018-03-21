@@ -106,7 +106,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     public void invalidateCaches(String key) {
         PascalModuleImpl.invalidate(key);
         PascalRoutineImpl.invalidate(key);
-        PasStructTypeImpl.invalidate(key);
+        PasStubStructTypeImpl.invalidate(key);
         containingScope = null;
         cachedKey = null;
     }

@@ -62,6 +62,8 @@ import java.util.Set;
 public class ResolveUtil {
 
     private static final Logger LOG = Logger.getInstance(ResolveUtil.class);
+    
+    public static final String STRUCT_SUFFIX = "#";
 
     private static final Set<PasField.Kind> KINDS_FOLLOW_TYPE = EnumSet.of(PasField.Kind.TYPEREF, PasField.Kind.ARRAY, PasField.Kind.POINTER, PasField.Kind.CLASSREF, PasField.Kind.PROCEDURE);
 
@@ -226,7 +228,7 @@ public class ResolveUtil {
     }
 
     private static PasField.ValueType retrieveStruct(String type, PascalIdentDecl element, ResolveContext context, int recursionCount) {
-        Collection<PasField> structs = resolveWithStubs(NamespaceRec.fromFQN(element, "#" + type), context, recursionCount);
+        Collection<PasField> structs = resolveWithStubs(NamespaceRec.fromFQN(element, type + STRUCT_SUFFIX), context, recursionCount);
         for (PasField struct : structs) {
             PascalNamedElement st = struct.getElement();
             if (st instanceof PasEntityScope) {
