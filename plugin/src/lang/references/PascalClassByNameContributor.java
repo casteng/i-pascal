@@ -40,7 +40,7 @@ public class PascalClassByNameContributor implements ChooseByNameContributor {
         return includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
     }
 
-    static String keyToName(String key) {
+    private static String keyToName(String key) {
         int ind = key.indexOf('.');
         return key.substring(ind + 1).replaceAll("#", "");
     }
@@ -49,7 +49,7 @@ public class PascalClassByNameContributor implements ChooseByNameContributor {
     @Override
     public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
         Collection<PascalNamedElement> items = new SmartHashSet<>();
-        final Pattern p = Pattern.compile("\\w*" + pattern + "\\w*");
+        final Pattern p = Pattern.compile("(?i)\\w*" + pattern + "\\w*");
 
         StubIndex.getInstance().processAllKeys(PascalStructIndex.KEY, new Processor<String>() {
             @Override

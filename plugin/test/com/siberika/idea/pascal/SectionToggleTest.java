@@ -3,12 +3,12 @@ package com.siberika.idea.pascal;
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
-import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDeclNested1;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.util.TestUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +40,7 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
 
     private List<PascalNamedElement> retrieveSymbols(String filename) {
         myFixture.configureByFiles(filename);
-        List<PascalNamedElement> symbols = new ArrayList<PascalNamedElement>(PascalParserUtil.findSymbols(myFixture.getProject(), ""));
+        List<PascalNamedElement> symbols = new ArrayList<PascalNamedElement>(TestUtil.findSymbols(myFixture.getProject(), ""));
         Collections.sort(symbols, new Comparator<PascalNamedElement>() {
             @Override
             public int compare(PascalNamedElement o1, PascalNamedElement o2) {

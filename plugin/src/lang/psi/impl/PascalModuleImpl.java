@@ -25,6 +25,7 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -68,7 +69,8 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
 
     @Override
     protected String calcUniqueName() {
-        return getName();
+        String result = getName();
+        return StringUtils.isNotEmpty(result) ? result : getContainingFile().getName();
     }
 
     @Override

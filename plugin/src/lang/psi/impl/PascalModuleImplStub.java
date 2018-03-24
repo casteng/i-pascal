@@ -26,6 +26,9 @@ public abstract class PascalModuleImplStub extends PasStubScopeImpl<PasModuleStu
                 return new PasField((PasNamedStub) stubElement);
             }
         }
+        if (getName().equalsIgnoreCase(name)) {
+            return new PasField(this.getStub());
+        }
         return null;
     }
 

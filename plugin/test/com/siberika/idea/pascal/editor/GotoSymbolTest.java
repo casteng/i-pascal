@@ -4,7 +4,6 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
-import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -46,7 +45,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testFindSymbol() {
         myFixture.configureByFiles("gotoSymbolTest.pas");
-        Collection<PascalNamedElement> symbols = PascalParserUtil.findSymbols(myFixture.getProject(), "");
+        Collection<PascalNamedElement> symbols = TestUtil.findSymbols(myFixture.getProject(), "");
         Set<String> names = new HashSet<String>(symbols.size());
         for (PascalNamedElement symbol : symbols) {
             names.add(symbol.getName());
@@ -69,7 +68,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
         names.put("testB", "testB(type1)");
         names.put("testC", "testC()");
         myFixture.configureByFiles("normalizeRoutineName.pas");
-        Collection<PascalRoutine> symbols = PascalParserUtil.findSymbols(myFixture.getProject(), "test", PascalRoutine.class);
+        Collection<PascalRoutine> symbols = TestUtil.findSymbols(myFixture.getProject(), "test", PascalRoutine.class);
         assertEquals("Wrong number of routines", names.size(), symbols.size());
         for (PascalNamedElement symbol : symbols) {
             if (symbol instanceof PascalRoutine) {

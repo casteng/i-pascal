@@ -7,18 +7,13 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
-import com.intellij.psi.search.FileTypeIndex;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.indexing.FileBasedIndex;
-import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.PascalRTException;
+import com.siberika.idea.pascal.lang.compiled.CompiledFileImpl;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
@@ -37,10 +32,8 @@ import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
-import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -48,13 +41,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -70,66 +60,20 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {
         PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
         if ((file != null) && (file.getVirtualFile() != null)) {
-            /*try {
+            try {
                 String name = file.getVirtualFile().getName();
                 if (!name.startsWith("test") && !name.startsWith("$")) {
                     throw new PascalRTException("===*** Parse: " + name);
                 }
             } catch (PascalRTException e) {
-                e.printStackTrace();
-            }*/
+//                e.printStackTrace();
+//                System.out.println(e.getMessage());
+            }
         }
         //builder_.setDebugMode(true);
         ErrorState state = ErrorState.get(builder_);
         boolean res = parseAsTree(state, builder_, level, DUMMY_BLOCK, true, parser, TRUE_CONDITION);
         return res;
-    }
-
-    @NotNull
-    public static Collection<PascalNamedElement> findSymbols(final Project project, final String pattern) {
-        final Set<PascalNamedElement> result = new HashSet<PascalNamedElement>();
-        final Pattern p = Pattern.compile("\\w*" + pattern + "\\w*");
-        processProjectElements(project, new PsiElementProcessor<PascalNamedElement>() {
-            @Override
-            public boolean execute(@NotNull PascalNamedElement element) {
-                if (p.matcher(element.getName()).matches()) {
-                    result.add(element);
-                }
-                return true;
-            }
-        }, PascalStructType.class, PasConstDeclaration.class, PascalRoutine.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class);
-        return new ArrayList<PascalNamedElement>(result);
-    }
-
-    @NotNull
-    public static <T extends PascalNamedElement> Collection<T> findSymbols(final Project project, final String pattern, Class<T> clazz) {
-        final Set<T> result = new HashSet<T>();
-        final Pattern p = Pattern.compile("\\w*" + pattern + "\\w*");
-        processProjectElements(project, new PsiElementProcessor<T>() {
-            @Override
-            public boolean execute(@NotNull T element) {
-                if (p.matcher(element.getName()).matches()) {
-                    result.add(element);
-                }
-                return true;
-            }
-        }, clazz);
-        return new ArrayList<T>(result);
-    }
-
-    public static Collection<PascalNamedElement> findClasses(Project project, final String pattern) {
-        final Set<PascalNamedElement> result = new HashSet<PascalNamedElement>();
-        final Pattern p = Pattern.compile("\\w*" + pattern + "\\w*");
-        processProjectElements(project, new PsiElementProcessor<PascalStructType>() {
-            @Override
-            public boolean execute(@NotNull PascalStructType element) {
-                if (p.matcher(element.getName()).matches()) {
-                    result.add(element);
-                }
-                return true;
-            }
-        }, PascalStructType.class);
-        return new ArrayList<PascalNamedElement>(result);
     }
 
     private static boolean isSameAffectingScope(PsiElement innerSection, PsiElement outerSection) {
@@ -249,7 +193,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             @Nullable
             @Override
             public String getPresentableText() {
-                if (element instanceof PascalRoutine) {
+                if ((element instanceof PascalRoutine) && (isASTAvailable(element))) {
                     return element.getText();
                 }
                 return element.getName() + getType(element);
@@ -290,6 +234,10 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         };
     }
 
+    private static boolean isASTAvailable(PascalNamedElement element) {
+        return (!(element.getContainingFile() instanceof CompiledFileImpl));
+    }
+
     private static String getType(PascalNamedElement item) {
         if (item instanceof PasClassTypeDecl) {
             return " [Class]";
@@ -307,22 +255,6 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             return " [Type]";
         }
         return "";
-    }
-
-    /**
-     * Handle all elements of the specified classes in project source (not in PPU) with the given processor
-     */
-    public static <T extends PascalPsiElement> void processProjectElements(Project project, PsiElementProcessor<T> processor, Class<? extends T>... clazz) {
-        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project));
-        for (VirtualFile virtualFile : virtualFiles) {
-            PascalFile pascalFile = (PascalFile) PsiManager.getInstance(project).findFile(virtualFile);
-            if (pascalFile != null) {
-                for (T element : PsiUtil.findChildrenOfAnyType(pascalFile, clazz)) {
-                    processor.execute(element);
-                }
-            }
-        }
     }
 
 }

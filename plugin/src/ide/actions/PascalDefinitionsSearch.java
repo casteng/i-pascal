@@ -100,7 +100,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
             return;
         }
 
-        final String name = struct.getName().replaceAll(ResolveUtil.STRUCT_SUFFIX, "");
+        final String name = struct.getName().replaceAll(ResolveUtil.STRUCT_SUFFIX, "").toUpperCase();
         final Project project = struct.getProject();
 
         StubIndex index = StubIndex.getInstance();
@@ -113,7 +113,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
                             public boolean process(PascalStructType type) {
                                 List<String> parents = type.getParentNames();
                                 for (String parent : parents) {
-                                    if (parent.endsWith(name)) {
+                                    if (parent.toUpperCase().endsWith(name)) {
                                         PasEntityScope resolved = resolveParent(struct, type, parent);
                                         if (PsiManager.getInstance(project).areElementsEquivalent(struct, resolved)) {
                                             targets.add(type);

@@ -73,12 +73,12 @@ public class ResolveUtil {
         final Collection<PascalModule> modules = new SmartHashSet<>();
         final GlobalSearchScope scope = module != null ? GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false) : ProjectScope.getAllScope(project);
         if (key != null) {
-            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, scope, PascalModule.class));
+            modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key.toUpperCase(), project, scope, PascalModule.class));
         } else {
             Processor<String> processor = new Processor<String>() {
                 @Override
                 public boolean process(String key) {
-                    modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key, project, scope, PascalModule.class));
+                    modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key.toUpperCase(), project, scope, PascalModule.class));
                     return true;
                 }
             };

@@ -38,7 +38,7 @@ public class PascalChooseByNameContributor implements ChooseByNameContributor {
     @Override
     public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
         Collection<PascalNamedElement> items = new SmartHashSet<>();
-        final Pattern p = Pattern.compile("\\w*" + pattern + "\\w*");
+        final Pattern p = Pattern.compile("(?i)\\w*" + pattern + "\\w*");
 
         StubIndex.getInstance().processAllKeys(PascalSymbolIndex.KEY, new Processor<String>() {
             @Override
