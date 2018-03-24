@@ -1,6 +1,6 @@
 package com.siberika.idea.pascal.lang.compiled;
 
-import com.intellij.extapi.psi.LightPsiFileBase;
+import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiCompiledFile;
@@ -11,8 +11,8 @@ import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.PsiFileEx;
 import com.intellij.psi.impl.file.PsiFileImplUtil;
-import com.intellij.psi.impl.source.LightPsiFileImpl;
 import com.intellij.psi.impl.source.PsiFileImpl;
+import com.intellij.psi.impl.source.PsiFileWithStubSupport;
 import com.intellij.psi.impl.source.SourceTreeToPsiMap;
 import com.intellij.psi.impl.source.tree.TreeElement;
 import com.intellij.util.IncorrectOperationException;
@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
  * Author: George Bakhtadze
  * Date: 14/11/2013
  */
-abstract class CompiledFileImpl extends LightPsiFileBase implements PsiFileEx, PsiCompiledFile {
+public abstract class CompiledFileImpl extends PsiFileBase implements PsiFileEx, PsiCompiledFile, PsiFileWithStubSupport {
 
     private static final String DECOMPILED_FILENAME_PREFIX = "$";
 
@@ -53,11 +53,6 @@ abstract class CompiledFileImpl extends LightPsiFileBase implements PsiFileEx, P
     public void delete() throws IncorrectOperationException {
         checkDelete();
         PsiFileImplUtil.doDelete(this);
-    }
-
-    @Override
-    public LightPsiFileImpl copyLight(FileViewProvider viewProvider) {
-        return null;
     }
 
     @Override

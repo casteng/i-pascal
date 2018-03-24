@@ -19,7 +19,7 @@ public class PascalFileElementType extends IStubFileElementType<PsiFileStub<Pasc
     }
 
     public static int getStubIndexVersion() {
-        return 21;
+        return 35;
     }
 
 }

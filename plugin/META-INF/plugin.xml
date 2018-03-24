@@ -404,7 +404,10 @@
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
         <fileType.fileViewProviderFactory filetype="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
 
-        <!--<psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.ClassFileDecompiler"/>-->
+        <filetype.stubBuilder filetype="FPC_PPU" implementationClass="com.intellij.psi.impl.compiled.ClassFileStubBuilder"/>
+        <filetype.stubBuilder filetype="DELPHI_DCU" implementationClass="com.intellij.psi.impl.compiled.ClassFileStubBuilder"/>
+
+        <psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PascalClassFileDecompiler"/>
 
         <lang.importOptimizer language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalImportOptimizer"/>
 
