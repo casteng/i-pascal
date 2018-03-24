@@ -12,6 +12,7 @@ import com.intellij.util.ArrayUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.HasUniqueName;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -110,9 +111,16 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
     public boolean isReferenceTo(PsiElement element) {
         final ResolveResult[] results = multiResolve(false);
         for (ResolveResult result : results) {
-            if (getElement().getManager().areElementsEquivalent(getNamedElement(result.getElement()), getNamedElement(element))) {
+            PsiElement resolved = result.getElement();
+            if (getElement().getManager().areElementsEquivalent(getNamedElement(resolved), getNamedElement(element))) {
                 return true;
             }
+            if ((resolved instanceof HasUniqueName) && (element instanceof HasUniqueName)) {
+                if (((HasUniqueName) resolved).getUniqueName().equalsIgnoreCase(((HasUniqueName) element).getUniqueName())) {
+                    return true;
+                }
+            }
+
         }
         return false;
     }

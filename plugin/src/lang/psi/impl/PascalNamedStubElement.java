@@ -16,7 +16,7 @@ import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalNamedElement {
+public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalNamedElement, HasUniqueName {
 
     public PascalNamedStubElement(ASTNode node) {
         super(node);

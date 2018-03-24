@@ -511,6 +511,7 @@ public class PsiUtil {
     }
 
     public static boolean isFromLibrary(@NotNull PsiElement element) {
+        // TODO: use PsiManager.isInProject()?
         return !element.isPhysical();
     }
 
