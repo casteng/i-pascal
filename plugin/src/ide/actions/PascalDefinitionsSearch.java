@@ -6,7 +6,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.DefinitionsScopedSearch;
 import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -21,6 +20,7 @@ import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.PascalClassByNameContributor;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PascalStructIndex;
@@ -96,38 +96,47 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
             LOG.info("ERROR: Max recursion reached");
             return;
         }
-        if ((null == struct) || (null == struct.getNameIdentifier())) {
+        if (null == struct) {
             return;
         }
 
-        final String name = struct.getName().replaceAll(ResolveUtil.STRUCT_SUFFIX, "").toUpperCase();
+        final String name = ResolveUtil.cleanupName(struct.getName()).toUpperCase();
         final Project project = struct.getProject();
 
         StubIndex index = StubIndex.getInstance();
 
-        index.processAllKeys(PascalStructIndex.KEY, struct.getProject(), new Processor<String>() {
+        final boolean includeNonProjectItems = PsiUtil.isFromLibrary(struct);
+
+        index.processAllKeys(PascalStructIndex.KEY, new Processor<String>() {
                     @Override
-                    public boolean process(String s) {
-                        index.processElements(PascalStructIndex.KEY, s, project, GlobalSearchScope.projectScope(project), PascalStructType.class, new Processor<PascalStructType>() {
-                            @Override
-                            public boolean process(PascalStructType type) {
-                                List<String> parents = type.getParentNames();
-                                for (String parent : parents) {
-                                    if (parent.toUpperCase().endsWith(name)) {
-                                        PasEntityScope resolved = resolveParent(struct, type, parent);
-                                        if (PsiManager.getInstance(project).areElementsEquivalent(struct, resolved)) {
-                                            targets.add(type);
-                                            findDescendingStructs(targets, type, GotoSuper.calcRemainingLimit(targets, limit), rCnt + 1);
+                    public boolean process(String key) {
+                        index.processElements(PascalStructIndex.KEY, key, project, PascalClassByNameContributor.getScope(project, includeNonProjectItems),
+                                PascalStructType.class, new Processor<PascalStructType>() {
+                                    @Override
+                                    public boolean process(PascalStructType type) {
+                                        List<String> parents = type.getParentNames();
+                                        for (String parent : parents) {
+                                            if (parent.toUpperCase().endsWith(name)) {
+                                                PasEntityScope resolved = resolveParent(struct, type, parent);
+                                                if (elementsEqual(struct, resolved)) {
+                                                    targets.add(type);
+                                                    findDescendingStructs(targets, type, GotoSuper.calcRemainingLimit(targets, limit), rCnt + 1);
+                                                }
+                                            }
                                         }
+                                        return ((null == limit) || (limit > targets.size()));
                                     }
-                                }
-                                return true;
-                            }
-                        });
+
+                                    private boolean elementsEqual(PascalStructType struct, PasEntityScope resolved) {
+                                        return (resolved != null) &&
+                                                (PsiManager.getInstance(project).areElementsEquivalent(struct, resolved)
+                                                        || struct.getUniqueName().equalsIgnoreCase(ResolveUtil.cleanupName(resolved.getUniqueName())));
+                                    }
+                                });
                         return ((null == limit) || (limit > targets.size()));
                     }
-                }
-        );
+                },
+                PascalClassByNameContributor.getScope(project, includeNonProjectItems), null);
     }
 
     private static PasEntityScope resolveParent(PascalStructType parent, PascalStructType descendant, String name) {

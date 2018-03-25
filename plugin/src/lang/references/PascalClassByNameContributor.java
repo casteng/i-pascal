@@ -36,13 +36,13 @@ public class PascalClassByNameContributor implements ChooseByNameContributor {
         return names.toArray(new String[names.size()]);
     }
 
-    static GlobalSearchScope getScope(Project project, boolean includeNonProjectItems) {
+    public static GlobalSearchScope getScope(Project project, boolean includeNonProjectItems) {
         return includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
     }
 
     private static String keyToName(String key) {
         int ind = key.indexOf('.');
-        return key.substring(ind + 1).replaceAll("#", "");
+        return ResolveUtil.cleanupName(key.substring(ind + 1));
     }
 
     @NotNull

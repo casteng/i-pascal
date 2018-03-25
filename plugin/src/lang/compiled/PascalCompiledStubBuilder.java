@@ -29,7 +29,7 @@ public class PascalCompiledStubBuilder extends ClsStubBuilder {
         if (file instanceof CompiledFileImpl) {
             return (PsiFileStub<?>) ((CompiledFileImpl) file).calcStubTree().getRoot();
         } else {
-            throw new IllegalArgumentException("buildFileStub: Invalid file class: " + file.getClass().getName());
+            throw new IllegalArgumentException("buildFileStub: Invalid file class: " + (file != null ? file.getClass().getName() : "null"));
         }
     }
 

@@ -397,4 +397,8 @@ public class ResolveUtil {
     public static boolean isStubPowered(PascalNamedElement element) {
         return (element instanceof StubBasedPsiElementBase) && (((StubBasedPsiElementBase) element).getStub() != null);
     }
+
+    public static String cleanupName(String name) {
+        return name != null ? name.replaceAll(STRUCT_SUFFIX, "") : null;
+    }
 }

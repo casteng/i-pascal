@@ -8,6 +8,7 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.SmartPointerManager;
@@ -512,7 +513,7 @@ public class PsiUtil {
 
     public static boolean isFromLibrary(@NotNull PsiElement element) {
         // TODO: use PsiManager.isInProject()?
-        return !element.isPhysical();
+        return !PsiManager.getInstance(element.getProject()).isInProject(element);
     }
 
     public static PasEntityScope getNearestAffectingScope(PsiElement element) {

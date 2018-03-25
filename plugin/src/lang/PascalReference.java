@@ -120,7 +120,6 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
                     return true;
                 }
             }
-
         }
         return false;
     }

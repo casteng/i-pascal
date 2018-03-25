@@ -108,10 +108,15 @@ public class EditorUtil {
 
     private static String getRightText(PsiElement element) {
         PsiFile file = element.getContainingFile();
-        Document doc = file != null ? PsiDocumentManager.getInstance(element.getProject()).getDocument(file) : null;
-        if (doc != null) {
-            int line = doc.getLineNumber(element.getTextOffset()) + 1;
-            return String.format("%s (%d)", file.getName(), line);
+        if (file != null) {
+            String line;
+            if (!PsiUtil.isFromLibrary(element)) {
+                Document doc = PsiDocumentManager.getInstance(element.getProject()).getDocument(file);
+                line = (doc != null) ? String.valueOf(doc.getLineNumber(element.getTextOffset()) + 1) : "-";
+            } else {
+                line = "-";
+            }
+            return String.format("%s (%s)", file.getName(), line);
         }
         return "-";
     }
