@@ -402,7 +402,7 @@ public class PasReferenceUtil {
                 // Scan namespaces and get one matching field
                 for (PasEntityScope namespace : namespaces) {
                     Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
-                    if (fields != null) {
+                    if ((fields != null) && (!fields.isEmpty())) {
                         result.addAll(fields);
                         return result;
                     }
@@ -495,14 +495,15 @@ public class PasReferenceUtil {
     }
 
     private static Collection<PasField> resolveFromStub(NamespaceRec fqn, PasEntityScope namespace, ResolveContext context, int recursionCount) {
+        Collection<PasField> result = null;
         if (namespace instanceof StubBasedPsiElement) {
             StubElement stub = ((StubBasedPsiElement) namespace).getStub();
             if (stub instanceof PasNamedStub) {
                 ResolveContext ctx = new ResolveContext(namespace, context.fieldTypes, context.includeLibrary, context.resultScope);
-                return ResolveUtil.resolveWithStubs(fqn, ctx, ++recursionCount);
+                result = ResolveUtil.resolveWithStubs(new NamespaceRec(fqn), ctx, ++recursionCount);
             }
         }
-        return null;
+        return result;
     }
 
     private static void saveScope(List<PsiElement> resultScope, PsiElement namespace, boolean clear) {

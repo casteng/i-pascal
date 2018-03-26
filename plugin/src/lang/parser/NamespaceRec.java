@@ -68,6 +68,15 @@ public class NamespaceRec {
         current = 0;
     }
 
+    public NamespaceRec(NamespaceRec fqn) {
+        this.levels = fqn.levels;
+        this.parentIdent = fqn.parentIdent;
+        this.target = fqn.target;
+        this.current = fqn.current;
+        this.nested = fqn.nested;
+        this.ignoreVisibility = fqn.ignoreVisibility;
+    }
+
     private static PascalQualifiedIdent getParent(PasSubIdent subIdent) {
         return subIdent.getParent() instanceof PascalQualifiedIdent ? (PascalQualifiedIdent) subIdent.getParent() : null;
     }
@@ -190,4 +199,5 @@ public class NamespaceRec {
     public String toString() {
         return String.format("%s (%d/%d) %s for: %s", Arrays.toString(levels), current, target, nested ? "nested" : "", parentIdent);
     }
+
 }
