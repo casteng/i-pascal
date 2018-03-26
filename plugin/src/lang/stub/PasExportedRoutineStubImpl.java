@@ -22,7 +22,7 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
                                       boolean constructor, boolean function, String functionTypeStr) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE);
         this.name = name;
-        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + name;
+        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + canonicalName;
         this.canonicalName = canonicalName;
         this.visibility = visibility;
         this.constructor = constructor;
