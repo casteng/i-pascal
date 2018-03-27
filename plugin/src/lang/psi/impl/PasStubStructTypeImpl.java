@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extends PasStructStub<T>>
-        extends PascalStubStructTypeImpl<B> implements PascalStructType {
+        extends PascalStubStructTypeImpl<B> implements PascalStructType<B> {
 
     public static final Logger LOG = Logger.getInstance(PasStubStructTypeImpl.class.getName());
 

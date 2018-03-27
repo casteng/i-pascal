@@ -5,7 +5,7 @@ import com.intellij.lang.LighterASTNode;
 import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRecordHelperDeclImpl;
-import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -22,7 +22,7 @@ public class PasRecordHelperDeclStubElementType extends PasStructDeclStubElement
 
     @Override
     public PasRecordHelperDeclStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasRecordHelperDeclStubImpl(parentStub, "-", Collections.emptyList(), INSTANCE);
+        return new PasRecordHelperDeclStubImpl(parentStub, "-", Collections.emptyList(), null, INSTANCE);
     }
 
     @Override
@@ -33,12 +33,14 @@ public class PasRecordHelperDeclStubElementType extends PasStructDeclStubElement
     @NotNull
     @Override
     public PasRecordHelperDeclStub createStub(@NotNull PascalRecordHelperDecl psi, StubElement parentStub) {
-        return new PasRecordHelperDeclStubImpl(parentStub, psi.getName() + ResolveUtil.STRUCT_SUFFIX, psi.getParentNames(), INSTANCE);
+        List<String> aliases = new SmartList<>();
+        String stubName = calcStubName(psi, aliases);
+        return new PasRecordHelperDeclStubImpl(parentStub, stubName, psi.getParentNames(), aliases, INSTANCE);
     }
 
     @Override
-    protected PasRecordHelperDeclStub createStub(StubElement parentStub, String name, List<String> parentNames) {
-        return new PasRecordHelperDeclStubImpl(parentStub, name, parentNames, INSTANCE);
+    protected PasRecordHelperDeclStub createStub(StubElement parentStub, String name, List<String> parentNames, List<String> aliases) {
+        return new PasRecordHelperDeclStubImpl(parentStub, name, parentNames, aliases, INSTANCE);
     }
 
     @NotNull

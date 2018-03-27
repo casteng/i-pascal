@@ -23,10 +23,12 @@ import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
+import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -85,6 +87,43 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     protected String calcKey() {
         PasEntityScope scope = this.getContainingScope();
         return String.format("%s%s", PsiUtil.getFieldName(this), scope != null ? "." + scope.getKey() : "");
+    }
+
+    PasField getFieldStub(String name) {
+        List<StubElement> childrenStubs = getStub().getChildrenStubs();
+        for (StubElement stubElement : childrenStubs) {
+            if (name.equalsIgnoreCase(((PasNamedStub) stubElement).getName())) {
+                return new PasField((PasNamedStub) stubElement, null);
+            }
+            if (stubElement instanceof PasStructStub) {
+                List<String> aliases = ((PasStructStub) stubElement).getAliases();
+                if (aliases != null) {
+                    for (String alias : aliases) {
+                        if (name.equalsIgnoreCase(alias)) {
+                            return new PasField((PasNamedStub) stubElement, alias);
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    Collection<PasField> getAllFieldsStub() {
+        Collection<PasField> res = new kotlin.reflect.jvm.internal.impl.utils.SmartList<PasField>();
+        List<StubElement> childrenStubs = getStub().getChildrenStubs();
+        for (StubElement stubElement : childrenStubs) {
+            res.add(new PasField((PasNamedStub) stubElement, null));
+            if (stubElement instanceof PasStructStub) {
+                List<String> aliases = ((PasStructStub) stubElement).getAliases();
+                if (aliases != null) {
+                    for (String alias : aliases) {
+                        res.add(new PasField((PasNamedStub) stubElement, alias));
+                    }
+                }
+            }
+        }
+        return res;
     }
 
     protected <T extends Cached> void ensureChache(Cache<String, T> cache) {

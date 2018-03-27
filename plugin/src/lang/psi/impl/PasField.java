@@ -124,10 +124,9 @@ public class PasField {
         this(owner, element, name, fieldType, visibility, null, NOT_INITIALIZED);
     }
 
-    public PasField(PasNamedStub stub) {
-        this(getScope(stub),
-                stub.getPsi() instanceof PascalNamedElement ? (PascalNamedElement) stub.getPsi() : null,
-                stub.getName(), stub.getType(), Visibility.PUBLIC, stub.getPsi(), NOT_INITIALIZED);
+    public PasField(PasNamedStub stub, @Nullable String alias) {
+        this(getScope(stub), stub.getPsi() instanceof PascalNamedElement ? (PascalNamedElement) stub.getPsi() : null,
+                alias != null ? alias : stub.getName(), stub.getType(), Visibility.PUBLIC, stub.getPsi(), NOT_INITIALIZED);
     }
 
     private static PasEntityScope getScope(PasNamedStub stub) {

@@ -2,11 +2,8 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.stubs.IStubElementType;
-import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
-import com.siberika.idea.pascal.lang.stub.PasNamedStub;
-import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 
 import java.util.Collection;
 
@@ -21,22 +18,16 @@ public abstract class PascalModuleImplStub extends PasStubScopeImpl<PasModuleStu
     }
 
     PasField getFieldStub(String name) {
-        for (StubElement stubElement : getStub().getChildrenStubs()) {
-            if (name.equalsIgnoreCase(((PasNamedStub) stubElement).getName())) {
-                return new PasField((PasNamedStub) stubElement);
-            }
+        PasField result = super.getFieldStub(name);
+        if ((null == result) && getName().equalsIgnoreCase(name)) {
+            result = new PasField(this.getStub(), null);       // unit name reference
         }
-        if (getName().equalsIgnoreCase(name)) {
-            return new PasField(this.getStub());
-        }
-        return null;
+        return result;
     }
 
     Collection<PasField> getAllFieldsStub() {
-        Collection<PasField> res = new SmartList<PasField>();
-        for (StubElement stubElement : getStub().getChildrenStubs()) {
-            res.add(new PasField((PasNamedStub) stubElement));
-        }
+        Collection<PasField> res = super.getAllFieldsStub();
+        res.add(new PasField(this.getStub(), null));       // unit name reference
         return res;
     }
 

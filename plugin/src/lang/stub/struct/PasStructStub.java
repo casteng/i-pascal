@@ -10,4 +10,5 @@ public interface PasStructStub<T extends PascalStructType> extends PasNamedStub<
     @NotNull
     List<String> getParentNames();
 
+    List<String> getAliases();
 }

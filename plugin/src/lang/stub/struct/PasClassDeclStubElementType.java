@@ -5,7 +5,7 @@ import com.intellij.lang.LighterASTNode;
 import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeDeclImpl;
-import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -22,7 +22,7 @@ public class PasClassDeclStubElementType extends PasStructDeclStubElementType<Pa
 
     @Override
     public PasClassDeclStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasClassDeclStubImpl(parentStub, "-", Collections.emptyList(), INSTANCE);
+        return new PasClassDeclStubImpl(parentStub, "-", Collections.emptyList(), null, INSTANCE);
     }
 
     @Override
@@ -33,12 +33,14 @@ public class PasClassDeclStubElementType extends PasStructDeclStubElementType<Pa
     @NotNull
     @Override
     public PasClassDeclStub createStub(@NotNull PascalClassDecl psi, StubElement parentStub) {
-        return new PasClassDeclStubImpl(parentStub, psi.getName() + ResolveUtil.STRUCT_SUFFIX, psi.getParentNames(), INSTANCE);
+        List<String> aliases = new SmartList<>();
+        String stubName = calcStubName(psi, aliases);
+        return new PasClassDeclStubImpl(parentStub, stubName, psi.getParentNames(), aliases, INSTANCE);
     }
 
     @Override
-    protected PasClassDeclStub createStub(StubElement parentStub, String name, List<String> parentNames) {
-        return new PasClassDeclStubImpl(parentStub, name, parentNames, INSTANCE);
+    protected PasClassDeclStub createStub(StubElement parentStub, String name, List<String> parentNames, List<String> aliases) {
+        return new PasClassDeclStubImpl(parentStub, name, parentNames, aliases, INSTANCE);
     }
 
     @NotNull

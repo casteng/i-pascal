@@ -26,7 +26,8 @@ public class PosUtil {
     public static Pair<Integer, Boolean> findPosInStruct(PascalStructType struct, PasField.FieldType type, PasField.Visibility targetVisibility) {
         Offsets section = new Offsets(PasField.Visibility.PUBLISHED, getBeginOffset(struct));
 
-        for (PasVisibility visibility : struct.getVisibilityList()) {
+        List<PasVisibility> visibilityList = struct.getVisibilityList();
+        for (PasVisibility visibility : visibilityList) {
             if (null == section.end) {
                 section.end = visibility.getTextOffset();
             }

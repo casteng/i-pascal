@@ -14,12 +14,14 @@ public class PasStructStubImpl<T extends PascalStructType> extends StubBase<T> i
     private String name;
     private String uniqueName;
     private List<String> parentNames;
+    private List<String> aliases;
 
-    public PasStructStubImpl(StubElement parent, String name, List<String> parentNames, PasStructDeclStubElementType elementType) {
+    public PasStructStubImpl(StubElement parent, String name, List<String> parentNames, List<String> aliases, PasStructDeclStubElementType elementType) {
         super(parent, elementType);
         this.name = name;
         this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + name;
         this.parentNames = parentNames;
+        this.aliases = aliases;
     }
 
     @Override
@@ -41,5 +43,14 @@ public class PasStructStubImpl<T extends PascalStructType> extends StubBase<T> i
     @Override
     public List<String> getParentNames() {
         return parentNames;
+    }
+
+    public void setAliases(List<String> aliases) {
+        this.aliases = aliases;
+    }
+
+    @Override
+    public List<String> getAliases() {
+        return aliases;
     }
 }
