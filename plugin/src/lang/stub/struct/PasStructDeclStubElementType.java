@@ -9,7 +9,9 @@ import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.lang.psi.PasArrayType;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
@@ -59,8 +61,10 @@ public abstract class PasStructDeclStubElementType<StubT extends PasStructStub, 
 
     static String calcStubName(PascalStructType psi, List<String> aliases) {
         if (isAnonymous(psi)) {
-            PsiElement decl = psi.getParent().getParent();
-            if (decl instanceof PascalVariableDeclaration) {
+            PsiElement decl = retrieveUperLevelDecl(psi);
+            if (decl instanceof PasTypeDeclaration) {
+                return ((PasTypeDeclaration) decl).getGenericTypeIdent().getName();
+            } else if (decl instanceof PascalVariableDeclaration) {
                 List<? extends PascalNamedElement> idents = ((PascalVariableDeclaration) decl).getNamedIdentDeclList();
                 if (idents.size() > 1) {
                     for (int i = 1; i < idents.size(); i++) {
@@ -77,6 +81,15 @@ public abstract class PasStructDeclStubElementType<StubT extends PasStructStub, 
         } else {
             return psi.getName() + ResolveUtil.STRUCT_SUFFIX;
         }
+    }
+
+    private static PsiElement retrieveUperLevelDecl(PsiElement psi) {
+        PsiElement parent = psi.getParent();
+        parent = parent != null ? parent.getParent() : null;
+        if (parent instanceof PasArrayType) {
+            parent = retrieveUperLevelDecl(parent);
+        }
+        return parent;
     }
 
     private static boolean isAnonymous(PascalStructType psi) {

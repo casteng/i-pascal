@@ -144,6 +144,9 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         if (PsiUtil.isTypeDeclPointingToSelf(typeIdent)) {
             return PsiUtil.getElementPasModule(typeIdent);
         }
+        if (typeIdent.getParent() instanceof PasGenericTypeIdent) {  // resolved from stub
+            typeIdent = (PascalNamedElement) typeIdent.getParent();
+        }
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(typeIdent, PasTypeDecl.class);
         if (typeDecl != null) {
             PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
