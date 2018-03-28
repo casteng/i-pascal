@@ -217,11 +217,12 @@ public class PascalCompletionContributor extends CompletionContributor {
     private TokenSet TS_CLASS = TokenSet.create(PasTypes.CLASS);
 
     private void handleInsideStatement(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos) {
-        if ((pos instanceof PasStatement) && (parameters.getOriginalPosition() != null)) {
+        if (((pos instanceof PasStatement) || (pos instanceof PasCaseItem))
+                && (parameters.getOriginalPosition() != null)) {
             if (!isPartOfExpression(parameters.getPosition()) && !isQualified(parameters.getPosition())) {
                 appendTokenSet(result, PascalLexer.STATEMENTS);
             }
-            if ((pos.getParent() instanceof PasIfThenStatement) || (originalPos instanceof PasCaseStatement)) {
+            if ((pos.getParent() instanceof PasIfThenStatement) || (originalPos instanceof PasCaseStatement) || (originalPos instanceof PasCaseItem)) {
                 appendTokenSet(result, TS_ELSE);
             }
             if (pos.getParent() instanceof PasTryStatement) {

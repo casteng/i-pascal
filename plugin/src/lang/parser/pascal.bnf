@@ -383,7 +383,8 @@ private rec_struct_field    ::= !(";" | ")" | END | CASE | identifier ) & rec_se
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
 private rec_name            ::= !(identifier | END) & rec_section
-private rec_case            ::= !(ELSE | Expression) & rec_name
+private rec_case            ::= !(ELSE | END) & rec_section
+private rec_caseItem        ::= !(END | ELSE | caseLabel)
 private rec_classparent     ::= !(CASE) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | "]") & rec_section
@@ -670,9 +671,13 @@ IfStatement         ::= IF Expression THEN IfThenStatement [ELSE IfElseStatement
 IfThenStatement     ::= Statement
 IfElseStatement     ::= Statement
 
-CaseStatement       ::= CASE Expression OF CaseItem* [ELSE statementList ] END {pin=1}
-CaseItem	        ::=	CaseLabel ("," CaseLabel)* ":" Statement [";"] {pin=3 recoverWhile=rec_case}
-CaseLabel	        ::=	ConstExpressionOrd [RANGE ConstExpressionOrd] //{}
+CaseStatement       ::= caseBody [CaseElse] END
+private caseBody    ::= CASE Expression OF CaseItem* {pin=1 recoverWhile=rec_case}
+CaseItem	        ::=	caseLabel Statement [";"] {pin=1 recoverWhile=rec_caseItem}
+CaseElse            ::= ELSE statementList
+
+private caseLabel           ::= caseLabelPart ("," caseLabelPart)* ":" //{pin=1 recoverWhile=rec_case3}
+private caseLabelPart	    ::=	ConstExpressionOrd [RANGE ConstExpressionOrd]
 
 TryStatement                ::= TRY statementList (tryExcept | tryFinally) END {pin=1}
 private tryFinally          ::= FINALLY statementList
