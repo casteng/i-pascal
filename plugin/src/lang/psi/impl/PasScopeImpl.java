@@ -17,7 +17,6 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -156,21 +155,8 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     }
 
     private static PasField addField(PasEntityScope owner, String name, PascalNamedElement namedElement, PasField.Visibility visibility) {
-        PasField.FieldType fieldType = getFieldType(namedElement);
+        PasField.FieldType fieldType = PsiUtil.getFieldType(namedElement);
         return new PasField(owner, namedElement, name, fieldType, visibility);
-    }
-
-    public static PasField.FieldType getFieldType(PascalNamedElement namedElement) {
-        PasField.FieldType type = PasField.FieldType.VARIABLE;
-        if (PsiUtil.isTypeName(namedElement)) {
-            type = PasField.FieldType.TYPE;
-        } else if (namedElement instanceof PascalRoutine) {
-            type = PasField.FieldType.ROUTINE;
-        } else if (PsiUtil.isConstDecl(namedElement) || PsiUtil.isEnumDecl(namedElement)) {
-            type = PasField.FieldType.CONSTANT;
-        }
-
-        return type;
     }
 
     static class Cached {

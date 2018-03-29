@@ -856,4 +856,17 @@ public class PsiUtil {
             return false;
         }
     }
+
+    public static PasField.FieldType getFieldType(PascalNamedElement namedElement) {
+        PasField.FieldType type = PasField.FieldType.VARIABLE;
+        if (isTypeName(namedElement)) {
+            type = PasField.FieldType.TYPE;
+        } else if (namedElement instanceof PascalRoutine) {
+            type = PasField.FieldType.ROUTINE;
+        } else if (isConstDecl(namedElement) || isEnumDecl(namedElement)) {
+            type = PasField.FieldType.CONSTANT;
+        }
+
+        return type;
+    }
 }

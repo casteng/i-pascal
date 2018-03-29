@@ -10,8 +10,8 @@ import com.intellij.psi.stubs.StubOutputStream;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.psi.impl.PasScopeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalIdentDeclImpl;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @NotNull
     @Override
     public PasIdentStub createStub(@NotNull PascalIdentDecl psi, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, psi.getName(), PasScopeImpl.getFieldType(psi), psi.getTypeString(), psi.getTypeKind());
+        return new PasIdentStubImpl(parentStub, psi.getName(), PsiUtil.getFieldType(psi), psi.getTypeString(), psi.getTypeKind());
     }
 
     @NotNull

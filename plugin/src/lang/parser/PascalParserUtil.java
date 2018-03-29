@@ -14,6 +14,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.lang.compiled.CompiledFileImpl;
+import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
@@ -31,10 +32,16 @@ import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.PascalIdentDeclImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -67,7 +74,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
             } catch (PascalRTException e) {
 //                e.printStackTrace();
-//                System.out.println(e.getMessage());
+                System.out.println(e.getMessage());
             }
         }
         //builder_.setDebugMode(true);
@@ -199,19 +206,28 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 if ((element instanceof PascalRoutine) && (isASTAvailable(element))) {
                     return element.getText();
                 }
-                return element.getName() + getType(element);
+                return ResolveUtil.cleanupName(element.getName());
             }
 
             @Nullable
             @Override
             public String getLocationString() {
-                return element.getContainingFile() != null ? element.getContainingFile().getName() : "-";
+                return getType(element) + (element.getContainingFile() != null ? element.getContainingFile().getName() : "-");
             }
 
             @Nullable
             @Override
             public Icon getIcon(boolean unused) {
-                if (element instanceof PasClassTypeDecl) {
+                if (element instanceof PascalIdentDeclImpl) {
+                    PasIdentStub stub = ((PascalIdentDeclImpl) element).getStub();
+                    PasField.FieldType type = stub != null ? stub.getType() : PsiUtil.getFieldType(element);
+                    switch (type) {
+                        case VARIABLE: return PascalIcons.VARIABLE;
+                        case TYPE: return PascalIcons.TYPE;
+                        case CONSTANT: return PascalIcons.CONSTANT;
+                        case ROUTINE: return PascalIcons.ROUTINE;
+                    }
+                } else if (element instanceof PasClassTypeDecl) {
                     return PascalIcons.CLASS;
                 } else if (element instanceof PasRecordDecl) {
                     return PascalIcons.RECORD;
@@ -223,16 +239,16 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                     return PascalIcons.ROUTINE;
                 } else if (element instanceof PasGenericTypeIdent) {
                     return PascalIcons.TYPE;
+                } else if (element instanceof PascalVariableDeclaration) {
+                    return PascalIcons.VARIABLE;
                 } else if (element instanceof PasConstDeclaration) {
                     return PascalIcons.CONSTANT;
                 } else if (element instanceof PasClassProperty) {
                     return PascalIcons.PROPERTY;
                 } else if (element instanceof PasModule) {
                     return PascalIcons.UNIT;
-                } else {
-                    return PascalIcons.GENERAL;
                 }
-
+                return PascalIcons.GENERAL;
             }
         };
     }
@@ -242,20 +258,39 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     private static String getType(PascalNamedElement item) {
-        if (item instanceof PasClassTypeDecl) {
-            return " [Class]";
+        if (item instanceof PascalIdentDeclImpl) {
+            PasIdentStub stub = ((PascalIdentDeclImpl) item).getStub();
+            PasField.FieldType type = stub != null ? stub.getType() : PsiUtil.getFieldType(item);
+            switch (type) {
+                case VARIABLE: return "[var] ";
+                case TYPE: return "[type] ";
+                case CONSTANT: return "[const] ";
+                case ROUTINE: return "[routine] ";
+            }
+        } else if (item instanceof PasClassTypeDecl) {
+            return "[class] ";
+        } else if (item instanceof PasInterfaceTypeDecl) {
+            return "[interface] ";
         } else if (item instanceof PasRecordDecl) {
-            return " [Record]";
+            return "[record] ";
         } else if (item instanceof PasObjectDecl) {
-            return " [Oject]";
+            return "[object] ";
+        } else if (item instanceof PascalRoutine) {
+            return "[routine] ";
         } else if (item instanceof PasClassHelperDecl) {
-            return " [Class helper]";
+            return "[class helper] ";
         } else if (item instanceof PasRecordHelperDecl) {
-            return " [Record helper]";
+            return "[record helper] ";
+        } else if (item instanceof PasVarDeclaration) {
+            return "[var] ";
+        } else if (item instanceof PasClassField) {
+            return "[field] ";
         } else if (item instanceof PasConstDeclaration) {
-            return " [Const]";
+            return "[const] ";
         } else if (item instanceof PasTypeDecl) {
-            return " [Type]";
+            return "[type] ";
+        } else if (item instanceof PasClassProperty) {
+            return "[property] ";
         }
         return "";
     }
