@@ -44,6 +44,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
@@ -212,7 +213,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private TokenSet TS_BEGIN = TokenSet.create(PasTypes.BEGIN);
     private TokenSet TS_UNTIL = TokenSet.create(PasTypes.UNTIL);
-    private TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF);
+    private TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF, PasTypes.ELSE);
     private TokenSet TS_ELSE = TokenSet.create(PasTypes.ELSE);
     private TokenSet TS_CLASS = TokenSet.create(PasTypes.CLASS);
 
@@ -271,7 +272,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT);
+    private TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT, PasTypes.CASE_ELSE);
     private boolean isControlStatement(PsiElement pos) {
         return TS_CONTROL_STATEMENT.contains(pos.getNode().getElementType());
     }
@@ -551,7 +552,11 @@ public class PascalCompletionContributor extends CompletionContributor {
             }
         }
         namespace.clearTarget();
-        result.addAll(PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0));
+        for (PasField pasField : PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0)) {
+            if ((pasField.name != null) && !pasField.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
+                result.add(pasField);
+            }
+        }
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
