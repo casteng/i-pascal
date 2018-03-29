@@ -130,7 +130,11 @@ public class ResolveUtil {
             return Pair.create(null, PasField.Kind.STRUCT);
         } else if (type instanceof PasArrayType) {
             Pair<String, PasField.Kind> baseType = retrieveType(((PasArrayTypeImpl) type).getTypeDecl(), null);
-            return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.ARRAY);
+            if (baseType != null) {
+                return Pair.create(baseType.first, baseType.second != PasField.Kind.STRUCT ? PasField.Kind.ARRAY : PasField.Kind.STRUCT);
+            } else {
+                return Pair.create(null, PasField.Kind.ARRAY);
+            }
         } else if (type instanceof PasSetType) {
             Pair<String, PasField.Kind> baseType = retrieveType(((PasSetType) type).getTypeDecl(), null);
             return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.SET);
@@ -138,7 +142,11 @@ public class ResolveUtil {
             return Pair.create(null, PasField.Kind.STRUCT);
         } else if (type instanceof PasPointerType) {
             Pair<String, PasField.Kind> baseType = retrieveType(((PasPointerType) type).getTypeDecl(), null);
-            return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.POINTER);
+            if (baseType != null) {
+                return Pair.create(baseType.first, baseType.second != PasField.Kind.STRUCT ? PasField.Kind.POINTER : PasField.Kind.STRUCT);
+            } else {
+                return Pair.create(null, PasField.Kind.POINTER);
+            }
         } else if (type instanceof PasProcedureType) {
             Pair<String, PasField.Kind> baseType = retrieveType(((PasProcedureType) type).getTypeDecl(), null);
             return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.PROCEDURE);

@@ -40,6 +40,7 @@ public class ResolveUtilTest extends LightPlatformCodeInsightFixtureTestCase {
                 .put("R", Pair.create(null, STRUCT))
                 .put("y", Pair.create("integer", TYPEREF))
                 .put("AAA", Pair.create("TA", ARRAY))
+                .put("AOR", Pair.create(null, STRUCT))
                 .put("PropA", Pair.create("TA", TYPEREF))
                 .put("func", Pair.create("TR", TYPEREF))
                 .build();

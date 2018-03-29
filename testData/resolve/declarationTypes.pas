@@ -16,6 +16,9 @@ var
     y: integer;
   end;
   AAA : array of array of TA;
+  AOR : array[0..1] of record
+    x: Integer;
+  end;
 
 property PropA: TA;
 

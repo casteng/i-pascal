@@ -459,7 +459,7 @@ public class PasReferenceUtil {
                         continue;
                     }
                     Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
-                    if (fields != null) {
+                    if ((fields != null) && (!fields.isEmpty())) {
                         result.addAll(fields);
                     } else for (PasField pasField : namespace.getAllFields()) {
                         if (isFieldMatches(pasField, fqn, fieldTypes) &&

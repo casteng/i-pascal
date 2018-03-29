@@ -25,6 +25,8 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
+import com.siberika.idea.pascal.lang.psi.PascalInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -301,13 +303,14 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             List<String> parentNames = stub.getParentNames();
             StubElement parentStub = stub.getParentStub();
             PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
-            if (parEl instanceof PascalStructType) {
+            if ((parEl instanceof PascalClassDecl) || (parEl instanceof PascalInterfaceDecl)) {         // Nested type
                 parentScopes = new SmartList<>(((PascalStructType) parEl).getParentScope());
                 parentScopes.add(SmartPointerManager.createPointer((PasEntityScope) parEl));
             } else {
                 parentScopes = new ArrayList<>(parentNames.size() + 1);
             }
-            for (String parentName : parentNames) {                            // TODO: +TObject
+            addDefaultScopes(parentScopes);
+            for (String parentName : parentNames) {
                 Collection<PasField> types = ResolveUtil.resolveWithStubs(NamespaceRec.fromFQN(this, parentName + ResolveUtil.STRUCT_SUFFIX),
                         new ResolveContext(this, PasField.TYPES_TYPE, true, null), 0);
                 for (PasField type : types) {
@@ -336,30 +339,33 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                     NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
                     PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
                     if (scope != PasStubStructTypeImpl.this) {
-                        addScope(res, scope);
+                        addScope(res.scopes, scope);
                     }
                 }
             } else {
-                PasEntityScope defEntity = null;
-                if (PasStubStructTypeImpl.this instanceof PasClassTypeDecl) {
-                    defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStubStructTypeImpl.this, "system.TObject"), true);
-                } else if (PasStubStructTypeImpl.this instanceof PasInterfaceTypeDecl) {
-                    defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStubStructTypeImpl.this, "system.IInterface"), true);
-                }
-                if (defEntity != PasStubStructTypeImpl.this) {
-                    addScope(res, defEntity);
-                }
+                addDefaultScopes(res.scopes);
             }
 
             return res;
         }
 
-        private void addScope(Parents res, PasEntityScope scope) {
-            if (scope != null) {
-                res.scopes.add(SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope));
-            }
-        }
-
     }
 
+    private void addDefaultScopes(List<SmartPsiElementPointer<PasEntityScope>> scopes) {
+        PasEntityScope defEntity = null;
+        if (PasStubStructTypeImpl.this instanceof PasClassTypeDecl) {
+            defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStubStructTypeImpl.this, "system.TObject"), true);
+        } else if (PasStubStructTypeImpl.this instanceof PasInterfaceTypeDecl) {
+            defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStubStructTypeImpl.this, "system.IInterface"), true);
+        }
+        if (defEntity != PasStubStructTypeImpl.this) {
+            addScope(scopes, defEntity);
+        }
+    }
+
+    private static void addScope(List<SmartPsiElementPointer<PasEntityScope>> scopes, PasEntityScope scope) {
+        if (scope != null) {
+            scopes.add(SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope));
+        }
+    }
 }
