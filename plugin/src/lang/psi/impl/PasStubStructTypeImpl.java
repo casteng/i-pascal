@@ -312,7 +312,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             addDefaultScopes(parentScopes);
             for (String parentName : parentNames) {
                 Collection<PasField> types = ResolveUtil.resolveWithStubs(NamespaceRec.fromFQN(this, parentName + ResolveUtil.STRUCT_SUFFIX),
-                        new ResolveContext(this, PasField.TYPES_TYPE, true, null), 0);
+                        new ResolveContext(this.getContainingScope(), PasField.TYPES_TYPE, true, null), 0);
                 for (PasField type : types) {
                     PascalNamedElement el = type.getElement();
                     if (el instanceof PasEntityScope) {
@@ -337,14 +337,13 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             if (parent != null) {
                 for (PasTypeID typeID : parent.getTypeIDList()) {
                     NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
-                    PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, true);
+                    PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, null, true);
                     if (scope != PasStubStructTypeImpl.this) {
                         addScope(res.scopes, scope);
                     }
                 }
-            } else {
-                addDefaultScopes(res.scopes);
             }
+            addDefaultScopes(res.scopes);
 
             return res;
         }
@@ -353,10 +352,11 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     private void addDefaultScopes(List<SmartPsiElementPointer<PasEntityScope>> scopes) {
         PasEntityScope defEntity = null;
+        PasEntityScope scope = PasStubStructTypeImpl.this.getContainingScope();
         if (PasStubStructTypeImpl.this instanceof PasClassTypeDecl) {
-            defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStubStructTypeImpl.this, "system.TObject"), true);
+            defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.TObject"), scope, true);
         } else if (PasStubStructTypeImpl.this instanceof PasInterfaceTypeDecl) {
-            defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(PasStubStructTypeImpl.this, "system.IInterface"), true);
+            defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.IInterface"), scope, true);
         }
         if (defEntity != PasStubStructTypeImpl.this) {
             addScope(scopes, defEntity);

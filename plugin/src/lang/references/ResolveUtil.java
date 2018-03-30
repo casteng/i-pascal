@@ -390,6 +390,7 @@ public class ResolveUtil {
             LOG.info("Stub is null" + scope);
             return;
         }
+        namespaces.addAll(findUnitsWithStub(scope.getProject(), null, "system"));
         for (String unitName : stub.getUsedUnitsPublic()) {
             namespaces.addAll(findUnitsWithStub(scope.getProject(), null, unitName));
         }

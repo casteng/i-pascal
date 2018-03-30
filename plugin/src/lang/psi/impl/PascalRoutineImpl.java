@@ -246,7 +246,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
                 NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
                 res.scopes = Collections.emptyList();                             // To prevent infinite recursion
-                PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn, true);
+                PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn, null, true);
                 if (type != null) {
                     res.scopes = Collections.singletonList(SmartPointerManager.getInstance(type.getProject()).createSmartPsiElementPointer(type));
                 }

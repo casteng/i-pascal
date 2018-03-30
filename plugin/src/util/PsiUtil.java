@@ -512,7 +512,6 @@ public class PsiUtil {
     }
 
     public static boolean isFromLibrary(@NotNull PsiElement element) {
-        // TODO: use PsiManager.isInProject()?
         return !PsiManager.getInstance(element.getProject()).isInProject(element);
     }
 
