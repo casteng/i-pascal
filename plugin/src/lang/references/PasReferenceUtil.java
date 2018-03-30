@@ -320,8 +320,8 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    public static PasEntityScope resolveTypeScope(NamespaceRec fqn, boolean includeLibrary) {
-        ResolveContext context = new ResolveContext(PasField.TYPES_TYPE, includeLibrary);
+    public static PasEntityScope resolveTypeScope(NamespaceRec fqn, PasEntityScope scope, boolean includeLibrary) {
+        ResolveContext context = new ResolveContext(scope, PasField.TYPES_TYPE, includeLibrary, null);
         Collection<PasField> types = resolve(fqn, context, 0);
         for (PasField field : types) {
             PasEntityScope struct = field.getElement() != null ? PascalParserUtil.getStructTypeByIdent(field.getElement(), 0) : null;
@@ -363,6 +363,9 @@ public class PasReferenceUtil {
         if (recursionCount > MAX_RECURSION_COUNT) {
             throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
         }
+        boolean implAffects = fqn.isFirst()
+                && !ResolveUtil.isStubPowered(context.scope)
+                && PsiUtil.isBefore(PsiUtil.getModuleImplementationSection(fqn.getParentIdent().getContainingFile()), fqn.getParentIdent());
         if (context.scope != null) {
             if (context.scope instanceof StubBasedPsiElement) {
                 StubElement stub = ((StubBasedPsiElement) context.scope).getStub();
@@ -373,9 +376,6 @@ public class PasReferenceUtil {
         } else {
             context.scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
         }
-
-        boolean implAffects = fqn.isFirst()
-                && PsiUtil.isBefore(PsiUtil.getModuleImplementationSection(fqn.getParentIdent().getContainingFile()), fqn.getParentIdent());
 
         // First entry in FQN
         List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();

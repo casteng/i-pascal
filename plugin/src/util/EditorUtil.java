@@ -19,6 +19,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.ui.awt.RelativePoint;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -94,7 +95,7 @@ public class EditorUtil {
                     PasEntityScope owner = ((PasEntityScope) element).getContainingScope();
                     ownerName = owner != null ? owner.getName() : ownerName;
                 }
-                return String.format("%s.%s", ownerName, PsiUtil.getFieldName((PascalNamedElement) element));
+                return String.format("%s.%s", ResolveUtil.cleanupName(ownerName), ResolveUtil.cleanupName(PsiUtil.getFieldName((PascalNamedElement) element)));
             } else {
                 return element.getText();
             }
