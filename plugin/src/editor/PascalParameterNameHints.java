@@ -5,6 +5,7 @@ import com.intellij.codeInsight.hints.InlayInfo;
 import com.intellij.codeInsight.hints.InlayParameterHintsProvider;
 import com.intellij.codeInsight.hints.Option;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
@@ -15,7 +16,6 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

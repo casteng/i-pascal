@@ -3,9 +3,9 @@ package com.siberika.idea.pascal.lang.stub.struct;
 import com.intellij.lang.LighterAST;
 import com.intellij.lang.LighterASTNode;
 import com.intellij.psi.stubs.StubElement;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PascalInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.impl.PasInterfaceTypeDeclImpl;
-import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;

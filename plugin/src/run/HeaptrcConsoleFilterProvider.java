@@ -6,8 +6,8 @@ import com.intellij.execution.filters.FileHyperlinkRawData;
 import com.intellij.execution.filters.Filter;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.util.ModuleUtil;
-import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
