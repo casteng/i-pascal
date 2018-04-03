@@ -5,7 +5,6 @@ import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.ProcessCanceledException;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
@@ -43,7 +42,7 @@ import java.util.concurrent.Callable;
  * Author: George Bakhtadze
  * Date: 14/09/2013
  */
-public abstract class PascalModuleImpl extends PascalModuleImplStub {
+public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> implements PascalModule {
 
     private static final UnitMembers EMPTY_MEMBERS = new UnitMembers();
     private static final Idents EMPTY_IDENTS = new Idents();
@@ -58,6 +57,8 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
 
     private Set<String> usedUnitsPublic = null;
     private Set<String> usedUnitsPrivate = null;
+    private List<SmartPsiElementPointer<PasEntityScope>> privateUnits = null;
+    private List<SmartPsiElementPointer<PasEntityScope>> publicUnits = null;
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -111,7 +112,7 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
             } else {
                 LOG.warn("Error occured during building members for: " + this, e.getCause());
             }
-            invalidateCaches(getKey());
+            invalidateCaches();
             return EMPTY_MEMBERS;
         }
     }
@@ -137,13 +138,27 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
             return getAllFieldsStub();
         } else {
             if (!PsiUtil.checkeElement(this)) {
-                invalidateCaches(getKey());
+                invalidateCaches();
             }
             Collection<PasField> result = new LinkedHashSet<PasField>();
             result.addAll(getPubicFields());
             result.addAll(getPrivateFields());
             return result;
         }
+    }
+
+    PasField getFieldStub(String name) {
+        PasField result = super.getFieldStub(name);
+        if ((null == result) && getName().equalsIgnoreCase(name)) {
+            result = new PasField(this.getStub(), null);       // This unit name reference
+        }
+        return result;
+    }
+
+    Collection<PasField> getAllFieldsStub() {
+        Collection<PasField> res = super.getAllFieldsStub();
+        res.add(new PasField(this.getStub(), null));       // This unit name reference
+        return res;
     }
 
     @Override
@@ -160,7 +175,36 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
 
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPrivateUnits() {
-        return getMembers(privateCache, PRIVATE_BUILDER).units;
+        synchronized (this) {
+            if (null == privateUnits) {
+                Set<String> units = getUsedUnitsPrivate();
+                privateUnits = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
+                addUnits(privateUnits, units);
+                addUnits(privateUnits, PascalParserUtil.EXPLICIT_UNITS);
+            }
+            return privateUnits;
+        }
+    }
+
+    @Override
+    public List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits() {
+        synchronized (this) {
+            if (null == publicUnits) {
+                Set<String> units = getUsedUnitsPublic();
+                publicUnits = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
+                addUnits(publicUnits, units);
+                addUnits(publicUnits, PascalParserUtil.EXPLICIT_UNITS);
+            }
+            return publicUnits;
+        }
+    }
+
+    private void addUnits(List<SmartPsiElementPointer<PasEntityScope>> result, Collection<String> units) {
+        for (String unitName : units) {
+            for (PascalModule pascalModule : ResolveUtil.findUnitsWithStub(getProject(), ModuleUtilCore.findModuleForPsiElement(this), unitName)) {
+                result.add(SmartPointerManager.createPointer(pascalModule));
+            }
+        }
     }
 
     @Override
@@ -175,11 +219,6 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
         return getMembers(publicCache, PUBLIC_BUILDER).all.values();
     }
 
-    @Override
-    public List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits() {
-        return getMembers(publicCache, PUBLIC_BUILDER).units;
-    }
-
     @NotNull
     private Idents getIdents(Cache<String, Idents> cache, Callable<? extends Idents> builder) {
         ensureChache(cache);
@@ -191,7 +230,7 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
             } else {
                 LOG.warn("Error occured during building idents for: " + this, e.getCause());
             }
-            invalidateCaches(getKey());
+            invalidateCaches();
             return EMPTY_IDENTS;
         }
     }
@@ -240,6 +279,17 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
         return usedUnitsPrivate;
     }
 
+    @Override
+    public void invalidateCaches() {
+        super.invalidateCaches();
+        synchronized (this) {
+            usedUnitsPrivate = null;
+            usedUnitsPublic = null;
+            privateUnits = null;
+            publicUnits = null;
+        }
+    }
+
     public static void invalidate(String key) {
         privateCache.invalidate(key);
         publicCache.invalidate(key);
@@ -281,8 +331,7 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
 
             collectFields(section, PasField.Visibility.PRIVATE, res.all, res.redeclared);
 
-            res.units = retrieveUsedUnits(section);
-            for (SmartPsiElementPointer<PasEntityScope> unitPtr : res.units) {
+            for (SmartPsiElementPointer<PasEntityScope> unitPtr : PascalModuleImpl.this.getPrivateUnits()) {
                 PasEntityScope unit = unitPtr.getElement();
                 if (unit != null) {
                     res.all.put(unit.getName().toUpperCase(), new PasField(PascalModuleImpl.this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
@@ -290,7 +339,7 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
             }
 
             res.stamp = getStamp(getContainingFile());
-            LOG.debug(String.format("Unit %s private: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
+            LOG.debug(String.format("Unit %s private: %d", getName(), res.all.size()));
             return res;
         }
     }
@@ -314,47 +363,15 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
 
             collectFields(section, PasField.Visibility.PUBLIC, res.all, res.redeclared);
 
-            res.units = retrieveUsedUnits(section);
-            for (SmartPsiElementPointer<PasEntityScope> unitPtr : res.units) {
+            for (SmartPsiElementPointer<PasEntityScope> unitPtr : PascalModuleImpl.this.getPublicUnits()) {
                 PasEntityScope unit = unitPtr.getElement();
                 if (unit != null) {
                     res.all.put(unit.getName().toUpperCase(), new PasField(PascalModuleImpl.this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
                 }
             }
 
-            LOG.debug(String.format("Unit %s public: %d, used: %d", getName(), res.all.size(), res.units != null ? res.units.size() : 0));
+            LOG.debug(String.format("Unit %s public: %d", getName(), res.all.size()));
             return res;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<SmartPsiElementPointer<PasEntityScope>> retrieveUsedUnits(PsiElement section) {
-        List<PascalQualifiedIdent> usedNames = PsiUtil.getUsedUnits(section);
-        List<SmartPsiElementPointer<PasEntityScope>> result = new ArrayList<SmartPsiElementPointer<PasEntityScope>>(usedNames.size());
-        Project project = section.getProject();
-        for (PascalQualifiedIdent ident : usedNames) {
-            //addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, ident.getName()), project);
-            Collection<PascalModule> units = ResolveUtil.findUnitsWithStub(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), ident.getName());
-            if (!units.isEmpty()) {
-                addUnit(result, units.iterator().next(), project);
-            }
-        }
-        for (String unitName : PascalParserUtil.EXPLICIT_UNITS) {
-            if (!unitName.equalsIgnoreCase(getName())) {
-//                List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section));
-//                addUnit(result, PasReferenceUtil.findUnit(section.getProject(), unitFiles, unitName), project);
-                Collection<PascalModule> units = ResolveUtil.findUnitsWithStub(section.getProject(), ModuleUtilCore.findModuleForPsiElement(section), unitName);
-                if (!units.isEmpty()) {
-                    addUnit(result, units.iterator().next(), project);
-                }
-            }
-        }
-        return result;
-    }
-
-    private static void addUnit(List<SmartPsiElementPointer<PasEntityScope>> result, PasEntityScope unit, Project project) {
-        if (unit != null) {
-            result.add(SmartPointerManager.getInstance(project).createSmartPsiElementPointer(unit));
         }
     }
 
@@ -369,8 +386,5 @@ public abstract class PascalModuleImpl extends PascalModuleImplStub {
     public PasEntityScope getContainingScope() {
         return null;
     }
-
-
-// Copied from PascalNamedElementImpl as we can't extend that class. TODO: Move to another place
 
 }

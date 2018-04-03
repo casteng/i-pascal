@@ -42,4 +42,7 @@ public interface PasEntityScope extends PascalNamedElement, NavigatablePsiElemen
 
     String getKey();
 
+    // Should invalidate all cached instances
+    void invalidateCaches();
+
 }

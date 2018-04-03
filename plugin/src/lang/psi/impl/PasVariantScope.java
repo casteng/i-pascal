@@ -43,4 +43,8 @@ public class PasVariantScope extends PasScopeImpl {
         return null;
     }
 
+    @Override
+    public void invalidateCaches() {
+    }
+
 }
