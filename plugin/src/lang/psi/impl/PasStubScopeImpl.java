@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProcessCanceledException;
@@ -22,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -29,7 +29,6 @@ import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -47,12 +46,11 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
 
     protected static final Members EMPTY_MEMBERS = new Members();
 
-    volatile protected boolean building = false;
     volatile protected String cachedKey;
 
-    protected static final Cache<String, Parents> parentCache = CacheBuilder.newBuilder().softValues().build();
     protected ReentrantLock containingScopeLock = new ReentrantLock();
-    volatile protected SmartPsiElementPointer<PasEntityScope> containingScope;
+
+    SmartPsiElementPointer<PasEntityScope> containingScope;
 
     public PasStubScopeImpl(ASTNode node) {
         super(node);
@@ -92,7 +90,8 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     PasField getFieldStub(String name) {
         List<StubElement> childrenStubs = getStub().getChildrenStubs();
         for (StubElement stubElement : childrenStubs) {
-            if (name.equalsIgnoreCase(((PasNamedStub) stubElement).getName())) {
+            String stubName = stubElement instanceof PasExportedRoutineStub ? ((PasExportedRoutineStub) stubElement).getCanonicalName() : ((PasNamedStub) stubElement).getName();
+            if (name.equalsIgnoreCase(stubName)) {
                 return new PasField((PasNamedStub) stubElement, null);
             }
             if (stubElement instanceof PasStructStub) {
@@ -110,7 +109,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     }
 
     Collection<PasField> getAllFieldsStub() {
-        Collection<PasField> res = new kotlin.reflect.jvm.internal.impl.utils.SmartList<PasField>();
+        Collection<PasField> res = new SmartList<PasField>();
         List<StubElement> childrenStubs = getStub().getChildrenStubs();
         for (StubElement stubElement : childrenStubs) {
             res.add(new PasField((PasNamedStub) stubElement, null));
@@ -135,21 +134,30 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
             return false;
         }*/
         if (!PsiUtil.isElementValid(this)) {
-            invalidateCaches(getKey());
+            invalidateCaches();
             throw new ProcessCanceledException();
         }
         Cached members = cache.getIfPresent(getKey());
         if ((members != null) && (getStamp(getContainingFile()) != members.stamp)) {
-            invalidateCaches(getKey());
+            invalidateCaches();
         }
     }
 
-    public void invalidateCaches(String key) {
-        PascalModuleImpl.invalidate(key);
-        PascalRoutineImpl.invalidate(key);
-        PasStubStructTypeImpl.invalidate(key);
-        containingScope = null;
-        cachedKey = null;
+    @Override
+    public void subtreeChanged() {
+        super.subtreeChanged();
+        invalidateCaches();
+    }
+
+    @Override
+    public void invalidateCaches() {
+        PascalModuleImpl.invalidate(getKey());
+        PascalRoutineImpl.invalidate(getKey());
+        PasStubStructTypeImpl.invalidate(getKey());
+        synchronized (this) {
+            containingScope = null;
+            cachedKey = null;
+        }
     }
 
     protected static long getStamp(PsiFile file) {
@@ -233,7 +241,6 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     }
 
     static class UnitMembers extends Members {
-        List<SmartPsiElementPointer<PasEntityScope>> units = Collections.emptyList();
     }
 
     static class Parents extends Cached {
@@ -246,7 +253,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
         B stub = getStub();
         if (stub != null) {
             StubElement parentStub = stub.getParentStub();
-            PsiElement parent = parentStub.getPsi();
+            PsiElement parent = parentStub != null ? parentStub.getPsi() : null;
             if (parent instanceof PasEntityScope) {
                 return (PasEntityScope) parent;
             }
@@ -272,13 +279,14 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
      * 4. For structured types returns containing module
      * 5. For nested structured types returns containing type
      */
-    private void calcContainingScope() {
+    void calcContainingScope() {
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);  // 2, 3, 4, 5, 1 for method declarations
         containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
         if ((scope instanceof PascalModuleImpl) && (this instanceof PasRoutineImplDecl)) {            // 1 for method implementations
             String[] names = PsiUtil.getQualifiedMethodName(this).split("\\.");
             if (names.length <= 1) {                                                                            // should not be true
                 containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
+                LOG.info(String.format("ERROR: qualified method name of %s is: %s", getName(), PsiUtil.getQualifiedMethodName(this)));
                 return;
             }
             PasField field = scope.getField(PsiUtil.cleanGenericDef(names[0]));

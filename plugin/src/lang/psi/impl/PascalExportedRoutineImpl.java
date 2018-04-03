@@ -2,10 +2,9 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.psi.PsiElement;
+import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
-import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -20,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExportedRoutineStub> implements PasDeclSection, PascalExportedRoutine {
 
@@ -115,23 +115,17 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        List<PasEntityScope> res = calcParentScopesStub();
-        if (res != null) {
-            return PsiUtil.packSmartPointers(res);
-        }
-        return Collections.emptyList();
+        return Collections.singletonList(SmartPointerManager.createPointer(Objects.requireNonNull(getContainingScope())));
     }
 
-    private List<PasEntityScope> calcParentScopesStub() {
-        PasExportedRoutineStub stub = getStub();
-        if (stub != null) {
-            StubElement parentStub = stub.getParentStub();
-            PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
-            if (parEl instanceof PasEntityScope) {
-                return Collections.singletonList((PasEntityScope) parEl);
-            }
+    @Override
+    void calcContainingScope() {
+        PasEntityScope scope = PsiTreeUtil.getParentOfType(this, PasEntityScope.class);
+        if (scope != null) {
+            containingScope = SmartPointerManager.createPointer(scope);
+        } else {
+            LOG.info("ERROR: containing scope not found for: " + getName());
         }
-        return null;
     }
 
 }

@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extends PasStructStub<T>>
-        extends PascalStubStructTypeImpl<B> implements PascalStructType<B> {
+        extends PasStubScopeImpl<B> implements PascalStructType<B> {
 
     public static final Logger LOG = Logger.getInstance(PasStubStructTypeImpl.class.getName());
 
@@ -70,7 +70,6 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     }
 
     private List<String> parentNames = null;
-
     private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
 
     public PasStubStructTypeImpl(ASTNode node) {
@@ -142,7 +141,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                 throw (ProcessCanceledException) e.getCause();
             } else {
                 LOG.warn("Error occured during building members for: " + this, e.getCause());
-                invalidateCaches(getKey());
+                invalidateCaches();
                 return EMPTY_MEMBERS;
             }
         }
@@ -181,28 +180,21 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     }
 
     @Override
-    public void subtreeChanged() {
-        super.subtreeChanged();
-        invalidateCached();
-    }
-
-    synchronized private void invalidateCached() {
-        parentNames = null;
-        parentScopes = null;
+    public void invalidateCaches() {
+        super.invalidateCaches();
+        synchronized (this) {
+            parentNames = null;
+            parentScopes = null;
+        }
     }
 
     public static void invalidate(String key) {
         cache.invalidate(key);
-        parentCache.invalidate(key);
     }
 
     private class MemberBuilder implements Callable<Members> {
         @Override
         public Members call() throws Exception {
-            if (null == getContainingFile()) {
-                PascalPsiImplUtil.logNullContainingFile(PasStubStructTypeImpl.this);
-                return null;
-            }
             Members res = new Members();
 
             PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
@@ -271,94 +263,72 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        List<SmartPsiElementPointer<PasEntityScope>> res = retrieveParentScopesStub();
-        if (res != null) {
-            return Collections.unmodifiableList(res);
-        }
-        ensureChache(parentCache);
-        try {
-            return Collections.unmodifiableList(parentCache.get(getKey(), new ParentBuilder()).scopes);
-        } catch (Exception e) {
-            if (e.getCause() instanceof ProcessCanceledException) {
-                throw (ProcessCanceledException) e.getCause();
-            } else {
-                LOG.warn("Error occured during building members for: " + this, e.getCause());
-                invalidateCaches(getKey());
-                return Collections.emptyList();
+        synchronized (this) {
+            if (null == parentScopes) {
+                calcParentScopes();
             }
+            return parentScopes;
         }
     }
 
-    synchronized private List<SmartPsiElementPointer<PasEntityScope>> retrieveParentScopesStub() {
+    private void calcParentScopes() {
+        calcParentScopesStub();
         if (null == parentScopes) {
-            calcParentScopesStub();
-        }
-        return parentScopes;
-    }
-
-    private void calcParentScopesStub() {
-        // TODO: cache with validation
-        B stub = getStub();
-        if (stub != null) {
-            List<String> parentNames = stub.getParentNames();
-            StubElement parentStub = stub.getParentStub();
-            PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
-            if ((parEl instanceof PascalClassDecl) || (parEl instanceof PascalInterfaceDecl)) {         // Nested type
-                parentScopes = new SmartList<>(((PascalStructType) parEl).getParentScope());
-                parentScopes.add(SmartPointerManager.createPointer((PasEntityScope) parEl));
-            } else {
-                parentScopes = new ArrayList<>(parentNames.size() + 1);
-            }
-            addDefaultScopes(parentScopes);
-            for (String parentName : parentNames) {
-                Collection<PasField> types = ResolveUtil.resolveWithStubs(NamespaceRec.fromFQN(this, parentName + ResolveUtil.STRUCT_SUFFIX),
-                        new ResolveContext(this.getContainingScope(), PasField.TYPES_TYPE, true, null), 0);
-                for (PasField type : types) {
-                    PascalNamedElement el = type.getElement();
-                    if (el instanceof PasEntityScope) {
-                        parentScopes.add(SmartPointerManager.createPointer((PasEntityScope) el));
-                    }
-                }
-            }
-        }
-    }
-
-    private class ParentBuilder implements Callable<Parents> {
-        @Override
-        public Parents call() throws Exception {
-            if (null == getContainingFile()) {
-                PascalPsiImplUtil.logNullContainingFile(PasStubStructTypeImpl.this);
-                return null;
-            }
-            Parents res = new Parents();
-            res.stamp = getStamp(getContainingFile());
-            res.scopes = new SmartList<SmartPsiElementPointer<PasEntityScope>>();
+            SmartList<SmartPsiElementPointer<PasEntityScope>> res = new SmartList<>();
             PasClassParent parent = getClassParent();
             if (parent != null) {
                 for (PasTypeID typeID : parent.getTypeIDList()) {
                     NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
                     PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, null, true);
                     if (scope != PasStubStructTypeImpl.this) {
-                        addScope(res.scopes, scope);
+                        addScope(res, scope);
                     }
                 }
             }
-            addDefaultScopes(res.scopes);
-
-            return res;
+            addDefaultScopes(res);
+            parentScopes = res;
         }
+    }
 
+    private void calcParentScopesStub() {
+        // TODO: cache with validation
+        B stub = getStub();
+        if (stub != null) {
+            List<SmartPsiElementPointer<PasEntityScope>> res;
+            List<String> parentNames = stub.getParentNames();
+            StubElement parentStub = stub.getParentStub();
+            PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
+            if ((parEl instanceof PascalClassDecl) || (parEl instanceof PascalInterfaceDecl)) {         // Nested type
+                res = new SmartList<>(((PascalStructType) parEl).getParentScope());
+                res.add(SmartPointerManager.createPointer((PasEntityScope) parEl));
+            } else {
+                res = new ArrayList<>(parentNames.size() + 1);
+            }
+            addDefaultScopes(res);
+            for (String parentName : parentNames) {
+                Collection<PasField> types = ResolveUtil.resolveWithStubs(NamespaceRec.fromFQN(this, parentName + ResolveUtil.STRUCT_SUFFIX),
+                        new ResolveContext(this.getContainingScope(), PasField.TYPES_TYPE, true, null), 0);
+                for (PasField type : types) {
+                    PascalNamedElement el = type.getElement();
+                    if (el instanceof PasEntityScope) {
+                        res.add(SmartPointerManager.createPointer((PasEntityScope) el));
+                    }
+                }
+            }
+            parentScopes = Collections.unmodifiableList(res);
+        }
     }
 
     private void addDefaultScopes(List<SmartPsiElementPointer<PasEntityScope>> scopes) {
         PasEntityScope defEntity = null;
-        PasEntityScope scope = PasStubStructTypeImpl.this.getContainingScope();
-        if (PasStubStructTypeImpl.this instanceof PasClassTypeDecl) {
+        PasEntityScope scope = this.getContainingScope();
+        scope = scope != null ? scope : this;
+        if (this instanceof PasClassTypeDecl) {
             defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.TObject"), scope, true);
-        } else if (PasStubStructTypeImpl.this instanceof PasInterfaceTypeDecl) {
+        } else if (this instanceof PasInterfaceTypeDecl) {
             defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.IInterface"), scope, true);
         }
-        if (defEntity != PasStubStructTypeImpl.this) {
+        if (defEntity != this) {
             addScope(scopes, defEntity);
         }
     }

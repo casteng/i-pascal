@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProcessCanceledException;
@@ -44,8 +43,6 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     volatile protected boolean building = false;
     volatile protected String cachedKey;
-
-    protected static final Cache<String, Parents> parentCache = CacheBuilder.newBuilder().softValues().build();
 
     protected ReentrantLock containingScopeLock = new ReentrantLock();
 

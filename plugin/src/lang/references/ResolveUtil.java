@@ -18,6 +18,7 @@ import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasArrayType;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -390,8 +391,10 @@ public class ResolveUtil {
             LOG.info("Stub is null" + scope);
             return;
         }
-        namespaces.addAll(findUnitsWithStub(scope.getProject(), null, "system"));
         for (String unitName : stub.getUsedUnitsPublic()) {
+            namespaces.addAll(findUnitsWithStub(scope.getProject(), null, unitName));
+        }
+        for (String unitName : PascalParserUtil.EXPLICIT_UNITS) {
             namespaces.addAll(findUnitsWithStub(scope.getProject(), null, unitName));
         }
     }
