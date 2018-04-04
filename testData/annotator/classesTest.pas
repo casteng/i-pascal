@@ -19,7 +19,7 @@ type
             public
                 myInnerField: Integer;
                 procedure innerProc;
-                constructor Create([CustomAttribute('', '', False)] a: a);
+                constructor Create([CustomAttribute('', '', False)] a: TOuterClass.TInnerClass);
             end;
         procedure outerProc(arg: Integer);
         class destructor Destroy();
@@ -40,9 +40,9 @@ begin
     end;
 end;
 
-constructor TOuterClass.TInnerClass.Create([CustomAttribute('', '', False)] a: a);
+constructor TOuterClass.TInnerClass.Create([CustomAttribute('', '', False)] a: TOuterClass.TInnerClass);
 begin
-
+    myInnerField := 0;
 end;
 
 procedure TOuterClass.outerProc;

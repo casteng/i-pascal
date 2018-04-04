@@ -9,8 +9,6 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
-import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
@@ -19,7 +17,6 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
@@ -227,17 +224,10 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     private void calcParentScopes() {
         parentScopes = Collections.emptyList();                             // To prevent infinite recursion
-        List<SmartPsiElementPointer<PasEntityScope>> res;
-        PasClassQualifiedIdent ident = PsiTreeUtil.getChildOfType(PascalRoutineImpl.this, PasClassQualifiedIdent.class);
-        res = Collections.emptyList();
-        if ((ident != null) && (ident.getSubIdentList().size() > 1)) {          // Should contain at least class name and method name parts
-            NamespaceRec fqn = NamespaceRec.fromElement(ident.getSubIdentList().get(ident.getSubIdentList().size() - 2));
-            PasEntityScope type = PasReferenceUtil.resolveTypeScope(fqn, null, true);
-            if (type != null) {
-                res = Collections.singletonList(SmartPointerManager.getInstance(type.getProject()).createSmartPsiElementPointer(type));
-            }
+        PasEntityScope scope = getContainingScope();
+        if (scope != null) {
+            parentScopes = Collections.singletonList(SmartPointerManager.createPointer(scope));
         }
-        parentScopes = res;
     }
 
 }
