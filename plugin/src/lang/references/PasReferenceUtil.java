@@ -324,6 +324,10 @@ public class PasReferenceUtil {
         ResolveContext context = new ResolveContext(scope, PasField.TYPES_TYPE, includeLibrary, null);
         Collection<PasField> types = resolve(fqn, context, 0);
         for (PasField field : types) {
+            PascalNamedElement el = field.getElement();
+            if (ResolveUtil.isStubPowered(el)) {
+                return ResolveUtil.retrieveFieldTypeScope(field, context, 0);
+            }
             PasEntityScope struct = field.getElement() != null ? PascalParserUtil.getStructTypeByIdent(field.getElement(), 0) : null;
             if (struct != null) {
                 return struct;

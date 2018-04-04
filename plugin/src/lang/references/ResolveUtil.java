@@ -23,6 +23,7 @@ import com.siberika.idea.pascal.lang.psi.PasArrayType;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasSetType;
@@ -412,5 +413,14 @@ public class ResolveUtil {
 
     public static String cleanupName(String name) {
         return name != null ? name.replaceAll(STRUCT_SUFFIX, "") : null;
+    }
+
+    public static boolean isTypeDeclPointingToSelf(StubBasedPsiElement typeIdent) {
+        if (typeIdent instanceof PasNamedIdentDecl) {
+            if (((PasNamedIdentDecl) typeIdent).getTypeKind() == PasField.Kind.TYPEREF) {
+                return ((PasNamedIdentDecl) typeIdent).getName().equalsIgnoreCase(((PasNamedIdentDecl) typeIdent).getTypeString());
+            }
+        }
+        return false;
     }
 }

@@ -13,6 +13,7 @@ import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.PsiElementProcessor;
@@ -33,6 +34,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -500,6 +502,9 @@ public class PsiUtil {
     }
 
     public static boolean isTypeDeclPointingToSelf(@NotNull PascalNamedElement typeIdent) {
+        if (typeIdent instanceof StubBasedPsiElement) {
+            return ResolveUtil.isTypeDeclPointingToSelf((StubBasedPsiElement)typeIdent);
+        }
         PsiElement parent = typeIdent.getParent();
         if (parent instanceof PasTypeDeclaration) {
             PasTypeDecl typeDecl = ((PasTypeDeclaration) parent).getTypeDecl();
@@ -562,7 +567,7 @@ public class PsiUtil {
 
     public static String getFieldName(PascalNamedElement element) {
         if (element instanceof PascalRoutine) {
-            return normalizeRoutineName((PascalRoutine) element);
+            return ((PascalRoutine) element).getCanonicalName();
         } else {
             return element.getName();
         }
