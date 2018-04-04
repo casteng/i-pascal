@@ -36,8 +36,8 @@ import java.util.TreeMap;
 public class PPUDumpParser {
 
     private static final Logger LOG = Logger.getInstance(PPUDumpParser.class);
-    public static final String UNRESOLVED_INTERNAL = "__INTERNAL__";
-    public static final String INDENT = "  ";
+    static final String UNRESOLVED_INTERNAL = "__INTERNAL__";
+    static final String INDENT = "  ";
     private static final String LF = "\n@";
 
     public static Section parse(InputStream inputStream, PPUDecompilerCache cache) throws ParseException, ParserConfigurationException, SAXException, IOException {
@@ -149,9 +149,9 @@ public class PPUDumpParser {
             return res;
         }
 
-        public final Map<String, String> idNameMap = new HashMap<String, String>();
-        public final Map<String, String> symidNameMap = new HashMap<String, String>();
-        public final List<String> units = new ArrayList<String>();
+        final Map<String, String> idNameMap = new HashMap<String, String>();
+        final Map<String, String> symidNameMap = new HashMap<String, String>();
+        final List<String> units = new ArrayList<String>();
 
         private Deque<Section> stack = new ArrayDeque<Section>();
         private StringBuilder chars = new StringBuilder();
@@ -352,7 +352,8 @@ public class PPUDumpParser {
                 sec.sb.append(")");
                 appendLineEnd(sec);
             } else if ("/proctype".equalsIgnoreCase(sec.type)) {
-                if (StringUtils.isBlank(sec.getDataStr("rettype/id"))) {
+                String returnTypeId = sec.getDataStr("rettype/id");
+                if (StringUtils.isBlank(returnTypeId) || "$void".equalsIgnoreCase(idNameMap.get(returnTypeId))) {
                     sec.insertText(0, "procedure ");
                 } else {
                     sec.insertText(0, "function ");
@@ -458,9 +459,7 @@ public class PPUDumpParser {
                     } else {
                         pos = sec.insertText(pos, prefix + def + postfix);
                     }
-                } else if (ref.startsWith("$")) {
-                    pos = sec.insertText(pos, def);
-                } else {
+                } else if (!("$formal".equalsIgnoreCase(ref) || "$void".equalsIgnoreCase(ref))) {
                     pos = sec.insertText(pos, prefix + ref + postfix);
                 }
             }

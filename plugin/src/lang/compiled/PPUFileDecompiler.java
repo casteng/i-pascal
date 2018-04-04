@@ -34,31 +34,4 @@ public class PPUFileDecompiler implements BinaryFileDecompiler {
         return PPUDecompilerCache.decompile(module, file.getPath(), file);
     }
 
-    /*@Override
-    public boolean accepts(@NotNull VirtualFile file) {
-        return PPUFileType.INSTANCE.equals(file.getFileType());
-    }
-
-    @NotNull
-    @Override
-    public ClsStubBuilder getStubBuilder() {
-        return new ClsStubBuilder() {
-            @Override
-            public int getStubVersion() {
-                return 1;
-            }
-
-            @Nullable
-            @Override
-            public PsiFileStub<?> buildFileStub(@NotNull FileContent fileContent) throws ClsFormatException {
-                return null;
-            }
-        };
-    }
-
-    @NotNull
-    @Override
-    public FileViewProvider createFileViewProvider(@NotNull VirtualFile file, @NotNull PsiManager manager, boolean physical) {
-        return new PPUViewProvider(manager, file, physical);
-    }*/
 }
