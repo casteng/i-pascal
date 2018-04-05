@@ -14,6 +14,8 @@ public interface PascalRoutine extends PasEntityScope {
 
     boolean isFunction();
 
+    boolean hasParameters();
+
     @NotNull
     String getFunctionTypeStr();
 

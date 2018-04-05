@@ -16,10 +16,11 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
     private PasField.Visibility visibility;
     private boolean constructor;
     private boolean function;
+    private boolean parameters;
     private String functionTypeStr;
 
     public PasExportedRoutineStubImpl(StubElement parent, String name, String canonicalName, PasField.Visibility visibility,
-                                      boolean constructor, boolean function, String functionTypeStr) {
+                                      boolean constructor, boolean function, boolean parameters, String functionTypeStr) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE);
         this.name = name;
         this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + canonicalName;
@@ -27,6 +28,7 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
         this.visibility = visibility;
         this.constructor = constructor;
         this.function = function;
+        this.parameters = parameters;
         this.functionTypeStr = functionTypeStr;
     }
 
@@ -63,6 +65,11 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
     @Override
     public boolean isFunction() {
         return function;
+    }
+
+    @Override
+    public boolean hasParameters() {
+        return parameters;
     }
 
     @Override

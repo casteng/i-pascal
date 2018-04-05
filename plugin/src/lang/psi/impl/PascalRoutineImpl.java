@@ -171,6 +171,11 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         return findChildByFilter(RoutineUtil.FUNCTION_KEYWORDS) != null;
     }
 
+    @Override
+    public boolean hasParameters() {
+        return PsiUtil.hasParameters(this);
+    }
+
     @NotNull
     public String getFunctionTypeStr() {
         if (isConstructor()) {                                 // Return namespace part of constructor implementation name as type name

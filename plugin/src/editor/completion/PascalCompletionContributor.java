@@ -511,7 +511,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(PsiUtil.getFieldName(field.getElement()));
         if (field.fieldType == PasField.FieldType.ROUTINE) {
             PascalNamedElement el = field.getElement();
-            final String content = (el instanceof PascalRoutine && PsiUtil.hasParameters((PascalRoutine) el)) ? "(" + DocUtil.PLACEHOLDER_CARET + ")" : "()" + DocUtil.PLACEHOLDER_CARET;
+            final String content = (el instanceof PascalRoutine && ((PascalRoutine) el).hasParameters()) ? "(" + DocUtil.PLACEHOLDER_CARET + ")" : "()" + DocUtil.PLACEHOLDER_CARET;
             res = res.withInsertHandler(new InsertHandler<LookupElement>() {
                 @Override
                 public void handleInsert(InsertionContext context, LookupElement item) {

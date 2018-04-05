@@ -30,7 +30,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
 
     @Override
     public PasExportedRoutineStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasExportedRoutineStubImpl(parentStub, "-", "-+-", PasField.Visibility.PUBLIC, false, false, "--");
+        return new PasExportedRoutineStubImpl(parentStub, "-", "-+-", PasField.Visibility.PUBLIC, false, false, false, "--");
     }
 
     @Override
@@ -42,7 +42,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @Override
     public PasExportedRoutineStub createStub(@NotNull PascalExportedRoutine psi, StubElement parentStub) {
         return new PasExportedRoutineStubImpl(parentStub, psi.getName(), psi.getCanonicalName(), psi.getVisibility(),
-                psi.isConstructor(), psi.isFunction(), psi.getFunctionTypeStr());
+                psi.isConstructor(), psi.isFunction(), psi.hasParameters(), psi.getFunctionTypeStr());
     }
 
     @NotNull
@@ -60,6 +60,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         dataStream.writeName(stub.getVisibility().name());
         dataStream.writeBoolean(stub.isConstructor());
         dataStream.writeBoolean(stub.isFunction());
+        dataStream.writeBoolean(stub.hasParameters());
         dataStream.writeName(stub.getFunctionTypeStr());
     }
 
@@ -71,8 +72,9 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         PasField.Visibility visibility = StubUtil.readEnum(dataStream, PasField.Visibility.class);
         boolean constructor = dataStream.readBoolean();
         boolean function = dataStream.readBoolean();
+        boolean parameters = dataStream.readBoolean();
         String typeStr = StubUtil.readName(dataStream);
-        return new PasExportedRoutineStubImpl(parentStub, name, canonicalName, visibility, constructor, function, typeStr);
+        return new PasExportedRoutineStubImpl(parentStub, name, canonicalName, visibility, constructor, function, parameters, typeStr);
     }
 
     @Override

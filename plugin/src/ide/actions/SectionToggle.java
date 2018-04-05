@@ -114,8 +114,8 @@ public class SectionToggle {
         return field != null ? field.getElement() : null;
     }
 
-    public static boolean hasParametersOrReturnType(PascalRoutine routine) {
-        return PsiUtil.hasParameters(routine) || (!routine.isConstructor() && routine.getFunctionTypeStr().length() > 0);
+    public static boolean hasParametersOrReturnType(@Nullable PascalRoutine routine) {
+        return (routine != null) && (routine.hasParameters() || (!routine.isConstructor() && routine.getFunctionTypeStr().length() > 0));
     }
 
     private static boolean isOverloaded(PasExportedRoutine routine) {
