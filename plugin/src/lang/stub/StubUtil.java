@@ -1,11 +1,11 @@
 package com.siberika.idea.pascal.lang.stub;
 
-import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.intellij.util.io.StringRef;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStub;
 
 import java.io.IOException;
@@ -64,12 +64,12 @@ public class StubUtil {
         }
     }
 
-    public static PasEntityScope retrieveScope(StubBasedPsiElementBase el) {
+    public static PasEntityScope retrieveScope(PascalStubElement el) {
         if (el instanceof PasEntityScope) {
             return (PasEntityScope) el;
         } else {
             // Parent stub is always present for non-scope stub based elements (IdentDecl) and it's PSI is always a scope
-            StubElement stub = el.getStub();
+            StubElement stub = el.retrieveStub();
             return stub != null ? (PasEntityScope) stub.getParentStub().getPsi() : null;
         }
     }

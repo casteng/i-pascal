@@ -32,7 +32,7 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
 
     @Nullable
     @Override
-    public PasIdentStub getStub() {      //===*** TODO: remove
+    public PasIdentStub retrieveStub() {
         PasIdentStub stub = super.getStub();
         return stub != null ? stub : getGreenStub();
     }
@@ -40,7 +40,7 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     @Nullable
     @Override
     public String getTypeString() {
-        PasIdentStub stub = getStub();
+        PasIdentStub stub = retrieveStub();
         if (stub != null) {
             return stub.getTypeString();
         }
@@ -51,7 +51,7 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     @Nullable
     @Override
     public PasField.Kind getTypeKind() {
-        PasIdentStub stub = getStub();
+        PasIdentStub stub = retrieveStub();
         if (stub != null) {
             return stub.getTypeKind();
         }
@@ -82,7 +82,7 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     @NotNull
     @Override
     public String getName() {
-        PasIdentStub stub = getStub();
+        PasIdentStub stub = retrieveStub();
         if (stub != null) {
             return stub.getName();
         }

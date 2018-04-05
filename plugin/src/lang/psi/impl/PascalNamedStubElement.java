@@ -12,11 +12,12 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalNamedElement, HasUniqueName {
+public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalStubElement<B>, PascalNamedElement {
 
     public PascalNamedStubElement(ASTNode node) {
         super(node);
@@ -48,7 +49,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     @NotNull
     @Override
     public String getName() {
-        B stub = getStub();
+        B stub = retrieveStub();
         if (stub != null) {
             return stub.getName();
         }
@@ -76,7 +77,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
 
     // Name qualified with container names
     public String getUniqueName() {
-        B stub = getStub();
+        B stub = retrieveStub();
         if (stub != null) {
             return stub.getUniqueName();
         }

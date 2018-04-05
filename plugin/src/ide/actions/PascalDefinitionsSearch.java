@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.ide.actions;
 
-import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.openapi.application.QueryExecutorBase;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -18,6 +17,7 @@ import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.PascalClassByNameContributor;
@@ -148,8 +148,8 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
             if (el instanceof PasGenericTypeIdent) {
                 return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(el, name), descendant.getContainingScope(), PsiUtil.isFromLibrary(parent));
             } else if (ResolveUtil.isStubPowered(el)) {          // not tested
-                ctx = new ResolveContext(StubUtil.retrieveScope((StubBasedPsiElementBase) el), PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null);
-                PasField.ValueType types = ResolveUtil.resolveTypeWithStub((StubBasedPsiElementBase) el, ctx, 0);
+                ctx = new ResolveContext(StubUtil.retrieveScope((PascalStubElement) el), PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null);
+                PasField.ValueType types = ResolveUtil.resolveTypeWithStub((PascalStubElement) el, ctx, 0);
                 if (types != null) {
                     return types.getTypeScopeStub();
                 }

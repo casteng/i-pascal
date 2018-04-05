@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.lang.references;
 
-import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressManager;
@@ -36,6 +35,7 @@ import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeTypeDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasEnumTypeImpl;
@@ -46,7 +46,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
-import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.lang.stub.PascalModuleIndex;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -168,8 +167,8 @@ public class ResolveUtil {
             try {
                 if (!field.isTypeResolved()) {
                     PascalNamedElement el = field.getElement();
-                    if ((el instanceof StubBasedPsiElementBase) && (((StubBasedPsiElementBase) el).getStub() != null)) {
-                        PasField.ValueType valueType = resolveTypeWithStub((StubBasedPsiElementBase) el, context, recursionCount);
+                    if ((el instanceof PascalStubElement) && (((PascalStubElement) el).retrieveStub() != null)) {
+                        PasField.ValueType valueType = resolveTypeWithStub((PascalStubElement) el, context, recursionCount);
                         if (valueType != null) {
                             valueType.field = field;
                             field.setValueType(valueType);
@@ -188,9 +187,9 @@ public class ResolveUtil {
         }
     }
 
-    public static PasField.ValueType resolveTypeWithStub(StubBasedPsiElementBase element, ResolveContext context, int recursionCount) {
+    public static PasField.ValueType resolveTypeWithStub(PascalStubElement element, ResolveContext context, int recursionCount) {
         if (recursionCount == 1) {
-            LOG.info("Resolving value type for " + element.getName());
+//            LOG.info("Resolving value type for " + element.getName());
         }
         if (element instanceof PascalIdentDecl) {
             return resolveIdentDeclType((PascalIdentDecl) element, context, recursionCount);
@@ -201,8 +200,8 @@ public class ResolveUtil {
     }
 
     private static PasField.ValueType resolveRoutineType(PascalExportedRoutine element, ResolveContext context, int recursionCount) {
-        PasExportedRoutineStub stub = element.getStub();
-        PsiElement scope = stub.getParentStub().getPsi();
+        PasExportedRoutineStub stub = element.retrieveStub();
+        PsiElement scope = stub != null ? stub.getParentStub().getPsi() : null;
         if (!(scope instanceof PasEntityScope)) {
             return null;
         }
@@ -211,8 +210,8 @@ public class ResolveUtil {
     }
 
     private static PasField.ValueType resolveIdentDeclType(@NotNull PascalIdentDecl element, ResolveContext context, int recursionCount) {
-        PasIdentStub stub = element.getStub();
-        PsiElement scope = stub.getParentStub().getPsi();
+        PasIdentStub stub = element.retrieveStub();
+        PsiElement scope = stub != null ? stub.getParentStub().getPsi() : null;
         if (!(scope instanceof PasEntityScope)) {
             return null;
         }
@@ -242,7 +241,7 @@ public class ResolveUtil {
         for (PasField struct : structs) {
             PascalNamedElement st = struct.getElement();
             if (st instanceof PasEntityScope) {
-                LOG.info("===*** resolved value type " + type + " to a structure via stubs");
+//                LOG.info("===*** resolved value type " + type + " to a structure via stubs");
                 return new PasField.ValueType(null, PasField.Kind.STRUCT, null, st);
             }
         }
@@ -256,9 +255,9 @@ public class ResolveUtil {
      *  for namespace of target entry add all its entities
      */
     public static Collection<PasField> resolveWithStubs(final NamespaceRec fqn, ResolveContext context, final int recursionCount) {
-        assert(context.scope instanceof StubBasedPsiElement);
-        StubElement stub = ((StubBasedPsiElement) context.scope).getStub();
-        assert(stub instanceof PasNamedStub);
+        assert(context.scope instanceof PascalStubElement);
+        StubElement stub = ((PascalStubElement) context.scope).retrieveStub();
+        assert(stub != null);
         PasEntityScope scope = context.scope;
         ProgressManager.checkCanceled();
         if (recursionCount > PasReferenceUtil.MAX_RECURSION_COUNT) {
@@ -280,9 +279,9 @@ public class ResolveUtil {
                 scope = fqn.isFirst() && (parentScope instanceof PasEntityScope) ? (PasEntityScope) parentScope : null;
             }
 
-            List<PasEntityScope> newNs = PasReferenceUtil.checkUnitScope(result, namespaces, fqn);
-            if (newNs != null) {
-                namespaces = newNs;
+            PasEntityScope unitNamespace = fqn.isFirst() ? PasReferenceUtil.checkUnitScope(result, namespaces, fqn) : null;
+            if (unitNamespace != null) {
+                namespaces = new SmartList<>(unitNamespace);
                 fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first
             }
 
@@ -300,7 +299,7 @@ public class ResolveUtil {
                     PasEntityScope newNS;
                         newNS = retrieveFieldTypeScope(field, context, recursionCount);
                         boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
-                        if ((fqn.getRestLevels() == 1) && ((null == newNs) || isDefault)         // "default" type pseudo value
+                        if ((fqn.getRestLevels() == 1) && ((null == newNS) || isDefault)         // "default" type pseudo value
                                 && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member
                             if (isDefault) {
                                 fqn.next();
@@ -387,7 +386,7 @@ public class ResolveUtil {
     }
 
     private static void addUnitNamespaces(List<PasEntityScope> namespaces, PascalModule scope) {
-        PasModuleStub stub = scope.getStub();
+        PasModuleStub stub = scope.retrieveStub();
         if (null == stub) {
             LOG.info("Stub is null" + scope);
             return;
@@ -408,7 +407,7 @@ public class ResolveUtil {
     }
 
     public static boolean isStubPowered(PascalNamedElement element) {
-        return (element instanceof StubBasedPsiElementBase) && (((StubBasedPsiElementBase) element).getStub() != null);
+        return (element instanceof PascalStubElement) && (((PascalStubElement) element).retrieveStub() != null);
     }
 
     public static String cleanupName(String name) {

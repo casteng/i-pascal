@@ -83,7 +83,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @NotNull
     @Override
     synchronized public List<String> getParentNames() {
-        B stub = getStub();
+        B stub = retrieveStub();
         if (stub != null) {
             return stub.getParentNames();
         }
@@ -150,7 +150,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @Nullable
     @Override
     public PasField getField(String name) {
-        if (getStub() != null) {
+        if (retrieveStub() != null) {
             return getFieldStub(name);
         } else {
             return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
@@ -160,7 +160,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        if (getStub() != null) {
+        if (retrieveStub() != null) {
             return getAllFieldsStub();
         } else {
             return getMembers(cache, MEMBER_BUILDER).all.values();
@@ -292,7 +292,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     private void calcParentScopesStub() {
         // TODO: cache with validation
-        B stub = getStub();
+        B stub = retrieveStub();
         if (stub != null) {
             List<SmartPsiElementPointer<PasEntityScope>> res;
             List<String> parentNames = stub.getParentNames();

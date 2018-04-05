@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.lang.references;
 
-import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressManager;
@@ -10,7 +9,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.SmartPsiElementPointer;
-import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
@@ -43,6 +41,7 @@ import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeTypeDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasEnumTypeImpl;
@@ -57,7 +56,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
-import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -244,7 +242,7 @@ public class PasReferenceUtil {
             PasField type = types.iterator().next();
             PascalNamedElement el = type.getElement();
             if (ResolveUtil.isStubPowered(el)) {
-                return ResolveUtil.resolveTypeWithStub((StubBasedPsiElementBase) el, new ResolveContext(type.owner, PasField.TYPES_TYPE, context.includeLibrary, null), recursionCount);
+                return ResolveUtil.resolveTypeWithStub((PascalStubElement) el, new ResolveContext(type.owner, PasField.TYPES_TYPE, context.includeLibrary, null), recursionCount);
             }
             return resolveFieldType(type, includeLibrary, ++recursionCount);          // resolve next type in chain
         }
@@ -371,8 +369,8 @@ public class PasReferenceUtil {
                 && !ResolveUtil.isStubPowered(context.scope)
                 && PsiUtil.isBefore(PsiUtil.getModuleImplementationSection(fqn.getParentIdent().getContainingFile()), fqn.getParentIdent());
         if (context.scope != null) {
-            if (context.scope instanceof StubBasedPsiElement) {
-                StubElement stub = ((StubBasedPsiElement) context.scope).getStub();
+            if (context.scope instanceof PascalStubElement) {
+                StubElement stub = ((PascalStubElement) context.scope).retrieveStub();
                 if (stub != null) {
                     return ResolveUtil.resolveWithStubs(fqn, context, recursionCount);
                 }
@@ -395,9 +393,9 @@ public class PasReferenceUtil {
                 context.scope = fqn.isFirst() ? PsiUtil.getNearestAffectingScope(context.scope) : null;
             }
 
-            List<PasEntityScope> newNs = checkUnitScope(result, namespaces, fqn);
-            if (newNs != null) {
-                namespaces = newNs;
+            PasEntityScope unitNamespace = fqn.isFirst() ? checkUnitScope(result, namespaces, fqn) : null;
+            if (unitNamespace != null) {
+                namespaces = new SmartList<>(unitNamespace);
                 fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first
             }
 
@@ -424,7 +422,7 @@ public class PasReferenceUtil {
                     } else {
                         newNS = retrieveFieldTypeScope(field, context, recursionCount);
                         boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
-                        if ((fqn.getRestLevels() == 1) && ((null == newNs) || isDefault)         // "default" type pseudo value
+                        if ((fqn.getRestLevels() == 1) && ((null == newNS) || isDefault)         // "default" type pseudo value
                          && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member
                             if (isDefault) {
                                 fqn.next();
@@ -500,9 +498,9 @@ public class PasReferenceUtil {
 
     private static Collection<PasField> resolveFromStub(NamespaceRec fqn, PasEntityScope namespace, ResolveContext context, int recursionCount) {
         Collection<PasField> result = null;
-        if (namespace instanceof StubBasedPsiElement) {
-            StubElement stub = ((StubBasedPsiElement) namespace).getStub();
-            if (stub instanceof PasNamedStub) {
+        if (namespace instanceof PascalStubElement) {
+            StubElement stub = ((PascalStubElement) namespace).retrieveStub();
+            if (stub != null) {
                 ResolveContext ctx = new ResolveContext(namespace, context.fieldTypes, context.includeLibrary, context.resultScope);
                 result = ResolveUtil.resolveWithStubs(new NamespaceRec(fqn), ctx, ++recursionCount);
             }
@@ -530,7 +528,7 @@ public class PasReferenceUtil {
         return result;
     }
 
-    static List<PasEntityScope> checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {
+    static PasEntityScope checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {
         List<PasEntityScope> sorted = new ArrayList<PasEntityScope>(namespaces.size());
         for (PasEntityScope namespace : namespaces) {
             if ((namespace instanceof PasModule) && !StringUtils.isEmpty(namespace.getName())) {
@@ -549,7 +547,7 @@ public class PasReferenceUtil {
                 if (fqn.isComplete()) {
                     result.add(namespace.getField(namespace.getName()));
                 }
-                return new SmartList<PasEntityScope>(namespace);
+                return namespace;
             }
         }
         return null;

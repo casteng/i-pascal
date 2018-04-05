@@ -54,7 +54,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @Override
     public String getCanonicalName() {
-        PasExportedRoutineStub stub = getStub();
+        PasExportedRoutineStub stub = retrieveStub();
         if (stub != null) {
             return stub.getCanonicalName();
         }
@@ -67,7 +67,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     }
 
     public boolean isConstructor() {
-        PasExportedRoutineStub stub = getStub();
+        PasExportedRoutineStub stub = retrieveStub();
         if (stub != null) {
             return stub.isConstructor();
         }
@@ -75,16 +75,25 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     }
 
     public boolean isFunction() {
-        PasExportedRoutineStub stub = getStub();
+        PasExportedRoutineStub stub = retrieveStub();
         if (stub != null) {
             return stub.isFunction();
         }
         return findChildByFilter(RoutineUtil.FUNCTION_KEYWORDS) != null;
     }
 
+    @Override
+    public boolean hasParameters() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.hasParameters();
+        }
+        return PsiUtil.hasParameters(this);
+    }
+
     @NotNull
     public String getFunctionTypeStr() {
-        PasExportedRoutineStub stub = getStub();
+        PasExportedRoutineStub stub = retrieveStub();
         if (stub != null) {
             return stub.getFunctionTypeStr();
         }

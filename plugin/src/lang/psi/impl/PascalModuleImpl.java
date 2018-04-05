@@ -81,7 +81,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     @Override
     public ModuleType getModuleType() {
-        PasModuleStub stub = getStub();
+        PasModuleStub stub = retrieveStub();
         if (stub != null) {
             return stub.getModuleType();
         } else {
@@ -120,7 +120,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     @Nullable
     public final PasField getField(final String name) {
-        if (getStub() != null) {
+        if (retrieveStub() != null) {
             return getFieldStub(name);
         } else {
             PasField result = getPublicField(name);
@@ -134,7 +134,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        if (getStub() != null) {
+        if (retrieveStub() != null) {
             return getAllFieldsStub();
         } else {
             if (!PsiUtil.checkeElement(this)) {
@@ -150,14 +150,14 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     PasField getFieldStub(String name) {
         PasField result = super.getFieldStub(name);
         if ((null == result) && getName().equalsIgnoreCase(name)) {
-            result = new PasField(this.getStub(), null);       // This unit name reference
+            result = new PasField(this.retrieveStub(), null);       // This unit name reference
         }
         return result;
     }
 
     Collection<PasField> getAllFieldsStub() {
         Collection<PasField> res = super.getAllFieldsStub();
-        res.add(new PasField(this.getStub(), null));       // This unit name reference
+        res.add(new PasField(this.retrieveStub(), null));       // This unit name reference
         return res;
     }
 

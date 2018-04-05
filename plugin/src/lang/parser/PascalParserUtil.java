@@ -74,7 +74,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 }
             } catch (PascalRTException e) {
 //                e.printStackTrace();
-                System.out.println(e.getMessage());
+//                System.out.println(e.getMessage());
             }
         }
         //builder_.setDebugMode(true);
@@ -219,7 +219,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             @Override
             public Icon getIcon(boolean unused) {
                 if (element instanceof PascalIdentDeclImpl) {
-                    PasIdentStub stub = ((PascalIdentDeclImpl) element).getStub();
+                    PasIdentStub stub = ((PascalIdentDeclImpl) element).retrieveStub();
                     PasField.FieldType type = stub != null ? stub.getType() : PsiUtil.getFieldType(element);
                     switch (type) {
                         case VARIABLE: return PascalIcons.VARIABLE;
@@ -259,7 +259,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     private static String getType(PascalNamedElement item) {
         if (item instanceof PascalIdentDeclImpl) {
-            PasIdentStub stub = ((PascalIdentDeclImpl) item).getStub();
+            PasIdentStub stub = ((PascalIdentDeclImpl) item).retrieveStub();
             PasField.FieldType type = stub != null ? stub.getType() : PsiUtil.getFieldType(item);
             switch (type) {
                 case VARIABLE: return "[var] ";

@@ -62,7 +62,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
 
     @Nullable
     @Override
-    public B getStub() {      //===*** TODO: remove
+    public B retrieveStub() {
         B stub = super.getStub();
         return stub != null ? stub : getGreenStub();
     }
@@ -88,7 +88,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     }
 
     PasField getFieldStub(String name) {
-        List<StubElement> childrenStubs = getStub().getChildrenStubs();
+        List<StubElement> childrenStubs = retrieveStub().getChildrenStubs();
         for (StubElement stubElement : childrenStubs) {
             String stubName = stubElement instanceof PasExportedRoutineStub ? ((PasExportedRoutineStub) stubElement).getCanonicalName() : ((PasNamedStub) stubElement).getName();
             if (name.equalsIgnoreCase(stubName)) {
@@ -110,7 +110,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
 
     Collection<PasField> getAllFieldsStub() {
         Collection<PasField> res = new SmartList<PasField>();
-        List<StubElement> childrenStubs = getStub().getChildrenStubs();
+        List<StubElement> childrenStubs = retrieveStub().getChildrenStubs();
         for (StubElement stubElement : childrenStubs) {
             res.add(new PasField((PasNamedStub) stubElement, null));
             if (stubElement instanceof PasStructStub) {
@@ -250,7 +250,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     @Nullable
     @Override
     public PasEntityScope getContainingScope() {
-        B stub = getStub();
+        B stub = retrieveStub();
         if (stub != null) {
             StubElement parentStub = stub.getParentStub();
             PsiElement parent = parentStub != null ? parentStub.getPsi() : null;

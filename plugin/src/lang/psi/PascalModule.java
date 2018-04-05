@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.lang.psi;
 
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.SmartPsiElementPointer;
-import com.intellij.psi.StubBasedPsiElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +15,7 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 13/08/2015
  */
-public interface PascalModule extends PasEntityScope, StubBasedPsiElement<PasModuleStub> {
+public interface PascalModule extends PasEntityScope, PascalStubElement<PasModuleStub> {
 
     enum ModuleType {
         UNIT, PROGRAM, LIBRARY, PACKAGE
