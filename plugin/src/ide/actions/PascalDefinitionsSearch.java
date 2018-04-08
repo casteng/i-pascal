@@ -146,7 +146,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
         for (PasField field : fields) {
             PascalNamedElement el = field.getElement();
             if (el instanceof PasGenericTypeIdent) {
-                return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(el, name), descendant.getContainingScope(), PsiUtil.isFromLibrary(parent));
+                return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(el, name), null, PsiUtil.isFromLibrary(parent));
             } else if (ResolveUtil.isStubPowered(el)) {          // not tested
                 ctx = new ResolveContext(StubUtil.retrieveScope((PascalStubElement) el), PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null);
                 PasField.ValueType types = ResolveUtil.resolveTypeWithStub((PascalStubElement) el, ctx, 0);

@@ -318,7 +318,7 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    public static PasEntityScope resolveTypeScope(NamespaceRec fqn, PasEntityScope scope, boolean includeLibrary) {
+    public static PasEntityScope resolveTypeScope(NamespaceRec fqn, @Nullable PasEntityScope scope, boolean includeLibrary) {
         ResolveContext context = new ResolveContext(scope, PasField.TYPES_TYPE, includeLibrary, null);
         Collection<PasField> types = resolve(fqn, context, 0);
         for (PasField field : types) {

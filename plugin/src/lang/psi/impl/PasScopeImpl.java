@@ -211,8 +211,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
         if ((scope instanceof PascalModuleImpl) && (this instanceof PasRoutineImplDecl)) {            // 1 for method implementations
             String[] names = PsiUtil.getQualifiedMethodName(this).split("\\.");
-            if (names.length <= 1) {                                                                            // should not be true
-                containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
+            if (names.length <= 1) {
                 return;
             }
             PasField field = scope.getField(PsiUtil.cleanGenericDef(names[0]));
