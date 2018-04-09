@@ -3,6 +3,8 @@ package com.siberika.idea.pascal.lang.stub;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 
+import java.util.List;
+
 /**
  * Author: George Bakhtadze
  * Date: 13/10/2015
@@ -18,7 +20,7 @@ public interface PasExportedRoutineStub extends PasNamedStub<PascalExportedRouti
 
     boolean isFunction();
 
-    boolean hasParameters();
-
     String getFunctionTypeStr();
+
+    List<String> getFormalParameterNames();
 }

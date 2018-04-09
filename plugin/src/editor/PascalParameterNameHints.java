@@ -9,8 +9,6 @@ import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasLiteralExpr;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
@@ -68,19 +66,10 @@ public class PascalParameterNameHints implements InlayParameterHintsProvider {
     private List<InlayInfo> getParameters(PasCallExpr callExpr) {
         int count = callExpr.getArgumentList().getExprList().size();
         if (count > 0) for (PasField field : PasReferenceUtil.resolveRoutines(callExpr)) {
-            if (field.getElement() instanceof PascalRoutine) {
-                PasFormalParameterSection parameters = ((PascalRoutine) field.getElement()).getFormalParameterSection();
-                if (parameters != null) {
-                    List<String> params = new SmartList<String>();
-                    for (PasFormalParameter parameter : parameters.getFormalParameterList()) {
-                        for (PascalNamedElement pasNamedIdent : parameter.getNamedIdentDeclList()) {
-                            params.add(pasNamedIdent.getName());
-                        }
-                    }
-                    if (count == params.size()) {
-                        return retrieveInlayInfo(callExpr, params);
-                    }
-                }
+            PascalNamedElement el = field.getElement();
+            List<String> params = el instanceof PascalRoutine ? ((PascalRoutine) el).getFormalParameterNames() : null;
+            if ((params != null) && (count == params.size())) {
+                return retrieveInlayInfo(callExpr, params);
             }
         }
         return Collections.emptyList();

@@ -11,9 +11,11 @@ import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Author: George Bakhtadze
@@ -30,7 +32,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
 
     @Override
     public PasExportedRoutineStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasExportedRoutineStubImpl(parentStub, "-", "-+-", PasField.Visibility.PUBLIC, false, false, false, "--");
+        return new PasExportedRoutineStubImpl(parentStub, "-", "-+-", PasField.Visibility.PUBLIC, false, false, "--", null);
     }
 
     @Override
@@ -42,7 +44,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @Override
     public PasExportedRoutineStub createStub(@NotNull PascalExportedRoutine psi, StubElement parentStub) {
         return new PasExportedRoutineStubImpl(parentStub, psi.getName(), psi.getCanonicalName(), psi.getVisibility(),
-                psi.isConstructor(), psi.isFunction(), psi.hasParameters(), psi.getFunctionTypeStr());
+                psi.isConstructor(), psi.isFunction(), psi.getFunctionTypeStr(), psi.getFormalParameterNames());
     }
 
     @NotNull
@@ -60,8 +62,8 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         dataStream.writeName(stub.getVisibility().name());
         dataStream.writeBoolean(stub.isConstructor());
         dataStream.writeBoolean(stub.isFunction());
-        dataStream.writeBoolean(stub.hasParameters());
         dataStream.writeName(stub.getFunctionTypeStr());
+        StubUtil.writeStringCollection(dataStream, stub.getFormalParameterNames());
     }
 
     @NotNull
@@ -72,9 +74,10 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         PasField.Visibility visibility = StubUtil.readEnum(dataStream, PasField.Visibility.class);
         boolean constructor = dataStream.readBoolean();
         boolean function = dataStream.readBoolean();
-        boolean parameters = dataStream.readBoolean();
         String typeStr = StubUtil.readName(dataStream);
-        return new PasExportedRoutineStubImpl(parentStub, name, canonicalName, visibility, constructor, function, parameters, typeStr);
+        List<String> parameterNames = new SmartList<>();
+        StubUtil.readStringCollection(dataStream, parameterNames);
+        return new PasExportedRoutineStubImpl(parentStub, name, canonicalName, visibility, constructor, function, typeStr, parameterNames);
     }
 
     @Override

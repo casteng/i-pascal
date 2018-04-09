@@ -163,6 +163,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         }
     }
 
+    @NotNull
+    @Override
+    public List<String> getFormalParameterNames() {
+        return RoutineUtil.calcFormalParameterNames(getFormalParameterSection());
+    }
+
     public boolean isConstructor() {
         return RoutineUtil.isConstructor(this);
     }

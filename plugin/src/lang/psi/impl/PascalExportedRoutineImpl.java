@@ -26,6 +26,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     protected static final Logger LOG = Logger.getInstance(PascalExportedRoutineImpl.class);
 
     private PasTypeID typeId;
+    private List<String> formalParameterNames;
 
     public PascalExportedRoutineImpl(ASTNode node) {
         super(node);
@@ -84,11 +85,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @Override
     public boolean hasParameters() {
-        PasExportedRoutineStub stub = retrieveStub();
-        if (stub != null) {
-            return stub.hasParameters();
-        }
-        return PsiUtil.hasParameters(this);
+        return !getFormalParameterNames().isEmpty();
     }
 
     @NotNull
@@ -137,4 +134,25 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         }
     }
 
+    @NotNull
+    @Override
+    public List<String> getFormalParameterNames() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getFormalParameterNames();
+        }
+        synchronized (this) {
+            formalParameterNames = RoutineUtil.calcFormalParameterNames(getFormalParameterSection());
+        }
+        return formalParameterNames;
+    }
+
+    @Override
+    public void invalidateCaches() {
+        super.invalidateCaches();
+        synchronized (this) {
+            typeId = null;
+            formalParameterNames = null;
+        }
+    }
 }

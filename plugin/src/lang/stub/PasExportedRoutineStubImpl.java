@@ -5,6 +5,8 @@ import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 
+import java.util.List;
+
 /**
  * Author: George Bakhtadze
  * Date: 13/10/2015
@@ -16,11 +18,11 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
     private PasField.Visibility visibility;
     private boolean constructor;
     private boolean function;
-    private boolean parameters;
     private String functionTypeStr;
+    private List<String> parameterNames;
 
     public PasExportedRoutineStubImpl(StubElement parent, String name, String canonicalName, PasField.Visibility visibility,
-                                      boolean constructor, boolean function, boolean parameters, String functionTypeStr) {
+                                      boolean constructor, boolean function, String functionTypeStr, List<String> parameterNames) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE);
         this.name = name;
         this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + canonicalName;
@@ -28,8 +30,8 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
         this.visibility = visibility;
         this.constructor = constructor;
         this.function = function;
-        this.parameters = parameters;
         this.functionTypeStr = functionTypeStr;
+        this.parameterNames = parameterNames;
     }
 
     @Override
@@ -68,12 +70,12 @@ public class PasExportedRoutineStubImpl extends StubBase<PascalExportedRoutine> 
     }
 
     @Override
-    public boolean hasParameters() {
-        return parameters;
+    public String getFunctionTypeStr() {
+        return functionTypeStr;
     }
 
     @Override
-    public String getFunctionTypeStr() {
-        return functionTypeStr;
+    public List<String> getFormalParameterNames() {
+        return parameterNames;
     }
 }
