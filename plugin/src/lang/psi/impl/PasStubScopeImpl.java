@@ -260,7 +260,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
         }
         if (SyncUtil.tryLockQuiet(containingScopeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
-                if (null == containingScope) {
+                if (!PsiUtil.isSmartPointerValid(containingScope)) {
                     calcContainingScope();
                 }
                 return containingScope != null ? containingScope.getElement() : null;

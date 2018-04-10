@@ -8,13 +8,11 @@ import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiPolyVariantReferenceBase;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.HasUniqueName;
@@ -149,7 +147,7 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
         }
         PsiElement stubbedElement = null;
         if (element instanceof PasGenericTypeIdent) {
-            stubbedElement = PsiTreeUtil.getChildOfType(element, PasNamedIdentDecl.class);
+            stubbedElement = ((PasGenericTypeIdent) element).getNamedIdentDecl();
         } else if (element.getParent() instanceof PasExportedRoutine) {
             stubbedElement = element.getParent();
         }

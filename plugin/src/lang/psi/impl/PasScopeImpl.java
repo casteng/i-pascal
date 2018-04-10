@@ -187,7 +187,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     public PasEntityScope getContainingScope() {
         if (SyncUtil.tryLockQuiet(containingScopeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
-                if (null == containingScope) {
+                if (!PsiUtil.isSmartPointerValid(containingScope)) {
                     calcContainingScope();
                 }
                 return containingScope != null ? containingScope.getElement() : null;

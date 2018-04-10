@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.52</version>
+    <version>1.80</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,12 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.80</p>
+        <ul>
+          <li>Optimization for large projects (via stub indices)</li>
+          <li>Find class by name</li>
+          <li>Find symbol by name</li>
+        </ul>
         <p>1.52</p>
         <ul>
           <li>Inplace local identifiers rename with smart suggestions</li>

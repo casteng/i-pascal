@@ -873,4 +873,8 @@ public class PsiUtil {
 
         return type;
     }
+
+    public static boolean isSmartPointerValid(SmartPsiElementPointer pointer) {
+        return (pointer != null) && (pointer.getElement() != null);
+    }
 }
