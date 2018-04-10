@@ -63,7 +63,7 @@ import java.util.Set;
 public class ResolveUtil {
 
     private static final Logger LOG = Logger.getInstance(ResolveUtil.class);
-    
+
     public static final String STRUCT_SUFFIX = "#";
 
     private static final Set<PasField.Kind> KINDS_FOLLOW_TYPE = EnumSet.of(PasField.Kind.TYPEREF, PasField.Kind.ARRAY, PasField.Kind.POINTER, PasField.Kind.CLASSREF, PasField.Kind.PROCEDURE);
@@ -218,6 +218,9 @@ public class ResolveUtil {
         ResolveContext typeResolveContext = new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null);
         String type = element.getTypeString();
         if ((type != null) && KINDS_FOLLOW_TYPE.contains(element.getTypeKind())) {
+            if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
+                return new PasField.ValueType(null, PasField.Kind.TYPEREF, null, element);
+            }
             return resolveTypeForStub(type, element, typeResolveContext, recursionCount);
         } else if (element.getTypeKind() == PasField.Kind.STRUCT) {
             return retrieveStruct(element.getName(), element, typeResolveContext, ++recursionCount);
@@ -310,17 +313,10 @@ public class ResolveUtil {
 //                                saveScope(context.resultScope, newNS, true);
                                 return result;
                             }
-                            /*if (field.getValueType() != null) {
-                                SmartPsiElementPointer<PasTypeDecl> typePtr = field.getValueType().declaration;
-                                PasTypeDecl enumType = typePtr != null ? typePtr.getElement() : null;
-                                PasEnumType enumDecl = enumType != null ? _PsiTreeUtil.findChildOfType(enumType, PasEnumType.class) : null;
-                                if (enumDecl != null) {
-                                    fqn.next();
-//                                    saveScope(context.resultScope, enumDecl, true);
-                                    return collectEnumFields(result, field, enumDecl, fqn, fieldTypes);
-                                }
-                            }*/
-                    }
+                            if (resolveEnumMember(result, field, fqn, fieldTypes)) {
+                                return result;
+                            }
+                        }
 
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
                     if (newNS instanceof PascalStructType) {
@@ -369,6 +365,32 @@ public class ResolveUtil {
             throw e;*/
         }
         return result;
+    }
+
+    static boolean resolveEnumMember(Collection<PasField> result, PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
+        PasEntityScope owner = field.owner;
+        PascalNamedElement el = field.getElement();
+        if (el instanceof PasGenericTypeIdent) {
+            el = ((PasGenericTypeIdent) el).getNamedIdentDecl();
+        }
+        boolean found = false;
+        if ((owner != null) && (el instanceof PasNamedIdentDecl)) {
+            fqn.next();
+            String name = fqn.getCurrentName().toUpperCase();
+            for (String subName : ((PasNamedIdentDecl) el).getSubMembers()) {
+                if (name.equals(subName.toUpperCase())) {
+                    PasField enumField = owner.getField(name);
+                    if (PasReferenceUtil.isFieldMatches(enumField, fqn, fieldTypes)) {
+                        result.add(enumField);
+                        found = true;
+                    }
+                }
+            }
+            if (!found) {
+                fqn.prev();
+            }
+        }
+        return found;
     }
 
     private static boolean isVisibleWithinUnit(PasField field, NamespaceRec fqn) {

@@ -26,13 +26,11 @@ import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -433,15 +431,8 @@ public class PasReferenceUtil {
                                 saveScope(context.resultScope, newNS, true);
                                 return result;
                             }
-                            if (field.getValueType() != null) {
-                                SmartPsiElementPointer<PsiElement> typePtr = field.getValueType().declaration;
-                                PsiElement enumType = typePtr != null ? typePtr.getElement() : null;
-                                PasEnumType enumDecl = enumType != null ? PsiTreeUtil.findChildOfType(enumType, PasEnumType.class) : null;
-                                if (enumDecl != null) {
-                                    fqn.next();
-                                    saveScope(context.resultScope, enumDecl, true);
-                                    return collectEnumFields(result, field, enumDecl, fqn, fieldTypes);
-                                }
+                            if (ResolveUtil.resolveEnumMember(result, field, fqn, fieldTypes)) {
+                                return result;
                             }
                         }
                     }
@@ -515,17 +506,6 @@ public class PasReferenceUtil {
             }
             resultScope.add(namespace);
         }
-    }
-
-    // Advances fqn
-    private static Collection<PasField> collectEnumFields(Collection<PasField> result, PasField field, PasEnumType enumDecl, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
-        for (PasNamedIdentDecl ident : enumDecl.getNamedIdentDeclList()) {
-            PasField enumField = new PasField(field.owner, ident, ident.getName(), PasField.FieldType.CONSTANT, field.visibility);
-            if (isFieldMatches(enumField, fqn, fieldTypes)) {
-                result.add(enumField);
-            }
-        }
-        return result;
     }
 
     static PasEntityScope checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {

@@ -15,6 +15,7 @@ var
   Enum: TEnum;
 begin
   TEnum.eTwo;
+  eOne;
   TEnum.default;
   Integer.default;
 end.

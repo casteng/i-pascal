@@ -2,7 +2,10 @@ package com.siberika.idea.pascal.lang.psi;
 
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public interface PascalIdentDecl extends PascalStubElement<PasIdentStub>, PasNamedIdent {
 
@@ -12,4 +15,6 @@ public interface PascalIdentDecl extends PascalStubElement<PasIdentStub>, PasNam
     @Nullable
     PasField.Kind getTypeKind();
 
+    @NotNull
+    List<String> getSubMembers();
 }
