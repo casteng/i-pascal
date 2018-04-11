@@ -454,16 +454,8 @@ public class PasReferenceUtil {
                     Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
                     if ((fields != null) && (!fields.isEmpty())) {
                         result.addAll(fields);
-                    } else for (PasField pasField : namespace.getAllFields()) {
-                        if (isFieldMatches(pasField, fqn, fieldTypes) &&
-                                !result.contains(pasField) &&
-                                isVisibleWithinUnit(pasField, fqn)) {
-                            saveScope(context.resultScope, namespace, false);
-                            result.add(pasField);
-                            if (!isCollectingAll(fqn)) {
-                                break;
-                            }
-                        }
+                    } else {
+                        ResolveUtil.findLastPart(result, fqn, namespace, fieldTypes, context, PasReferenceUtil::isVisibleWithinUnit);
                     }
                     if (!result.isEmpty() && !isCollectingAll(fqn)) {
                         break;
@@ -499,7 +491,7 @@ public class PasReferenceUtil {
         return result;
     }
 
-    private static void saveScope(List<PsiElement> resultScope, PsiElement namespace, boolean clear) {
+    static void saveScope(List<PsiElement> resultScope, PsiElement namespace, boolean clear) {
         if (resultScope != null) {
             if (clear) {
                 resultScope.clear();
@@ -564,8 +556,12 @@ public class PasReferenceUtil {
         return "".equals(fqn.getCurrentName());
     }
 
+    static boolean isFieldTypeMatches(PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
+        return !fqn.isTarget() || fieldTypes.contains(field.fieldType);
+    }
+
     static boolean isFieldMatches(PasField field, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
-        return (!fqn.isTarget() || fieldTypes.contains(field.fieldType)) &&
+        return isFieldTypeMatches(field, fqn, fieldTypes) &&
                 (isCollectingAll(fqn) || field.name.equalsIgnoreCase(fqn.getCurrentName()));
     }
 

@@ -310,7 +310,7 @@ public class ResolveUtil {
                                 if (PasReferenceUtil.isFieldMatches(defaultField, fqn, fieldTypes)) {
                                     result.add(defaultField);
                                 }
-//                                saveScope(context.resultScope, newNS, true);
+                                PasReferenceUtil.saveScope(context.resultScope, newNS, true);
                                 return result;
                             }
                             if (resolveEnumMember(result, field, fqn, fieldTypes)) {
@@ -334,17 +334,7 @@ public class ResolveUtil {
                         LOG.info(String.format("===*** null namespace! %s", fqn));
                         continue;
                     }
-                    for (PasField pasField : namespace.getAllFields()) {
-                        if (PasReferenceUtil.isFieldMatches(pasField, fqn, fieldTypes) &&
-                                !result.contains(pasField) &&
-                                isVisibleWithinUnit(pasField, fqn)) {
-//                            saveScope(context.resultScope, namespace, false);
-                            result.add(pasField);
-                            if (!PasReferenceUtil.isCollectingAll(fqn)) {
-                                break;
-                            }
-                        }
-                    }
+                    findLastPart(result, fqn, namespace, fieldTypes, context, ResolveUtil::isVisibleWithinUnit);
                     if (!result.isEmpty() && !PasReferenceUtil.isCollectingAll(fqn)) {
                         break;
                     }
@@ -355,14 +345,6 @@ public class ResolveUtil {
                 }
             }
         } catch (PasInvalidScopeException e) {
-            /*if (namespaces != null) {
-                for (PasEntityScope namespace : namespaces) {
-                    namespace.invalidateCache();
-                }
-            }*/
-        /*} catch (Throwable e) {
-            //LOG.error(String.format("Error parsing scope %s, file %s", scope, scope != null ? scope.getContainingFile().getName() : ""), e);
-            throw e;*/
         }
         return result;
     }
@@ -443,5 +425,32 @@ public class ResolveUtil {
             }
         }
         return false;
+    }
+
+    static void findLastPart(Collection<PasField> result, NamespaceRec fqn, PasEntityScope namespace, Set<PasField.FieldType> fieldTypes,
+                             ResolveContext context, VisibilityChecker visibilityChecker) {
+        if (PasReferenceUtil.isCollectingAll(fqn)) {
+            for (PasField pasField : namespace.getAllFields()) {
+                if (PasReferenceUtil.isFieldMatches(pasField, fqn, fieldTypes) &&
+                        !result.contains(pasField) &&
+                        visibilityChecker.check(pasField, fqn)) {
+                    PasReferenceUtil.saveScope(context.resultScope, namespace, false);
+                    result.add(pasField);
+                    if (!PasReferenceUtil.isCollectingAll(fqn)) {
+                        break;
+                    }
+                }
+            }
+        } else {
+           PasField pasField = namespace.getField(fqn.getCurrentName());
+            if ((pasField != null) && !result.contains(pasField) && visibilityChecker.check(pasField, fqn)) {
+                PasReferenceUtil.saveScope(context.resultScope, namespace, false);
+                result.add(pasField);
+            }
+        }
+    }
+
+    interface VisibilityChecker {
+        boolean check(@NotNull PasField field, @NotNull NamespaceRec fqn);
     }
 }
