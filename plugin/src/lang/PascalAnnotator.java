@@ -3,7 +3,6 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
-import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
@@ -19,7 +18,6 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
@@ -177,10 +175,6 @@ public class PascalAnnotator implements Annotator {
                 }
             }
         }
-
-        if ((element instanceof PascalNamedElement) && PsiUtil.isUsedUnitName(element.getParent())) {
-            annotateUnit(holder, (PascalQualifiedIdent) element.getParent());
-        }
     }
 
     private boolean isVariantField(List<PsiElement> scopes) {
@@ -195,29 +189,6 @@ public class PascalAnnotator implements Annotator {
             }
         }
         return scope;
-    }
-
-    private void annotateUnit(AnnotationHolder holder, PascalQualifiedIdent usedUnitName) {
-        if (PascalImportOptimizer.isExcludedFromCheck(usedUnitName)) {
-            return;
-        }
-        Annotation ann = null;
-        switch (PascalImportOptimizer.getUsedUnitStatus(usedUnitName, ModuleUtilCore.findModuleForPsiElement(usedUnitName))) {
-            case UNUSED: {
-                ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit"));
-                break;
-            }
-            case USED_IN_IMPL: {
-                ann = holder.createWarningAnnotation(usedUnitName, message("ann.warn.unused.unit.interface"));
-                ann.registerFix(new UsesActions.MoveUnitAction(message("action.uses.move"), usedUnitName));
-                break;
-            }
-        }
-        if (ann != null) {
-            ann.registerFix(new UsesActions.RemoveUnitAction(message("action.uses.remove"), usedUnitName));
-            ann.registerFix(new UsesActions.ExcludeUnitAction(message("action.uses.exclude"), usedUnitName));
-            ann.registerFix(new UsesActions.OptimizeUsesAction(message("action.uses.optimize")));
-        }
     }
 
     /**

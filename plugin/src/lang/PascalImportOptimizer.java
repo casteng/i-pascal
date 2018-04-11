@@ -55,7 +55,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
 
     public static final List<String> EXCLUDED_UNITS = Arrays.asList("CMEM", "HEAPTRC", "CTHREADS", "CWSTRING", "FASTMM4");
 
-    static boolean isExcludedFromCheck(PascalQualifiedIdent usedUnitName) {
+    public static boolean isExcludedFromCheck(PascalQualifiedIdent usedUnitName) {
         if (EXCLUDED_UNITS.contains(usedUnitName.getName().toUpperCase())) {
             return true;
         }

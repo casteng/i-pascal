@@ -133,11 +133,6 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(false, false, false);
     }
 
-    public void testUnusedUnits() {
-        myFixture.configureByFiles("unusedUnits.pas", "types.pas", "objects.pas", "scoped.types.pas", "exception.pas", "interfaces.pas", "routines.pas", "enumTypes.pas");
-        myFixture.checkHighlighting(true, false, false);
-    }
-
     public void testParamsInDeclaration() {
         myFixture.configureByFiles("paramsInDeclaration.pas");
         myFixture.checkHighlighting(true, false, false);
@@ -153,22 +148,17 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(true, false, false);
     }
 
-    public void testUsesInImplementation() {
-        myFixture.configureByFiles("usesInImplementation.pas", "types.pas");
-        myFixture.checkHighlighting(true, false, false);
-    }
-
-    public void testKeywordIdentifiers() throws Exception {
+    public void testKeywordIdentifiers() {
         myFixture.configureByFiles("keywordIdentifiers.pas");
         myFixture.checkHighlighting(true, false, false);
     }
 
-    public void testFPCGenerics() throws Exception {
+    public void testFPCGenerics() {
         myFixture.configureByFiles("fpcGenerics.pas");
         myFixture.checkHighlighting(true, false, false);
     }
 
-    public void testVariant() throws Exception {
+    public void testVariant() {
         myFixture.configureByFiles("variant.pas");
         myFixture.checkHighlighting(true, false, false);
     }

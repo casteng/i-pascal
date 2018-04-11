@@ -363,6 +363,8 @@
         <lang.foldingBuilder language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalFoldingBuilder"/>
 
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
+        <localInspection language="Pascal" displayName="Unused units detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection"/>
 
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
