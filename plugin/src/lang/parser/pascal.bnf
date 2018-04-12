@@ -401,6 +401,7 @@ private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ 
 private procName            ::= ClassQualifiedIdent | NamedIdent
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
+private operatorName        ::= IN | procName
 
 ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PascalExportedRoutine"
                              stubClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub"
@@ -410,7 +411,7 @@ private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc |
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=2}
 private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=2}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
-private classOperatorDecl   ::= [CLASS] OPERATOR procName FormalParameterSection ":" TypeDecl {pin=2}
+private classOperatorDecl   ::= [CLASS] OPERATOR operatorName FormalParameterSection ":" TypeDecl {pin=2}
 
 RoutineImplDecl             ::= routineImpl ProcBodyBlock {pin=1 name="procedure or function declaration"}
 RoutineImplDeclNested1      ::= routineDeclaration (ProcForwardDecl | BlockLocalNested1) [";"] {extends=RoutineImplDecl}
