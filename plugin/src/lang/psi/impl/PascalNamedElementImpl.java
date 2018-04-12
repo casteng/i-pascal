@@ -23,11 +23,13 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: George Bakhtadze
@@ -36,6 +38,7 @@ import java.util.Iterator;
 public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
     private static final int MAX_SHORT_TEXT_LENGTH = 32;
     private volatile String myCachedName;
+    private ReentrantLock nameLock = new ReentrantLock();
 
     public PascalNamedElementImpl(ASTNode node) {
         super(node);
@@ -44,16 +47,23 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
-        synchronized (this) {
+        if (SyncUtil.lockOrCancel(nameLock)) {
             myCachedName = null;
+            nameLock.unlock();
         }
     }
 
     @NotNull
     @Override
-    synchronized public String getName() {
-        if ((myCachedName == null) || (myCachedName.length() == 0)) {
-            myCachedName = calcName(getNameElement());
+    public String getName() {
+        if (SyncUtil.lockOrCancel(nameLock)) {
+            try {
+                if ((myCachedName == null) || (myCachedName.length() == 0)) {
+                    myCachedName = calcName(getNameElement());
+                }
+            } finally {
+                nameLock.unlock();
+            }
         }
         return myCachedName;
     }

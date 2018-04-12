@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressManager;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -17,6 +18,19 @@ public class SyncUtil {
     public static boolean tryLockQuiet(Lock lock, int timeoutMs) {
         try {
             return lock.tryLock(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            LOG.warn("Interrupted thread", e);
+            return false;
+        }
+    }
+
+    public static boolean lockOrCancel(Lock lock) {
+        try {
+            while (!lock.tryLock(LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                ProgressManager.checkCanceled();
+            }
+//            lock.lockInterruptibly();
+            return true;
         } catch (InterruptedException e) {
             LOG.warn("Interrupted thread", e);
             return false;

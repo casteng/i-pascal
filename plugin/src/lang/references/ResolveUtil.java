@@ -441,8 +441,8 @@ public class ResolveUtil {
                     }
                 }
             }
-        } else {
-           PasField pasField = namespace.getField(fqn.getCurrentName());
+        } else if (fqn.getCurrentName() != null) {
+            PasField pasField = namespace.getField(fqn.getCurrentName());
             if ((pasField != null) && !result.contains(pasField) && visibilityChecker.check(pasField, fqn)) {
                 PasReferenceUtil.saveScope(context.resultScope, namespace, false);
                 result.add(pasField);

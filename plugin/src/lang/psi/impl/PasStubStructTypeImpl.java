@@ -34,6 +34,7 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extends PasStructStub<T>>
         extends PasStubScopeImpl<B> implements PascalStructType<B> {
@@ -71,6 +73,8 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     private List<String> parentNames = null;
     private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
+    private ReentrantLock parentNamesLock = new ReentrantLock();
+    private ReentrantLock parentScopesLock = new ReentrantLock();
 
     public PasStubStructTypeImpl(ASTNode node) {
         super(node);
@@ -82,20 +86,26 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     @NotNull
     @Override
-    synchronized public List<String> getParentNames() {
+    public List<String> getParentNames() {
         B stub = retrieveStub();
         if (stub != null) {
             return stub.getParentNames();
         }
-        if (null == parentNames) {
-            PasClassParent classParent = getClassParent();
-            if (classParent != null) {
-                parentNames = new SmartList<>();
-                for (PasTypeID typeID : classParent.getTypeIDList()) {
-                    parentNames.add(typeID.getFullyQualifiedIdent().getName());
+        if (SyncUtil.lockOrCancel(parentNamesLock)) {
+            try {
+                if (null == parentNames) {
+                    PasClassParent classParent = getClassParent();
+                    if (classParent != null) {
+                        parentNames = new SmartList<>();
+                        for (PasTypeID typeID : classParent.getTypeIDList()) {
+                            parentNames.add(typeID.getFullyQualifiedIdent().getName());
+                        }
+                    } else {
+                        parentNames = Collections.emptyList();
+                    }
                 }
-            } else {
-                parentNames = Collections.emptyList();
+            } finally {
+                parentNamesLock.unlock();
             }
         }
         return parentNames;
@@ -182,9 +192,13 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @Override
     public void invalidateCaches() {
         super.invalidateCaches();
-        synchronized (this) {
+        if (SyncUtil.lockOrCancel(parentNamesLock)) {
             parentNames = null;
+            parentNamesLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(parentScopesLock)) {
             parentScopes = null;
+            parentScopesLock.unlock();
         }
     }
 
@@ -263,12 +277,16 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        synchronized (this) {
-            if (null == parentScopes) {
-                calcParentScopes();
+        if (SyncUtil.lockOrCancel(parentScopesLock)) {
+            try {
+                if (null == parentScopes) {
+                    calcParentScopes();
+                }
+            } finally {
+                parentScopesLock.unlock();
             }
-            return parentScopes;
         }
+        return parentScopes;
     }
 
     private void calcParentScopes() {

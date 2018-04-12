@@ -24,6 +24,7 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: George Bakhtadze
@@ -59,6 +61,9 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     private Set<String> usedUnitsPrivate = null;
     private List<SmartPsiElementPointer<PasEntityScope>> privateUnits = null;
     private List<SmartPsiElementPointer<PasEntityScope>> publicUnits = null;
+    private ReentrantLock unitsLock = new ReentrantLock();
+    private ReentrantLock publicUnitsLock = new ReentrantLock();
+    private ReentrantLock privateUnitsLock = new ReentrantLock();
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -175,28 +180,36 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPrivateUnits() {
-        synchronized (this) {
-            if (null == privateUnits) {
-                Set<String> units = getUsedUnitsPrivate();
-                privateUnits = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
-                addUnits(privateUnits, units);
-                addUnits(privateUnits, PascalParserUtil.EXPLICIT_UNITS);
+        if (SyncUtil.lockOrCancel(privateUnitsLock)) {
+            try {
+                if (null == privateUnits) {
+                    Set<String> units = getUsedUnitsPrivate();
+                    privateUnits = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
+                    addUnits(privateUnits, units);
+                    addUnits(privateUnits, PascalParserUtil.EXPLICIT_UNITS);
+                }
+            } finally {
+                privateUnitsLock.unlock();
             }
-            return privateUnits;
         }
+        return privateUnits;
     }
 
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits() {
-        synchronized (this) {
-            if (null == publicUnits) {
-                Set<String> units = getUsedUnitsPublic();
-                publicUnits = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
-                addUnits(publicUnits, units);
-                addUnits(publicUnits, PascalParserUtil.EXPLICIT_UNITS);
+        if (SyncUtil.lockOrCancel(publicUnitsLock)) {
+            try {
+                if (null == publicUnits) {
+                    Set<String> units = getUsedUnitsPublic();
+                    publicUnits = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
+                    addUnits(publicUnits, units);
+                    addUnits(publicUnits, PascalParserUtil.EXPLICIT_UNITS);
+                }
+            } finally {
+                publicUnitsLock.unlock();
             }
-            return publicUnits;
         }
+        return publicUnits;
     }
 
     private void addUnits(List<SmartPsiElementPointer<PasEntityScope>> result, Collection<String> units) {
@@ -257,11 +270,17 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     @NotNull
     @Override
-    synchronized public Set<String> getUsedUnitsPublic() {
-        if (null == usedUnitsPublic) {
-            usedUnitsPublic = new SmartHashSet<>();
-            for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceSection(this))) {
-                usedUnitsPublic.add(ident.getName());
+    public Set<String> getUsedUnitsPublic() {
+        if (SyncUtil.lockOrCancel(unitsLock)) {
+            try {
+                if (null == usedUnitsPublic) {
+                    usedUnitsPublic = new SmartHashSet<>();
+                    for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceSection(this))) {
+                        usedUnitsPublic.add(ident.getName());
+                    }
+                }
+            } finally {
+                unitsLock.unlock();
             }
         }
         return usedUnitsPublic;
@@ -269,11 +288,17 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     @NotNull
     @Override
-    synchronized public Set<String> getUsedUnitsPrivate() {
-        if (null == usedUnitsPrivate) {
-            usedUnitsPrivate = new SmartHashSet<>();
-            for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationSection(this))) {
-                usedUnitsPrivate.add(ident.getName());
+    public Set<String> getUsedUnitsPrivate() {
+        if (SyncUtil.lockOrCancel(unitsLock)) {
+            try {
+                if (null == usedUnitsPrivate) {
+                    usedUnitsPrivate = new SmartHashSet<>();
+                    for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationSection(this))) {
+                        usedUnitsPrivate.add(ident.getName());
+                    }
+                }
+            } finally {
+                unitsLock.unlock();
             }
         }
         return usedUnitsPrivate;
@@ -282,11 +307,18 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     public void invalidateCaches() {
         super.invalidateCaches();
-        synchronized (this) {
+        if (SyncUtil.lockOrCancel(unitsLock)) {
             usedUnitsPrivate = null;
             usedUnitsPublic = null;
+            unitsLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(privateUnitsLock)) {
             privateUnits = null;
+            privateUnitsLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(publicUnitsLock)) {
             publicUnits = null;
+            publicUnitsLock.unlock();
         }
     }
 

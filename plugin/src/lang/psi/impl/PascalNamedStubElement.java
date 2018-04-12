@@ -14,8 +14,11 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalStubElement<B>, PascalNamedElement {
 
@@ -28,9 +31,8 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     }
 
     private String myCachedUniqueName;
-    
-    // Copied from PascalNamedElementImpl as we can't extend that class.
     private String myCachedName;
+    private ReentrantLock nameLock = new ReentrantLock();
 
     @Override
     public ItemPresentation getPresentation() {
@@ -40,9 +42,10 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
-        synchronized (this) {
+        if (SyncUtil.lockOrCancel(nameLock)) {
             myCachedName = null;
             myCachedUniqueName = null;
+            nameLock.unlock();
         }
     }
 
@@ -53,12 +56,16 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getName();
         }
-        synchronized (this) {
-            if ((myCachedName == null) || (myCachedName.length() == 0)) {
-                myCachedName = PascalNamedElementImpl.calcName(getNameElement());
+        if (SyncUtil.lockOrCancel(nameLock)) {
+            try {
+                if ((myCachedName == null) || (myCachedName.length() == 0)) {
+                    myCachedName = PascalNamedElementImpl.calcName(getNameElement());
+                }
+            } finally {
+                nameLock.unlock();
             }
-            return myCachedName;
         }
+        return myCachedName;
     }
 
     @Override
@@ -81,12 +88,16 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getUniqueName();
         }
-        synchronized (this) {
-            if ((myCachedUniqueName == null) || (myCachedUniqueName.length() == 0)) {
-                myCachedUniqueName = calcUniqueName();
+        if (SyncUtil.lockOrCancel(nameLock)) {
+            try {
+                if ((myCachedUniqueName == null) || (myCachedUniqueName.length() == 0)) {
+                    myCachedUniqueName = calcUniqueName();
+                }
+            } finally {
+                nameLock.unlock();
             }
-            return myCachedUniqueName;
         }
+        return myCachedUniqueName;
     }
 
     protected abstract String calcUniqueName();

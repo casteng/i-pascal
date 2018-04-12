@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.Pair;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -14,17 +13,21 @@ import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.lang.stub.PasIdentStubElementType;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIdentStub> implements PascalIdentDecl {
 
     private Pair<String, PasField.Kind> myCachedType;
     private List<String> subMembers;                            // members which can be qualified by this ident as well as accessed directly (enums)
+    private ReentrantLock typeLock = new ReentrantLock();
+    private ReentrantLock subMembersLock = new ReentrantLock();
 
     public PascalIdentDeclImpl(ASTNode node) {
         super(node);
@@ -54,8 +57,8 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         if (stub != null) {
             return stub.getTypeString();
         }
-        ensureTypeResolved();
-        return myCachedType != null ? myCachedType.first : null;
+        Pair<String, PasField.Kind> cachedType = ensureTypeResolved();
+        return cachedType != null ? cachedType.first : null;
     }
 
     @Nullable
@@ -65,34 +68,47 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         if (stub != null) {
             return stub.getTypeKind();
         }
-        ensureTypeResolved();
-        return myCachedType != null ? myCachedType.second : null;
+        Pair<String, PasField.Kind> type = ensureTypeResolved();
+        return type != null ? type.second : null;
     }
 
-    synchronized private void ensureTypeResolved() {
-        if (myCachedType == null) {
-            myCachedType = ResolveUtil.retrieveDeclarationType(this);
+    private Pair<String, PasField.Kind> ensureTypeResolved() {
+        if (SyncUtil.lockOrCancel(typeLock)) {
+            try {
+                if (myCachedType == null) {
+                    myCachedType = ResolveUtil.retrieveDeclarationType(this);
+                    return myCachedType;
+                }
+            } finally {
+                typeLock.unlock();
+            }
         }
+        return myCachedType;
     }
 
+    @NotNull
     public List<String> getSubMembers() {
         PasIdentStub stub = retrieveStub();
         if (stub != null) {
             return stub.getSubMembers();
         }
-        synchronized (this) {
-            if (null == subMembers) {
-                PasTypeDecl decl = getTypeKind() == PasField.Kind.ENUM ? PsiTreeUtil.getNextSiblingOfType(getParent(), PasTypeDecl.class) : null;
-                PasEnumType enumDecl = decl != null ? PsiTreeUtil.findChildOfType(decl, PasEnumType.class) : null;
-                if (enumDecl != null) {
-                    List<PasNamedIdentDecl> constsList = enumDecl.getNamedIdentDeclList();
-                    subMembers = new ArrayList<>(constsList.size());
-                    for (PasNamedIdentDecl enumConstDecl : constsList) {
-                        subMembers.add(enumConstDecl.getName());
+        if (SyncUtil.lockOrCancel(subMembersLock)) {
+            try {
+                if (null == subMembers) {
+                    PasTypeDecl decl = getTypeKind() == PasField.Kind.ENUM ? PsiTreeUtil.getNextSiblingOfType(getParent(), PasTypeDecl.class) : null;
+                    PasEnumType enumDecl = decl != null ? PsiTreeUtil.findChildOfType(decl, PasEnumType.class) : null;
+                    if (enumDecl != null) {
+                        List<PasNamedIdentDecl> constsList = enumDecl.getNamedIdentDeclList();
+                        subMembers = new ArrayList<>(constsList.size());
+                        for (PasNamedIdentDecl enumConstDecl : constsList) {
+                            subMembers.add(enumConstDecl.getName());
+                        }
+                    } else {
+                        subMembers = Collections.emptyList();
                     }
-                } else {
-                    subMembers = Collections.emptyList();
                 }
+            } finally {
+                subMembersLock.unlock();
             }
         }
         return subMembers;
@@ -103,45 +119,17 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         return (scope != null ? scope.getUniqueName() + "." : "") + PsiUtil.getFieldName(this);
     }
 
-    // From PascalNamedElementImpl
-    private String myCachedName;
-
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
-        myCachedName = null;
-        subMembers = null;
-    }
-
-    @NotNull
-    @Override
-    public String getName() {
-        PasIdentStub stub = retrieveStub();
-        if (stub != null) {
-            return stub.getName();
+        if (SyncUtil.lockOrCancel(subMembersLock)) {
+            subMembers = null;
+            subMembersLock.unlock();
         }
-        synchronized (this) {
-            if ((myCachedName == null) || (myCachedName.length() == 0)) {
-                myCachedName = PascalNamedElementImpl.calcName(getNameElement());
-            }
-            return myCachedName;
+        if (SyncUtil.lockOrCancel(typeLock)) {
+            myCachedType = null;
+            typeLock.unlock();
         }
-    }
-
-    @Override
-    public String getNamespace() {
-        return "";
-    }
-
-    @Override
-    public String getNamePart() {
-        return getName();
-    }
-
-    @Nullable
-    @Override
-    public PsiElement getNameIdentifier() {
-        return getNameElement();
     }
 
 }

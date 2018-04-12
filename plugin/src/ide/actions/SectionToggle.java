@@ -292,7 +292,8 @@ public class SectionToggle {
         for (PasField field : fields) {
             PascalNamedElement el = field.getElement();
             //noinspection SuspiciousMethodCalls
-            if (((null == type) || (field.fieldType == type)) && !resultSet.contains(el) && ((null == filter) || filter.allow(field))) {
+            if (((null == type) || (field.fieldType == type)) &&
+                    (el != null) && !resultSet.contains(el) && ((null == filter) || filter.allow(field))) {
                 result.add((T) el);
                 resultSet.add((T) el);
             }

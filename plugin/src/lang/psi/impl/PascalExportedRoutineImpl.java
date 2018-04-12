@@ -13,6 +13,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExportedRoutineStub> implements PasDeclSection, PascalExportedRoutine {
 
@@ -27,6 +29,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     private PasTypeID typeId;
     private List<String> formalParameterNames;
+    private ReentrantLock parametersLock = new ReentrantLock();
 
     public PascalExportedRoutineImpl(ASTNode node) {
         super(node);
@@ -141,8 +144,14 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         if (stub != null) {
             return stub.getFormalParameterNames();
         }
-        synchronized (this) {
-            formalParameterNames = RoutineUtil.calcFormalParameterNames(getFormalParameterSection());
+        if (SyncUtil.lockOrCancel(parametersLock)) {
+            try {
+                if (null == formalParameterNames) {
+                    formalParameterNames = RoutineUtil.calcFormalParameterNames(getFormalParameterSection());
+                }
+            } finally {
+                parametersLock.unlock();
+            }
         }
         return formalParameterNames;
     }
@@ -150,9 +159,10 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @Override
     public void invalidateCaches() {
         super.invalidateCaches();
-        synchronized (this) {
-            typeId = null;
+        if (SyncUtil.lockOrCancel(parametersLock)) {
             formalParameterNames = null;
+            parametersLock.unlock();
         }
+        typeId = null;
     }
 }

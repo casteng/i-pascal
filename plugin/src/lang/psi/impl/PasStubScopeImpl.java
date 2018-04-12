@@ -21,7 +21,6 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
-import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -40,6 +39,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Author: George Bakhtadze
  * Date: 07/09/2013
  */
+@SuppressWarnings("unchecked")
 public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNamedStubElement<B> implements PasEntityScope {
 
     protected static final Logger LOG = Logger.getInstance(PasStubScopeImpl.class.getName());
@@ -48,7 +48,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
 
     volatile protected String cachedKey;
 
-    protected ReentrantLock containingScopeLock = new ReentrantLock();
+    private ReentrantLock containingScopeLock = new ReentrantLock();
 
     SmartPsiElementPointer<PasEntityScope> containingScope;
 
@@ -90,7 +90,8 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     PasField getFieldStub(String name) {
         List<StubElement> childrenStubs = retrieveStub().getChildrenStubs();
         for (StubElement stubElement : childrenStubs) {
-            String stubName = stubElement instanceof PasExportedRoutineStub ? ((PasExportedRoutineStub) stubElement).getCanonicalName() : ((PasNamedStub) stubElement).getName();
+            //String stubName = stubElement instanceof PasExportedRoutineStub ? ((PasExportedRoutineStub) stubElement).getCanonicalName() : ((PasNamedStub) stubElement).getName();
+            String stubName = ((PasNamedStub) stubElement).getName();
             if (name.equalsIgnoreCase(stubName)) {
                 return new PasField((PasNamedStub) stubElement, null);
             }
@@ -109,7 +110,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     }
 
     Collection<PasField> getAllFieldsStub() {
-        Collection<PasField> res = new SmartList<PasField>();
+        Collection<PasField> res = new SmartList<>();
         List<StubElement> childrenStubs = retrieveStub().getChildrenStubs();
         for (StubElement stubElement : childrenStubs) {
             res.add(new PasField((PasNamedStub) stubElement, null));
@@ -125,7 +126,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
         return res;
     }
 
-    protected <T extends Cached> void ensureChache(Cache<String, T> cache) {
+    <T extends Cached> void ensureChache(Cache<String, T> cache) {
 /*        if (!PsiUtil.checkeElement(this)) {
             return false;
         }*/
@@ -154,20 +155,21 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
         PascalModuleImpl.invalidate(getKey());
         PascalRoutineImpl.invalidate(getKey());
         PasStubStructTypeImpl.invalidate(getKey());
-        synchronized (this) {
+        if (SyncUtil.lockOrCancel(containingScopeLock)) {
             containingScope = null;
-            cachedKey = null;
+            containingScopeLock.unlock();
         }
+        cachedKey = null;
     }
 
-    protected static long getStamp(PsiFile file) {
+    static long getStamp(PsiFile file) {
         //return System.currentTimeMillis();
         return file.getModificationStamp();
     }
 
     @SuppressWarnings("unchecked")
-    protected void collectFields(PsiElement section, PasField.Visibility visibility,
-                                 final Map<String, PasField> members, final Set<PascalNamedElement> redeclaredMembers) {
+    void collectFields(PsiElement section, PasField.Visibility visibility,
+                       final Map<String, PasField> members, final Set<PascalNamedElement> redeclaredMembers) {
         if (null == section) {
             return;
         }
@@ -223,7 +225,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     }
 
     static class Cached {
-        protected static final int UNCACHEABLE_STAMP = -1000000000;
+        static final int UNCACHEABLE_STAMP = -1000000000;
         long stamp;
         public boolean isChachable() {
             return stamp != UNCACHEABLE_STAMP;
@@ -243,10 +245,6 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     static class UnitMembers extends Members {
     }
 
-    static class Parents extends Cached {
-        List<SmartPsiElementPointer<PasEntityScope>> scopes = new SmartList<SmartPsiElementPointer<PasEntityScope>>();
-    }
-
     @Nullable
     @Override
     public PasEntityScope getContainingScope() {
@@ -258,7 +256,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
                 return (PasEntityScope) parent;
             }
         }
-        if (SyncUtil.tryLockQuiet(containingScopeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
+        if (SyncUtil.lockOrCancel(containingScopeLock)) {
             try {
                 if (!PsiUtil.isSmartPointerValid(containingScope)) {
                     calcContainingScope();
