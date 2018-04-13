@@ -48,21 +48,10 @@ type
 
     CA = class of TA;
 
-    TAHelper = class helper for TA
-        Name: string;
-        class function Func: TA;
-        constructor Create(a, b: TA);
-    end;
-
     PVec = ^TVec;
     TVec = packed record
         x, Y: Single;
         z: TA;
-    end;
-
-    TVecHelper = record helper for TVec
-        class function v: TVec;
-        constructor Create();
     end;
 
     TVarRec = packed record
@@ -137,26 +126,6 @@ begin
 end;
 
 class function TObserverMapping.GetObserverID(const Key: Single): Integer;
-begin
-
-end;
-
-class function TAHelper.Func: TA;
-begin
-
-end;
-
-constructor TAHelper.Create(a, b: TA);
-begin
-
-end;
-
-class function TVecHelper.v: TVec;
-begin
-
-end;
-
-constructor TVecHelper.Create();
 begin
 
 end;

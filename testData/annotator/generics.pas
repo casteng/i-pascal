@@ -10,7 +10,10 @@ type
         procedure SetItem(const Value: T);
         property Items[Index: Integer]: T read GetItem write SetItem; default;
     end;
-    TList2<T>=class
+    TList2<T: TEnumerable, class, constructor>=class
+    end;
+
+    TList3<record>=class
     end;
 implementation
 

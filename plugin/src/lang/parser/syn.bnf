@@ -396,7 +396,7 @@ private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR 
 private rec_name            ::= !(identifier | END) & rec_section
 private rec_case            ::= !(ELSE | END) & rec_section
 private rec_caseItem        ::= !(END | ELSE | caseLabel)
-private rec_classparent     ::= !(CASE) & rec_name
+private rec_classparent     ::= !(CASE | FOR) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param    ::= !(")" | ";" | "]") & rec_section
 private rec_propspec        ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
@@ -414,7 +414,7 @@ private rec_procName        ::= !("(" | "<" | ":" | ";") & rec_section
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
 private operatorName        ::= InOperatorQualifiedIdent | procName
-InOperatorQualifiedIdent    ::= [identifier [GenericPostfix] "."] IN
+InOperatorQualifiedIdent    ::= (SubIdent [GenericPostfix] ".")* IN
 
 ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PascalExportedRoutine"
                              stubClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub"
@@ -526,10 +526,9 @@ GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
 private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {}             //TODO use meta rule
 private identsRest          ::= "," NamedIdent {recoverWhile=rec_generic_def}
 private constrainedGenericDefinition ::= "<" constrainedGeneric genericConstraintsRest* ">" {pin=1}
-private constrainedGeneric  ::= NamedIdent [ ":" GenericConstraint]
+private constrainedGeneric  ::= (NamedIdent [ ":" GenericConstraint]) | (CONSTRUCTOR | CLASS | RECORD)
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
-private genericConstraintsRest ::= "," constrainedGeneric {pin=1}
-private constrainedGenericsRest ::= ";" constrainedGeneric {pin=1}
+private genericConstraintsRest ::= ("," | ";") constrainedGeneric {pin=1}
 GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"               // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
@@ -559,7 +558,7 @@ ClassHelperDecl             ::= CLASS HELPER classHelperBody END {pin=2
                                                                   stubClass="com.siberika.idea.pascal.lang.stub.struct.PasClassHelperDeclStub"
                                                                   elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasClassHelperDeclStubElementType"}
 
-private classHelperBody     ::= FOR TypeID structItem* {pin=2 recoverWhile=rec_struct_outer}
+private classHelperBody     ::= [classParentWithRecovery] FOR TypeID structItem* {pin=2 recoverWhile=rec_struct_outer}
 
 InterfaceTypeDecl           ::= interfaceKey interfaceBody END
                               | interfaceKey [classParentWithRecovery] {pin(".*")=interfaceKey name="interface declaration"
