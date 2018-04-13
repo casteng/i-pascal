@@ -75,7 +75,7 @@ public abstract class PasStructDeclStubElementType<StubT extends PasStructStub, 
             } else if (decl instanceof PasConstDeclaration) {
                 return ((PasConstDeclaration) decl).getNamedIdentDecl().getName() + ResolveUtil.STRUCT_SUFFIX;
             } else {
-                LOG.error("Unexpected anonymous PSI parent class: " + psi.getParent().getParent());
+                LOG.warn("ERROR: Unexpected anonymous PSI parent class: " + psi.getParent().getParent().getText());
                 return "";
             }
         } else {

@@ -29,6 +29,7 @@ import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
 import com.siberika.idea.pascal.lang.psi.PascalInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
@@ -248,8 +249,8 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                 addField(res, (PascalNamedElement) child, fieldType, visibility);
             } else if (child.getClass() == PasConstDeclarationImpl.class) {
                 addField(res, ((PasConstDeclarationImpl) child).getNamedIdentDecl(), fieldType, visibility);
-            } else if (child.getClass() == PasVarDeclarationImpl.class) {
-                for (PasNamedIdent namedIdent : ((PasVarDeclarationImpl) child).getNamedIdentDeclList()) {
+            } else if (child instanceof PascalVariableDeclaration) {
+                for (PascalNamedElement namedIdent : ((PascalVariableDeclaration) child).getNamedIdentDeclList()) {
                     addField(res, namedIdent, fieldType, visibility);
                 }
             } else if (child.getClass() == PasTypeDeclarationImpl.class) {

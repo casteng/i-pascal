@@ -47,7 +47,7 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     @Override
     public PasIdentStub retrieveStub() {
         PasIdentStub stub = super.getStub();
-        return stub != null ? stub : getGreenStub();
+        return stub;// != null ? stub : getGreenStub();
     }
 
     @Nullable
