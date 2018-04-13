@@ -331,7 +331,7 @@
   ]
 
   implements(".+Statement")="com.siberika.idea.pascal.lang.psi.PasStatement"
-  implements(".*QualifiedIdent|NamespaceIdent")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
+  implements(".*QualifiedIdent|NamespaceIdent|inOperatorName")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.PasDeclSection"
   extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
@@ -387,7 +387,7 @@ private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | P
 private rec_section         ::= !rec__routine_key & rec_section_nested
 private rec_statement_mid   ::= !(rec__stmt_middle)
 private rec_section_global  ::= !(".") & rec_section
-private rec_routine         ::= !(EXTERNAL | FORWARD | END) & rec_section & rec_interface
+private rec_routine         ::= !(EXTERNAL | FORWARD) & rec_name & rec_interface
 private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";") & rec_section
 private rec_struct_field    ::= !(";" | ")" | END | CASE | identifier ) & rec_section
@@ -409,10 +409,12 @@ ExportsSection              ::= EXPORTS RefNamedIdent exportItem ("," RefNamedId
 private exportItem          ::= [FormalParameterSection] [INDEX Expression] ["name" Expression] ["resident"]
 
 private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LTEQ | LT | GT | "<>" | IN | "explicit"
-private procName            ::= ClassQualifiedIdent | NamedIdent
+private procName            ::= ClassQualifiedIdent | NamedIdent {recoverWhile=rec_procName}
+private rec_procName        ::= !("(" | "<" | ":" | ";") & rec_section
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
-private operatorName        ::= IN | procName
+private operatorName        ::= InOperatorQualifiedIdent | procName
+InOperatorQualifiedIdent    ::= [identifier [GenericPostfix] "."] IN
 
 ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PascalExportedRoutine"
                              stubClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub"
@@ -535,7 +537,7 @@ TypeID                      ::=	"specialize"? FullyQualifiedIdent [GenericPostfi
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
-private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS | OBJC_PROTOCOL) [ClassParentWORec] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
+private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS | OBJC_PROTOCOL) [classParentWORec] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
 
 ClassField                  ::= field
 private classFieldSemi      ::= ClassField ";" {pin=1 recoverWhile=rec_struct_field}
@@ -546,8 +548,8 @@ ClassTypeDecl               ::= [PACKED] classDecl
                              stubClass="com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStub"
                              elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStubElementType"}
 
-private classDecl           ::= (CLASS | objc_decl) ((classBody END) | [ClassParent]) {pin=1}
-private classBody           ::= [ClassState] [ClassParent] structItem* {recoverWhile=rec_struct_outer}
+private classDecl           ::= (CLASS | objc_decl) ((classBody END) | [classParentWithRecovery]) {pin=1}
+private classBody           ::= [ClassState] [classParentWithRecovery] structItem* {recoverWhile=rec_struct_outer}
 private objc_decl           ::= OBJC_CLASS | OBJC_CATEGORY [EXTERNAL [externalSpecifier]]
 
 ClassHelperDecl             ::= CLASS HELPER classHelperBody END {pin=2
@@ -560,37 +562,33 @@ ClassHelperDecl             ::= CLASS HELPER classHelperBody END {pin=2
 private classHelperBody     ::= FOR TypeID structItem* {pin=2 recoverWhile=rec_struct_outer}
 
 InterfaceTypeDecl           ::= interfaceKey interfaceBody END
-                              | interfaceKey [ClassParent] {pin(".*")=interfaceKey name="interface declaration"
+                              | interfaceKey [classParentWithRecovery] {pin(".*")=interfaceKey name="interface declaration"
                                                             extends="com.siberika.idea.pascal.lang.psi.impl.PascalInterfaceDeclImpl"
                                                             implements="com.siberika.idea.pascal.lang.psi.PascalInterfaceDecl"
                                                             stubClass="com.siberika.idea.pascal.lang.stub.struct.PasInterfaceDeclStub"
                                                             elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasInterfaceDeclStubElementType"}
 
-private interfaceBody       ::= [ClassParent] [interfaceGuid] structItem* {recoverWhile=rec_struct_outer}
+private interfaceBody       ::= [classParentWithRecovery] [interfaceGuid] structItem* {recoverWhile=rec_struct_outer}
 ObjectDecl                  ::= [PACKED] objectTypeDecl {name="object declaration"
                                                          extends="com.siberika.idea.pascal.lang.psi.impl.PascalObjectDeclImpl"
                                                          implements="com.siberika.idea.pascal.lang.psi.PascalObjectDecl"
                                                          stubClass="com.siberika.idea.pascal.lang.stub.struct.PasObjectDeclStub"
                                                          elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasObjectDeclStubElementType"}
 private objectTypeDecl      ::= OBJECT objectBody END {pin=1}
-private objectBody          ::= [ClassParent] structItem* {recoverWhile=rec_struct_outer}
+private objectBody          ::= [classParentWithRecovery] structItem* {recoverWhile=rec_struct_outer}
 
-RecordDecl                  ::= (variantRecord | simpleRecord) {name="record declaration"
+RecordDecl                  ::= [PACKED | "bitpacked"] RECORD varRecDecl END  {pin=2 name="record declaration"
                                                                 extends="com.siberika.idea.pascal.lang.psi.impl.PascalRecordDeclImpl"
                                                                 implements="com.siberika.idea.pascal.lang.psi.PascalRecordDecl"
                                                                 stubClass="com.siberika.idea.pascal.lang.stub.struct.PasRecordDeclStub"
                                                                 elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasRecordDeclStubElementType"}
 
-private simpleRecord        ::= [PACKED | "bitpacked"] RECORD recordBody END {pin=2}
-private recordBody          ::= [ClassParent] structItem* [ClassField] {recoverWhile=rec_struct_outer}
-
-private variantRecord       ::= [PACKED | "bitpacked"] RECORD varRecDecl END
-private varRecDecl          ::= [ClassParent] structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
-private varRecDeclInner     ::= (field ";")* [field] [recordVariantSection] {recoverWhile=rec_struct_field}
+private varRecDecl          ::= [classParentWORec] structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
+private varRecDeclInner     ::= (ClassField ";")* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
 private field               ::= customAttributes* identListDecl ":" TypeDecl hintingDirective* {pin=2 recoverWhile=rec_struct_field}
 private recordVariantSection ::= CASE [NamedIdent ":"] TypeDecl OF recordVariants {pin=1}
 private recordVariants      ::= (RecordVariant ";")* [RecordVariant]
-RecordVariant               ::= Expression ("," Expression)* ":" "(" varRecDeclInner ")" {pin=4}  // rethink expression, separate simpler expressions?
+RecordVariant               ::= ConstExpressionOrd ("," ConstExpressionOrd)* ":" "(" varRecDeclInner ")" {pin=4}  // rethink expression, separate simpler expressions?
 
 RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2
                                                                    name="record helper declaration"
@@ -599,10 +597,11 @@ RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2
                                                                    stubClass="com.siberika.idea.pascal.lang.stub.struct.PasRecordHelperDeclStub"
                                                                    elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasRecordHelperDeclStubElementType"}
 
-ClassState          ::= SEALED | ABSTRACT
+ClassState                  ::= SEALED | ABSTRACT
 
-ClassParent         ::= "(" TypeID? ("," TypeID)* ")" {pin=1 recoverWhile=rec_classparent}
-ClassParentWORec    ::= "(" TypeID? ("," TypeID)* ")"
+private classParentWithRecovery ::= ClassParent {recoverWhile=rec_classparent}
+private classParentWORec        ::= ClassParent
+ClassParent                     ::= "(" TypeID? ("," TypeID)* ")" {pin = 1}
 
 private interfaceGuid       ::= "[" quotedString "]" {pin=1}
 private interfaceKey        ::= INTERFACE | DISPINTERFACE | (OBJC_PROTOCOL [EXTERNAL [externalSpecifier]])

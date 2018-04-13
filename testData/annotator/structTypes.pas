@@ -96,6 +96,11 @@ type
             )
     end;
 
+    TOuter = record
+    case Byte of
+        1: (inner: record f1: Byte; end);
+    end;
+
     TArray = array[0..100] of TA;
     TArrayP = bitpacked array of PVec;
     PArrayP = ^TArrayP;
@@ -114,6 +119,7 @@ implementation
 var
     vec: TVarRec2;
     a: tvarrec;
+    o: TOuter;
 
 class function TObserverMapping.Instance: TObserverMapping;
 begin
@@ -171,4 +177,6 @@ begin
     with vec do
         Y := 1;
     vr2.tag := 1;
+    o.inner;
+    o.inner.f1;
 end.

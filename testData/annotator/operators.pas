@@ -9,8 +9,9 @@ type
     TA = class
     end;
 
-    typeName = record
+    typeName<T> = record
         class operator conversionOp(a: Integer): Integer;
+        class operator in(a: Integer): Integer;
     end;
 
     operator Explicit(AVariant: Single) z: Single;
@@ -27,7 +28,11 @@ begin
     z := Integer(AVariant);
 end;
 
-class operator typeName.conversionOp(a: Integer): Integer;
+class operator typeName<T>.conversionOp(a: Integer): Integer;
+begin
+end;
+
+class operator typeName<T>.in(a: Integer): Integer;
 begin
 end;
 

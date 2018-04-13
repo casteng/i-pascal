@@ -191,7 +191,7 @@ public class PascalCompletionContributor extends CompletionContributor {
                 handleStatement(result, parameters, pos, originalPos, entities);
                 handleInsideStatement(result, parameters, pos, originalPos);
 
-                handleDirectives(result, parameters, originalPos, pos);
+                handleDirectives(result, parameters, originalPos, pos, prev);
                 addEntitiesToResult(result, entities, parameters);
                 result.restartCompletionWhenNothingMatches();
             }
@@ -559,13 +559,19 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos) {
+    private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos, PsiElement prev) {
         if (DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition())) {
             return;
         }
-        if (pos instanceof PascalRoutine) {
-            if (isMethod((PascalRoutine) pos)) {
-                if (pos instanceof PasExportedRoutine) {                   // Directives should appear in the class declaration only, not in the defining declaration
+        PascalRoutine routine = null;
+        if (originalPos instanceof PascalRoutine) {
+            routine = (PascalRoutine) originalPos;
+        } else if (prev instanceof PascalRoutine) {
+            routine = (PascalRoutine) prev;
+        }
+        if (routine != null) {
+            if (isMethod(routine)) {
+                if (routine instanceof PasExportedRoutine) {                   // Directives should appear in the class declaration only, not in the defining declaration
                     appendTokenSet(result, PascalLexer.DIRECTIVE_METHOD);
                 }
             } else {
