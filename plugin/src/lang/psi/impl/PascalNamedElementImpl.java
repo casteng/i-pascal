@@ -14,7 +14,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
-import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
@@ -69,8 +68,8 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     }
 
     public static String calcName(PsiElement nameElement) {
-        if ((nameElement != null) && (nameElement.getClass() == PasClassQualifiedIdentImpl.class)) {
-            Iterator<PasSubIdent> it = ((PasClassQualifiedIdent) nameElement).getSubIdentList().iterator();
+        if ((nameElement != null) && (nameElement instanceof PascalQualifiedIdent)) {
+            Iterator<PasSubIdent> it = ((PascalQualifiedIdent) nameElement).getSubIdentList().iterator();
             StringBuilder sb = new StringBuilder(it.next().getName());
             while (it.hasNext()) {
                 String name = it.next().getName();
