@@ -586,7 +586,7 @@ RecordDecl                  ::= [PACKED | "bitpacked"] RECORD varRecDecl END  {p
 private varRecDecl          ::= [classParentWORec] structItem* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
 private varRecDeclInner     ::= (ClassField ";")* [ClassField] [recordVariantSection] {recoverWhile=rec_struct_field}
 private field               ::= customAttributes* identListDecl ":" TypeDecl hintingDirective* {pin=2 recoverWhile=rec_struct_field}
-private recordVariantSection ::= CASE [NamedIdent ":"] TypeDecl OF recordVariants {pin=1}
+private recordVariantSection ::= CASE [NamedIdentDecl ":"] TypeDecl OF recordVariants {pin=1}
 private recordVariants      ::= (RecordVariant ";")* [RecordVariant]
 RecordVariant               ::= ConstExpressionOrd ("," ConstExpressionOrd)* ":" "(" varRecDeclInner ")" {pin=4}  // rethink expression, separate simpler expressions?
 
