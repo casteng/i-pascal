@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.stub.PasIdentStubImpl;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -33,6 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -47,6 +49,8 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     protected static final Members EMPTY_MEMBERS = new Members();
 
     volatile protected String cachedKey;
+    private Map<String, PasNamedStub> fieldsMap = new ConcurrentHashMap<>();
+    private static final String KEY_EMPTY_MARKER = "#";
 
     private ReentrantLock containingScopeLock = new ReentrantLock();
 
@@ -88,25 +92,34 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     }
 
     PasField getFieldStub(String name) {
+        if (fieldsMap.containsKey(KEY_EMPTY_MARKER)) {
+            PasNamedStub stub = fieldsMap.get(name.toUpperCase());
+            return stub != null ? new PasField(stub, name) : null;
+        }
+
+        PasField result = null;
         List<StubElement> childrenStubs = retrieveStub().getChildrenStubs();
         for (StubElement stubElement : childrenStubs) {
             //String stubName = stubElement instanceof PasExportedRoutineStub ? ((PasExportedRoutineStub) stubElement).getCanonicalName() : ((PasNamedStub) stubElement).getName();
             String stubName = ((PasNamedStub) stubElement).getName();
             if (name.equalsIgnoreCase(stubName)) {
-                return new PasField((PasNamedStub) stubElement, null);
+                result = new PasField((PasNamedStub) stubElement, null);
             }
+            fieldsMap.put(stubName.toUpperCase(), (PasNamedStub) stubElement);
             if (stubElement instanceof PasStructStub) {
                 List<String> aliases = ((PasStructStub) stubElement).getAliases();
                 if (aliases != null) {
                     for (String alias : aliases) {
                         if (name.equalsIgnoreCase(alias)) {
-                            return new PasField((PasNamedStub) stubElement, alias);
+                            result = new PasField((PasNamedStub) stubElement, alias);
                         }
+                        fieldsMap.put(alias.toUpperCase(), (PasNamedStub) stubElement);
                     }
                 }
             }
         }
-        return null;
+        fieldsMap.put(KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", PasField.FieldType.VARIABLE, "", null, null));
+        return result;
     }
 
     Collection<PasField> getAllFieldsStub() {
@@ -160,6 +173,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
             containingScopeLock.unlock();
         }
         cachedKey = null;
+        fieldsMap.clear();                                     // TODO: probably not safe
     }
 
     static long getStamp(PsiFile file) {
@@ -227,6 +241,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     static class Cached {
         static final int UNCACHEABLE_STAMP = -1000000000;
         long stamp;
+
         public boolean isChachable() {
             return stamp != UNCACHEABLE_STAMP;
         }
@@ -235,6 +250,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     static class Members extends Cached {
         Map<String, PasField> all = new LinkedHashMap<String, PasField>();
         Set<PascalNamedElement> redeclared = new LinkedHashSet<PascalNamedElement>();
+
         static Members createNotCacheable() {
             Members res = new Members();
             res.stamp = UNCACHEABLE_STAMP;
