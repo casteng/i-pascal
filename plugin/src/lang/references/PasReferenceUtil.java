@@ -391,12 +391,6 @@ public class PasReferenceUtil {
                 context.scope = fqn.isFirst() ? PsiUtil.getNearestAffectingScope(context.scope) : null;
             }
 
-            PasEntityScope unitNamespace = fqn.isFirst() ? checkUnitScope(result, namespaces, fqn) : null;
-            if (unitNamespace != null) {
-                namespaces = new SmartList<>(unitNamespace);
-                fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first
-            }
-
             while (fqn.isBeforeTarget() && (namespaces != null)) {
                 PasField field = null;
                 // Scan namespaces and get one matching field
@@ -411,7 +405,14 @@ public class PasReferenceUtil {
                         break;
                     }
                 }
-                namespaces = null;
+
+                PasEntityScope unitNamespace = null;
+                if (((null == field) && fqn.isFirst()) || ((field != null ? field.fieldType : null) == PasField.FieldType.UNIT)) {
+                    unitNamespace = handleUnitScope(result, namespaces, fqn, fieldTypes);
+                    field = unitNamespace != null ? null : field;
+                }
+                namespaces = unitNamespace != null ? namespaces : null;
+                
                 if (field != null) {
                     PasEntityScope newNS;
                     if (field.fieldType == PasField.FieldType.UNIT) {
@@ -440,9 +441,10 @@ public class PasReferenceUtil {
                     namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
                     addParentNamespaces(namespaces, newNS, false);
                 }
-                fqn.next();
-                fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first in FQN
-                fieldTypes.remove(PasField.FieldType.PSEUDO_VARIABLE);                                                   // Pseudo variables can be only first in FQN
+                if (null == unitNamespace) {
+                    fqn.next();
+                    removeFirstOnlyTypes(fieldTypes);
+                }
             }
 
             if (!fqn.isComplete() && (namespaces != null)) {
@@ -461,6 +463,9 @@ public class PasReferenceUtil {
                         break;
                     }
                 }
+                if (result.isEmpty() && fqn.isFirst()) {
+                    handleUnitScope(result, namespaces, fqn, fieldTypes);
+                }
                 if (result.isEmpty() && (context.resultScope != null)) {
                     context.resultScope.clear();
                     context.resultScope.addAll(namespaces);
@@ -477,6 +482,21 @@ public class PasReferenceUtil {
             throw e;*/
         }
         return result;
+    }
+
+    static PasEntityScope handleUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
+        PasEntityScope unitNamespace = fqn.isFirst() ? checkUnitScope(result, namespaces, fqn) : null;
+        if (unitNamespace != null) {
+            namespaces.clear();
+            namespaces.add(unitNamespace);
+            removeFirstOnlyTypes(fieldTypes);
+        }
+        return unitNamespace;
+    }
+
+    static void removeFirstOnlyTypes(Set<PasField.FieldType> fieldTypes) {
+        fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first in FQN
+        fieldTypes.remove(PasField.FieldType.PSEUDO_VARIABLE);                                                   // Pseudo variables can be only first in FQN
     }
 
     private static Collection<PasField> resolveFromStub(NamespaceRec fqn, PasEntityScope namespace, ResolveContext context, int recursionCount) {

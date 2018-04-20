@@ -282,12 +282,6 @@ public class ResolveUtil {
                 scope = fqn.isFirst() && (parentScope instanceof PasEntityScope) ? (PasEntityScope) parentScope : null;
             }
 
-            PasEntityScope unitNamespace = fqn.isFirst() ? PasReferenceUtil.checkUnitScope(result, namespaces, fqn) : null;
-            if (unitNamespace != null) {
-                namespaces = new SmartList<>(unitNamespace);
-                fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first
-            }
-
             while (fqn.isBeforeTarget() && (namespaces != null)) {
                 PasField field = null;
                 // Scan namespaces and get one matching field
@@ -297,7 +291,14 @@ public class ResolveUtil {
                         break;
                     }
                 }
-                namespaces = null;
+
+                PasEntityScope unitNamespace = null;
+                if (((null == field) && fqn.isFirst()) || ((field != null ? field.fieldType : null) == PasField.FieldType.UNIT)) {
+                    unitNamespace = PasReferenceUtil.handleUnitScope(result, namespaces, fqn, fieldTypes);
+                    field = unitNamespace != null ? null : field;
+                }
+                namespaces = unitNamespace != null ? namespaces : null;
+
                 if (field != null) {
                     PasEntityScope newNS;
                         newNS = retrieveFieldTypeScope(field, context, recursionCount);
@@ -323,9 +324,10 @@ public class ResolveUtil {
                         addParentNamespaces(namespaces, (PascalStructType) newNS);
                     }
                 }
-                fqn.next();
-                fieldTypes.remove(PasField.FieldType.UNIT);                                                              // Unit qualifier can be only first in FQN
-                fieldTypes.remove(PasField.FieldType.PSEUDO_VARIABLE);                                                   // Pseudo variables can be only first in FQN
+                if (null == unitNamespace) {
+                    fqn.next();
+                    PasReferenceUtil.removeFirstOnlyTypes(fieldTypes);
+                }
             }
 
             if (!fqn.isComplete() && (namespaces != null)) {
@@ -338,6 +340,9 @@ public class ResolveUtil {
                     if (!result.isEmpty() && !PasReferenceUtil.isCollectingAll(fqn)) {
                         break;
                     }
+                }
+                if (result.isEmpty() && fqn.isFirst()) {
+                    PasReferenceUtil.handleUnitScope(result, namespaces, fqn, fieldTypes);
                 }
                 if (result.isEmpty() && (context.resultScope != null)) {
                     context.resultScope.clear();

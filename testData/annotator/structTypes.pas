@@ -116,8 +116,9 @@ begin
 end;
 
 constructor TObserverMapping.Create;
+var structTypes: TVec;
 begin
-
+    structTypes.x;
 end;
 
 class destructor TObserverMapping.Destroy;
