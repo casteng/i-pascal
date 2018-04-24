@@ -3,6 +3,8 @@ package com.siberika.idea.pascal.lang.references;
 import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.codeStyle.MinusculeMatcher;
+import com.intellij.psi.codeStyle.NameUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.stubs.StubIndex;
 import com.intellij.util.Processor;
@@ -15,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Date: 3/14/13
@@ -33,7 +34,7 @@ public class PascalClassByNameContributor implements ChooseByNameContributor {
                 return true;
             }
         }, getScope(project, includeNonProjectItems), null);
-        return names.toArray(new String[names.size()]);
+        return names.toArray(new String[0]);
     }
 
     public static GlobalSearchScope getScope(Project project, boolean includeNonProjectItems) {
@@ -49,12 +50,12 @@ public class PascalClassByNameContributor implements ChooseByNameContributor {
     @Override
     public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
         Collection<PascalNamedElement> items = new SmartHashSet<>();
-        final Pattern p = Pattern.compile("(?i)\\w*" + pattern + "\\w*");
+        MinusculeMatcher matcher = NameUtil.buildMatcher(pattern).build();
 
         StubIndex.getInstance().processAllKeys(PascalStructIndex.KEY, new Processor<String>() {
             @Override
             public boolean process(final String key) {
-                if (p.matcher(keyToName(key)).matches()) {
+                if (matcher.matches(keyToName(key))) {
                     StubIndex.getInstance().processElements(PascalStructIndex.KEY, key, project, getScope(project, includeNonProjectItems),
                             PascalStructType.class, new Processor<PascalStructType>() {
                                 @Override
@@ -68,7 +69,7 @@ public class PascalClassByNameContributor implements ChooseByNameContributor {
             }
         }, getScope(project, includeNonProjectItems), null);
 
-        return items.toArray(new NavigationItem[items.size()]);
+        return items.toArray(new NavigationItem[0]);
     }
 
 }
