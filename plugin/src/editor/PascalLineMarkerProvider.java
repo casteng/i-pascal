@@ -13,18 +13,23 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ConstantFunction;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.ide.actions.GotoSuper;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
+import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
+import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +40,7 @@ import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -73,8 +79,35 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             Collection<PasEntityScope> supers = GotoSuper.retrieveGotoSuperTargets(namedElement.getNameIdentifier());
             if (!supers.isEmpty()) {
-                result.add(createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridingMethod, msg("navigate.title.goto.super"),
+                result.add(createLineMarkerInfo(element, AllIcons.Gutter.OverridingMethod, msg("navigate.title.goto.super"),
                         getHandler(msg("navigate.title.goto.super"), supers)));
+            }
+            if (element instanceof PasUnitModuleHead) {
+                Collection<PascalModule> modules = retrieveUsingModules(((PasUnitModuleHead) element).getNamespaceIdent());
+                if (!modules.isEmpty()) {
+                    result.add(createLineMarkerInfo(element, AllIcons.Hierarchy.Caller, msg("navigate.title.used.by"),
+                            getHandler(msg("navigate.title.used.by"), modules)));
+                }
+            }
+        }
+    }
+
+    private Collection<PascalModule> retrieveUsingModules(@Nullable PasNamespaceIdent namespaceIdent) {
+        if (null == namespaceIdent) {
+            return Collections.emptyList();
+        }
+        Collection<PascalModule> res = new SmartList<>();
+        for (PascalModule module : ResolveUtil.findUnitsWithStub(namespaceIdent.getProject(), null, null)) {
+            collectUnits(res, namespaceIdent.getName(), module, module.getUsedUnitsPublic());
+            collectUnits(res, namespaceIdent.getName(), module, module.getUsedUnitsPrivate());
+        }
+        return res;
+    }
+
+    private void collectUnits(Collection<PascalModule> res, String name, PascalModule module, Set<String> usedUnitsList) {
+        for (String unitName : usedUnitsList) {
+            if (unitName.equalsIgnoreCase(name)) {
+                res.add(module);
             }
         }
     }
@@ -114,7 +147,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
         try {
             for (PsiElement element : elements) {
-                if ((element instanceof PascalRoutine) || (element instanceof PascalStructType) || (element instanceof PasUsesClause)) {
+                if ((element instanceof PascalRoutine) || (element instanceof PascalStructType) || (element instanceof PasUsesClause) || (element instanceof PasUnitModuleHead)) {
                     collectNavigationMarkers(element, result);
                 }
             }
