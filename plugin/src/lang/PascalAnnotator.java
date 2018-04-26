@@ -3,11 +3,15 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
+import com.siberika.idea.pascal.editor.refactoring.PascalRenameAction;
 import com.siberika.idea.pascal.ide.actions.AddFixType;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.ide.actions.UsesActions;
@@ -16,7 +20,12 @@ import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
+import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -53,6 +62,8 @@ public class PascalAnnotator implements Annotator {
                 annotateRoutineInImplementation((PasRoutineImplDeclImpl) parent, holder);
             }
         }
+
+        annotateModuleHead(element, holder);
 
         //noinspection ConstantConditions
         if (PsiUtil.isEntityName(element) && !PsiUtil.isLastPartOfMethodImplName((PascalNamedElement) element)) {
@@ -173,6 +184,30 @@ public class PascalAnnotator implements Annotator {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private void annotateModuleHead(PsiElement element, AnnotationHolder holder) {
+        PasNamespaceIdent nameIdent = null;
+        if (element instanceof PasUnitModuleHead) {
+            nameIdent = ((PasUnitModuleHead) element).getNamespaceIdent();
+        } else if (element instanceof PasLibraryModuleHead) {
+            nameIdent = ((PasLibraryModuleHead) element).getNamespaceIdent();
+        } else if (element instanceof PasProgramModuleHead) {
+            nameIdent = ((PasProgramModuleHead) element).getNamespaceIdent();
+        } else if (element instanceof PasPackageModuleHead) {
+            nameIdent = ((PasPackageModuleHead) element).getNamespaceIdent();
+        }
+        if (nameIdent != null) {
+            String fn = element.getContainingFile().getName();
+            String fileName = FileUtil.getNameWithoutExtension(fn);
+            if (!nameIdent.getName().equalsIgnoreCase(fileName)) {
+                Annotation ann = holder.createErrorAnnotation(element, PascalBundle.message("ann.error.unit.name.notmatch"));
+                ann.registerFix(new PascalRenameAction(element, fileName, PascalBundle.message("action.module.rename")));
+                ann.registerFix(new PascalRenameAction(element.getContainingFile(),
+                        nameIdent.getName() + "." + FileUtilRt.getExtension(fn),
+                        PascalBundle.message("action.file.rename")));
             }
         }
     }

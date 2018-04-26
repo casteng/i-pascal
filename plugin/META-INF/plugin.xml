@@ -12,6 +12,7 @@
         <p>1.81</p>
         <ul>
             <li>Unit used by which units info on gutter</li>
+            <li>Unit and file name mismatch error annotation</li>
         </ul>
         <p>1.80</p>
         <ul>

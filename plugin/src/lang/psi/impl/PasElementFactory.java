@@ -4,8 +4,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.impl.PsiFileFactoryImpl;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 
 /**
  * Author: George Bakhtadze
@@ -25,4 +27,12 @@ public class PasElementFactory {
         return file.getFirstChild();
     }
 
+    public static PsiElement createReplacementElement(PsiElement element, String text) {
+        if (element instanceof PascalPsiElement) {
+            PsiFileFactoryImpl factory = (PsiFileFactoryImpl) PsiFileFactoryImpl.getInstance(element.getProject());
+            return factory.createElementFromText(text, element.getLanguage(), element.getNode().getElementType(), element);
+        } else {
+            return createLeafFromText(element.getProject(), text);
+        }
+    }
 }

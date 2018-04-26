@@ -112,7 +112,10 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
         PsiElement element = getNameElement();
         if (element != null) {
-            element.replace(PasElementFactory.createLeafFromText(getProject(), name));
+            PsiElement el = PasElementFactory.createReplacementElement(element, name);
+            if (el != null) {
+                element.replace(el);
+            }
         }
         return this;
     }

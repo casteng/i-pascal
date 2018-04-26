@@ -121,7 +121,10 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     public PsiElement setName(@NonNls @NotNull String s) throws IncorrectOperationException {
         PsiElement element = getNameElement();
         if (element != null) {
-            element.replace(PasElementFactory.createLeafFromText(getProject(), s));
+            PsiElement el = PasElementFactory.createReplacementElement(element, s);
+            if (el != null) {
+                element.replace(el);
+            }
         }
         return this;
     }
