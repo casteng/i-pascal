@@ -271,6 +271,10 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @NotNull
     @Override
     public Set<String> getUsedUnitsPublic() {
+        PasModuleStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getUsedUnitsPublic();
+        }
         if (SyncUtil.lockOrCancel(unitsLock)) {
             try {
                 if (null == usedUnitsPublic) {
@@ -289,6 +293,10 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @NotNull
     @Override
     public Set<String> getUsedUnitsPrivate() {
+        PasModuleStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getUsedUnitsPrivate();
+        }
         if (SyncUtil.lockOrCancel(unitsLock)) {
             try {
                 if (null == usedUnitsPrivate) {
