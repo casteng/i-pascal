@@ -1,4 +1,4 @@
-unit structTypes;
+unit variables;
 
 interface
 

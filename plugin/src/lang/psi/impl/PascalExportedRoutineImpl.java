@@ -131,7 +131,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     void calcContainingScope() {
         PasEntityScope scope = PsiTreeUtil.getParentOfType(this, PasEntityScope.class);
         if (scope != null) {
-            containingScope = SmartPointerManager.createPointer(scope);
+            containingScope = PsiUtil.createSmartPointer(scope);
         } else {
             LOG.info("ERROR: containing scope not found for: " + getName());
         }

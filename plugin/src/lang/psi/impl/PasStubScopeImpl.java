@@ -295,7 +295,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
      */
     void calcContainingScope() {
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);  // 2, 3, 4, 5, 1 for method declarations
-        containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
+        containingScope = PsiUtil.createSmartPointer(scope);
         if ((scope instanceof PascalModuleImpl) && (this instanceof PasRoutineImplDecl)) {            // 1 for method implementations
             String[] names = PsiUtil.getQualifiedMethodName(this).split("\\.");
             if (names.length <= 1) {                                                                            // should not be true

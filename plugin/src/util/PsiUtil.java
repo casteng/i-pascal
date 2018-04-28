@@ -33,7 +33,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasStubStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
-import com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import org.apache.commons.lang.StringUtils;
@@ -849,8 +848,11 @@ public class PsiUtil {
         return routine.getClass() == PasRoutineImplDeclImpl.class;
     }
 
-    public static boolean isLocalDeclaration(PascalNamedElementImpl element) {
+    public static boolean isLocalDeclaration(PascalNamedElement element) {
         PsiElement parent = element.getParent();
+        if (parent instanceof PasGenericTypeIdent) {
+            parent = parent.getParent();
+        }
         if (parent instanceof PasFormalParameter) {
             return true;
         } else if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration) {
@@ -876,5 +878,30 @@ public class PsiUtil {
 
     public static boolean isSmartPointerValid(SmartPsiElementPointer pointer) {
         return (pointer != null) && (pointer.getElement() != null);
+    }
+
+    public static <T extends PsiElement> SmartPsiElementPointer<T> createSmartPointer(T element) {
+        try {
+            return SmartPointerManager.createPointer(element);
+        } catch (Throwable e) {
+            LOG.info(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    // element can be PasNamedIdentDecl or PasGenericTypeIdent
+    public static boolean isStructDecl(PsiElement element) {
+        if (element instanceof PasNamedIdentDecl) {
+            element = element.getParent();
+        }
+        if (element instanceof PasGenericTypeIdent) {
+            PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
+            return (typeDecl != null) &&
+                    ((typeDecl.getClassTypeDecl() != null) || (typeDecl.getInterfaceTypeDecl() != null)
+                            || (typeDecl.getObjectDecl() != null) || (typeDecl.getRecordDecl() != null)
+                            || (typeDecl.getClassHelperDecl() != null) || (typeDecl.getRecordHelperDecl() != null)
+                    );
+        }
+        return false;
     }
 }
