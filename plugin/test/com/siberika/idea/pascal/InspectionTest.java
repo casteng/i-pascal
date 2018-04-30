@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal;
 
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.lang.inspection.UnusedIdentsInspection;
 import com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection;
 
 @SuppressWarnings("unchecked")
@@ -24,6 +25,12 @@ public class InspectionTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testUsesInImplementation() {
         myFixture.enableInspections(UnusedUnitsInspection.class);
         myFixture.configureByFiles("usesInImplementation.pas", "types.pas");
+        myFixture.checkHighlighting(true, false, false);
+    }
+
+    public void testUsesUnusedIdents() {
+        myFixture.enableInspections(UnusedIdentsInspection.class);
+        myFixture.configureByFiles("unusedIdents.pas");
         myFixture.checkHighlighting(true, false, false);
     }
 

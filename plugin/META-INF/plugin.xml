@@ -13,6 +13,7 @@
         <ul>
             <li>Unit used by which units info on gutter</li>
             <li>Unit and file name mismatch error annotation</li>
+            <li>unused local identifier inspection</li>
         </ul>
         <p>1.80</p>
         <ul>
@@ -370,6 +371,8 @@
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
         <localInspection language="Pascal" displayName="Unused units detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection"/>
+        <localInspection language="Pascal" displayName="Unused local identifiers detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedIdentsInspection"/>
 
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>

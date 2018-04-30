@@ -848,7 +848,7 @@ public class PsiUtil {
         return routine.getClass() == PasRoutineImplDeclImpl.class;
     }
 
-    public static boolean isLocalDeclaration(PascalNamedElement element) {
+    public static boolean isLocalDeclaration(@NotNull PascalNamedElement element) {
         PsiElement parent = element.getParent();
         if (parent instanceof PasGenericTypeIdent) {
             parent = parent.getParent();
@@ -861,6 +861,11 @@ public class PsiUtil {
         } else {
             return false;
         }
+    }
+
+    public static boolean isFormalParameterOfExportedRoutine(@NotNull PascalNamedElement element) {
+        return ((element.getParent() instanceof PasFormalParameter) && (element.getParent().getParent() instanceof PasFormalParameterSection)
+                && (element.getParent().getParent().getParent() instanceof PasExportedRoutine));
     }
 
     public static PasField.FieldType getFieldType(PascalNamedElement namedElement) {
@@ -904,4 +909,5 @@ public class PsiUtil {
         }
         return false;
     }
+
 }
