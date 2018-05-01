@@ -598,7 +598,7 @@ public class PPUDumpParser {
                     }
                     if (null == sec.dataPrefix) {
                         if (sec.data.get(sec.type + "/isString") != null) {
-                            sec.sb.append('\'').append(txt.replaceAll("'", "''").replaceAll("\n", "'#13#10'")).append('\'');
+                            sec.sb.append('\'').append(handleStringData(txt)).append('\'');
                         } else {
                             sec.sb.append(txt);
                         }
@@ -614,6 +614,10 @@ public class PPUDumpParser {
             }
             chars = new StringBuilder();
             path = path.substring(0, path.lastIndexOf("/"));
+        }
+
+        private String handleStringData(String txt) {
+            return txt.replaceAll("'", "''").replaceAll("\n", "'#10'").replaceAll("\r", "'#13'");
         }
 
         public void fixupUndefined(Section sec) {
