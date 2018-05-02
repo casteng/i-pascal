@@ -50,7 +50,7 @@ public class PascalRenameAction extends BaseIntentionAction {
 
     @Override
     public void invoke(@NotNull final Project project, final Editor editor, final PsiFile file) throws IncorrectOperationException {
-        RefactoringFactory.getInstance(project).createRename(element, newName).run();
+        RefactoringFactory.getInstance(project).createRename(element, newName, false, false).run();
     }
 
 }
