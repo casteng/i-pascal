@@ -33,6 +33,7 @@ import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
+import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
@@ -44,6 +45,7 @@ import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -206,7 +208,14 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 if ((element instanceof PascalRoutine) && (isASTAvailable(element))) {
                     return element.getText();
                 }
-                return ResolveUtil.cleanupName(element.getName());
+                String typeString = "";
+                if (element instanceof PascalIdentDecl) {
+                    typeString = ((PascalIdentDecl) element).getTypeString();
+                    if (!StringUtils.isEmpty(typeString)) {
+                        typeString = ": " + typeString;
+                    }
+                }
+                return ResolveUtil.cleanupName(element.getName()) + typeString;
             }
 
             @Nullable
