@@ -62,6 +62,8 @@ public class PascalCompletionContributor extends CompletionContributor {
     private static final double PRIORITY_LOWER = -10.0;
     private static final double PRIORITY_LOWEST = -100.0;
 
+    private static final String TYPE_UNTYPED = "<untyped>";
+
     private static Map<String, String> getInsertMap() {
         Map<String, String> res = new HashMap<String, String>();
         res.put(PasTypes.UNIT.toString(), String.format(" %s;\n\ninterface\n\n  %s\nimplementation\n\nend.\n", PLACEHOLDER_FILENAME, DocUtil.PLACEHOLDER_CARET));
@@ -596,12 +598,12 @@ public class PascalCompletionContributor extends CompletionContributor {
     }
 
     private static boolean buildFromElement(@NotNull PasField field) {
-        return (field.getElementPtr() != null) && (StringUtils.isEmpty(field.name) || (field.fieldType == PasField.FieldType.ROUTINE));
+        return (field.getElementPtr() != null) && (field.fieldType != PasField.FieldType.PSEUDO_VARIABLE);
     }
 
     private LookupElementBuilder createLookupElement(final Editor editor, @NotNull PasField field) {
         assert field.getElement() != null;
-        LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(PsiUtil.getFieldName(field.getElement()));
+        LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(getFieldText(field));
         if (field.fieldType == PasField.FieldType.ROUTINE) {
             PascalNamedElement el = field.getElement();
             final String content = (el instanceof PascalRoutine && ((PascalRoutine) el).hasParameters()) ? "(" + DocUtil.PLACEHOLDER_CARET + ")" : "()" + DocUtil.PLACEHOLDER_CARET;
@@ -616,6 +618,15 @@ public class PascalCompletionContributor extends CompletionContributor {
             });
         }
         return res;
+    }
+
+    private String getFieldText(PasField field) {
+        PascalNamedElement el = field.getElement();
+        if (el instanceof PascalIdentDecl) {
+            String type = ((PascalIdentDecl) el).getTypeString();
+            return PsiUtil.getFieldName(el) + ": " + (type != null ? type : TYPE_UNTYPED);
+        }
+        return PsiUtil.getFieldName(el);
     }
 
     private boolean isQualifiedIdent(PsiElement parent) {

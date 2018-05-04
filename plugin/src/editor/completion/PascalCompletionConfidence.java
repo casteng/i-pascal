@@ -38,6 +38,7 @@ public class PascalCompletionConfidence extends CompletionConfidence {
     }
 
     private static final Pattern COMMENT_BEGIN = Pattern.compile("\\{\\$?\\w+");
+
     private boolean shouldSkipInComment(PsiElement contextElement, int offset) {
         int len = offset - contextElement.getTextRange().getStartOffset();
         String text = contextElement.getText().substring(0, len);
@@ -45,6 +46,8 @@ public class PascalCompletionConfidence extends CompletionConfidence {
     }
 
     private boolean isName(IElementType type) {
-        return (type == PasTypes.SUB_IDENT) || (type == PasTypes.NAME) || (type == PasTypes.CALL_EXPR);
+        return (type == PasTypes.SUB_IDENT) || (type == PasTypes.NAME)
+                || (type == PasTypes.CALL_EXPR) || (type == PasTypes.INDEX_EXPR) || (type == PasTypes.DEREFERENCE_EXPR)
+                || (type == PasTypes.PAREN_EXPR) || (type == PasTypes.EXPRESSION);
     }
 }
