@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.lang.psi;
 
-import com.intellij.psi.StubBasedPsiElement;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +10,7 @@ import java.util.List;
  * Author: George Bakhtadze
  * Date: 29/01/2015
  */
-public interface PascalStructType<StubT extends PasStructStub> extends PasEntityScope, StubBasedPsiElement<StubT> {
+public interface PascalStructType<StubT extends PasStructStub> extends PasEntityScope, PascalStubElement<StubT> {
     @Nullable
     PasClassParent getClassParent();
     @NotNull

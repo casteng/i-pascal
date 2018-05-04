@@ -22,7 +22,7 @@ public class PasClassDeclStubElementType extends PasStructDeclStubElementType<Pa
 
     @Override
     public PasClassDeclStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasClassDeclStubImpl(parentStub, "-", Collections.emptyList(), null, INSTANCE);
+        return new PasClassDeclStubImpl(parentStub, "-", ".", Collections.emptyList(), null, INSTANCE);
     }
 
     @Override
@@ -35,12 +35,12 @@ public class PasClassDeclStubElementType extends PasStructDeclStubElementType<Pa
     public PasClassDeclStub createStub(@NotNull PascalClassDecl psi, StubElement parentStub) {
         List<String> aliases = new SmartList<>();
         String stubName = calcStubName(psi, aliases);
-        return new PasClassDeclStubImpl(parentStub, stubName, psi.getParentNames(), aliases, INSTANCE);
+        return new PasClassDeclStubImpl(parentStub, stubName, psi.getContainingUnitName(), psi.getParentNames(), aliases, INSTANCE);
     }
 
     @Override
-    protected PasClassDeclStub createStub(StubElement parentStub, String name, List<String> parentNames, List<String> aliases) {
-        return new PasClassDeclStubImpl(parentStub, name, parentNames, aliases, INSTANCE);
+    protected PasClassDeclStub createStub(StubElement parentStub, String name, String containingUnitName, List<String> parentNames, List<String> aliases) {
+        return new PasClassDeclStubImpl(parentStub, name, containingUnitName, parentNames, aliases, INSTANCE);
     }
 
     @NotNull

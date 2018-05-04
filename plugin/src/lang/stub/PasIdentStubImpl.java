@@ -1,26 +1,22 @@
 package com.siberika.idea.pascal.lang.stub;
 
-import com.intellij.psi.stubs.StubBase;
 import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class PasIdentStubImpl extends StubBase<PascalIdentDecl> implements PasIdentStub {
+public class PasIdentStubImpl extends PasNamedStubBase<PascalIdentDecl> implements PasIdentStub {
 
-    private String name;
-    private String uniqueName;
     private PasField.FieldType kind;
     private String typeString;
     private PasField.Kind typeKind;
     private List<String> subMembers;                            // members which can be qualified by this ident as well as accessed directly (enums)
 
-    public PasIdentStubImpl(StubElement parent, String name, PasField.FieldType kind, String typeString, PasField.Kind typeKind, List<String> subMembers) {
-        super(parent, PasIdentStubElementType.INSTANCE);
-        this.name = name;
-        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + name;
+    public PasIdentStubImpl(StubElement parent, String name, String containingUnitName, PasField.FieldType kind, String typeString, PasField.Kind typeKind, List<String> subMembers) {
+        super(parent, PasIdentStubElementType.INSTANCE, name, containingUnitName);
         this.kind = kind;
         this.typeString = typeString;
         this.typeKind = typeKind;
@@ -28,18 +24,8 @@ public class PasIdentStubImpl extends StubBase<PascalIdentDecl> implements PasId
     }
 
     @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
     public PasField.FieldType getType() {
         return kind;
-    }
-
-    @Override
-    public String getUniqueName() {
-        return uniqueName;
     }
 
     @Nullable
@@ -54,6 +40,7 @@ public class PasIdentStubImpl extends StubBase<PascalIdentDecl> implements PasId
         return typeKind;
     }
 
+    @NotNull
     @Override
     public List<String> getSubMembers() {
         return subMembers;

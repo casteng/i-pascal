@@ -12,6 +12,7 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -38,6 +39,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     private String myCachedUniqueName;
     private String myCachedName;
     private ReentrantLock nameLock = new ReentrantLock();
+    private String containingUnitName;
 
     @Override
     public ItemPresentation getPresentation() {
@@ -50,6 +52,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (SyncUtil.lockOrCancel(nameLock)) {
             myCachedName = null;
             myCachedUniqueName = null;
+            containingUnitName = null;
             nameLock.unlock();
         }
     }
@@ -106,6 +109,28 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     }
 
     protected abstract String calcUniqueName();
+
+    public String getContainingUnitName() {
+        B stub = retrieveStub();
+        if (stub != null) {
+            return stub.getContainingUnitName();
+        }
+        if (SyncUtil.lockOrCancel(nameLock)) {
+            try {
+                if (containingUnitName == null) {
+                    containingUnitName = calcContainingUnitName();
+                }
+            } finally {
+                nameLock.unlock();
+            }
+        }
+        return containingUnitName;
+    }
+
+    private String calcContainingUnitName() {
+        PasModule module = PsiUtil.getElementPasModule(this);
+        return module != null ? module.getName() : null;
+    }
 
     @NotNull
     @Override
