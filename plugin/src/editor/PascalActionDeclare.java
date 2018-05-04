@@ -549,6 +549,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 if (parent instanceof PasAssignPart) {
                     type = PascalExpression.calcAssignExpectedType(parent.getParent());
                     type = type != null ? type : "";
+                } else if (parent instanceof PasArgumentList) {
+                    type = "";  // TODO: infere actual type
                 }
             }
             if ((scope instanceof PascalStructType) && (null == callScope)) {
