@@ -498,7 +498,7 @@ VarValueSpec	            ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpres
 
 ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_block_local_end}
 private constKey            ::= CONST |	RESOURCESTRING
-ConstDeclaration            ::= customAttributes* NamedIdentDecl [":" TypeDecl] "=" ConstExpression hintingDirective* ";" {pin=4 recoverWhile=rec_name}
+ConstDeclaration            ::= customAttributes* NamedIdentDecl [":" TypeDecl] "=" ConstExpression hintingDirective* ";" {pin=2 recoverWhile=rec_name}
 NamedIdentDecl              ::= identifier {extends="com.siberika.idea.pascal.lang.psi.impl.PascalIdentDeclImpl"
                                             implements="com.siberika.idea.pascal.lang.psi.PascalIdentDecl"
                                             stubClass="com.siberika.idea.pascal.lang.stub.PasIdentStub"
@@ -748,10 +748,10 @@ private identListRest       ::= "," identListItem {pin=1}
 private identListItem       ::= NamedIdent
 
 ConstExpression	            ::=	constExpr {recoverWhile=rec_expr_colon name="constant expression"}
-private constExpr           ::= recordConstExpr | arrayConstExpr | Expression
-private arrayConstExpr      ::= "(" constExpr ("," constExpr)+ ")"
+private constExpr           ::= RecordConstExpr | ArrayConstExpr | Expression
+ArrayConstExpr              ::= "(" constExpr ("," constExpr)+ ")"
 ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression" extends=ConstExpression}
-private recordConstExpr     ::= "(" recordConstInner ")"
+RecordConstExpr             ::= "(" recordConstInner ")"
 private recordConstInner    ::= recordValue recordValueRest* {recoverWhile=rec_record_colon}
 private recordValueRest     ::= ";" recordValue
 private recordValue         ::= identifier ":" constExpr
