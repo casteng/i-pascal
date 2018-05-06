@@ -76,28 +76,29 @@ public class PascalAnnotator implements Annotator {
             if (refs.isEmpty() && !isVariantField(scopes)) {
                 Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
                 PsiContext context = PsiUtil.getContext(namedElement);
-                Set<AddFixType> fixes = EnumSet.of(AddFixType.VAR, AddFixType.TYPE, AddFixType.CONST, AddFixType.ROUTINE); // [*] => var type const routine
+                Set<AddFixType> fixes = EnumSet.of(AddFixType.VAR, AddFixType.TYPE, AddFixType.CONST, AddFixType.ROUTINE, AddFixType.UNIT_FIND); // [*] => var type const routine
                 if (context == PsiContext.FQN_FIRST) {
                     fixes.add(AddFixType.UNIT);
                 }
                 PsiElement scope = scopes.isEmpty() ? null : scopes.get(0);
                 if (scope instanceof PasEnumType) {                                                          // TEnum.* => -* +enum
                     fixes = EnumSet.of(AddFixType.ENUM);
+                    fixes.remove(AddFixType.UNIT_FIND);
                 } else if (scope instanceof PascalRoutine) {                                                 // [inRoutine] => +parameter
                     fixes.add(AddFixType.PARAMETER);
                 }
                 if (context == PsiContext.TYPE_ID) {                                                         // [TypeIdent] => -* +type
-                    fixes = EnumSet.of(AddFixType.TYPE);
+                    fixes = EnumSet.of(AddFixType.TYPE, AddFixType.UNIT_FIND);
                 } else if (PsiTreeUtil.getParentOfType(namedElement, PasConstExpression.class) != null) {    // [part of const expr] => -* +const +enum
-                    fixes = EnumSet.of(AddFixType.CONST);
+                    fixes = EnumSet.of(AddFixType.CONST, AddFixType.UNIT_FIND);
                 } else if (context == PsiContext.EXPORT) {
                     fixes = EnumSet.of(AddFixType.ROUTINE);
                 } else if (context == PsiContext.CALL) {
-                    fixes = EnumSet.of(AddFixType.ROUTINE, AddFixType.VAR);
+                    fixes = EnumSet.of(AddFixType.ROUTINE, AddFixType.VAR, AddFixType.UNIT_FIND);
                 } else if (context == PsiContext.PROPERTY_SPEC) {
                     fixes = EnumSet.of(AddFixType.VAR, AddFixType.ROUTINE);
                 } else if (context == PsiContext.FOR) {
-                    fixes = EnumSet.of(AddFixType.VAR);
+                    fixes = EnumSet.of(AddFixType.VAR, AddFixType.UNIT_FIND);
                 }
                 if (context == PsiContext.USES) {
                     fixes = EnumSet.of(AddFixType.NEW_UNIT);
@@ -180,6 +181,11 @@ public class PascalAnnotator implements Annotator {
                         }
                         case NEW_UNIT: {
                             ann.registerFix(new UsesActions.NewUnitAction(message("action.create.unit"), namedElement.getName()));
+                            break;
+                        }
+                        case UNIT_FIND: {
+                            ann.registerFix(new UsesActions.SearchUnitAction(message("action.unit.search", namedElement.getName()),
+                                    namedElement.getName(), PsiUtil.belongsToInterface(namedElement)));
                             break;
                         }
                     }

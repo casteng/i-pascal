@@ -53,7 +53,7 @@ public class EditorUtil {
     public static void showErrorHint(String title, RelativePoint relativePoint) {
         final JLabel label = new JLabel(title);
         label.setBorder(HintUtil.createHintBorder());
-        label.setBackground(HintUtil.ERROR_COLOR);
+        label.setBackground(HintUtil.getErrorColor());
         label.setOpaque(true);
         HintManager.getInstance().showHint(label, relativePoint, 0, NO_ITEMS_HINT_TIMEOUT_MS);
     }

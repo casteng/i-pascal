@@ -12,8 +12,9 @@
         <p>1.81</p>
         <ul>
             <li>Unit used by which units info on gutter</li>
-            <li>Unit and file name mismatch error annotation</li>
-            <li>unused local identifier inspection</li>
+            <li>File and unit name mismatch error annotation</li>
+            <li>Unused local identifier inspection</li>
+            <li>Add containing unit quick fix for "unknown identifier" error</li>
         </ul>
         <p>1.80</p>
         <ul>
@@ -451,6 +452,7 @@
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalModuleIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalStructIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalSymbolIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex"/>
 
     </extensions>
 </idea-plugin>
