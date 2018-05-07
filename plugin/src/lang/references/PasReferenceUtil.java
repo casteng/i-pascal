@@ -505,6 +505,7 @@ public class PasReferenceUtil {
             StubElement stub = ((PascalStubElement) namespace).retrieveStub();
             if (stub != null) {
                 ResolveContext ctx = new ResolveContext(namespace, context.fieldTypes, context.includeLibrary, context.resultScope);
+                ctx.disableParentNamespaces = true;
                 result = ResolveUtil.resolveWithStubs(new NamespaceRec(fqn), ctx, ++recursionCount);
             }
         }

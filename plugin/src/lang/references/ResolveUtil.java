@@ -275,7 +275,10 @@ public class ResolveUtil {
 
         try {
             // Retrieve all namespaces affecting first FQN level
-            while (scope != null) {
+            if (context.disableParentNamespaces) {
+                namespaces.add(scope);
+            } else
+                while (scope != null) {
                 addFirstNamespaces(namespaces, scope, context.includeLibrary);
                 stub = stub.getParentStub();
                 PsiElement parentScope = stub.getPsi();
