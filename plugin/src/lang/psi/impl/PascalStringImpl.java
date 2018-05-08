@@ -31,6 +31,9 @@ public abstract class PascalStringImpl extends PascalPsiElementImpl implements P
     public PascalStringImpl updateText(@NotNull String text) {
         ASTNode valueNode = getNode().getFirstChildNode();
         assert valueNode instanceof LeafElement;
+        if (text.length() > 1) {
+            text = text.charAt(0) + text.substring(1, text.length()-1).replace("'", "''") + text.charAt(text.length()-1);
+        }
         ((LeafElement)valueNode).replaceWithText(text);
         return this;
     }
