@@ -11,6 +11,7 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -231,7 +232,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
             type = PasField.FieldType.TYPE;
         } else if (namedElement instanceof PascalRoutine) {
             type = PasField.FieldType.ROUTINE;
-        } else if (PsiUtil.isConstDecl(namedElement) || PsiUtil.isEnumDecl(namedElement)) {
+        } else if (ContextUtil.isConstDecl(namedElement) || ContextUtil.isEnumDecl(namedElement)) {
             type = PasField.FieldType.CONSTANT;
         }
 

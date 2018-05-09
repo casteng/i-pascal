@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
@@ -41,7 +42,7 @@ public class PascalReadWriteAccessDetector extends ReadWriteAccessDetector {
 
     static boolean isWriteAccess(PsiElement element) {
         if (element instanceof PascalNamedElement) {
-            if (PsiUtil.isAssignLeftPart((PascalNamedElement) element)) {
+            if (ContextUtil.isAssignLeftPart((PascalNamedElement) element)) {
                 return true;
             } else {
                 PsiElement next = PsiTreeUtil.skipSiblingsForward(element.getParent(), PsiUtil.ELEMENT_WS_COMMENTS);

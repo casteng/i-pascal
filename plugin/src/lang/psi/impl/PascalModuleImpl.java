@@ -12,6 +12,7 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -349,7 +350,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
                 if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
                     Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(namedElement), new ResolveContext(PasField.TYPES_ALL, true), 0);
                     if (!refs.isEmpty()) {
-                        String name = (PsiUtil.belongsToInterface(namedElement) ? INTERFACE_PREFIX : "") + PsiUtil.getUniqueName(namedElement);
+                        String name = (ContextUtil.belongsToInterface(namedElement) ? INTERFACE_PREFIX : "") + PsiUtil.getUniqueName(namedElement);
                         res.idents.put(name, refs.iterator().next());
                     }
                 }

@@ -16,6 +16,7 @@ import com.intellij.util.Processor;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.PascalRTException;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasArrayType;
@@ -96,7 +97,7 @@ public class ResolveUtil {
     public static Pair<String, PasField.Kind> retrieveDeclarationType(@NotNull PascalNamedElement el) {
         PasTypeDecl typeDecl = null;
         PasTypeID typeId = null;
-        if (PsiUtil.isVariableDecl(el) || PsiUtil.isFieldDecl(el) || PsiUtil.isPropertyDecl(el) || PsiUtil.isConstDecl(el)) {   // variable declaration case
+        if (ContextUtil.isVariableDecl(el) || ContextUtil.isFieldDecl(el) || ContextUtil.isPropertyDecl(el) || ContextUtil.isConstDecl(el)) {   // variable declaration case
             typeDecl = PsiTreeUtil.getNextSiblingOfType(el, PasTypeDecl.class);
             if (null == typeDecl) {
                 typeId = PsiTreeUtil.getNextSiblingOfType(el, PasTypeID.class);

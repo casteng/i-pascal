@@ -17,6 +17,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -78,7 +79,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         PascalModule pasModule = PsiUtil.getElementPasModule(usedUnitName);
         if ((pasModule != null)) {
             Pair<List<PascalNamedElement>, List<PascalNamedElement>> idents = pasModule.getIdentsFrom(usedUnitName.getName());
-            if (PsiUtil.belongsToInterface(usedUnitName)) {
+            if (ContextUtil.belongsToInterface(usedUnitName)) {
                 if (idents.getFirst().size() + idents.getSecond().size() == 0) {
                     res = UsedUnitStatus.UNUSED;
                 } else if (idents.getFirst().size() == 0) {
@@ -124,7 +125,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         PasUsesClause usesIntf = null;
         PasUsesClause usesImpl = null;
         for (PasUsesClause usesClause : usesClauses) {
-            if (PsiUtil.belongsToInterface(usesClause)) {
+            if (ContextUtil.belongsToInterface(usesClause)) {
                 usesIntf = usesClause;
             } else {
                 usesImpl = usesClause;

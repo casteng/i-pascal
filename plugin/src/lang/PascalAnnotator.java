@@ -15,6 +15,7 @@ import com.siberika.idea.pascal.editor.refactoring.PascalRenameAction;
 import com.siberika.idea.pascal.ide.actions.AddFixType;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.ide.actions.UsesActions;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
@@ -153,7 +154,7 @@ public class PascalAnnotator implements Annotator {
                             if (scope instanceof PascalStructType) {
                                 if (context == PsiContext.PROPERTY_SPEC) {
                                     PasClassPropertySpecifier spec = PsiTreeUtil.getParentOfType(namedElement, PasClassPropertySpecifier.class);
-                                    ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create." + (PsiUtil.isPropertyGetter(spec) ? "getter" : "setter")),
+                                    ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create." + (ContextUtil.isPropertyGetter(spec) ? "getter" : "setter")),
                                             namedElement, scope, null, priority, spec));
                                 } else {
                                     ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.method"), namedElement, scope, null, priority, null));
@@ -176,7 +177,7 @@ public class PascalAnnotator implements Annotator {
                             break;
                         }
                         case UNIT: {
-                            ann.registerFix(new UsesActions.AddUnitAction(message("action.add.uses"), namedElement.getName(), PsiUtil.belongsToInterface(namedElement)));
+                            ann.registerFix(new UsesActions.AddUnitAction(message("action.add.uses"), namedElement.getName(), ContextUtil.belongsToInterface(namedElement)));
                             break;
                         }
                         case NEW_UNIT: {
@@ -185,7 +186,7 @@ public class PascalAnnotator implements Annotator {
                         }
                         case UNIT_FIND: {
                             ann.registerFix(new UsesActions.SearchUnitAction(message("action.unit.search", namedElement.getName()),
-                                    namedElement.getName(), PsiUtil.belongsToInterface(namedElement)));
+                                    namedElement.getName(), ContextUtil.belongsToInterface(namedElement)));
                             break;
                         }
                     }

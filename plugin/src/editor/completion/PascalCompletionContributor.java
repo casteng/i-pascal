@@ -277,7 +277,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
             String name = getFieldName(field).toUpperCase();
             if (!nameSet.contains(name) && StringUtil.isNotEmpty(name)) {
-                lookupElements.add(getLookupElement(parameters.getOriginalFile().getVirtualFile(), parameters.getEditor(), field));
+                lookupElements.add(getLookupElement(parameters.getOriginalFile().getVirtualFile(), parameters.getEditor(), field, null));
                 nameSet.add(name);
             }
         }
@@ -400,7 +400,7 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private void handleStatement(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, Collection<PasField> entities) {
         if (isAtAssignmentRightPart(pos, parameters.getOriginalPosition())) {                           // identifier completion in right part of assignment
-            addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
+            addEntities(result, entities, parameters.getPosition(), PasField.TYPES_ALL, parameters);
             PsiElement prev = PsiTreeUtil.skipSiblingsBackward(parameters.getOriginalPosition(), PsiWhiteSpace.class, PsiComment.class);
             if ((null == prev) || (!prev.getText().equals("."))) {
                 appendTokenSet(result, PascalLexer.VALUES);
@@ -409,7 +409,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             pos = originalPos;
         }
         if (pos instanceof PasStatement) {                                                                          // identifier completion in left part of assignment
-            addEntities(entities, parameters.getPosition(), PasField.TYPES_LEFT_SIDE, parameters.isExtendedCompletion());        // complete identifier variants
+            addEntities(result, entities, parameters.getPosition(), PasField.TYPES_LEFT_SIDE, parameters);        // complete identifier variants
             //noinspection unchecked
             if (PsiTreeUtil.getParentOfType(parameters.getOriginalPosition(), PasForStatement.class, PasWhileStatement.class, PasRepeatStatement.class) != null) {
                 appendTokenSet(result, PascalLexer.STATEMENTS_IN_CYCLE);
@@ -419,17 +419,17 @@ public class PascalCompletionContributor extends CompletionContributor {
 
     private void handleEntities(CompletionResultSet result, CompletionParameters parameters, PsiElement pos, PsiElement originalPos, PsiElement expr, Collection<PasField> entities) {
         if ((pos instanceof PasTypeID) || (originalPos instanceof PasTypeID)) {                                                                          // Type declaration
-            addEntities(entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters.isExtendedCompletion());
+            addEntities(result, entities, parameters.getPosition(), PasField.TYPES_TYPE_UNIT, parameters);
             if (!PsiUtil.isInstanceOfAny(pos.getParent(), PasClassParent.class)) {
                 appendTokenSet(result, TYPE_DECLARATIONS);
                 result.caseInsensitive().addElement(getElement("interface "));
             }
         } else if (pos instanceof PasClassPropertySpecifier || pos instanceof PasClassProperty) {
-            addEntities(entities, parameters.getPosition(), PasField.TYPES_PROPERTY_SPECIFIER, parameters.isExtendedCompletion());
+            addEntities(result, entities, parameters.getPosition(), PasField.TYPES_PROPERTY_SPECIFIER, parameters);
         } else if (pos instanceof PasConstExpressionOrd) {
-            addEntities(entities, parameters.getPosition(), PasField.TYPES_STATIC, parameters.isExtendedCompletion());
+            addEntities(result, entities, parameters.getPosition(), PasField.TYPES_STATIC, parameters);
         } else if (expr instanceof PascalExpression) {
-            addEntities(entities, parameters.getPosition(), PasField.TYPES_ALL, parameters.isExtendedCompletion());
+            addEntities(result, entities, parameters.getPosition(), PasField.TYPES_ALL, parameters);
         }
     }
 
@@ -576,11 +576,11 @@ public class PascalCompletionContributor extends CompletionContributor {
         }
     }
 
-    private LookupElement getLookupElement(VirtualFile virtualFile, Editor editor, @NotNull PasField field) {
+    private static LookupElement getLookupElement(VirtualFile virtualFile, Editor editor, @NotNull PasField field, @Nullable InsertHandler<LookupElement> handler) {
         String scope = field.owner != null ? field.owner.getName() : "-";
         LookupElementBuilder lookupElement = buildFromElement(field) ? createLookupElement(editor, field) : LookupElementBuilder.create(field.name);
         LookupElement element = lookupElement.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
-                withCaseSensitivity(true).withTypeText(scope, false);
+                withCaseSensitivity(true).withTypeText(scope, false).withInsertHandler(handler);
         if (field.name.startsWith("__")) {
             return priority(element, PRIORITY_LOWEST);
         }
@@ -593,7 +593,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         return element;
     }
 
-    private LookupElement priority(LookupElement element, double priority) {
+    private static LookupElement priority(LookupElement element, double priority) {
         return PrioritizedLookupElement.withPriority(element, priority);
     }
 
@@ -601,7 +601,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         return (field.getElementPtr() != null) && (field.fieldType != PasField.FieldType.PSEUDO_VARIABLE);
     }
 
-    private LookupElementBuilder createLookupElement(final Editor editor, @NotNull PasField field) {
+    private static LookupElementBuilder createLookupElement(final Editor editor, @NotNull PasField field) {
         assert field.getElement() != null;
         LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(getFieldText(field));
         if (field.fieldType == PasField.FieldType.ROUTINE) {
@@ -620,7 +620,7 @@ public class PascalCompletionContributor extends CompletionContributor {
         return res;
     }
 
-    private String getFieldText(PasField field) {
+    private static String getFieldText(PasField field) {
         PascalNamedElement el = field.getElement();
         if (el instanceof PascalIdentDecl) {
             String type = ((PascalIdentDecl) el).getTypeString();
@@ -646,7 +646,7 @@ public class PascalCompletionContributor extends CompletionContributor {
     * a_.bc ____
     * a.b_.c a.____
     */
-    private static void addEntities(Collection<PasField> result, PsiElement position, Set<PasField.FieldType> fieldTypes, boolean extendedCompletion) {
+    private static void addEntities(CompletionResultSet result, Collection<PasField> entities, PsiElement position, Set<PasField.FieldType> fieldTypes, CompletionParameters parameters) {
         NamespaceRec namespace = NamespaceRec.fromFQN(position, PasField.DUMMY_IDENTIFIER);
         if (PsiUtil.isIdent(position.getParent())) {
             if (position.getParent().getParent() instanceof PascalNamedElement) {
@@ -655,12 +655,18 @@ public class PascalCompletionContributor extends CompletionContributor {
                 namespace = NamespaceRec.fromFQN(position, ((PascalNamedElement) position).getName());
             }
         }
-        namespace.clearTarget();
-        for (PasField pasField : PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0)) {
-            if ((pasField.name != null) && !pasField.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
-                result.add(pasField);
+        //String key = namespace.getCurrentName().replaceFirst(PasField.DUMMY_IDENTIFIER.substring(0, 4), "");
+        //if (!namespace.isFirst() || StringUtils.isEmpty(key)) {
+            namespace.clearTarget();
+            for (PasField pasField : PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0)) {
+                if ((pasField.name != null) && !pasField.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
+                    entities.add(pasField);
+                }
             }
-        }
+        /*} else {
+            addSymbolsToResult(result, findSymbols(position.getProject(), key), parameters);
+        }*/
+
     }
 
     private static void handleDirectives(CompletionResultSet result, CompletionParameters parameters, PsiElement originalPos, PsiElement pos, PsiElement prev) {
