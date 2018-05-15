@@ -350,8 +350,8 @@ private progWoHead          ::= [intUsesClause] BlockGlobal "." {pin=2 recoverWh
 private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation "." {pin=1}
 private prolog              ::= {recoverWhile=rec_module_start}
 UnitModuleHead              ::= UNIT NamespaceIdent hintingDirective* ";" {pin=1 recoverWhile=rec_module}
-private intUsesClause       ::= UsesClause {recoverWhile=rec_block_local_end}
-UsesClause                  ::= USES namespaceNameList ";" {pin=1}
+private intUsesClause       ::= UsesClause
+UsesClause                  ::= USES namespaceNameList ";" {pin=1 recoverWhile=rec_block_local_end}
 
 private moduleLibrary       ::= LibraryModuleHead [intUsesClause] libBlockGlobal "." {pin=1}
 private libBlockGlobal      ::= ImplDeclSection END | BlockGlobal
@@ -362,8 +362,11 @@ PackageModuleHead           ::= PACKAGE NamespaceIdent ";" {pin=1}
 RequiresClause              ::= REQUIRES namespaceNameList ";" {pin=1}
 ContainsClause              ::= CONTAINS namespaceNameList ";" {pin=1}
 
-UnitInterface               ::= INTERFACE [intUsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
+UnitInterface               ::= unitInterfaceKey [intUsesClause] interfaceDecl* {pin=1 recoverWhile=rec_interface name="interface section"}
+private unitInterfaceKey    ::= INTERFACE {recoverWhile=rec_sectionKey}
 
+private rec_sectionKey      ::= !(USES) & rec_section
+private rec_programHead     ::= !(USES) & rec_section
 private rec_block_global_end ::= !(".")
 private rec_block_local_end  ::= !(END) & rec_section
 private rec_module_start    ::= !(UNIT | LIBRARY | PROGRAM | PACKAGE | USES | END) & rec_section
@@ -387,7 +390,7 @@ private rec_case            ::= !(ELSE | END) & rec_section
 private rec_caseItem        ::= !(END | ELSE | caseLabel)
 private rec_classparent     ::= !(CASE | FOR) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
-private rec_formal_param    ::= !(")" | ";" | "]") & rec_section
+private rec_formal_param    ::= !(";" | ":" | ">" | "]" | "," | OF | identifier) & rec_section
 private rec_propspec        ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
 private rec_generic_def     ::= !(">" | "," | ":" | ">""=") & rec_section
 
@@ -435,13 +438,14 @@ private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclS
 private declSectionNested1  ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_block_local_end}
 private declSectionWONested ::= commonDecl | LabelDeclSection {recoverWhile=rec_section_nested}
 
-UnitImplementation          ::= IMPLEMENTATION [intUsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation_dot name="implementation section"}
+UnitImplementation          ::= unitImplementationKey [intUsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation_dot name="implementation section"}
+private unitImplementationKey ::= IMPLEMENTATION {recoverWhile=rec_sectionKey}
 ImplDeclSection             ::= declSection* {}
 private unitBlock           ::= [UnitInitialization] [UnitFinalization] END | CompoundStatement | END {}
 UnitInitialization          ::= INITIALIZATION statementList {pin=1 name="initialization section"}
 UnitFinalization            ::= FINALIZATION statementList  {pin=1 name="finalization section"}
 
-ProgramModuleHead	        ::= PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1}
+ProgramModuleHead	        ::= PROGRAM NamespaceIdent ProgramParamList? ";" {pin=1 recoverWhile=rec_programHead}
 ProgramParamList            ::= LPAREN progParam? progParamsRest* RPAREN {pin=1}
 private progParamsRest      ::= "," progParam {pin=1}
 private progParam           ::= identifier {}
@@ -519,7 +523,7 @@ private constrainedGenericDefinition ::= "<" constrainedGeneric genericConstrain
 private constrainedGeneric  ::= (NamedIdent [ ":" GenericConstraint]) | (CONSTRUCTOR | CLASS | RECORD)
 GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
 private genericConstraintsRest ::= ("," | ";") constrainedGeneric {pin=1}
-GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"               // TODO use TypeId + procedure types instead?
+GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"             // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
 TypeID                      ::=	"specialize"? FullyQualifiedIdent [GenericPostfix]
@@ -657,7 +661,7 @@ private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
 private simpleStatement     ::= GotoStatement | stmtSimpleOrAssign | Expression
 private stmtSimpleOrAssign  ::= Expression AssignPart
 AssignOp                    ::= ":=" | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN
-AssignPart                  ::= AssignOp (NewStatement | Expression) {pin=1 }
+AssignPart                  ::= AssignOp (NewStatement | Expression) {pin=1 recoverWhile=rec_statement}
 NewStatement                ::= NEW "(" [ Expression ] ("," [ Expression ])* [ "," ConstExpression ] ")"// {pin=1 }
 stmtEmpty           ::= //empty
 
@@ -819,9 +823,10 @@ private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExp
 private callGroup           ::= callExpr | indexExpr | dereferenceExpr
 literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
-FormalParameterSection      ::= "(" [ formalParameterList ] ")" {pin=1}
+FormalParameterSection      ::= formalParameterSect
+private formalParameterSect ::= "(" [ formalParameterList ] ")" {pin=1 recoverWhile=rec_formal_param}
 private formalParameterList ::= FormalParameter (";" FormalParameter)*
-FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" TypeDecl ] [ "=" ConstExpression ] {pin=3 recoverWhile=rec_formal_param
+FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" TypeDecl ] [ "=" ConstExpression ] {pin=3
                                                         mixin="com.siberika.idea.pascal.lang.psi.impl.PasFormalParameterMixin"}
 ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 

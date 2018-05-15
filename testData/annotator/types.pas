@@ -8,6 +8,7 @@ type
 
   TProc = procedure(a: Integer);
   TFunc = function(a: Int): Int of object;
+  TProcOfObj = procedure(a: Integer) of object;
 
   TEnum = (soDown, soMatchCase, soWholeWord);
   TSet = set of TEnum;
