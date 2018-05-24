@@ -403,7 +403,7 @@
         <codeInsight.parameterInfo language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterInfoHandler"/>
         <nameSuggestionProvider implementation="com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider"/>
 
-        <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionContributor"/>
+        <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCtxCompletionContributor"/>
         <completion.confidence language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionConfidence"/>
 
         <braceMatcher filetype="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalBraceMatcher"/>

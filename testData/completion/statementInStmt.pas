@@ -4,11 +4,14 @@ var
     s1: set of Integer;
 begin
     a := b div a;
-    for <caret> do ;
-    if <caret> then ;
-    while <caret> do ;
-    case <caret>
-
+    for a := 0 to 1 <caret> ;
+    if a=b <caret>;
+    while a=b <caret>;
+    case a <caret>
+    end;
+    try
+    except
+        on E : TException <caret>
     end;
     s1 := [1, 2..5];
 end.

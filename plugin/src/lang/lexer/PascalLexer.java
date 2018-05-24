@@ -52,7 +52,7 @@ public abstract class PascalLexer extends DelegateLexer implements PasTypes {
     public static final TokenSet OPERATORS = TokenSet.create(
             AND, OR, NOT, XOR, IDIV, MOD, SHR, SHL, IN, AS, IS
     );
-
+    //move
     public static final TokenSet STATEMENTS = TokenSet.create(
             FOR, WHILE, REPEAT,
             IF, CASE, WITH,
@@ -86,9 +86,13 @@ public abstract class PascalLexer extends DelegateLexer implements PasTypes {
             VAR, CONST, TYPE, THREADVAR, RESOURCESTRING
     );
 
-    public static final TokenSet DECLARATIONS = TokenSet.create(
+    public static final TokenSet DECLARATIONS_INTF = TokenSet.create(
             VAR, CONST, TYPE, THREADVAR, RESOURCESTRING,
-            PROCEDURE, FUNCTION, CONSTRUCTOR, DESTRUCTOR
+            PROCEDURE, FUNCTION
+    );
+
+    public static final TokenSet DECLARATIONS_IMPL = TokenSet.create(
+            CONSTRUCTOR, DESTRUCTOR
     );
 
     public static final TokenSet STRUCT_DECLARATIONS = TokenSet.create(
@@ -109,7 +113,7 @@ public abstract class PascalLexer extends DelegateLexer implements PasTypes {
             DEPRECATED, EXPERIMENTAL, PLATFORM, LIBRARY, DISPID
     );
 
-    public static final TokenSet VISIBILITY = TokenSet.create(STRICT, PRIVATE, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED);
+    public static final TokenSet VISIBILITY = TokenSet.create(PRIVATE, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED);
 
     /*EXPORTS,
     EXCEPT, ON, FINALLY,

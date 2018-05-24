@@ -538,7 +538,12 @@ public class PasReferenceUtil {
         for (PasEntityScope namespace : sorted) {
             if (fqn.advance(namespace.getName())) {
                 if (fqn.isComplete()) {
-                    result.add(namespace.getField(namespace.getName()));
+                    PasField field = namespace.getField(namespace.getName());
+                    if (field != null) {
+                        result.add(field);
+                    } else {
+                        LOG.info("ERROR: field is null. FQN: " + fqn.toString());
+                    }
                 }
                 return namespace;
             }
