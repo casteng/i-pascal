@@ -1,10 +1,14 @@
 package com.siberika.idea.pascal.editor.completion;
 
 import com.intellij.codeInsight.completion.CompletionContributor;
+import com.intellij.codeInsight.completion.CompletionInitializationContext;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.codeInsight.completion.PrioritizedLookupElement;
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiComment;
@@ -15,6 +19,7 @@ import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.context.Context;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -23,21 +28,32 @@ import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import static com.siberika.idea.pascal.lang.context.CodePlace.ASSIGN_LEFT;
+import static com.siberika.idea.pascal.lang.context.CodePlace.CONST_EXPRESSION;
 import static com.siberika.idea.pascal.lang.context.CodePlace.DECL_FIELD;
+import static com.siberika.idea.pascal.lang.context.CodePlace.DECL_TYPE;
 import static com.siberika.idea.pascal.lang.context.CodePlace.EXPR;
+import static com.siberika.idea.pascal.lang.context.CodePlace.FIRST_IN_EXPR;
+import static com.siberika.idea.pascal.lang.context.CodePlace.FIRST_IN_NAME;
 import static com.siberika.idea.pascal.lang.context.CodePlace.GLOBAL_DECLARATION;
 import static com.siberika.idea.pascal.lang.context.CodePlace.INTERFACE;
 import static com.siberika.idea.pascal.lang.context.CodePlace.LOCAL_DECLARATION;
 import static com.siberika.idea.pascal.lang.context.CodePlace.MODULE_HEADER;
+import static com.siberika.idea.pascal.lang.context.CodePlace.PROPERTY_SPECIFIER;
 import static com.siberika.idea.pascal.lang.context.CodePlace.STATEMENT;
-import static com.siberika.idea.pascal.lang.context.CodePlace.STATEMENT_START;
 import static com.siberika.idea.pascal.lang.context.CodePlace.STMT_CASE_ITEM;
 import static com.siberika.idea.pascal.lang.context.CodePlace.STMT_EXCEPT;
 import static com.siberika.idea.pascal.lang.context.CodePlace.STMT_FOR;
@@ -45,6 +61,7 @@ import static com.siberika.idea.pascal.lang.context.CodePlace.STMT_IF_THEN;
 import static com.siberika.idea.pascal.lang.context.CodePlace.STMT_REPEAT;
 import static com.siberika.idea.pascal.lang.context.CodePlace.STMT_TRY;
 import static com.siberika.idea.pascal.lang.context.CodePlace.STMT_WHILE;
+import static com.siberika.idea.pascal.lang.context.CodePlace.TYPE_ID;
 import static com.siberika.idea.pascal.lang.context.CodePlace.UNKNOWN;
 import static com.siberika.idea.pascal.lang.context.CodePlace.USES;
 
@@ -55,9 +72,20 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     private static final TokenSet TS_CLASS = TokenSet.create(PasTypes.CLASS);
     private static final TokenSet DECLARATIONS_LOCAL = TokenSet.create(PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.PROCEDURE, PasTypes.FUNCTION);
 
+    private static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
+            PasTypes.CLASS, PasTypes.OBJC_CLASS, PasTypes.DISPINTERFACE, PasTypes.RECORD, PasTypes.OBJECT,
+            PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.ARRAY
+    );
+
     @Override
     public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
         return position instanceof PsiComment && typeChar == '$';
+    }
+
+    @Override
+    public void beforeCompletion(@NotNull CompletionInitializationContext context) {
+        super.beforeCompletion(context);
+        context.setDummyIdentifier(PasField.DUMMY_IDENTIFIER);
     }
 
     @SuppressWarnings("unchecked")
@@ -67,21 +95,35 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
                 Context ctx = new Context(parameters.getOriginalPosition(), parameters.getPosition(), parameters.getOriginalFile());
 
-                if (ctx.getPrimary() == EXPR && ctx.contains(STATEMENT_START)) {
-                    CompletionUtil.appendTokenSet(result, PascalLexer.STATEMENTS);
-                    if (ctx.contains(STMT_TRY)) {
-                        CompletionUtil.appendTokenSetUnique(result, PasTypes.EXCEPT, ctx.getPosition().getParent());
-                        CompletionUtil.appendTokenSetUnique(result, PasTypes.FINALLY, ctx.getPosition().getParent());
-                        CompletionUtil.appendTokenSet(result, TokenSet.create(PasTypes.ON));
+                Map<String, LookupElement> entities = new HashMap<>();
+
+                if (ctx.getPrimary() == EXPR) {
+                    if (ctx.contains(FIRST_IN_NAME) && ctx.contains(FIRST_IN_EXPR)) {
+                        CompletionUtil.appendTokenSet(result, PascalLexer.STATEMENTS);
+                        if (ctx.contains(STMT_TRY)) {
+                            CompletionUtil.appendTokenSetUnique(result, PasTypes.EXCEPT, ctx.getPosition().getParent());
+                            CompletionUtil.appendTokenSetUnique(result, PasTypes.FINALLY, ctx.getPosition().getParent());
+                            CompletionUtil.appendTokenSet(result, TokenSet.create(PasTypes.ON));
+                        }
+                        if (ctx.contains(STMT_REPEAT)) {
+                            CompletionUtil.appendTokenSetUnique(result, PasTypes.UNTIL, ctx.getPosition().getParent());
+                        }
+                        if (DO_THEN_OF_MAP.containsKey(ctx.getPosition().getParent().getNode().getElementType())) {
+                            CompletionUtil.appendTokenSetUnique(result, TS_BEGIN, ctx.getPosition());
+                        }
+                        if (ctx.contains(STMT_FOR) || ctx.contains(STMT_WHILE) || ctx.contains(STMT_REPEAT)) {
+                            CompletionUtil.appendTokenSet(result, PascalLexer.STATEMENTS_IN_CYCLE);
+                        }
                     }
-                    if (ctx.contains(STMT_REPEAT)) {
-                        CompletionUtil.appendTokenSetUnique(result, PasTypes.UNTIL, ctx.getPosition().getParent());
-                    }
-                    if (DO_THEN_OF_MAP.containsKey(ctx.getPosition().getParent().getNode().getElementType())) {
-                        CompletionUtil.appendTokenSetUnique(result, TS_BEGIN, ctx.getPosition());
-                    }
-                    if (ctx.contains(STMT_FOR) || ctx.contains(STMT_WHILE) || ctx.contains(STMT_REPEAT)) {
-                        CompletionUtil.appendTokenSet(result, PascalLexer.STATEMENTS_IN_CYCLE);
+                    if (ctx.contains(CONST_EXPRESSION)) {
+                        addEntities(result, entities, ctx, PasField.TYPES_STATIC, parameters);
+                    } else if (ctx.contains(ASSIGN_LEFT)) {
+                        addEntities(result, entities, ctx, PasField.TYPES_LEFT_SIDE, parameters);
+                    } else {
+                        addEntities(result, entities, ctx, PasField.TYPES_ALL, parameters);
+                        if (ctx.contains(FIRST_IN_NAME)) {
+                            CompletionUtil.appendTokenSet(result, PascalLexer.VALUES);
+                        }
                     }
                 } else if ((ctx.getPrimary() == STATEMENT) || (ctx.getPrimary() == STMT_EXCEPT)) {
                     if (!getDoThenOf(result, ctx, parameters.getOffset()) && (ctx.contains(STMT_IF_THEN))) {
@@ -95,6 +137,20 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                     CompletionUtil.appendText(result, "const ");
                     CompletionUtil.appendText(result, "var ");
                     CompletionUtil.appendText(result, "out ");
+                }
+
+                if (ctx.getPrimary() == TYPE_ID ) {
+                    addEntities(result, entities, ctx, PasField.TYPES_TYPE_UNIT, parameters);
+                    if (ctx.contains(DECL_TYPE)) {
+                        CompletionUtil.appendTokenSet(result, TYPE_DECLARATIONS);
+                        result.caseInsensitive().addElement(CompletionUtil.getElement("interface "));
+                        result.caseInsensitive().addElement(CompletionUtil.getElement("class helper"));
+                        result.caseInsensitive().addElement(CompletionUtil.getElement("record helper"));
+                        result.caseInsensitive().addElement(CompletionUtil.getElement("class of"));
+                        result.caseInsensitive().addElement(CompletionUtil.getElement("type "));
+                    }
+                } else if (ctx.getPrimary() == PROPERTY_SPECIFIER) {
+                    addEntities(result, entities, ctx, PasField.TYPES_PROPERTY_SPECIFIER, parameters);
                 }
 
                 if (ctx.getPrimary() == DECL_FIELD) {
@@ -134,6 +190,8 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                     CompletionUtil.appendTokenSet(result, DECLARATIONS_LOCAL);
                     CompletionUtil.appendTokenSet(result, TokenSet.create(PasTypes.BEGIN));
                 }
+
+                addEntitiesToResult(result, entities);
 
                 result.restartCompletionWhenNothingMatches();
             }
@@ -198,6 +256,47 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                     result.caseInsensitive().addElement(CompletionUtil.getElement("begin  "));
             }
         }
+    }
+
+    private static final double PRIORITY_HIGHER = 10.0;
+    private static final double PRIORITY_LOWER = -10.0;
+    private static final double PRIORITY_LOWEST = -100.0;
+
+    private static void addEntities(CompletionResultSet result, Map<String, LookupElement> entities, Context context, Set<PasField.FieldType> fieldTypes, CompletionParameters parameters) {
+        NamespaceRec namespace = NamespaceRec.fromFQN(parameters.getPosition(), PasField.DUMMY_IDENTIFIER);
+        if (PsiUtil.isIdent(parameters.getPosition().getParent())) {
+            if (parameters.getPosition().getParent().getParent() instanceof PascalNamedElement) {
+                namespace = NamespaceRec.fromElement(parameters.getPosition().getParent());
+            } else {
+                namespace = NamespaceRec.fromFQN(parameters.getPosition(), ((PascalNamedElement) parameters.getPosition()).getName());
+            }
+        }
+        namespace.clearTarget();
+        for (PasField pasField : PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0)) {
+            if ((pasField.name != null) && !pasField.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
+                LookupElement lookupElement;
+                LookupElementBuilder el = buildFromElement(pasField) ? CompletionUtil.createLookupElement(parameters.getEditor(), pasField) : LookupElementBuilder.create(pasField.name);
+                lookupElement = el.appendTailText(" : " + pasField.fieldType.toString().toLowerCase(), true).
+                        withCaseSensitivity(true).withTypeText(pasField.owner != null ? pasField.owner.getName() : "-", false);
+                if (lookupElement.getLookupString().startsWith("_")) {
+                    lookupElement = PrioritizedLookupElement.withPriority(lookupElement, PRIORITY_LOWEST);
+                }
+                if ((pasField.getElementPtr() != null) && (parameters.getOriginalFile().getVirtualFile() != null)
+                        && !parameters.getOriginalFile().getVirtualFile().equals(pasField.getElementPtr().getVirtualFile())) {
+                    lookupElement = PrioritizedLookupElement.withPriority(lookupElement, PRIORITY_LOWER);
+                }
+                entities.put(el.getLookupString(), lookupElement);
+            }
+        }
+    }
+
+
+    private static boolean buildFromElement(@NotNull PasField field) {
+        return (field.getElementPtr() != null) && (field.fieldType != PasField.FieldType.PSEUDO_VARIABLE);
+    }
+
+    private void addEntitiesToResult(CompletionResultSet result, Map<String, LookupElement> entities) {
+        result.caseInsensitive().addAllElements(entities.values());
     }
 
 }

@@ -5,59 +5,13 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.siberika.idea.pascal.lang.psi.PasArrayIndex;
-import com.siberika.idea.pascal.lang.psi.PasAssignPart;
-import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
-import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
-import com.siberika.idea.pascal.lang.psi.PasCaseElse;
-import com.siberika.idea.pascal.lang.psi.PasCaseItem;
-import com.siberika.idea.pascal.lang.psi.PasCaseStatement;
-import com.siberika.idea.pascal.lang.psi.PasClassField;
-import com.siberika.idea.pascal.lang.psi.PasClassProperty;
-import com.siberika.idea.pascal.lang.psi.PasClassPropertyArray;
-import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
-import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
-import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
-import com.siberika.idea.pascal.lang.psi.PasConstSection;
-import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasExpr;
-import com.siberika.idea.pascal.lang.psi.PasForStatement;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasHandler;
-import com.siberika.idea.pascal.lang.psi.PasIfStatement;
-import com.siberika.idea.pascal.lang.psi.PasIfThenStatement;
-import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
-import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
-import com.siberika.idea.pascal.lang.psi.PasRaiseStatement;
-import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
-import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
-import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
-import com.siberika.idea.pascal.lang.psi.PasRoutineImplDeclNested1;
-import com.siberika.idea.pascal.lang.psi.PasRoutineImplDeclWoNested;
-import com.siberika.idea.pascal.lang.psi.PasStatement;
-import com.siberika.idea.pascal.lang.psi.PasSubIdent;
-import com.siberika.idea.pascal.lang.psi.PasTryStatement;
-import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
-import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
-import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PasTypeSection;
-import com.siberika.idea.pascal.lang.psi.PasUnitImplementation;
-import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
-import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
-import com.siberika.idea.pascal.lang.psi.PasVarSection;
-import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
-import com.siberika.idea.pascal.lang.psi.PascalOperation;
-import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.*;
 import com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 
 public class Context {
@@ -118,55 +72,58 @@ public class Context {
 
         position = PsiUtil.skipToExpressionParent(element);
         tempPos = position;
-        originalPos = PsiUtil.skipToExpressionParent(originalPos);
+        PsiElement originalExprParent = PsiUtil.skipToExpressionParent(originalPos);
 
-        printContext(tempPos, originalPos);
+        printContext(tempPos, originalExprParent);
 
         if (tempPos instanceof PasModule) {
             return CodePlace.MODULE_HEADER;
         }
 
+        checkIdent(element, originalPos);
+
         CodePlace res = CodePlace.UNKNOWN;
 
-        if (tempPos instanceof PasStatement || tempPos instanceof PasAssignPart) {
-            PsiElement expr = PsiUtil.skipToExpression(element);
+        if ((tempPos instanceof PasStatement) || (tempPos instanceof PasAssignPart) || (originalExprParent instanceof PasRangeBound)) {
+            PsiElement expr = PsiUtil.skipToExpression(originalExprParent instanceof PasRangeBound ? originalPos : element);
             if (expr instanceof PasExpr) {
                 res = CodePlace.EXPR;
                 if (expr.getPrevSibling() instanceof PascalOperation) {
                     context.add(CodePlace.EXPR_AFTER_OPERATION);
                 }
-                if (expr instanceof PasReferenceExpr) {
+                if (expr instanceof PasReferenceExpr || expr instanceof PasLiteralExpr) {
                     expr = expr.getParent();
                 }
-                if (expr == tempPos.getFirstChild()) {
-                    context.add(CodePlace.STATEMENT_START);
+                if (((expr.getParent() instanceof PasExpressionOrd) && (expr.getParent().getParent() instanceof PasConstExpressionOrd))
+                        || (expr.getParent() instanceof PasConstExpression)) {
+                    context.add(CodePlace.CONST_EXPRESSION);
+                    expr = expr.getParent().getParent();
                 }
             } else {
                 res = CodePlace.STATEMENT;
             }
-            if (tempPos.getParent() instanceof PasCompoundStatement) {
-                List<PasStatement> statements = ((PasCompoundStatement) tempPos.getParent()).getStatementList();
-                if ((statements.size() > 0) && (statements.get(0) == tempPos)) {
-                    context.add(CodePlace.STATEMENT_FIRST);
-                }
+            if (tempPos instanceof PasCaseStatement) {
+                context.add(CodePlace.ASSIGN_RIGHT);
+            } else if ((originalExprParent instanceof PasStatement) && (PsiUtil.findImmChildOfAnyType(originalExprParent, PasAssignPart.class) != null)) {
+                context.add(CodePlace.ASSIGN_LEFT);
             }
         } else if (tempPos instanceof PasCaseItem) {
             res = CodePlace.STMT_CASE_ITEM;
         } else if (PsiUtil.isInstanceOfAny(tempPos, GLOBAL_DECL)) {
-            if (originalPos instanceof PasRoutineImplDecl) {
+            if (originalExprParent instanceof PasRoutineImplDecl) {
                 res = CodePlace.LOCAL_DECLARATION;
-                position = originalPos;
+                position = originalExprParent;
             } else {
                 res = CodePlace.GLOBAL_DECLARATION;
             }
         } else if (PsiUtil.isInstanceOfAny(tempPos, LOCAL_DECL)) {
             res = CodePlace.LOCAL_DECLARATION;
         } else if (tempPos instanceof PasUsesClause) {
-            if (originalPos instanceof PasUsesClause && element.getParent() instanceof PasSubIdent && element.getParent().getParent() instanceof PasNamespaceIdent) {
+            if (originalExprParent instanceof PasUsesClause && element.getParent() instanceof PasSubIdent && element.getParent().getParent() instanceof PasNamespaceIdent) {
                 res = CodePlace.USES;
             } else {
                 res = CodePlace.GLOBAL_DECLARATION;
-                position = originalPos;
+                position = originalExprParent;
             }
         } else if (tempPos instanceof PasFormalParameter) {
             res = CodePlace.FORMAL_PARAMETER;
@@ -266,6 +223,10 @@ public class Context {
             addToContext(CodePlace.STRUCT);
         }
 
+        if (tempPos instanceof PasClassParent) {
+            addToContext(CodePlace.STRUCT_PARENT);
+        }
+
         if (tempPos instanceof PasVarDeclaration) {
             addToContext(CodePlace.DECL_VAR);
         }
@@ -289,12 +250,37 @@ public class Context {
             addToContext(CodePlace.INTERFACE);
         }
         if (PsiUtil.isInstanceOfAny(tempPos, GLOBAL_DECL)) {
-            addToContext(PsiUtil.isInstanceOfAny(originalPos, LOCAL_DECL) ? CodePlace.LOCAL : CodePlace.GLOBAL);
+            addToContext(PsiUtil.isInstanceOfAny(originalExprParent, LOCAL_DECL) ? CodePlace.LOCAL : CodePlace.GLOBAL);
         } else if (PsiUtil.isInstanceOfAny(tempPos, LOCAL_DECL)) {
             addToContext(CodePlace.LOCAL);
         }
 
         return res != CodePlace.UNKNOWN ? res : tempFirst;
+    }
+
+    private void checkIdent(PsiElement element, PsiElement originalPos) {
+        originalPos = originalPos.getParent() instanceof PasStringFactor ? originalPos.getParent() : originalPos;
+        PsiElement pos = PsiUtil.isInstanceOfAny(originalPos.getParent(), PascalNamedElement.class, PasLiteralExpr.class) ? originalPos.getParent() : element.getParent();
+        System.out.println("===*** " + pos);
+        if (!PsiUtil.isInstanceOfAny(pos, PascalNamedElement.class, PasLiteralExpr.class)) {
+            return;
+        }
+        while (PsiUtil.isInstanceOfAny(pos, PasSubIdent.class, PascalQualifiedIdent.class, PasReferenceExpr.class)) {
+            PsiElement par = pos.getParent();
+            if (!(par.getChildren()[0] == pos)) {
+                return;
+            }
+            pos = par;
+        }
+        context.add(CodePlace.FIRST_IN_NAME);
+        while (PsiUtil.isInstanceOfAny(pos, PasExpr.class, PasIndexList.class)) {
+            PsiElement par = pos.getParent();
+            if (!(par.getChildren()[0] == pos)) {
+                return;
+            }
+            pos = par;
+        }
+        context.add(CodePlace.FIRST_IN_EXPR);
     }
 
     private void addToContext(CodePlace place) {

@@ -28,13 +28,11 @@ public enum CodePlace {
     // place where a type identifier is exists or needed
     TYPE_ID,
 
-    // first referenced namespace in an FQN or in an expression
-    FIRST_PART,
+    // first referenced namespace in an FQN including indexed and dereferenced parts
+    FIRST_IN_NAME,
+    // first operand in expression
+    FIRST_IN_EXPR,
 
-    // first starting a new statement (first token in statement)
-    STATEMENT_FIRST,  //TODO: rename ===***
-    // starting a new statement (first token in statement)
-    STATEMENT_START,
     // inside expression
     EXPR,
     // inside expression and after operation
@@ -98,6 +96,8 @@ public enum CodePlace {
     // inside a generic definition
     GENERIC_DEFINITION,
 
+    // constant expression
+    CONST_EXPRESSION,
     // within "()" in record constant specifier
     CONST_RECORD,
     // within "()" in array constant specifier
@@ -114,6 +114,8 @@ public enum CodePlace {
     ROUTINE,
     // inside header (before field declarations) of a structured type declaration
     STRUCT_HEADER,
+    // inside parent clause of a structured type declaration
+    STRUCT_PARENT,
     // inside a structured type declaration
     STRUCT,
     // somewhere in interface or implementation global declaration section

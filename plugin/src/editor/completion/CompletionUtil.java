@@ -5,7 +5,13 @@ import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.ide.DataManager;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -30,8 +36,11 @@ import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasTryStatement;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.stub.PascalSymbolIndex;
 import com.siberika.idea.pascal.util.DocUtil;
@@ -77,6 +86,7 @@ public class CompletionUtil {
     };
     static final TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF, PasTypes.ELSE);
     private static final TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT, PasTypes.CASE_ELSE);
+    private static final String TYPE_UNTYPED = "<untyped>";
 
     private static Map<IElementType, TokenSet> TOKEN_TO_PAS = initTokenToPasToken();
 
@@ -162,6 +172,9 @@ public class CompletionUtil {
         res.put(PasTypes.INTERFACE.toString() + " ", String.format("(IUnknown)\n%s\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.ARRAY.toString(), String.format("[0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.SET.toString(), String.format(" of %s;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.CLASS.toString() + " of", String.format(" %s;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.CLASS.toString() + " helper", String.format(" for T%s\n\nend;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.RECORD.toString() + " helper", String.format(" for T%s\n\nend;", DocUtil.PLACEHOLDER_CARET));
 
         res.put(PasTypes.CONSTRUCTOR.toString(), String.format(" Create(%s);", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.DESTRUCTOR.toString(), String.format(" Destroy(%s); override;", DocUtil.PLACEHOLDER_CARET));
@@ -175,6 +188,7 @@ public class CompletionUtil {
         res.put(PasTypes.CONST.toString(), String.format(" %s = ;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.RESOURCESTRING.toString(), String.format(" %s = '';", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.TYPE.toString(), String.format(" T%s = ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.TYPE.toString() + " ", String.format(" T%s;", DocUtil.PLACEHOLDER_CARET));
 
         res.put(PasTypes.PROPERTY.toString(), String.format(" %s: read ;", DocUtil.PLACEHOLDER_CARET));
 
@@ -266,5 +280,33 @@ public class CompletionUtil {
 
     static void appendText(CompletionResultSet result, String s) {
         result.caseInsensitive().addElement(getElement(s));
+    }
+
+    static LookupElementBuilder createLookupElement(final Editor editor, @NotNull PasField field) {
+        assert field.getElement() != null;
+        LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(getFieldText(field));
+        if (field.fieldType == PasField.FieldType.ROUTINE) {
+            PascalNamedElement el = field.getElement();
+            final String content = (el instanceof PascalRoutine && ((PascalRoutine) el).hasParameters()) ? "(" + DocUtil.PLACEHOLDER_CARET + ")" : "()" + DocUtil.PLACEHOLDER_CARET;
+            res = res.withInsertHandler(new InsertHandler<LookupElement>() {
+                @Override
+                public void handleInsert(InsertionContext context, LookupElement item) {
+                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), content);
+                    AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
+                    DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
+                    act.actionPerformed(new AnActionEvent(null, dataContext, "", act.getTemplatePresentation(), ActionManager.getInstance(), 0));
+                }
+            });
+        }
+        return res;
+    }
+
+    private static String getFieldText(PasField field) {
+        PascalNamedElement el = field.getElement();
+        if (el instanceof PascalIdentDecl) {
+            String type = ((PascalIdentDecl) el).getTypeString();
+            return PsiUtil.getFieldName(el) + ": " + (type != null ? type : TYPE_UNTYPED);
+        }
+        return PsiUtil.getFieldName(el);
     }
 }
