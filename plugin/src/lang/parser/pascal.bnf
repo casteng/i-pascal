@@ -690,7 +690,7 @@ private caseBody    ::= CASE ctrlStmtExpression OF CaseItem* {pin=1 recoverWhile
 CaseItem	        ::=	caseLabel Statement [";"] {pin=1 recoverWhile=rec_caseItem}
 CaseElse            ::= ELSE statementList {pin=1}
 
-private caseLabel           ::= caseLabelPart ("," caseLabelPart)* ":" //{pin=1 recoverWhile=rec_case3}
+private caseLabel           ::= caseLabelPart ("," caseLabelPart)* ":" {pin=1}
 private caseLabelPart	    ::=	ConstExpressionOrd [RANGE ConstExpressionOrd]
 
 TryStatement                ::= TRY statementList (tryExcept | tryFinally) END {pin=1}

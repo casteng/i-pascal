@@ -226,6 +226,11 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testMethodDeclImplHead() {
         myFixture.configureByFiles("methodImplHead.pas");
+        checkCompletion(myFixture, "begin");
+    }
+
+    public void testMethodDeclImplHeadNewLine() {
+        myFixture.configureByFiles("methodImplHeadNewLine.pas");
         checkCompletion(myFixture, "begin", "const", "function", "procedure", "type", "var");
     }
 
@@ -245,12 +250,12 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "automated", "private", "strict private", "class ", "operator", "var");
     }
 
-    public void testTypeId() {
+    public void testTypeIdInVarDecl() {
         myFixture.configureByFiles("typeId.pas");
         checkCompletionContains(myFixture, "TTest", "TRec2", "typeId",
-                "type", "class", "dispinterface", "interface ", "record", "object", "packed", "set", "file", "helper", "array");
-        myFixture.type("te");
-        checkCompletionContains(myFixture, "TTest", "dispinterface", "interface ");
+                "record", "packed", "set", "file", "array");
+        myFixture.type("re");
+        checkCompletionContains(myFixture, "TRec2", "record");
     }
 
     public void testParent() {
@@ -269,8 +274,8 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testConsts() {
         myFixture.configureByFiles("consts.pas");
-        checkCompletionContainsAllCarets(myFixture, "a", "b", "CONST_1", "CONST_2");
-        //checkCompletionContains(myFixture, "a", "b", "CONST_1", "CONST_2");
+        checkCompletionNotContains(myFixture, "a", "b");
+        checkCompletionContains(myFixture, "CONST_1", "CONST_2");
     }
 
     public void testStatementInStmt() {

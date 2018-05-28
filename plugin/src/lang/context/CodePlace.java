@@ -39,6 +39,12 @@ public enum CodePlace {
     EXPR_AFTER_OPERATION,
     // on actual parameter of a call expression
     EXPR_ARGUMENT,
+    // expression within parentheses
+    EXPR_PAREN,
+    // set expression (within [])
+    EXPR_SET,
+    // array indexing expression (within [])
+    EXPR_INDEX,
 
     // inside left part of assignment
     ASSIGN_LEFT,

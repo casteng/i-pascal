@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.context;
 
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -18,6 +19,7 @@ public class Context {
 
     private static final Class[] GLOBAL_DECL = {PasUnitInterface.class, PasUnitImplementation.class, PasImplDeclSection.class, PasBlockGlobal.class};
     private static final Class[] LOCAL_DECL = {PasRoutineImplDecl.class, PasBlockLocal.class, PasRoutineImplDeclNested1.class, PasRoutineImplDeclWoNested.class};
+    private static final Class[] EXPRESION_CLASSES = {PasExpr.class, PasArgumentList.class, PasIndexList.class, PasExpression.class};
 
     private final Set<CodePlace> context;
     private final CodePlace primary;
@@ -84,20 +86,13 @@ public class Context {
 
         CodePlace res = CodePlace.UNKNOWN;
 
-        if ((tempPos instanceof PasStatement) || (tempPos instanceof PasAssignPart) || (originalExprParent instanceof PasRangeBound)) {
-            PsiElement expr = PsiUtil.skipToExpression(originalExprParent instanceof PasRangeBound ? originalPos : element);
-            if (expr instanceof PasExpr) {
+        if ((tempPos instanceof PasStatement) || (tempPos instanceof PasAssignPart) || (tempPos instanceof PasArgumentList) || (tempPos instanceof PasIndexList)
+                || (originalExprParent instanceof PasRangeBound)) {
+            PsiElement expr = skipToExpression(originalExprParent instanceof PasRangeBound ? originalPos : element);
+            if ((expr instanceof PasExpr) || (expr instanceof PasExpression)) {
                 res = CodePlace.EXPR;
                 if (expr.getPrevSibling() instanceof PascalOperation) {
                     context.add(CodePlace.EXPR_AFTER_OPERATION);
-                }
-                if (expr instanceof PasReferenceExpr || expr instanceof PasLiteralExpr) {
-                    expr = expr.getParent();
-                }
-                if (((expr.getParent() instanceof PasExpressionOrd) && (expr.getParent().getParent() instanceof PasConstExpressionOrd))
-                        || (expr.getParent() instanceof PasConstExpression)) {
-                    context.add(CodePlace.CONST_EXPRESSION);
-                    expr = expr.getParent().getParent();
                 }
             } else {
                 res = CodePlace.STATEMENT;
@@ -118,6 +113,9 @@ public class Context {
             }
         } else if (PsiUtil.isInstanceOfAny(tempPos, LOCAL_DECL)) {
             res = CodePlace.LOCAL_DECLARATION;
+            if (originalExprParent instanceof PasRoutineImplDecl) {
+                position = originalExprParent;
+            }
         } else if (tempPos instanceof PasUsesClause) {
             if (originalExprParent instanceof PasUsesClause && element.getParent() instanceof PasSubIdent && element.getParent().getParent() instanceof PasNamespaceIdent) {
                 res = CodePlace.USES;
@@ -258,6 +256,42 @@ public class Context {
         return res != CodePlace.UNKNOWN ? res : tempFirst;
     }
 
+    private PsiElement skipToExpression(PsiElement element) {
+        PsiElement pos = PsiTreeUtil.skipParentsOfType(element, PascalNamedElement.class,
+                PasReferenceExpr.class, PasDereferenceExpr.class,
+                PsiWhiteSpace.class, PsiErrorElement.class);
+        PsiElement res = pos;
+        PsiElement parent = pos != null ? pos.getParent() : null;
+        boolean contextModified = false;
+        while (PsiUtil.isInstanceOfAny(parent, EXPRESION_CLASSES)) {
+            if (!contextModified) {
+                if (pos instanceof PasArgumentList) {
+                    context.add(CodePlace.EXPR_ARGUMENT);
+                    contextModified = true;
+                }
+                if (pos instanceof PasParenExpr) {
+                    context.add(CodePlace.EXPR_PAREN);
+                    contextModified = true;
+                }
+                if (pos instanceof PasSetExpr) {
+                    context.add(CodePlace.EXPR_SET);
+                    contextModified = true;
+                }
+                if (pos instanceof PasIndexList) {
+                    context.add(CodePlace.EXPR_INDEX);
+                    contextModified = true;
+                }
+                if ((pos instanceof PasConstExpressionOrd) || (pos instanceof PasConstExpression)) {
+                    context.add(CodePlace.CONST_EXPRESSION);
+                }
+            }
+            res = pos;
+            pos = pos != null ? pos.getParent() : null;
+            parent = pos != null ? pos.getParent() : null;
+        }
+        return res;
+    }
+
     private void checkIdent(PsiElement element, PsiElement originalPos) {
         originalPos = originalPos.getParent() instanceof PasStringFactor ? originalPos.getParent() : originalPos;
         PsiElement pos = PsiUtil.isInstanceOfAny(originalPos.getParent(), PascalNamedElement.class, PasLiteralExpr.class) ? originalPos.getParent() : element.getParent();
@@ -273,7 +307,7 @@ public class Context {
             pos = par;
         }
         context.add(CodePlace.FIRST_IN_NAME);
-        while (PsiUtil.isInstanceOfAny(pos, PasExpr.class, PasIndexList.class)) {
+        while (PsiUtil.isInstanceOfAny(pos, PasExpr.class, PasIndexList.class, PasArgumentList.class)) {
             PsiElement par = pos.getParent();
             if (!(par.getChildren()[0] == pos)) {
                 return;
@@ -297,4 +331,7 @@ public class Context {
         System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
     }
 
+    public boolean withinBraces() {
+        return contains(CodePlace.EXPR_ARGUMENT) || contains(CodePlace.EXPR_PAREN) || contains(CodePlace.EXPR_INDEX) || contains(CodePlace.EXPR_SET);
+    }
 }
