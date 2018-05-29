@@ -23,7 +23,7 @@ public enum CodePlace {
 
 
                 // Secondary
-    // place where an identifier is exists or needed
+    // place where an identifier is exists or may be
     NAMED_IDENT,
     // place where a type identifier is exists or needed
     TYPE_ID,

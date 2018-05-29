@@ -207,7 +207,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testMethodDirectivesIntf() {
         myFixture.configureByFiles("methodDirectivesIntf.pas");
-        checkCompletion(myFixture, "assembler", "cdecl", "deprecated", "dispid", "experimental",
+        checkCompletion(myFixture, "assembler", "cdecl", "deprecated", "experimental",
                 "export", "final", "inline", "library", "message", "overload", "pascal", "platform",
                 "register", "safecall", "static", "stdcall",
                 "abstract", "dynamic", "override", "reintroduce", "virtual");

@@ -52,27 +52,6 @@ public abstract class PascalLexer extends DelegateLexer implements PasTypes {
     public static final TokenSet OPERATORS = TokenSet.create(
             AND, OR, NOT, XOR, IDIV, MOD, SHR, SHL, IN, AS, IS
     );
-    //move
-    public static final TokenSet STATEMENTS = TokenSet.create(
-            FOR, WHILE, REPEAT,
-            IF, CASE, WITH,
-            GOTO, EXIT,
-            TRY, RAISE,
-            END
-    );
-
-    public static final TokenSet STATEMENTS_IN_CYCLE = TokenSet.create(BREAK, CONTINUE);
-
-    public static final TokenSet VALUES = TokenSet.create(NIL, FALSE, TRUE);
-
-    public static final TokenSet MODULE_HEADERS = TokenSet.create(PROGRAM, UNIT, LIBRARY, PACKAGE);
-
-    public static final TokenSet TOP_LEVEL_DECLARATIONS = TokenSet.create(CONTAINS, REQUIRES);
-
-    public static final TokenSet UNIT_SECTIONS = TokenSet.create(
-            INTERFACE, IMPLEMENTATION,
-            INITIALIZATION, FINALIZATION
-    );
 
     public static final TokenSet VAR_KEY = TokenSet.create(
             VAR, THREADVAR
@@ -85,35 +64,6 @@ public abstract class PascalLexer extends DelegateLexer implements PasTypes {
     public static final TokenSet DECL_SECTION_KEY = TokenSet.create(
             VAR, CONST, TYPE, THREADVAR, RESOURCESTRING
     );
-
-    public static final TokenSet DECLARATIONS_INTF = TokenSet.create(
-            VAR, CONST, TYPE, THREADVAR, RESOURCESTRING,
-            PROCEDURE, FUNCTION
-    );
-
-    public static final TokenSet DECLARATIONS_IMPL = TokenSet.create(
-            CONSTRUCTOR, DESTRUCTOR
-    );
-
-    public static final TokenSet STRUCT_DECLARATIONS = TokenSet.create(
-            PROCEDURE, FUNCTION, CONSTRUCTOR, DESTRUCTOR,
-            CLASS, OPERATOR, PROPERTY, END
-    );
-
-    public static final TokenSet DIRECTIVE_ROUTINE = TokenSet.create(
-            OVERLOAD, INLINE, ASSEMBLER,
-            CDECL, PASCAL, REGISTER, SAFECALL, STDCALL, EXPORT,
-            DEPRECATED, EXPERIMENTAL, PLATFORM, LIBRARY
-    );
-
-    public static final TokenSet DIRECTIVE_METHOD = TokenSet.create(
-            REINTRODUCE, OVERLOAD, MESSAGE, STATIC, DYNAMIC, OVERRIDE, VIRTUAL,
-            CDECL, PASCAL, REGISTER, SAFECALL, STDCALL, EXPORT,
-            ABSTRACT, FINAL, INLINE, ASSEMBLER,
-            DEPRECATED, EXPERIMENTAL, PLATFORM, LIBRARY, DISPID
-    );
-
-    public static final TokenSet VISIBILITY = TokenSet.create(PRIVATE, PROTECTED, PUBLIC, PUBLISHED, AUTOMATED);
 
     /*EXPORTS,
     EXCEPT, ON, FINALLY,

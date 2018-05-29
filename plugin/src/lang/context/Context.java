@@ -23,15 +23,19 @@ public class Context {
 
     private final Set<CodePlace> context;
     private final CodePlace primary;
+    @Nullable
+    private final PsiElement dummyIdent;
     private PsiElement position;
     private PsiElement tempPos;
+    private PascalNamedElement namedElement;
     private CodePlace tempFirst;
 
-    public Context(@Nullable PsiElement originalPos, @Nullable PsiElement ident, @Nullable PsiFile file) {
+    public Context(@Nullable PsiElement originalPos, @Nullable PsiElement dummyIdent, @Nullable PsiFile file) {
+        this.dummyIdent = dummyIdent;
         PsiElement element;
         PsiElement origPos;
-        if (ident != null) {
-            element = ident;
+        if (dummyIdent != null) {
+            element = dummyIdent;
             origPos = originalPos;
         } else {
             element = originalPos;
@@ -41,14 +45,14 @@ public class Context {
         if (element != null) {
             PsiElement prev = PsiTreeUtil.skipSiblingsBackward(element, PsiWhiteSpace.class, PsiComment.class);
             PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
-            System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, element, oPrev, prev, originalPos != null ? originalPos.getParent() : null, element.getParent()));
+//            System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, element, oPrev, prev, originalPos != null ? originalPos.getParent() : null, element.getParent()));
 
             file = file != null ? file : element.getContainingFile();
             primary = retrieveContext(element, origPos, file, context);
         } else {
             primary = CodePlace.UNKNOWN;
         }
-        System.out.println(String.format("=== Context: %s, %s, %s", primary, context, position));
+//        System.out.println(String.format("=== Context: %s, %s, %s", primary, context, position));
     }
 
     public boolean contains(CodePlace place) {
@@ -61,6 +65,15 @@ public class Context {
 
     public PsiElement getPosition() {
         return position;
+    }
+
+    @Nullable
+    public PsiElement getDummyIdent() {
+        return dummyIdent;
+    }
+
+    public PascalNamedElement getNamedElement() {
+        return namedElement;
     }
 
     @NotNull
@@ -293,10 +306,20 @@ public class Context {
     }
 
     private void checkIdent(PsiElement element, PsiElement originalPos) {
-        originalPos = originalPos.getParent() instanceof PasStringFactor ? originalPos.getParent() : originalPos;
-        PsiElement pos = PsiUtil.isInstanceOfAny(originalPos.getParent(), PascalNamedElement.class, PasLiteralExpr.class) ? originalPos.getParent() : element.getParent();
-        System.out.println("===*** " + pos);
-        if (!PsiUtil.isInstanceOfAny(pos, PascalNamedElement.class, PasLiteralExpr.class)) {
+        PsiElement pos;
+        if (originalPos.getParent() instanceof PasStringFactor) {
+            pos = originalPos.getParent().getParent();
+        } else if (originalPos.getParent() instanceof PascalNamedElement) {
+            pos = originalPos.getParent();
+        } else {
+            pos = element.getParent();
+        }
+        if (pos instanceof PascalNamedElement) {
+            namedElement = (PascalNamedElement) pos;
+            context.add(CodePlace.NAMED_IDENT);
+        } else if (pos instanceof PasLiteralExpr) {
+            context.add(CodePlace.STRING);
+        } else {
             return;
         }
         while (PsiUtil.isInstanceOfAny(pos, PasSubIdent.class, PascalQualifiedIdent.class, PasReferenceExpr.class)) {
@@ -328,7 +351,7 @@ public class Context {
         PsiElement prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
         PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
         int level = PsiUtil.getElementLevel(originalPos);
-        System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
+//        System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
     }
 
     public boolean withinBraces() {
