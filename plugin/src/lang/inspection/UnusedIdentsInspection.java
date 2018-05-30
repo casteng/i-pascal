@@ -46,7 +46,7 @@ public class UnusedIdentsInspection extends LocalInspectionTool {
     }
 
     private ProblemDescriptor annotateIdent(InspectionManager holder, PascalNamedElement element, boolean isOnTheFly, LocalSearchScope fileScope) {
-        if (PsiUtil.isLocalDeclaration(element) && !PsiUtil.isFormalParameterOfExportedRoutine(element)) {
+        if (PsiUtil.isLocalDeclaration(element) && !PsiUtil.isFormalParameterOfExportedRoutine(element) && !PsiUtil.isPropertyIndexIdent(element)) {
             Query<PsiReference> usages = ReferencesSearch.search(element, fileScope);
             final boolean structDecl = PsiUtil.isStructDecl(element);
             if (usages.forEach(new Processor<PsiReference>() {

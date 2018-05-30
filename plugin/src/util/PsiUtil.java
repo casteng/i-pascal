@@ -864,4 +864,7 @@ public class PsiUtil {
         return false;
     }
 
+    public static boolean isPropertyIndexIdent(PascalNamedElement element) {
+        return (element.getParent() instanceof PasFormalParameter) && (element.getParent().getParent() instanceof PasClassPropertyArray);
+    }
 }
