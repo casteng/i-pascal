@@ -407,7 +407,7 @@ private rec_generic_def     ::= !(">" | "," | ":" | ">""=") & rec_section
 
 private rec_statements       ::= !(END | INITIALIZATION | FINALIZATION)
 private rec_statement       ::= !(SEMI | ELSE | FINALLY | EXCEPT | UNTIL) & rec_statements
-private rec_statement_mid   ::= !(DO | ELSE | THEN | TO | OF | ON | SEMI | REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | END) & rec_section
+private rec_statement_mid   ::= !(DO | ELSE | THEN | TO | DOWNTO | OF | ON | SEMI | REPEAT | WHILE | FOR | CASE | WITH | RAISE | IF | TRY | END) & rec_section
 private rec_doKey   ::= !(BEGIN | identifier) & rec_statement
 
 

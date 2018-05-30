@@ -6,6 +6,8 @@ import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.codeInsight.completion.InsertHandler;
+import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
@@ -19,6 +21,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
+import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.lang.context.Context;
@@ -32,15 +35,20 @@ import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
@@ -180,6 +188,8 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                     return;
                 }
 
+                handleSuggestions(result, ctx, entities, parameters);
+
                 handleExpressionAndStatement(result, ctx, entities, parameters);
 
                 if ((ctx.getPosition() instanceof PasFormalParameter) && (((PasFormalParameter) ctx.getPosition()).getParamType() == null)) {
@@ -210,8 +220,27 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         });
     }
 
+    private void handleSuggestions(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
+        if (ctx.getPosition() instanceof PasTypeDeclaration) {
+            PasTypeDecl decl = ((PasTypeDeclaration) ctx.getPosition()).getTypeDecl();
+            PasPointerType ptr = decl.getPointerType();
+            if (ptr != null) {
+                result.caseInsensitive().addElement(CompletionUtil.getElement("P" + ptr.getTypeDecl().getText()));
+            }
+        } else if (ctx.getPosition() instanceof PascalVariableDeclaration) {
+            PasTypeDecl decl = ((PascalVariableDeclaration) ctx.getPosition()).getTypeDecl();
+            PasPointerType ptr = decl != null ? decl.getPointerType() : null;
+            if (ptr != null) {
+                String typeName = ptr.getTypeDecl() != null ? ptr.getTypeDecl().getText() : "";
+                int start = typeName.startsWith("T") ? 1 : 0;
+                result.caseInsensitive().addElement(CompletionUtil.getElement( typeName.substring(start) + "Ptr"));
+                result.caseInsensitive().addElement(CompletionUtil.getElement( typeName.substring(start) + "Pointer"));
+            }
+        }
+    }
+
     private static void handleDeclarations(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
-        if (ctx.getPrimary() == TYPE_ID ) {
+        if (ctx.getPrimary() == TYPE_ID) {
             addEntities(entities, ctx, PasField.TYPES_TYPE_UNIT, parameters);
             if (ctx.contains(DECL_TYPE)) {
                 CompletionUtil.appendTokenSet(result, TYPE_DECLARATIONS);
@@ -273,11 +302,36 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                 return;
             }
             PasEntityScope scope = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(fqi), null, true);
-            if (scope != null) {
-                result.caseInsensitive().addElement(CompletionUtil.getElement("All fields of " + scope.getName()));
+            if (scope instanceof PasRecordDecl) {
+                LookupElement el = LookupElementBuilder.create(scope, "").withPresentableText("Complete record constant").withIcon(PascalIcons.RECORD).withInsertHandler(RECORD_INSERT_HANDLER);
+                result.caseInsensitive().addElement(el);
             }
         }
     }
+
+    private static final InsertHandler<LookupElement> RECORD_INSERT_HANDLER = new InsertHandler<LookupElement>() {
+        @Override
+        public void handleInsert(final InsertionContext context, LookupElement item) {
+            PasRecordDecl record = (PasRecordDecl) item.getObject();
+            StringBuilder sb = new StringBuilder("(");
+            for (PasClassField field : record.getClassFieldList()) {
+                for (PasNamedIdentDecl namedIdentDecl : field.getNamedIdentDeclList()) {
+                    String caretPH;
+                    if (sb.length() != 1) {
+                        caretPH = "";
+                        sb.append("; ");
+                    } else {
+                        caretPH = DocUtil.PLACEHOLDER_CARET;
+                    }
+                    sb.append(namedIdentDecl.getName()).append(": ").append(caretPH);
+                }
+            }
+            sb.append(");");
+            int caretPos = context.getEditor().getCaretModel().getOffset();
+            DocUtil.adjustDocument(context.getEditor(), caretPos, sb.toString());
+            context.commitDocument();
+        }
+    };
 
     private static void handleStruct(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
         if (ctx.getPrimary() == PROPERTY_SPECIFIER) {
