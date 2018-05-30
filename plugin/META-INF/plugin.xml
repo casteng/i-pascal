@@ -15,6 +15,9 @@
             <li>File and unit name mismatch error annotation</li>
             <li>Unused local identifier inspection</li>
             <li>Add containing unit quick fix for "unknown identifier" error</li>
+            <li>Name suggestions</li>
+            <li>Record constant completion</li>
+            <li>Type inference in constructor call (Issue #28)</li>
         </ul>
         <p>1.80</p>
         <ul>

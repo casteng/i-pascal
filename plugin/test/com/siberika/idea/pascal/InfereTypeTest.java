@@ -59,6 +59,7 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("TInnerRec", PascalExpression.infereType(expressions.get(i++).getExpr()));
         assertEquals("Integer", PascalExpression.infereType(expressions.get(i++).getExpr()));
+        assertEquals("TClass1", PascalExpression.infereType(expressions.get(i++).getExpr()));
     }
 
     public void testComplex() throws Exception {
