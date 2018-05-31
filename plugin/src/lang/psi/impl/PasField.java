@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 */
 public class PasField {
 
-    public static final String DUMMY_IDENTIFIER = "____;";
+    public static final String DUMMY_IDENTIFIER = "____";
 
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY, PSEUDO_VARIABLE}
 

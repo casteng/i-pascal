@@ -47,6 +47,7 @@ import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -207,7 +208,11 @@ public class CompletionUtil {
     }
 
     static LookupElement getElement(String s) {
-        return LookupElementBuilder.create(s).withIcon(PascalIcons.GENERAL).withStrikeoutness(s.equals(PasTypes.GOTO.toString())).withInsertHandler(INSERT_HANDLER);
+        return getElement(s, PascalIcons.GENERAL);
+    }
+
+    static LookupElement getElement(String s, Icon icon) {
+        return LookupElementBuilder.create(s).withIcon(icon).withStrikeoutness(s.equals(PasTypes.GOTO.toString())).withInsertHandler(INSERT_HANDLER);
     }
 
     static void appendTokenSetIfAbsent(CompletionResultSet result, TokenSet tokenSet, PsiElement position, Class... classes) {

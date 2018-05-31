@@ -223,20 +223,32 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     private void handleSuggestions(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
         if (ctx.getPosition() instanceof PasTypeDeclaration) {
             PasTypeDecl decl = ((PasTypeDeclaration) ctx.getPosition()).getTypeDecl();
-            PasPointerType ptr = decl.getPointerType();
+            PasPointerType ptr = decl != null ? decl.getPointerType() : null;
             if (ptr != null) {
                 result.caseInsensitive().addElement(CompletionUtil.getElement("P" + ptr.getTypeDecl().getText()));
             }
         } else if (ctx.getPosition() instanceof PascalVariableDeclaration) {
             PasTypeDecl decl = ((PascalVariableDeclaration) ctx.getPosition()).getTypeDecl();
-            PasPointerType ptr = decl != null ? decl.getPointerType() : null;
-            if (ptr != null) {
-                String typeName = ptr.getTypeDecl() != null ? ptr.getTypeDecl().getText() : "";
-                int start = typeName.startsWith("T") ? 1 : 0;
-                result.caseInsensitive().addElement(CompletionUtil.getElement( typeName.substring(start) + "Ptr"));
-                result.caseInsensitive().addElement(CompletionUtil.getElement( typeName.substring(start) + "Pointer"));
+            boolean ptr = false;
+            boolean arr = false;
+            if (decl != null && decl.getPointerType() != null) {
+                ptr = true;
+                decl = decl.getPointerType().getTypeDecl() != null ? decl.getPointerType().getTypeDecl() : decl;
+            }
+            if (decl != null && decl.getArrayType() != null) {
+                arr = true;
+                decl = decl.getArrayType().getTypeDecl() != null ? decl.getArrayType().getTypeDecl() : decl;
+            }
+            if (decl != null) {
+                String varName = typeNameToVarName(decl.getText());
+                result.caseInsensitive().addElement(CompletionUtil.getElement(varName + (arr ? "Array" : "") + (ptr ? "Ptr" : ""), PascalIcons.VARIABLE));
+                result.caseInsensitive().addElement(CompletionUtil.getElement( varName + (arr ? "Array" : "") + (ptr ? "Pointer" : ""), PascalIcons.VARIABLE));
             }
         }
+    }
+
+    private String typeNameToVarName(String typeName) {
+        return typeName.substring(typeName.startsWith("T") ? 1 : 0);
     }
 
     private static void handleDeclarations(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
