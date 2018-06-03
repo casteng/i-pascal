@@ -59,7 +59,7 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 09/05/2018
  */
-public class CompletionUtil {
+class CompletionUtil {
     private static final Map<String, String> INSERT_MAP = getInsertMap();
     private static final String PLACEHOLDER_FILENAME = "__FILENAME__";
     private static final Collection<String> CLOSING_STATEMENTS = Arrays.asList(PasTypes.END.toString(), PasTypes.EXCEPT.toString(), PasTypes.UNTIL.toString());
@@ -85,7 +85,7 @@ public class CompletionUtil {
             }
         }
     };
-    static final TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF, PasTypes.ELSE);
+    private static final TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF, PasTypes.ELSE);
     private static final TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT, PasTypes.CASE_ELSE);
     private static final String TYPE_UNTYPED = "<untyped>";
 
@@ -171,7 +171,8 @@ public class CompletionUtil {
         res.put(PasTypes.CLASS.toString(), String.format("(TObject)\nprivate\n%s\npublic\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.OBJC_CLASS.toString(), String.format("(NSObject)\n%s\npublic\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.INTERFACE.toString() + " ", String.format("(IUnknown)\n%s\nend;", DocUtil.PLACEHOLDER_CARET));
-        res.put(PasTypes.ARRAY.toString(), String.format("[0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.ARRAY.toString(), String.format(" of %s;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.ARRAY.toString() + "[", String.format("[0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.SET.toString(), String.format(" of %s;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.CLASS.toString() + " of", String.format(" %s;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.CLASS.toString() + " helper", String.format(" for T%s\n\nend;", DocUtil.PLACEHOLDER_CARET));

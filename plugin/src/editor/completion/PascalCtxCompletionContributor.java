@@ -24,6 +24,7 @@ import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
+import com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider;
 import com.siberika.idea.pascal.lang.context.Context;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
@@ -37,18 +38,15 @@ import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
-import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
-import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
-import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
@@ -220,35 +218,10 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         });
     }
 
-    private void handleSuggestions(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
-        if (ctx.getPosition() instanceof PasTypeDeclaration) {
-            PasTypeDecl decl = ((PasTypeDeclaration) ctx.getPosition()).getTypeDecl();
-            PasPointerType ptr = decl != null ? decl.getPointerType() : null;
-            if (ptr != null) {
-                result.caseInsensitive().addElement(CompletionUtil.getElement("P" + ptr.getTypeDecl().getText()));
-            }
-        } else if (ctx.getPosition() instanceof PascalVariableDeclaration) {
-            PasTypeDecl decl = ((PascalVariableDeclaration) ctx.getPosition()).getTypeDecl();
-            boolean ptr = false;
-            boolean arr = false;
-            if (decl != null && decl.getPointerType() != null) {
-                ptr = true;
-                decl = decl.getPointerType().getTypeDecl() != null ? decl.getPointerType().getTypeDecl() : decl;
-            }
-            if (decl != null && decl.getArrayType() != null) {
-                arr = true;
-                decl = decl.getArrayType().getTypeDecl() != null ? decl.getArrayType().getTypeDecl() : decl;
-            }
-            if (decl != null) {
-                String varName = typeNameToVarName(decl.getText());
-                result.caseInsensitive().addElement(CompletionUtil.getElement(varName + (arr ? "Array" : "") + (ptr ? "Ptr" : ""), PascalIcons.VARIABLE));
-                result.caseInsensitive().addElement(CompletionUtil.getElement( varName + (arr ? "Array" : "") + (ptr ? "Pointer" : ""), PascalIcons.VARIABLE));
-            }
+    private static void handleSuggestions(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
+        for (String name : PascalNameSuggestionProvider.suggestNames(ctx.getPosition())) {
+            result.caseInsensitive().addElement(CompletionUtil.getElement(name, null));
         }
-    }
-
-    private String typeNameToVarName(String typeName) {
-        return typeName.substring(typeName.startsWith("T") ? 1 : 0);
     }
 
     private static void handleDeclarations(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
@@ -261,10 +234,12 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                 result.caseInsensitive().addElement(CompletionUtil.getElement("record helper"));
                 result.caseInsensitive().addElement(CompletionUtil.getElement("class of"));
                 result.caseInsensitive().addElement(CompletionUtil.getElement("type "));
+                result.caseInsensitive().addElement(CompletionUtil.getElement("array["));
             } else if (ctx.contains(DECL_VAR)) {
                 CompletionUtil.appendTokenSet(result, TokenSet.create(
                         PasTypes.RECORD, PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.ARRAY
                 ));
+                result.caseInsensitive().addElement(CompletionUtil.getElement("array["));
             }
         } else if ((ctx.getPrimary() == DECL_TYPE) || (ctx.getPrimary() == DECL_VAR) || (ctx.getPrimary() == DECL_CONST) || (ctx.getPrimary() == GLOBAL_DECLARATION) || (ctx.getPrimary() == LOCAL_DECLARATION)) {
             boolean firstOnLine = DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition());
