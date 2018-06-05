@@ -29,6 +29,7 @@ public class Context {
     private PsiElement tempPos;
     private PascalNamedElement namedElement;
     private CodePlace tempFirst;
+    private final PsiFile file;
 
     public Context(@Nullable PsiElement originalPos, @Nullable PsiElement dummyIdent, @Nullable PsiFile file) {
         this.dummyIdent = dummyIdent;
@@ -45,14 +46,15 @@ public class Context {
         if (element != null) {
             PsiElement prev = PsiTreeUtil.skipSiblingsBackward(element, PsiWhiteSpace.class, PsiComment.class);
             PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
-//            System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, element, oPrev, prev, originalPos != null ? originalPos.getParent() : null, element.getParent()));
+            System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, element, oPrev, prev, originalPos != null ? originalPos.getParent() : null, element.getParent()));
 
             file = file != null ? file : element.getContainingFile();
             primary = retrieveContext(element, origPos, file, context);
         } else {
             primary = CodePlace.UNKNOWN;
         }
-//        System.out.println(String.format("=== Context: %s, %s, %s", primary, context, position));
+        this.file = file;
+        System.out.println(String.format("=== Context: %s, %s, %s", primary, context, position));
     }
 
     public boolean contains(CodePlace place) {
@@ -74,6 +76,10 @@ public class Context {
 
     public PascalNamedElement getNamedElement() {
         return namedElement;
+    }
+
+    public PsiFile getFile() {
+        return file;
     }
 
     @NotNull
@@ -99,8 +105,8 @@ public class Context {
 
         CodePlace res = CodePlace.UNKNOWN;
 
-        if ((tempPos instanceof PasStatement) || (tempPos instanceof PasAssignPart) || (tempPos instanceof PasArgumentList) || (tempPos instanceof PasIndexList)
-                || (originalExprParent instanceof PasRangeBound)) {
+        if ((tempPos instanceof PasStatement) || (tempPos instanceof PasAssignPart) || (tempPos instanceof PasArgumentList)
+                || (tempPos instanceof PasIndexList) || (originalExprParent instanceof PasRangeBound)) {
             PsiElement expr = skipToExpression(originalExprParent instanceof PasRangeBound ? originalPos : element);
             if ((expr instanceof PasExpr) || (expr instanceof PasExpression)) {
                 res = CodePlace.EXPR;
@@ -217,13 +223,14 @@ public class Context {
             tempPos = tempPos.getParent();
         }
 
-        if (tempPos instanceof PasClassPropertySpecifier) {
-            addToContext(CodePlace.PROPERTY_SPECIFIER);
-        }
-
         if (tempPos instanceof PasClassProperty) {
             position = tempPos;
             addToContext(CodePlace.DECL_PROPERTY);
+        }
+
+        if (tempPos instanceof PasClassPropertySpecifier) {
+            position = tempPos;
+            addToContext(CodePlace.PROPERTY_SPECIFIER);
         }
 
         if (tempPos instanceof PasClassField) {
@@ -351,7 +358,7 @@ public class Context {
         PsiElement prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
         PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
         int level = PsiUtil.getElementLevel(originalPos);
-//        System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
+        System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
     }
 
     public boolean withinBraces() {

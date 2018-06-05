@@ -28,6 +28,7 @@ import com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider;
 import com.siberika.idea.pascal.lang.context.Context;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
@@ -64,6 +65,7 @@ import static com.siberika.idea.pascal.lang.context.CodePlace.ASSIGN_LEFT;
 import static com.siberika.idea.pascal.lang.context.CodePlace.CONST_EXPRESSION;
 import static com.siberika.idea.pascal.lang.context.CodePlace.DECL_CONST;
 import static com.siberika.idea.pascal.lang.context.CodePlace.DECL_FIELD;
+import static com.siberika.idea.pascal.lang.context.CodePlace.DECL_PROPERTY;
 import static com.siberika.idea.pascal.lang.context.CodePlace.DECL_TYPE;
 import static com.siberika.idea.pascal.lang.context.CodePlace.DECL_VAR;
 import static com.siberika.idea.pascal.lang.context.CodePlace.EXPR;
@@ -137,7 +139,9 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.ARRAY
     );
 
-    private static Map<IElementType, TokenSet> DO_THEN_OF_MAP = initDoThenOfMap();
+    private static final Map<IElementType, TokenSet> DO_THEN_OF_MAP = initDoThenOfMap();
+
+    private static final TokenSet PROPERTY_SPECIFIERS = TokenSet.create(PasTypes.READ, PasTypes.WRITE);
 
     private static Map<IElementType, TokenSet> initDoThenOfMap() {
         Map<IElementType, TokenSet> result = new HashMap<>();
@@ -219,7 +223,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     }
 
     private static void handleSuggestions(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
-        for (String name : PascalNameSuggestionProvider.suggestNames(ctx.getPosition())) {
+        for (String name : PascalNameSuggestionProvider.suggestForElement(ctx.getPosition())) {
             result.caseInsensitive().addElement(CompletionUtil.getElement(name, null));
         }
     }
@@ -323,6 +327,10 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     private static void handleStruct(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
         if (ctx.getPrimary() == PROPERTY_SPECIFIER) {
             addEntities(entities, ctx, PasField.TYPES_PROPERTY_SPECIFIER, parameters);
+        } else if (ctx.getPrimary() == DECL_PROPERTY) {
+            if (ctx.getPosition() instanceof PasClassProperty) {
+                CompletionUtil.appendTokenSetUnique(result, PROPERTY_SPECIFIERS, ctx.getPosition());
+            }
         } else if (ctx.getPrimary() == DECL_FIELD) {
             if (DocUtil.isFirstOnLine(parameters.getEditor(), parameters.getPosition())) {
                 CompletionUtil.appendTokenSet(result, VISIBILITY);
@@ -350,11 +358,12 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     }
 
     private static boolean isContextAwareVirtualFile(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
-        if ((ctx.getPosition() instanceof PsiFile) && (((PsiFile) ctx.getPosition()).getVirtualFile() instanceof ContextAwareVirtualFile)) {
-            NamespaceRec namespace = NamespaceRec.fromFQN(ctx.getPosition(), ctx.getPosition().getText().replace(PasField.DUMMY_IDENTIFIER, "")); // TODO: refactor
+        PsiFile file = ctx.getFile();
+        if ((ctx.getPrimary() == UNKNOWN) && (file != null) && (file.getVirtualFile() instanceof ContextAwareVirtualFile) && (ctx.getDummyIdent() != null)) {
+            NamespaceRec namespace = NamespaceRec.fromFQN(ctx.getDummyIdent(), ctx.getDummyIdent().getText().replace(PasField.DUMMY_IDENTIFIER, "")); // TODO: refactor
             namespace.setIgnoreVisibility(true);
             namespace.clearTarget();
-            ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) ((PsiFile) ctx.getPosition()).getVirtualFile()).getContextElement()),
+            ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) file.getVirtualFile()).getContextElement()),
                     PasField.TYPES_ALL, false, null);
             fieldsToEntities(entities, PasReferenceUtil.resolve(namespace, resolveContext, 0), parameters);
             addEntitiesToResult(result, entities);

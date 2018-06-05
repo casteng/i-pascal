@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.81</version>
+    <version>1.90</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,13 +9,13 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>1.81</p>
+        <p>1.90</p>
         <ul>
             <li>Unit used by which units info on gutter</li>
             <li>File and unit name mismatch error annotation</li>
             <li>Unused local identifier inspection</li>
             <li>Add containing unit quick fix for "unknown identifier" error</li>
-            <li>Name suggestions</li>
+            <li>Name suggestions for variables, types, constants, property accessors</li>
             <li>Record constant completion</li>
             <li>Type inference in constructor call (Issue #28)</li>
         </ul>
