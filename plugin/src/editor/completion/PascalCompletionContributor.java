@@ -1,14 +1,6 @@
 package com.siberika.idea.pascal.editor.completion;
 
-import com.intellij.codeInsight.completion.CompletionContributor;
-import com.intellij.codeInsight.completion.CompletionInitializationContext;
-import com.intellij.codeInsight.completion.CompletionParameters;
-import com.intellij.codeInsight.completion.CompletionProvider;
-import com.intellij.codeInsight.completion.CompletionResultSet;
-import com.intellij.codeInsight.completion.CompletionType;
-import com.intellij.codeInsight.completion.InsertHandler;
-import com.intellij.codeInsight.completion.InsertionContext;
-import com.intellij.codeInsight.completion.PrioritizedLookupElement;
+import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.ide.DataManager;
@@ -22,12 +14,8 @@ import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.patterns.PlatformPatterns;
-import com.intellij.psi.PsiComment;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiErrorElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiWhiteSpace;
-import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.*;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -36,6 +24,7 @@ import com.intellij.util.ProcessingContext;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
+import com.siberika.idea.pascal.ide.actions.GotoSuper;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
@@ -51,12 +40,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Author: George Bakhtadze
@@ -149,6 +133,34 @@ public class PascalCompletionContributor extends CompletionContributor {
                 PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
 //                System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent()));
 
+                boolean isInherited = false;
+
+                PasEntityScope nearestScope = PsiTreeUtil.getParentOfType(originalPos, PasEntityScope.class);
+                PasEntityScope containingScope = null;
+
+                if (nearestScope != null) {
+                    containingScope = nearestScope.getContainingScope();
+
+                    if (oPrev != null) {
+                        PsiElement deepestFirst = PsiTreeUtil.getDeepestFirst(oPrev);
+                        if (deepestFirst != null && (deepestFirst instanceof LeafPsiElement) && ((LeafPsiElement)deepestFirst).getElementType() == PasTypes.INHERITED) {
+                            isInherited = true;
+                        }
+                    }
+                    else if (originalPos instanceof LeafPsiElement) {
+                        if (((LeafPsiElement)originalPos).getElementType() == PasTypes.NAME) {
+                            PasStatement parent = PsiTreeUtil.getParentOfType(originalPos, PasStatement.class);
+                            if (parent != null) {
+                                PsiElement deepestFirst = PsiTreeUtil.getDeepestFirst(parent);
+                                if (deepestFirst != null && (deepestFirst instanceof LeafPsiElement) && ((LeafPsiElement)deepestFirst).getElementType() == PasTypes.INHERITED) {
+                                    isInherited = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
                 originalPos = PsiUtil.skipToExpressionParent(parameters.getOriginalPosition());
                 pos = PsiUtil.skipToExpressionParent(parameters.getPosition());
                 prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
@@ -166,7 +178,14 @@ public class PascalCompletionContributor extends CompletionContributor {
                     ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) ((PsiFile) pos).getVirtualFile()).getContextElement()),
                             PasField.TYPES_ALL, false, null);
                     entities.addAll(PasReferenceUtil.resolve(namespace, resolveContext, 0));
-                    addEntitiesToResult(result, entities, parameters);
+                    addEntitiesToResult(result, entities, parameters, originalPos, containingScope, false);
+                    result.stopHere();
+                    return;
+                }
+
+                if (isInherited) {
+                    handleInherited(pos, entities);
+                    addEntitiesToResult(result, entities, parameters, originalPos, containingScope, true);
                     result.stopHere();
                     return;
                 }
@@ -192,16 +211,68 @@ public class PascalCompletionContributor extends CompletionContributor {
                 handleInsideStatement(result, parameters, pos, originalPos);
 
                 handleDirectives(result, parameters, originalPos, pos, prev);
-                addEntitiesToResult(result, entities, parameters);
+                addEntitiesToResult(result, entities, parameters, originalPos, containingScope);
                 result.restartCompletionWhenNothingMatches();
             }
         });
     }
 
-    private void addEntitiesToResult(CompletionResultSet result, Collection<PasField> entities, CompletionParameters parameters) {
+    private void addEntitiesToResult(CompletionResultSet result, Collection<PasField> entities, CompletionParameters parameters, PsiElement position, PasEntityScope containingScope)
+    {
+        addEntitiesToResult(result, entities, parameters, position, containingScope, false);
+    }
+
+    private void addEntitiesToResult(CompletionResultSet result, Collection<PasField> entities, CompletionParameters parameters, PsiElement position, PasEntityScope containingScope, boolean inheritedCall) {
+        PasModule pasModule = position instanceof PasModule ? (PasModule)position : PsiTreeUtil.getParentOfType(position, PasModule.class);
+        String pasModuleName = null;
+        List<PasEntityScope> parents = null;
+        if (pasModule != null) {
+            pasModuleName = pasModule.getName();
+            parents = new ArrayList<>();
+            if (containingScope != null) {
+                // Get parent classes list
+                GotoSuper.getParentStructs(parents, containingScope);
+            }
+        }
+
         Set<String> nameSet = new HashSet<String>();                                  // TODO: replace with proper implementation of LookupElement
         Collection<LookupElement> lookupElements = new HashSet<LookupElement>();
         for (PasField field : entities) if (field.getElement() != null) {
+            PasModule fieldPasModule = PsiTreeUtil.getParentOfType(field.getElement(), PasModule.class);
+
+            if (fieldPasModule == null || pasModuleName == null || pasModuleName.compareToIgnoreCase(fieldPasModule.getName()) != 0) {
+                if (field.visibility == PasField.Visibility.PROTECTED) {
+                    boolean isInParent = false;
+                    PasEntityScope fieldScope = PsiTreeUtil.getParentOfType(field.getElement(), PasEntityScope.class);
+                    if (parents != null && fieldScope.getContainingScope() != containingScope) {
+                        for (PasEntityScope parent : parents) {
+                            if (parent == fieldScope) {
+                                isInParent = true;
+                                break;
+                            }
+                        }
+                        if (!isInParent) {
+                            continue;
+                        }
+                    }
+                }
+                else  if (field.visibility != PasField.Visibility.PUBLIC && field.visibility != PasField.Visibility.PUBLISHED) {
+                    // Unit names are marked as private, but they should be accessible
+                    if (field.fieldType != PasField.FieldType.UNIT) {
+                        continue;
+                    }
+                }
+            }
+            else
+            {
+                PasEntityScope fieldScope = PsiTreeUtil.getParentOfType(field.getElement(), PasEntityScope.class);
+                if (fieldScope != null && containingScope != null && fieldScope.getUniqueName().compareToIgnoreCase(containingScope.getUniqueName()) == 0) {
+                    if (inheritedCall || field.visibility == PasField.Visibility.STRICT_PRIVATE || field.visibility == PasField.Visibility.STRICT_PROTECTED) {
+                        continue;
+                    }
+                }
+            }
+
             String name = getFieldName(field).toUpperCase();
             if (!nameSet.contains(name) && StringUtil.isNotEmpty(name)) {
                 lookupElements.add(getLookupElement(parameters.getOriginalFile().getVirtualFile(), parameters.getEditor(), field));
@@ -428,6 +499,28 @@ public class PascalCompletionContributor extends CompletionContributor {
                     appendTokenSetUnique(result, TokenSet.create(PascalLexer.USES), parameters.getOriginalFile());
                     appendTokenSet(result, PascalLexer.DECLARATIONS);
                     result.caseInsensitive().addElement(getElement("begin  "));
+            }
+        }
+    }
+
+    private void handleInherited(PsiElement pos, Collection<PasField> entities) {
+        NamespaceRec namespace = NamespaceRec.fromFQN(pos, PasField.DUMMY_IDENTIFIER);
+        if (PsiUtil.isIdent(pos.getParent())) {
+            if (pos.getParent().getParent() instanceof PascalNamedElement) {
+                namespace = NamespaceRec.fromElement(pos.getParent());
+            } else {
+                namespace = NamespaceRec.fromFQN(pos, ((PascalNamedElement) pos).getName());
+            }
+        }
+        namespace.clearTarget();
+
+        for (PasField pasField : PasReferenceUtil.resolveExpr(namespace, new ResolveContext(EnumSet.of(PasField.FieldType.ROUTINE), true), 0)) {
+            if ((pasField.name != null) && !pasField.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
+                if (pasField.owner instanceof PasClassTypeDecl) {
+                    PasClassTypeDecl owner = (PasClassTypeDecl)pasField.owner;
+                    System.out.println(owner.getClassMethodResolutionList());
+                    entities.add(pasField);
+                }
             }
         }
     }
