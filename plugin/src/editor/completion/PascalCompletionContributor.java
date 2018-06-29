@@ -266,7 +266,7 @@ public class PascalCompletionContributor extends CompletionContributor {
             else
             {
                 PasEntityScope fieldScope = PsiTreeUtil.getParentOfType(field.getElement(), PasEntityScope.class);
-                if (fieldScope != null && containingScope != null && fieldScope.getUniqueName().compareToIgnoreCase(containingScope.getUniqueName()) == 0) {
+                if (fieldScope != null && containingScope != null && fieldScope.getUniqueName().compareToIgnoreCase(containingScope.getUniqueName()) != 0) {
                     if (inheritedCall || field.visibility == PasField.Visibility.STRICT_PRIVATE || field.visibility == PasField.Visibility.STRICT_PROTECTED) {
                         continue;
                     }
