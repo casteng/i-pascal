@@ -344,7 +344,14 @@
         </action>
     </actions>
 
+
+
     <extensions defaultExtensionNs="com.intellij">
+
+        <codeInsight.overrideMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalOverrideMethodsHandler"/>
+        <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
+
+
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
 
         <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.GotoSuper"/>
