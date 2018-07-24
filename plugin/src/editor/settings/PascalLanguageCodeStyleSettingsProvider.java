@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.editor.settings;
 
 import com.intellij.application.options.IndentOptionsEditor;
-import com.intellij.application.options.SmartIndentOptionsEditor;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.StreamUtil;
@@ -52,7 +51,7 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
     @Override
     public IndentOptionsEditor getIndentOptionsEditor() {
-        return new SmartIndentOptionsEditor();
+        return new PascalIndentOptionsEditor();
     }
 
     @Override
@@ -138,12 +137,9 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
             consumer.showCustomOption(PascalCodeStyleSettings.class, "BEGIN_ON_NEW_LINE", PascalBundle.message("style.settings.wrap.begin.newline"),
                     null, CodeStyleSettingsCustomizable.OptionAnchor.BEFORE, "WRAP_LONG_LINES");
-            consumer.showCustomOption(PascalCodeStyleSettings.class, "INDENT_BEGIN_END", PascalBundle.message("style.settings.wrap.begin.indent"),
-                    null, CodeStyleSettingsCustomizable.OptionAnchor.BEFORE, "WRAP_LONG_LINES");
             consumer.showCustomOption(PascalCodeStyleSettings.class, "KEEP_SIMPLE_SECTIONS_IN_ONE_LINE", PascalBundle.message("style.settings.wrap.keep.simple.sections"),
                     "Keep when reformatting", CodeStyleSettingsCustomizable.OptionAnchor.AFTER, "KEEP_SIMPLE_METHODS_IN_ONE_LINE");
-        }
-        else if (settingsType == SettingsType.BLANK_LINES_SETTINGS) {
+        } else if (settingsType == SettingsType.BLANK_LINES_SETTINGS) {
             consumer.showStandardOptions(
                     "KEEP_BLANK_LINES_IN_DECLARATIONS",
                     "KEEP_BLANK_LINES_IN_CODE",
@@ -166,6 +162,8 @@ public class PascalLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
             consumer.renameStandardOption("BLANK_LINES_AFTER_IMPORTS", PascalBundle.message("style.settings.blanklines.after.uses"));
             consumer.renameStandardOption("BLANK_LINES_AROUND_METHOD", PascalBundle.message("style.settings.blanklines.around.routine.definition"));
             consumer.renameStandardOption("BLANK_LINES_AROUND_METHOD_IN_INTERFACE", PascalBundle.message("style.settings.blanklines.around.routine.declaration"));
+        } else if (settingsType == SettingsType.INDENT_SETTINGS) {
+            consumer.showCustomOption(PascalCodeStyleSettings.class, "INDENT_BEGIN_END", "style.settings.indent.begin_end", "test");
         }
     }
 

@@ -1,4 +1,4 @@
-unit generics;
+unit fpcGenerics;
 interface
 type
     TInt = TInt;

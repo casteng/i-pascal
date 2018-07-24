@@ -20,7 +20,6 @@ import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NonNls;
@@ -121,7 +120,10 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     public PsiElement setName(@NonNls @NotNull String s) throws IncorrectOperationException {
         PsiElement element = getNameElement();
         if (element != null) {
-            element.replace(PasElementFactory.createLeafFromText(getProject(), s));
+            PsiElement el = PasElementFactory.createReplacementElement(element, s);
+            if (el != null) {
+                element.replace(el);
+            }
         }
         return this;
     }
@@ -179,7 +181,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     @NotNull
     public PsiReference[] getReferences() {
-        if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent) || (this.getParent() instanceof PascalRoutine)) {
+        if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent) /*|| (this.getParent() instanceof PascalRoutine)*/) {
             if ((getNameElement() != null) && getTextRange().intersects(getNameElement().getTextRange())) {
                 return new PsiReference[]{
                         new PascalReference(this, new TextRange(0, getName().length()))

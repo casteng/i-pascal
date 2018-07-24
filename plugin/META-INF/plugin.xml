@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.81</version>
+    <version>1.90</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,9 +9,15 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>1.81</p>
+        <p>1.90</p>
         <ul>
             <li>Unit used by which units info on gutter</li>
+            <li>File and unit name mismatch error annotation</li>
+            <li>Unused local identifier inspection</li>
+            <li>Add containing unit quick fix for "unknown identifier" error</li>
+            <li>Name suggestions for variables, types, constants, property accessors</li>
+            <li>Record constant completion</li>
+            <li>Type inference in constructor call (Issue #28)</li>
         </ul>
         <p>1.80</p>
         <ul>
@@ -376,6 +382,8 @@
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
         <localInspection language="Pascal" displayName="Unused units detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection"/>
+        <localInspection language="Pascal" displayName="Unused local identifiers detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedIdentsInspection"/>
 
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
@@ -405,7 +413,7 @@
         <codeInsight.parameterInfo language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterInfoHandler"/>
         <nameSuggestionProvider implementation="com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider"/>
 
-        <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionContributor"/>
+        <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCtxCompletionContributor"/>
         <completion.confidence language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionConfidence"/>
 
         <braceMatcher filetype="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalBraceMatcher"/>
@@ -454,6 +462,7 @@
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalModuleIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalStructIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalSymbolIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex"/>
 
     </extensions>
 </idea-plugin>

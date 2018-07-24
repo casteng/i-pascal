@@ -5,7 +5,8 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -15,18 +16,26 @@ import java.util.Set;
 public class NameSuggestTest {
     @Test
     public void suggestVar() {
-        Set<String> suggested = new HashSet<>();
-        PascalNameSuggestionProvider.suggestNames(suggested, "MyBigName", false);
+        Set<String> suggested = new LinkedHashSet<>();
+        PascalNameSuggestionProvider.suggestNames("MyBigName", Collections.emptyList(), PascalNameSuggestionProvider.ElementType.VAR, suggested);
         printNames(suggested);
-        Assert.assertTrue(suggested.containsAll(Arrays.asList("Name", "BigName", "MyBigName")));
+        Assert.assertEquals(new LinkedHashSet<>(Arrays.asList("MyBigName", "BigName", "Name")), suggested);
     }
 
     @Test
     public void suggestConst() {
-        Set<String> suggested = new HashSet<>();
-        PascalNameSuggestionProvider.suggestNames(suggested, "MyBigName", true);
+        Set<String> suggested = new LinkedHashSet<>();
+        PascalNameSuggestionProvider.suggestNames("MyBigName", Collections.emptyList(), PascalNameSuggestionProvider.ElementType.CONST, suggested);
         printNames(suggested);
-        Assert.assertTrue(suggested.containsAll(Arrays.asList("NAME", "BIG_NAME", "MY_BIG_NAME")));
+        Assert.assertEquals(new LinkedHashSet<>(Arrays.asList("MY_BIG_NAME", "BIG_NAME", "NAME")), suggested);
+    }
+
+    @Test
+    public void suggestType() {
+        Set<String> suggested = new LinkedHashSet<>();
+        PascalNameSuggestionProvider.suggestNames("TMyBigName", Collections.emptyList(), PascalNameSuggestionProvider.ElementType.TYPE, suggested);
+        printNames(suggested);
+        Assert.assertEquals(new LinkedHashSet<>(Arrays.asList("TMyBigName", "TBigName", "TName")), suggested);
     }
 
     private void printNames(Collection<String> names) {

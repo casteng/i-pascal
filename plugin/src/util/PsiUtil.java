@@ -21,6 +21,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.FileContentUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.*;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
@@ -33,7 +34,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasStubStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
-import com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import org.apache.commons.lang.StringUtils;
@@ -411,34 +411,6 @@ public class PsiUtil {
         }
     }
 
-    public static boolean isFieldDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasClassField);
-    }
-
-    public static boolean isPropertyDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasClassProperty);
-    }
-
-    /**
-     * Checks if the entityDecl is a declaration of variable or formal parameter
-     *
-     * @param entityDecl entity declaration to check
-     * @return true if the entityDecl is a declaration of variable or formal parameter
-     */
-    public static boolean isVariableDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PascalVariableDeclaration);
-    }
-
-    // Checks if the entityDecl is a declaration of constant
-    public static boolean isConstDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasConstDeclaration);
-    }
-
-    // Checks if the entityDecl is a declaration of an enumeration constant
-    public static boolean isEnumDecl(PascalNamedElement entityDecl) {
-        return (entityDecl.getParent() instanceof PasEnumType);
-    }
-
     public static boolean isForwardProc(PascalRoutine decl) {
         return PsiTreeUtil.findChildOfType(decl, PasProcForwardDecl.class) != null;
     }
@@ -722,10 +694,6 @@ public class PsiUtil {
         return sb.toString();
     }
 
-    public static boolean belongsToInterface(PsiElement ident) {
-        return PsiTreeUtil.getParentOfType(ident, PasUnitInterface.class) != null;
-    }
-
     // Returns pair sorted by starting offset. Nulls come last.
     public static Pair<PsiElement, PsiElement> sortByStart(PsiElement o1, PsiElement o2, boolean ascending) {
         if (null == o2) {
@@ -821,24 +789,9 @@ public class PsiUtil {
         return res.toString();
     }
 
-    // Check if the named element is the left part of an assignment statement
-    public static boolean isAssignLeftPart(PascalNamedElement element) {
-        PsiElement expr = PsiUtil.skipToExpression(element);
-        if (expr instanceof PasReferenceExpr) {
-            if (expr.getParent() instanceof PasExpression) {
-                return PsiTreeUtil.skipSiblingsForward(expr.getParent(), PsiUtil.ELEMENT_WS_COMMENTS) instanceof PasAssignPart;
-            }
-        }
-        return false;
-    }
-
     public static boolean hasParameters(PascalRoutine routine) {
         PasFormalParameterSection params = routine.getFormalParameterSection();
         return (params != null) && !params.getFormalParameterList().isEmpty();
-    }
-
-    public static boolean isPropertyGetter(PasClassPropertySpecifier spec) {
-        return "read".equalsIgnoreCase(spec.getFirstChild().getText());
     }
 
     public static boolean isBefore(@NotNull PsiElement el1, @NotNull PsiElement el2) {
@@ -849,8 +802,11 @@ public class PsiUtil {
         return routine.getClass() == PasRoutineImplDeclImpl.class;
     }
 
-    public static boolean isLocalDeclaration(PascalNamedElementImpl element) {
+    public static boolean isLocalDeclaration(@NotNull PascalNamedElement element) {
         PsiElement parent = element.getParent();
+        if (parent instanceof PasGenericTypeIdent) {
+            parent = parent.getParent();
+        }
         if (parent instanceof PasFormalParameter) {
             return true;
         } else if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration) {
@@ -861,13 +817,18 @@ public class PsiUtil {
         }
     }
 
+    public static boolean isFormalParameterOfExportedRoutine(@NotNull PascalNamedElement element) {
+        return ((element.getParent() instanceof PasFormalParameter) && (element.getParent().getParent() instanceof PasFormalParameterSection)
+                && (element.getParent().getParent().getParent() instanceof PasExportedRoutine));
+    }
+
     public static PasField.FieldType getFieldType(PascalNamedElement namedElement) {
         PasField.FieldType type = PasField.FieldType.VARIABLE;
         if (isTypeName(namedElement)) {
             type = PasField.FieldType.TYPE;
         } else if (namedElement instanceof PascalRoutine) {
             type = PasField.FieldType.ROUTINE;
-        } else if (isConstDecl(namedElement) || isEnumDecl(namedElement)) {
+        } else if (ContextUtil.isConstDecl(namedElement) || ContextUtil.isEnumDecl(namedElement)) {
             type = PasField.FieldType.CONSTANT;
         }
 
@@ -876,5 +837,34 @@ public class PsiUtil {
 
     public static boolean isSmartPointerValid(SmartPsiElementPointer pointer) {
         return (pointer != null) && (pointer.getElement() != null);
+    }
+
+    public static <T extends PsiElement> SmartPsiElementPointer<T> createSmartPointer(T element) {
+        try {
+            return SmartPointerManager.createPointer(element);
+        } catch (Throwable e) {
+            LOG.info(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    // element can be PasNamedIdentDecl or PasGenericTypeIdent
+    public static boolean isStructDecl(PsiElement element) {
+        if (element instanceof PasNamedIdentDecl) {
+            element = element.getParent();
+        }
+        if (element instanceof PasGenericTypeIdent) {
+            PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(element, PasTypeDecl.class);
+            return (typeDecl != null) &&
+                    ((typeDecl.getClassTypeDecl() != null) || (typeDecl.getInterfaceTypeDecl() != null)
+                            || (typeDecl.getObjectDecl() != null) || (typeDecl.getRecordDecl() != null)
+                            || (typeDecl.getClassHelperDecl() != null) || (typeDecl.getRecordHelperDecl() != null)
+                    );
+        }
+        return false;
+    }
+
+    public static boolean isPropertyIndexIdent(PascalNamedElement element) {
+        return (element.getParent() instanceof PasFormalParameter) && (element.getParent().getParent() instanceof PasClassPropertyArray);
     }
 }

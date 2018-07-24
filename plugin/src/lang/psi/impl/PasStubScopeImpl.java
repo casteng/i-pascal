@@ -11,6 +11,7 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -118,7 +119,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
                 }
             }
         }
-        fieldsMap.put(KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", PasField.FieldType.VARIABLE, "", null, null));
+        fieldsMap.put(KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", "", PasField.FieldType.VARIABLE, "", null, null));
         return result;
     }
 
@@ -231,7 +232,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
             type = PasField.FieldType.TYPE;
         } else if (namedElement instanceof PascalRoutine) {
             type = PasField.FieldType.ROUTINE;
-        } else if (PsiUtil.isConstDecl(namedElement) || PsiUtil.isEnumDecl(namedElement)) {
+        } else if (ContextUtil.isConstDecl(namedElement) || ContextUtil.isEnumDecl(namedElement)) {
             type = PasField.FieldType.CONSTANT;
         }
 
@@ -295,7 +296,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
      */
     void calcContainingScope() {
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);  // 2, 3, 4, 5, 1 for method declarations
-        containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
+        containingScope = PsiUtil.createSmartPointer(scope);
         if ((scope instanceof PascalModuleImpl) && (this instanceof PasRoutineImplDecl)) {            // 1 for method implementations
             String[] names = PsiUtil.getQualifiedMethodName(this).split("\\.");
             if (names.length <= 1) {                                                                            // should not be true

@@ -505,6 +505,7 @@ public class PasReferenceUtil {
             StubElement stub = ((PascalStubElement) namespace).retrieveStub();
             if (stub != null) {
                 ResolveContext ctx = new ResolveContext(namespace, context.fieldTypes, context.includeLibrary, context.resultScope);
+                ctx.disableParentNamespaces = true;
                 result = ResolveUtil.resolveWithStubs(new NamespaceRec(fqn), ctx, ++recursionCount);
             }
         }
@@ -537,7 +538,12 @@ public class PasReferenceUtil {
         for (PasEntityScope namespace : sorted) {
             if (fqn.advance(namespace.getName())) {
                 if (fqn.isComplete()) {
-                    result.add(namespace.getField(namespace.getName()));
+                    PasField field = namespace.getField(namespace.getName());
+                    if (field != null) {
+                        result.add(field);
+                    } else {
+                        LOG.info("ERROR: field is null. FQN: " + fqn.toString());
+                    }
                 }
                 return namespace;
             }

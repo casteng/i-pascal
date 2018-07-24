@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.util;
 
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -19,8 +20,8 @@ public class PsiUtilTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testIsAssignLeftPart() {
         myFixture.configureByFiles("psiUtilTest.pas");
         Map<String, PascalNamedElement> named = collectNamed("psiUtilTest");
-        assertTrue(PsiUtil.isAssignLeftPart(named.get("AssignLeftPart")));
-        assertFalse(PsiUtil.isAssignLeftPart(named.get("AssignRightPart")));
+        assertTrue(ContextUtil.isAssignLeftPart(named.get("AssignLeftPart")));
+        assertFalse(ContextUtil.isAssignLeftPart(named.get("AssignRightPart")));
     }
 
     private Map<String, PascalNamedElement> collectNamed(String unitName) {

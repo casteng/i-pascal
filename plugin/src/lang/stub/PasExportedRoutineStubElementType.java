@@ -32,7 +32,8 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
 
     @Override
     public PasExportedRoutineStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasExportedRoutineStubImpl(parentStub, "-", "-+-", PasField.Visibility.PUBLIC, false, false, "--", null);
+        return new PasExportedRoutineStubImpl(parentStub, "-", "-+-", PasField.Visibility.PUBLIC,
+                "", false, false, "--", null);
     }
 
     @Override
@@ -44,7 +45,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @Override
     public PasExportedRoutineStub createStub(@NotNull PascalExportedRoutine psi, StubElement parentStub) {
         return new PasExportedRoutineStubImpl(parentStub, psi.getName(), psi.getCanonicalName(), psi.getVisibility(),
-                psi.isConstructor(), psi.isFunction(), psi.getFunctionTypeStr(), psi.getFormalParameterNames());
+                psi.getContainingUnitName(), psi.isConstructor(), psi.isFunction(), psi.getFunctionTypeStr(), psi.getFormalParameterNames());
     }
 
     @NotNull
@@ -60,6 +61,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         dataStream.writeName(stub.getName());
         dataStream.writeName(stub.getCanonicalName());
         dataStream.writeName(stub.getVisibility().name());
+        dataStream.writeName(stub.getContainingUnitName());
         dataStream.writeBoolean(stub.isConstructor());
         dataStream.writeBoolean(stub.isFunction());
         dataStream.writeName(stub.getFunctionTypeStr());
@@ -72,16 +74,18 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         String name = StubUtil.readName(dataStream);
         String canonicalName = StubUtil.readName(dataStream);
         PasField.Visibility visibility = StubUtil.readEnum(dataStream, PasField.Visibility.class);
+        String containingUnitName = StubUtil.readName(dataStream);
         boolean constructor = dataStream.readBoolean();
         boolean function = dataStream.readBoolean();
         String typeStr = StubUtil.readName(dataStream);
         List<String> parameterNames = new SmartList<>();
         StubUtil.readStringCollection(dataStream, parameterNames);
-        return new PasExportedRoutineStubImpl(parentStub, name, canonicalName, visibility, constructor, function, typeStr, parameterNames);
+        return new PasExportedRoutineStubImpl(parentStub, name, canonicalName, visibility, containingUnitName, constructor, function, typeStr, parameterNames);
     }
 
     @Override
     public void indexStub(@NotNull PasExportedRoutineStub stub, @NotNull IndexSink sink) {
         sink.occurrence(PascalSymbolIndex.KEY, stub.getName());
+        sink.occurrence(PascalUnitSymbolIndex.KEY, stub.getName().toUpperCase());
     }
 }

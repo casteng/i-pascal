@@ -30,7 +30,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
 
     @Override
     public PasIdentStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, "-", PasField.FieldType.VARIABLE, null, null, Collections.emptyList());
+        return new PasIdentStubImpl(parentStub, "-", ".", PasField.FieldType.VARIABLE, null, null, Collections.emptyList());
     }
 
     @Override
@@ -41,7 +41,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @NotNull
     @Override
     public PasIdentStub createStub(@NotNull PascalIdentDecl psi, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, psi.getName(), PsiUtil.getFieldType(psi), psi.getTypeString(), psi.getTypeKind(), psi.getSubMembers());
+        return new PasIdentStubImpl(parentStub, psi.getName(), psi.getContainingUnitName(), PsiUtil.getFieldType(psi), psi.getTypeString(), psi.getTypeKind(), psi.getSubMembers());
     }
 
     @NotNull
@@ -55,6 +55,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         StubUtil.printStub("PasIdentStub.serialize", stub);
 
         dataStream.writeName(stub.getName());
+        dataStream.writeName(stub.getContainingUnitName());
         dataStream.writeName(stub.getType().name());
         dataStream.writeName(stub.getTypeString());
         dataStream.writeName(stub.getTypeKind() != null ? stub.getTypeKind().name() : StubUtil.ENUM_NULL);
@@ -65,16 +66,18 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @Override
     public PasIdentStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
         String name = StubUtil.readName(dataStream);
+        String containingUnitName = StubUtil.readName(dataStream);
         PasField.FieldType type = StubUtil.readEnum(dataStream, PasField.FieldType.class);
         String typeString = StubUtil.readName(dataStream);
         List<String> subMembers = new SmartList<>();
         PasField.Kind kind = StubUtil.readEnum(dataStream, PasField.Kind.class);
         StubUtil.readStringCollection(dataStream, subMembers);
-        return new PasIdentStubImpl(parentStub, name, type, typeString, kind, subMembers);
+        return new PasIdentStubImpl(parentStub, name, containingUnitName, type, typeString, kind, subMembers);
     }
 
     @Override
     public void indexStub(@NotNull PasIdentStub stub, @NotNull IndexSink sink) {
         sink.occurrence(PascalSymbolIndex.KEY, stub.getName());
+        sink.occurrence(PascalUnitSymbolIndex.KEY, stub.getName().toUpperCase());
     }
 }

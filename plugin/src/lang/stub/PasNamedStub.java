@@ -9,4 +9,6 @@ public interface PasNamedStub<T extends PascalNamedElement> extends StubElement<
     PasField.FieldType getType();
 
     String getUniqueName();
+
+    String getContainingUnitName();
 }

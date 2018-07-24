@@ -319,15 +319,27 @@ public class PascalBlock extends AbstractBlock implements Block {
             return Indent.getNormalIndent(true);
         } else if (TOKENS_INDENT_CHILD_NON_RELATIVE.contains(myNode.getElementType()) && (childNode != null)) {
             final PascalCodeStyleSettings pascalSettings = mySettings.getCustomSettings(PascalCodeStyleSettings.class);
-            if (!nodeIs(myNode, PasTypes.STATEMENT) || !nodeIs(childNode, PasTypes.COMPOUND_STATEMENT) || (pascalSettings.INDENT_BEGIN_END )) {
+            if (!nodeIs(myNode, PasTypes.STATEMENT) || !nodeIs(childNode, PasTypes.COMPOUND_STATEMENT)) {
                 return Indent.getNormalIndent();
             }
+        } else if (shouldIndentCompound(myNode)) {
+            return Indent.getNormalIndent();
         } else if (TOKENS_INDENT_CHILD.contains(myNode.getElementType()) && (childNode != null)) {
             if (TOKEN_UNINDENTED_MAP.get(myNode.getElementType()) != childNode.getElementType()) {
                 return Indent.getNormalIndent(true);
             }
         }
         return Indent.getNoneIndent();
+    }
+
+    private boolean shouldIndentCompound(ASTNode myNode) {
+        final PascalCodeStyleSettings pascalSettings = mySettings.getCustomSettings(PascalCodeStyleSettings.class);
+        return myNode.getElementType() == PasTypes.COMPOUND_STATEMENT && pascalSettings.INDENT_BEGIN_END
+                && nodeIsNotBlock(myNode.getTreeParent());
+    }
+
+    private boolean nodeIsNotBlock(ASTNode node) {
+        return (node != null) && (node.getElementType() != PasTypes.UNIT_IMPLEMENTATION) && (node.getElementType() != PasTypes.BLOCK_BODY);
     }
 
     private static int getCurrentIndent(ASTNode childNode) {

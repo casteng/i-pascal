@@ -3,20 +3,30 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.editor.PascalActionDeclare;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
+import com.siberika.idea.pascal.editor.refactoring.PascalRenameAction;
 import com.siberika.idea.pascal.ide.actions.AddFixType;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.ide.actions.UsesActions;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
+import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -54,6 +64,8 @@ public class PascalAnnotator implements Annotator {
             }
         }
 
+        annotateModuleHead(element, holder);
+
         //noinspection ConstantConditions
         if (PsiUtil.isEntityName(element) && !PsiUtil.isLastPartOfMethodImplName((PascalNamedElement) element)) {
             //noinspection ConstantConditions
@@ -65,28 +77,29 @@ public class PascalAnnotator implements Annotator {
             if (refs.isEmpty() && !isVariantField(scopes)) {
                 Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
                 PsiContext context = PsiUtil.getContext(namedElement);
-                Set<AddFixType> fixes = EnumSet.of(AddFixType.VAR, AddFixType.TYPE, AddFixType.CONST, AddFixType.ROUTINE); // [*] => var type const routine
+                Set<AddFixType> fixes = EnumSet.of(AddFixType.VAR, AddFixType.TYPE, AddFixType.CONST, AddFixType.ROUTINE, AddFixType.UNIT_FIND); // [*] => var type const routine
                 if (context == PsiContext.FQN_FIRST) {
                     fixes.add(AddFixType.UNIT);
                 }
                 PsiElement scope = scopes.isEmpty() ? null : scopes.get(0);
                 if (scope instanceof PasEnumType) {                                                          // TEnum.* => -* +enum
                     fixes = EnumSet.of(AddFixType.ENUM);
+                    fixes.remove(AddFixType.UNIT_FIND);
                 } else if (scope instanceof PascalRoutine) {                                                 // [inRoutine] => +parameter
                     fixes.add(AddFixType.PARAMETER);
                 }
                 if (context == PsiContext.TYPE_ID) {                                                         // [TypeIdent] => -* +type
-                    fixes = EnumSet.of(AddFixType.TYPE);
+                    fixes = EnumSet.of(AddFixType.TYPE, AddFixType.UNIT_FIND);
                 } else if (PsiTreeUtil.getParentOfType(namedElement, PasConstExpression.class) != null) {    // [part of const expr] => -* +const +enum
-                    fixes = EnumSet.of(AddFixType.CONST);
+                    fixes = EnumSet.of(AddFixType.CONST, AddFixType.UNIT_FIND);
                 } else if (context == PsiContext.EXPORT) {
                     fixes = EnumSet.of(AddFixType.ROUTINE);
                 } else if (context == PsiContext.CALL) {
-                    fixes = EnumSet.of(AddFixType.ROUTINE, AddFixType.VAR);
+                    fixes = EnumSet.of(AddFixType.ROUTINE, AddFixType.VAR, AddFixType.UNIT_FIND);
                 } else if (context == PsiContext.PROPERTY_SPEC) {
                     fixes = EnumSet.of(AddFixType.VAR, AddFixType.ROUTINE);
                 } else if (context == PsiContext.FOR) {
-                    fixes = EnumSet.of(AddFixType.VAR);
+                    fixes = EnumSet.of(AddFixType.VAR, AddFixType.UNIT_FIND);
                 }
                 if (context == PsiContext.USES) {
                     fixes = EnumSet.of(AddFixType.NEW_UNIT);
@@ -141,7 +154,7 @@ public class PascalAnnotator implements Annotator {
                             if (scope instanceof PascalStructType) {
                                 if (context == PsiContext.PROPERTY_SPEC) {
                                     PasClassPropertySpecifier spec = PsiTreeUtil.getParentOfType(namedElement, PasClassPropertySpecifier.class);
-                                    ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create." + (PsiUtil.isPropertyGetter(spec) ? "getter" : "setter")),
+                                    ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create." + (ContextUtil.isPropertyGetter(spec) ? "getter" : "setter")),
                                             namedElement, scope, null, priority, spec));
                                 } else {
                                     ann.registerFix(PascalActionDeclare.newActionCreateRoutine(message("action.create.method"), namedElement, scope, null, priority, null));
@@ -164,15 +177,44 @@ public class PascalAnnotator implements Annotator {
                             break;
                         }
                         case UNIT: {
-                            ann.registerFix(new UsesActions.AddUnitAction(message("action.add.uses"), namedElement.getName(), PsiUtil.belongsToInterface(namedElement)));
+                            ann.registerFix(new UsesActions.AddUnitAction(message("action.add.uses"), namedElement.getName(), ContextUtil.belongsToInterface(namedElement)));
                             break;
                         }
                         case NEW_UNIT: {
                             ann.registerFix(new UsesActions.NewUnitAction(message("action.create.unit"), namedElement.getName()));
                             break;
                         }
+                        case UNIT_FIND: {
+                            ann.registerFix(new UsesActions.SearchUnitAction(message("action.unit.search", namedElement.getName()),
+                                    namedElement.getName(), ContextUtil.belongsToInterface(namedElement)));
+                            break;
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    private void annotateModuleHead(PsiElement element, AnnotationHolder holder) {
+        PasNamespaceIdent nameIdent = null;
+        if (element instanceof PasUnitModuleHead) {
+            nameIdent = ((PasUnitModuleHead) element).getNamespaceIdent();
+        } else if (element instanceof PasLibraryModuleHead) {
+            nameIdent = ((PasLibraryModuleHead) element).getNamespaceIdent();
+        } else if (element instanceof PasProgramModuleHead) {
+            nameIdent = ((PasProgramModuleHead) element).getNamespaceIdent();
+        } else if (element instanceof PasPackageModuleHead) {
+            nameIdent = ((PasPackageModuleHead) element).getNamespaceIdent();
+        }
+        if (nameIdent != null) {
+            String fn = element.getContainingFile().getName();
+            String fileName = FileUtil.getNameWithoutExtension(fn);
+            if (!nameIdent.getName().equalsIgnoreCase(fileName)) {
+                Annotation ann = holder.createErrorAnnotation(element, PascalBundle.message("ann.error.unit.name.notmatch"));
+                ann.registerFix(new PascalRenameAction(element, fileName, PascalBundle.message("action.module.rename")));
+                ann.registerFix(new PascalRenameAction(element.getContainingFile(),
+                        nameIdent.getName() + "." + FileUtilRt.getExtension(fn),
+                        PascalBundle.message("action.file.rename")));
             }
         }
     }

@@ -13,6 +13,7 @@ type
   TOuterRec = class
     arrInRec: array of TInnerRec;
     function test(): TEnum;
+    constructor Create();
     property prop: TInnerRec;
     property arrProp[Index: Integer]: TInnerRec;
   end;
@@ -45,6 +46,11 @@ begin
   Result;
 end;
 
+constructor TOuterRec.Create();
+begin
+
+end;
+
 function test(): TClass2;
 begin
   Result;
@@ -60,10 +66,11 @@ begin
   cls.prop.innerField;
   cls.arrProp;
   cls.arrProp[0].innerField;
+  TClass1.Create();
 
   obj[0].A;
   arrPtr^[0].arrInRec[0].innerField;
   (TOuterRec).arrInRec;
   (int as TOuterRec).arrInRec;
-  PropInfo^.PropType^.Kind
+  PropInfo^.PropType^.Kind;
 end.

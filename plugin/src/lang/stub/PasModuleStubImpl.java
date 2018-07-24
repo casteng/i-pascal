@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.lang.stub;
 
-import com.intellij.psi.stubs.StubBase;
 import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -12,27 +11,18 @@ import java.util.Set;
  * Author: George Bakhtadze
  * Date: 13/10/2015
  */
-public class PasModuleStubImpl extends StubBase<PascalModule> implements PasModuleStub {
+public class PasModuleStubImpl extends PasNamedStubBase<PascalModule> implements PasModuleStub {
 
-    private String name;
-    private String uniqueName;
     private PascalModule.ModuleType moduleType;
     private Set<String> usedUnitsPublic;
     private Set<String> usedUnitsPrivate;
 
     public PasModuleStubImpl(StubElement parent, String name, PascalModule.ModuleType moduleType,
                              Set<String> usedUnitsPublic, Set<String> usedUnitsPrivate) {
-        super(parent, PasModuleStubElementType.INSTANCE);
-        this.name = name;
-        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + name;
+        super(parent, PasModuleStubElementType.INSTANCE, name, name);
         this.moduleType = moduleType;
         this.usedUnitsPublic = usedUnitsPublic;
         this.usedUnitsPrivate = usedUnitsPrivate;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -40,11 +30,7 @@ public class PasModuleStubImpl extends StubBase<PascalModule> implements PasModu
         return PasField.FieldType.UNIT;
     }
 
-    @Override
-    public String getUniqueName() {
-        return uniqueName;
-    }
-
+    @NotNull
     @Override
     public PascalModule.ModuleType getModuleType() {
         return moduleType;

@@ -35,6 +35,7 @@ import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasBlockBody;
@@ -274,7 +275,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     String calcType(FixActionData data) {
         String res = "T";
-        if (PsiUtil.isAssignLeftPart(data.element)) {
+        if (ContextUtil.isAssignLeftPart(data.element)) {
             String type = PascalExpression.calcAssignStatementType(PsiUtil.skipToExpressionParent(data.element));
             res = type != null ? type : res;
         }
@@ -549,6 +550,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 if (parent instanceof PasAssignPart) {
                     type = PascalExpression.calcAssignExpectedType(parent.getParent());
                     type = type != null ? type : "";
+                } else if (parent instanceof PasArgumentList) {
+                    type = "";  // TODO: infere actual type
                 }
             }
             if ((scope instanceof PascalStructType) && (null == callScope)) {
@@ -587,7 +590,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             fillMemberPlace(scope, data, PasField.Visibility.PUBLIC, PasField.FieldType.ROUTINE, null, null);
             Pair<String, Map<String, String>> arguments;
             if (spec != null) {
-                if (PsiUtil.isPropertyGetter(spec)) {
+                if (ContextUtil.isPropertyGetter(spec)) {
                     Map<String, String> defaults = new SmartHashMap<String, String>();
                     arguments = Pair.create("", defaults);
                 } else {

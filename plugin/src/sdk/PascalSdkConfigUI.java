@@ -197,15 +197,15 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     }
 
     public void apply() throws ConfigurationException {
-        for (Map.Entry<String, JComponent> entry : keyComponentMap.entrySet()) {
-            BasePascalSdkType.getAdditionalData(sdk).setValue(entry.getKey(), getValue(keyComponentMap.get(entry.getKey())));
-        }
         if ((decompilerCommandEdit != null) &&
                 !getValue(keyComponentMap.get(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey())).equals(
                         BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey()))
                 ) {
             BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.Keys.DECOMPILER_CACHE.getKey(), null);
             invalidateCompiledCache();
+        }
+        for (Map.Entry<String, JComponent> entry : keyComponentMap.entrySet()) {
+            BasePascalSdkType.getAdditionalData(sdk).setValue(entry.getKey(), getValue(keyComponentMap.get(entry.getKey())));
         }
         BasePascalSdkType.invalidateSdkCaches();
     }

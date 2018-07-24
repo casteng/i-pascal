@@ -269,7 +269,15 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                 PasFormalParameterSection params = suitable.getFormalParameterSection();
                 // TODO: make type check and handle overload
                 if (params != null && params.getFormalParameterList().size() == expression.getArgumentList().getExprList().size()) {
-                    return suitable.getFunctionTypeStr();
+                    if (suitable.isConstructor()) {
+                        // TODO: handle metaclass constructor calls
+                        if (expression.getExpr() instanceof PasReferenceExpr) {
+                            String typeName = expression.getExpr().getText();
+                            return typeName.substring(0, typeName.length() - suitable.getName().length() - 1);
+                        }
+                    } else {
+                        return suitable.getFunctionTypeStr();
+                    }
                 }
             }
         }
