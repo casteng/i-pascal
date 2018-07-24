@@ -16,15 +16,19 @@ import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider;
+import com.siberika.idea.pascal.ide.actions.GotoSuper;
 import com.siberika.idea.pascal.lang.context.Context;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
@@ -41,6 +45,8 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasPackageModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
+import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
@@ -58,6 +64,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -182,6 +189,12 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
 
                 Map<String, LookupElement> entities = new HashMap<>();
 
+                if (handleInherited(ctx, entities, parameters)) {
+                    addEntitiesToResult(result, entities);
+                    result.stopHere();
+                    return;
+                }
+
                 if (isContextAwareVirtualFile(result, ctx, entities, parameters)) {
                     return;
                 } else if (parameters.getOriginalPosition() instanceof PsiComment) {
@@ -220,6 +233,58 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                 result.restartCompletionWhenNothingMatches();
             }
         });
+    }
+
+    private PasEntityScope getInheritedScope(PsiElement originalPos) {
+        PasEntityScope nearestScope = PsiTreeUtil.getParentOfType(originalPos, PasEntityScope.class);
+
+        if (nearestScope instanceof PasRoutineImplDecl) {
+            PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
+
+            if (oPrev != null) {
+                PsiElement deepestFirst = PsiTreeUtil.getDeepestFirst(oPrev);
+                if (deepestFirst instanceof LeafPsiElement && ((LeafPsiElement) deepestFirst).getElementType() == PasTypes.INHERITED) {
+                    return nearestScope.getContainingScope();
+                }
+            } else if (originalPos instanceof LeafPsiElement) {
+                if (((LeafPsiElement) originalPos).getElementType() == PasTypes.NAME) {
+                    PasStatement parent = PsiTreeUtil.getParentOfType(originalPos, PasStatement.class);
+                    if (parent != null) {
+                        PsiElement deepestFirst = PsiTreeUtil.getDeepestFirst(parent);
+                        if (deepestFirst instanceof LeafPsiElement && ((LeafPsiElement) deepestFirst).getElementType() == PasTypes.INHERITED) {
+                            return nearestScope.getContainingScope();
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    //TODO: move the logic to resolving code
+    private boolean handleInherited(Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
+        PasEntityScope scope = getInheritedScope(parameters.getOriginalPosition());
+        if (null == scope) {
+            return false;
+        }
+
+        List<PasEntityScope> parents = new SmartList<>();
+        GotoSuper.getParentStructs(parents, scope);
+        for (PasEntityScope parent : parents) {
+            for (PasField field : parent.getAllFields()) {
+                if (field.fieldType == PasField.FieldType.ROUTINE) {
+                    //filter out strict private methods as well as private ones from other units
+                    if (field.visibility != PasField.Visibility.STRICT_PRIVATE && (field.visibility != PasField.Visibility.PRIVATE || isFromSameUnit(field, parameters.getOriginalFile()))) {
+                        fieldToEntity(entities, field, parameters);
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean isFromSameUnit(PasField field, PsiFile file) {
+        return PsiUtil.isSmartPointerValid(field.getElementPtr()) && (PsiManager.getInstance(file.getProject()).areElementsEquivalent(file, field.getElementPtr().getContainingFile()));
     }
 
     private static void handleSuggestions(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
@@ -472,20 +537,24 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
 
     private static void fieldsToEntities(Map<String, LookupElement> entities, Collection<PasField> fields, CompletionParameters parameters) {
         for (PasField pasField : fields) {
-            if ((pasField.name != null) && !pasField.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
-                LookupElement lookupElement;
-                LookupElementBuilder el = buildFromElement(pasField) ? CompletionUtil.createLookupElement(parameters.getEditor(), pasField) : LookupElementBuilder.create(pasField.name);
-                lookupElement = el.appendTailText(" : " + pasField.fieldType.toString().toLowerCase(), true).
-                        withCaseSensitivity(true).withTypeText(pasField.owner != null ? pasField.owner.getName() : "-", false);
-                if (lookupElement.getLookupString().startsWith("_")) {
-                    lookupElement = PrioritizedLookupElement.withPriority(lookupElement, PRIORITY_LOWEST);
-                }
-                if ((pasField.getElementPtr() != null) && (parameters.getOriginalFile().getVirtualFile() != null)
-                        && !parameters.getOriginalFile().getVirtualFile().equals(pasField.getElementPtr().getVirtualFile())) {
-                    lookupElement = PrioritizedLookupElement.withPriority(lookupElement, PRIORITY_LOWER);
-                }
-                entities.put(el.getLookupString(), lookupElement);
+            fieldToEntity(entities, pasField, parameters);
+        }
+    }
+
+    private static void fieldToEntity(Map<String, LookupElement> entities, PasField field, CompletionParameters parameters) {
+        if ((field.name != null) && !field.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
+            LookupElement lookupElement;
+            LookupElementBuilder el = buildFromElement(field) ? CompletionUtil.createLookupElement(parameters.getEditor(), field) : LookupElementBuilder.create(field.name);
+            lookupElement = el.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
+                    withCaseSensitivity(true).withTypeText(field.owner != null ? field.owner.getName() : "-", false);
+            if (lookupElement.getLookupString().startsWith("_")) {
+                lookupElement = PrioritizedLookupElement.withPriority(lookupElement, PRIORITY_LOWEST);
             }
+            if ((field.getElementPtr() != null) && (parameters.getOriginalFile().getVirtualFile() != null)
+                    && !parameters.getOriginalFile().getVirtualFile().equals(field.getElementPtr().getVirtualFile())) {
+                lookupElement = PrioritizedLookupElement.withPriority(lookupElement, PRIORITY_LOWER);
+            }
+            entities.put(el.getLookupString(), lookupElement);
         }
     }
 

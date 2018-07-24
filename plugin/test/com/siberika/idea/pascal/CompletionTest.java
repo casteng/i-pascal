@@ -327,4 +327,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletionContains(myFixture, "Bar");
     }
 
+    public void testInherited() {
+        myFixture.configureByFiles("inherited1.pas", "inherited2.pas");
+        checkCompletion(myFixture, "ParentConstructor", "parentMethod", "Parent2Constructor", "parent2Method");
+    }
+
 }

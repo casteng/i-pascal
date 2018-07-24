@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.ide.actions;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
@@ -263,10 +264,11 @@ public class SectionToggle {
         int res = -1;
         int ind = -1;
         PasEntityScope scope = routine.getContainingScope();
+        PsiManager psiManager = PsiManager.getInstance(routine.getProject());
         if (scope != null) {
             List<PascalRoutine> decls = collectFields(getDeclFields(scope), PasField.FieldType.ROUTINE, null);
             for (int i = 0; i < decls.size(); i++) {
-                if (decls.get(i).isEquivalentTo(routine)) {
+                if (psiManager.areElementsEquivalent(routine, decls.get(i))) {
                     ind = i;
                 }
             }
@@ -334,8 +336,9 @@ public class SectionToggle {
                 return (value.getElement() instanceof PascalRoutine) && (((PascalRoutine) value.getElement()).getContainingScope() == scope);
             }
         });
+        PsiManager psiManager = PsiManager.getInstance(routine.getProject());
         for (int i = 0; i < impls.size(); i++) {
-            if (impls.get(i).isEquivalentTo(routine)) {
+            if (psiManager.areElementsEquivalent(routine, impls.get(i))) {
                 ind = i;
             }
         }

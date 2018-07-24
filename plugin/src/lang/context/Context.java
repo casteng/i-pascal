@@ -44,10 +44,6 @@ public class Context {
         }
         context = EnumSet.noneOf(CodePlace.class);
         if (element != null) {
-            PsiElement prev = PsiTreeUtil.skipSiblingsBackward(element, PsiWhiteSpace.class, PsiComment.class);
-            PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
-            System.out.println(String.format("=== oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s", originalPos, element, oPrev, prev, originalPos != null ? originalPos.getParent() : null, element.getParent()));
-
             file = file != null ? file : element.getContainingFile();
             primary = retrieveContext(element, origPos, file, context);
         } else {
