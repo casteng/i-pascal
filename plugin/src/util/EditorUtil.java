@@ -90,12 +90,15 @@ public class EditorUtil {
         @Override
         public String getElementText(PsiElement element) {
             if (element instanceof PascalNamedElement) {
-                String ownerName = "";
+                StringBuilder sb = new StringBuilder();
                 if (element instanceof PasEntityScope) {
                     PasEntityScope owner = ((PasEntityScope) element).getContainingScope();
-                    ownerName = owner != null ? owner.getName() : ownerName;
+                    if (owner != null) {
+                        sb.append(owner.getName()).append(".");
+                    }
                 }
-                return String.format("%s.%s", ResolveUtil.cleanupName(ownerName), ResolveUtil.cleanupName(PsiUtil.getFieldName((PascalNamedElement) element)));
+                sb.append(ResolveUtil.cleanupName(PsiUtil.getFieldName((PascalNamedElement) element)));
+                return sb.toString();
             } else {
                 return element.getText();
             }

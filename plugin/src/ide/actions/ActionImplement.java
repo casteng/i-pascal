@@ -45,6 +45,11 @@ public class ActionImplement extends PascalAction {
     @Override
     public void doActionPerformed(AnActionEvent e) {
         PsiElement el = getElement(e);
+        Editor editor = getEditor(e);
+        showOverrideDialog(el, editor);
+    }
+
+    public void showOverrideDialog(PsiElement el, Editor editor) {
         PascalRoutine methodImpl = null;
         PasEntityScope scope = PsiTreeUtil.getParentOfType(el, PasEntityScope.class);
         if (scope instanceof PascalRoutine) {
@@ -52,7 +57,7 @@ public class ActionImplement extends PascalAction {
             scope = scope.getContainingScope();
         }
         if (!(scope instanceof PascalStructType)) {
-            EditorUtil.showErrorHint(PascalBundle.message("action.error.notinstruct"), EditorUtil.getHintPos(getEditor(e)));
+            EditorUtil.showErrorHint(PascalBundle.message("action.error.notinstruct"), EditorUtil.getHintPos(editor));
             return;
         }
         Collection<PasEntityScope> structs = new SmartList<PasEntityScope>();
@@ -70,7 +75,7 @@ public class ActionImplement extends PascalAction {
         });
         tree.show();
 
-        doOverride(getEditor(e), scope, el, methodImpl, tree.getSelected());
+        doOverride(editor, scope, el, methodImpl, tree.getSelected());
     }
 
     private boolean allowNonExistingRoutines(PasField value, Set<String> existing) {
@@ -149,4 +154,5 @@ public class ActionImplement extends PascalAction {
     public void update(AnActionEvent e) {
         e.getPresentation().setEnabledAndVisible(PascalLanguage.INSTANCE.equals(e.getData(LangDataKeys.LANGUAGE)));
     }
+
 }

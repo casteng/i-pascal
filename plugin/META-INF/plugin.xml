@@ -11,13 +11,15 @@
     <change-notes><![CDATA[
         <p>1.90</p>
         <ul>
-            <li>Unit used by which units info on gutter</li>
-            <li>File and unit name mismatch error annotation</li>
             <li>Unused local identifier inspection</li>
             <li>Add containing unit quick fix for "unknown identifier" error</li>
+            <li>Unit used by which units info on gutter</li>
+            <li>File and unit name mismatch error annotation</li>
             <li>Name suggestions for variables, types, constants, property accessors</li>
             <li>Record constant completion</li>
             <li>Type inference in constructor call (Issue #28)</li>
+            <li>Fix rename of a method to different case (Issue #29)</li>
+            <li>Correct completion after inherited keyword</li>
         </ul>
         <p>1.80</p>
         <ul>
