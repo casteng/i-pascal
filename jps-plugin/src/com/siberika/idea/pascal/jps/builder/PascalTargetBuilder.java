@@ -198,7 +198,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
     }
 
     private void getFiles(Set<JpsModule> visited, List<File> result, JpsModule module) {
-        if (visited.contains(module)) {
+        if ((null == module) || visited.contains(module)) {
             return;
         }
         visited.add(module);
