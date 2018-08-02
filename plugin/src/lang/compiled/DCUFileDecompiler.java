@@ -80,7 +80,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
             String[] args = getArgs(BasePascalSdkType.getDecompilerArgs(sdk), file.getPath(), "-U" + Joiner.on(';').join(paths), "-I", "-SI", "-");
             result = SysUtils.runAndGetStdOut(sdk.getHomePath(), decompilerCommand.getCanonicalPath(), args);
             if (result != null) {
-                return handleText(result);
+                return handleText(result).replace("\r", "");
             } else {
                 return PascalBundle.message("decompile.empty.result");
             }
