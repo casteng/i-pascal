@@ -28,6 +28,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     protected static final Logger LOG = Logger.getInstance(PascalExportedRoutineImpl.class);
 
     private PasTypeID typeId;
+    private ReentrantLock typeIdLock = new ReentrantLock();
     private List<String> formalParameterNames;
     private ReentrantLock parametersLock = new ReentrantLock();
 
@@ -37,6 +38,12 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     public PascalExportedRoutineImpl(PasExportedRoutineStub stub, IStubElementType nodeType) {
         super(stub, nodeType);
+    }
+
+    @NotNull
+    @Override
+    public PasField.FieldType getType() {
+        return PasField.FieldType.ROUTINE;
     }
 
     @Override
@@ -102,8 +109,14 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @Override
     public PasTypeID getFunctionTypeIdent() {
-        if (null == typeId) {
-            typeId = PsiTreeUtil.findChildOfType(findChildByClass(PasTypeDecl.class), PasTypeID.class);
+        if (SyncUtil.lockOrCancel(typeIdLock)) {
+            try {
+                if (null == typeId) {
+                    typeId = PsiTreeUtil.findChildOfType(findChildByClass(PasTypeDecl.class), PasTypeID.class);
+                }
+            } finally {
+                typeIdLock.unlock();
+            }
         }
         return typeId;
     }

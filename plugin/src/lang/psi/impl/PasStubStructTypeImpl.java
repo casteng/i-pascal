@@ -87,6 +87,12 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     @NotNull
     @Override
+    public PasField.FieldType getType() {
+        return PasField.FieldType.TYPE;
+    }
+
+    @NotNull
+    @Override
     public List<String> getParentNames() {
         B stub = retrieveStub();
         if (stub != null) {

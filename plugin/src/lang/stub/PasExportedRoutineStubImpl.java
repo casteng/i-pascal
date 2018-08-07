@@ -17,9 +17,11 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     private boolean function;
     private String functionTypeStr;
     private List<String> parameterNames;
+    private List<PasField.Access> parameterModifiers;
 
     public PasExportedRoutineStubImpl(StubElement parent, String name, String canonicalName, PasField.Visibility visibility,
-                                      String containingUnitName, boolean constructor, boolean function, String functionTypeStr, List<String> parameterNames) {
+                                      String containingUnitName, boolean constructor, boolean function, String functionTypeStr,
+                                      List<String> parameterNames) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE, name, containingUnitName);
         this.canonicalName = canonicalName;
         this.visibility = visibility;

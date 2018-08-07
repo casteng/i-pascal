@@ -30,6 +30,8 @@ public class PasField {
 
     public enum Kind {BOOLEAN, POINTER, INTEGER, FLOAT, CHAR, STRING, SET, STRUCT, CLASSREF, FILE, PROCEDURE, ENUM, SUBRANGE, ARRAY, VARIANT, TYPEREF}
 
+    public enum Access {READONLY, WRITEONLY, READWRITE}
+
     public static final Set<FieldType> TYPES_ALL = Collections.unmodifiableSet(EnumSet.allOf(FieldType.class));
     public static final Set<FieldType> TYPES_LEFT_SIDE = Collections.unmodifiableSet(EnumSet.of(FieldType.UNIT, FieldType.VARIABLE, FieldType.PSEUDO_VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE));
     public static final Set<FieldType> TYPES_TYPE = Collections.unmodifiableSet(EnumSet.of(FieldType.TYPE));

@@ -34,6 +34,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasStubStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
+import com.siberika.idea.pascal.lang.psi.impl.PascalNamedStubElement;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import org.apache.commons.lang.StringUtils;
@@ -803,6 +804,9 @@ public class PsiUtil {
     }
 
     public static boolean isLocalDeclaration(@NotNull PascalNamedElement element) {
+        if (element instanceof PascalNamedStubElement) {
+            return false;
+        }
         PsiElement parent = element.getParent();
         if (parent instanceof PasGenericTypeIdent) {
             parent = parent.getParent();
@@ -830,6 +834,8 @@ public class PsiUtil {
             type = PasField.FieldType.ROUTINE;
         } else if (ContextUtil.isConstDecl(namedElement) || ContextUtil.isEnumDecl(namedElement)) {
             type = PasField.FieldType.CONSTANT;
+        } else if (ContextUtil.isPropertyDecl(namedElement)) {
+            type = PasField.FieldType.PROPERTY;
         }
 
         return type;

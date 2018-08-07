@@ -48,6 +48,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         super(node);
     }
 
+    @NotNull
+    @Override
+    public PasField.FieldType getType() {
+        return PasField.FieldType.ROUTINE;
+    }
+
     @Override
     protected String calcKey() {
         StringBuilder sb = new StringBuilder(PsiUtil.getFieldName(this));
@@ -57,7 +63,9 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         sb.append("(impl)");
 
         PasEntityScope scope = this.getContainingScope();
-        sb.append(scope != null ? "." + scope.getKey() : "");
+        if (scope != null) {
+            sb.append(".").append(scope.getKey());
+        }
 
 //        System.out.println(String.format("%s:%d - %s", PsiUtil.getFieldName(this), this.getTextOffset(), sb.toString()));
         return sb.toString();

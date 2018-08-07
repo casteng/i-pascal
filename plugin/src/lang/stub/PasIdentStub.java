@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Set;
 
 public interface PasIdentStub extends PasNamedStub<PascalIdentDecl> {
 
@@ -17,4 +18,13 @@ public interface PasIdentStub extends PasNamedStub<PascalIdentDecl> {
 
     @NotNull
     List<String> getSubMembers();
+
+    @NotNull
+    PasField.Access getAccess();
+
+    @Nullable
+    String getValue();
+
+    @NotNull
+    Set<String> getTypeParameters();
 }

@@ -90,6 +90,16 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         return pos >= 0 ? name.substring(pos + 1) : name;
     }
 
+    @NotNull
+    @Override
+    public PasField.FieldType getType() {
+        B stub = retrieveStub();
+        if (stub != null) {
+            return stub.getType();
+        }
+        return PsiUtil.getFieldType(this);
+    }
+
     // Name qualified with container names
     public String getUniqueName() {
         B stub = retrieveStub();

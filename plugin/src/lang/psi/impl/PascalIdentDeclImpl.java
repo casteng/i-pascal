@@ -2,24 +2,31 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.Pair;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasVarValueSpec;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.lang.stub.PasIdentStubElementType;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIdentStub> implements PascalIdentDecl {
@@ -27,6 +34,10 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     private Pair<String, PasField.Kind> myCachedType;
     private List<String> subMembers;                            // members which can be qualified by this ident as well as accessed directly (enums)
     private ReentrantLock typeLock = new ReentrantLock();
+    //TODO: cache
+    /*private PasField.Access access;
+    private String value;
+    private Set<String> typeParameters;*/
     private ReentrantLock subMembersLock = new ReentrantLock();
 
     public PascalIdentDeclImpl(ASTNode node) {
@@ -72,18 +83,49 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         return type != null ? type.second : null;
     }
 
-    private Pair<String, PasField.Kind> ensureTypeResolved() {
-        if (SyncUtil.lockOrCancel(typeLock)) {
-            try {
-                if (myCachedType == null) {
-                    myCachedType = ResolveUtil.retrieveDeclarationType(this);
-                    return myCachedType;
-                }
-            } finally {
-                typeLock.unlock();
-            }
+    @NotNull
+    @Override
+    public PasField.Access getAccess() {
+        PasIdentStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getAccess();
         }
-        return myCachedType;
+        if (getType() == PasField.FieldType.VARIABLE) {
+            return PasField.Access.READWRITE;
+        } else if (getType() == PasField.FieldType.CONSTANT) {
+            return StringUtils.isBlank(getTypeString()) ? PasField.Access.READONLY : PasField.Access.READWRITE;
+        } else if (getType() == PasField.FieldType.PROPERTY) {
+            return getPropertyAccess();
+        }
+        return PasField.Access.READONLY;
+    }
+
+    @Nullable
+    @Override
+    public String getValue() {
+        PasIdentStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getValue();
+        }
+        PsiElement parent = getParent();
+        if (parent instanceof PasVarDeclaration) {
+            PasVarValueSpec varSpec = ((PasVarDeclaration) parent).getVarValueSpec();
+            return varSpec != null ? varSpec.getText() : null;
+        } else if (parent instanceof PasConstDeclaration) {
+            PasConstExpression expr = PsiTreeUtil.getChildOfType(parent, PasConstExpression.class);
+            return expr != null ? expr.getText() : null;
+        } else {
+            return null;
+        }
+    }
+    @NotNull
+    @Override
+    public Set<String> getTypeParameters() {
+        PasIdentStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getTypeParameters();
+        }
+        return Collections.emptySet();
     }
 
     @NotNull
@@ -114,11 +156,6 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         return subMembers;
     }
 
-    protected String calcUniqueName() {
-        PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);
-        return (scope != null ? scope.getUniqueName() + "." : "") + PsiUtil.getFieldName(this);
-    }
-
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
@@ -130,6 +167,29 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
             myCachedType = null;
             typeLock.unlock();
         }
+    }
+
+    protected String calcUniqueName() {
+        PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);
+        return (scope != null ? scope.getUniqueName() + "." : "") + PsiUtil.getFieldName(this);
+    }
+
+    private Pair<String, PasField.Kind> ensureTypeResolved() {
+        if (SyncUtil.lockOrCancel(typeLock)) {
+            try {
+                if (myCachedType == null) {
+                    myCachedType = ResolveUtil.retrieveDeclarationType(this);
+                    return myCachedType;
+                }
+            } finally {
+                typeLock.unlock();
+            }
+        }
+        return myCachedType;
+    }
+
+    private PasField.Access getPropertyAccess() {
+        return PasField.Access.READWRITE; //TODO
     }
 
 }

@@ -37,6 +37,10 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     private static final int MAX_SHORT_TEXT_LENGTH = 32;
     private volatile String myCachedName;
     private ReentrantLock nameLock = new ReentrantLock();
+    private volatile PasField.FieldType myCachedType;
+    private ReentrantLock typeLock = new ReentrantLock();
+    private volatile PsiElement myCachedNameEl;
+    private ReentrantLock nameElLock = new ReentrantLock();
 
     public PascalNamedElementImpl(ASTNode node) {
         super(node);
@@ -100,10 +104,38 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         return pos >= 0 ? name.substring(pos + 1) : name;
     }
 
+    @NotNull
+    @Override
+    public PasField.FieldType getType() {
+        if (SyncUtil.lockOrCancel(typeLock)) {
+            try {
+                if (null == myCachedType) {
+                    myCachedType = PsiUtil.getFieldType(this);
+                }
+            } finally {
+                typeLock.unlock();
+            }
+        }
+        return myCachedType;
+    }
+
     @Nullable
     protected PsiElement getNameElement() {
+        if (SyncUtil.lockOrCancel(nameElLock)) {
+            try {
+                if (!PsiUtil.isElementUsable(myCachedNameEl)) {
+                    calcNameElement();
+                }
+            } finally {
+                nameElLock.unlock();
+            }
+        }
+        return myCachedNameEl;
+    }
+
+    private void calcNameElement() {
         if ((this instanceof PasNamespaceIdent) || (this instanceof PascalQualifiedIdent)) {
-            return this;
+            myCachedNameEl = this;
         }
         PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
         if (null == result) {
@@ -113,7 +145,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         if (null == result) {
             result = findChildByType(NAME_TYPE_SET);
         }
-        return result;
+        myCachedNameEl = result;
     }
 
     @Override

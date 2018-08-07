@@ -119,7 +119,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
                 }
             }
         }
-        fieldsMap.put(KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", "", PasField.FieldType.VARIABLE, "", null, null));
+        fieldsMap.put(KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", "", PasField.FieldType.VARIABLE, "", null, PasField.Access.READONLY, null, null, null));
         return result;
     }
 

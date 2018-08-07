@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.psi;
 
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.tree.TokenSet;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -14,4 +15,6 @@ public interface PascalNamedElement extends PascalPsiElement, PsiNameIdentifierO
     String getName();
     String getNamespace();
     String getNamePart();
+    @NotNull
+    PasField.FieldType getType();
 }
