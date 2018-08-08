@@ -836,6 +836,8 @@ public class PsiUtil {
             type = PasField.FieldType.CONSTANT;
         } else if (ContextUtil.isPropertyDecl(namedElement)) {
             type = PasField.FieldType.PROPERTY;
+        } else if (namedElement instanceof PascalModule) {
+            type = PasField.FieldType.UNIT;
         }
 
         return type;

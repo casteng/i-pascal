@@ -36,8 +36,8 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
 
     private static final Pattern WARNING1 = Pattern.compile("Warning:.+- all imported names will be shown with unit names");
     private static final Pattern WARNING2 = Pattern.compile("Warning at 0x[A-F0-9]+.*");
-    private static final Pattern CONSTANT1 = Pattern.compile("\\s*[A-F0-9]+:\\s*.+(\\||\\[)[A-F0-9 (]+\\|.*");
-    private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+\\]\\s*at \\$[0-9A-F]+");
+    private static final Pattern CONSTANT1 = Pattern.compile("\\s*[A-F0-9]+:\\s*.+([|\\[])[A-F0-9 (]+\\|.*");
+    private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+]\\s*at \\$[0-9A-F]+");
     private static final Pattern VAR = Pattern.compile("\\s*spec var\\s+\\w+\\.\\$\\w+.*");
     private static final Pattern TYPE = Pattern.compile("\\s*\\w+\\.\\w+\\s*=.*");
     private static final Pattern COMMENTED_TYPE = Pattern.compile("\\s*\\{type}\\s*");

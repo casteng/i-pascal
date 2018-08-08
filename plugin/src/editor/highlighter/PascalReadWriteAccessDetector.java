@@ -6,10 +6,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.context.ContextUtil;
-import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
-import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
+import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,16 +19,17 @@ public class PascalReadWriteAccessDetector extends ReadWriteAccessDetector {
 
     @Override
     public boolean isReadWriteAccessible(@NotNull PsiElement element) {
-        return (element.getParent() instanceof PasVarDeclaration) || (element.getParent() instanceof PasConstDeclaration);
+        if (element instanceof PascalIdentDecl) {
+            return ((PascalIdentDecl) element).getAccess() == PasField.Access.READWRITE;
+        } else {
+            return false;
+        }
     }
 
     @Override
     public boolean isDeclarationWriteAccess(@NotNull PsiElement element) {
-        if (element.getParent() instanceof PasConstDeclaration) {
-            return true;
-        } else if (element.getParent() instanceof PasVarDeclaration) {
-            PasVarDeclaration varDecl = (PasVarDeclaration) element.getParent();
-            return varDecl.getVarValueSpec() != null;
+        if (element instanceof PascalIdentDecl) {
+            return ((PascalIdentDecl) element).getValue() != null;
         } else {
             return false;
         }
