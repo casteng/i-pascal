@@ -2,11 +2,14 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.TokenSet;
-import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.lang.psi.PasArgumentList;
+import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasParamType;
+import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
@@ -14,7 +17,7 @@ import com.siberika.idea.pascal.util.PsiUtil;
 
 import java.util.List;
 
-class RoutineUtil {
+public class RoutineUtil {
     static final TokenSet FUNCTION_KEYWORDS = TokenSet.create(PasTypes.FUNCTION, PasTypes.OPERATOR);
 
     static String calcKey(PascalRoutine routine) {
@@ -37,15 +40,47 @@ class RoutineUtil {
         return routine.getFirstChild().getNode().getElementType() == PasTypes.CONSTRUCTOR;
     }
 
-    static List<String> calcFormalParameterNames(PasFormalParameterSection formalParameterSection) {
-        List<String> res = new SmartList<>();
+    static void calcFormalParameterNames(PasFormalParameterSection formalParameterSection, List<String> formalParameterNames, List<PasField.Access> formalParameterAccess) {
         if (formalParameterSection != null) {
             for (PasFormalParameter parameter : formalParameterSection.getFormalParameterList()) {
+                PasField.Access access = calcAccess(parameter.getParamType());
                 for (PascalNamedElement pasNamedIdent : parameter.getNamedIdentDeclList()) {
-                    res.add(pasNamedIdent.getName());
+                    formalParameterNames.add(pasNamedIdent.getName());
+                    formalParameterAccess.add(access);
                 }
             }
         }
-        return res;
+    }
+
+    private static PasField.Access calcAccess(PasParamType paramType) {
+        if (paramType != null) {
+            String text = paramType.getText().toUpperCase();
+            if ("VAR".equals(text)) {
+                return PasField.Access.READWRITE;
+            } else if ("OUT".equals(text)) {
+                return PasField.Access.WRITEONLY;
+            }
+        }
+        return PasField.Access.READONLY;
+    }
+
+    public static PasCallExpr retrieveCallExpr(PascalNamedElement element) {
+        PsiElement parent = element.getParent();
+        if (parent instanceof PasReferenceExpr) {
+            if (parent.getParent() instanceof PasArgumentList) {
+                parent = parent.getParent().getParent();
+                return parent instanceof PasCallExpr ? (PasCallExpr) parent : null;
+            }
+        }
+        return null;
+    }
+
+    public static boolean isSuitable(PasCallExpr expression, PascalRoutine routine) {
+        List<String> params = routine.getFormalParameterNames();
+        // TODO: make type check and handle overload
+        if (params.size() == expression.getArgumentList().getExprList().size()) {
+            return true;
+        }
+        return false;
     }
 }

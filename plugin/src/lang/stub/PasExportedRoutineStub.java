@@ -23,4 +23,7 @@ public interface PasExportedRoutineStub extends PasNamedStub<PascalExportedRouti
     String getFunctionTypeStr();
 
     List<String> getFormalParameterNames();
+
+    // How a passed actual parameter will be accessed
+    List<PasField.Access> getFormalParameterAccess();
 }

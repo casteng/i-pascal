@@ -17,7 +17,6 @@ import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
-import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
@@ -266,9 +265,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             PascalNamedElement el = routine.getElement();
             if (el instanceof PascalRoutine) {
                 suitable = (PascalRoutine) el;
-                PasFormalParameterSection params = suitable.getFormalParameterSection();
-                // TODO: make type check and handle overload
-                if (params != null && params.getFormalParameterList().size() == expression.getArgumentList().getExprList().size()) {
+                if (RoutineUtil.isSuitable(expression, suitable)) {
                     if (suitable.isConstructor()) {
                         // TODO: handle metaclass constructor calls
                         if (expression.getExpr() instanceof PasReferenceExpr) {

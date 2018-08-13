@@ -29,4 +29,7 @@ public interface PascalRoutine extends PasEntityScope {
 
     @NotNull
     List<String> getFormalParameterNames();
+
+    @NotNull
+    List<PasField.Access> getFormalParameterAccess();
 }

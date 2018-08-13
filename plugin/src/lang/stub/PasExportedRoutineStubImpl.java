@@ -17,11 +17,11 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     private boolean function;
     private String functionTypeStr;
     private List<String> parameterNames;
-    private List<PasField.Access> parameterModifiers;
+    private List<PasField.Access> parameterAccess;
 
     public PasExportedRoutineStubImpl(StubElement parent, String name, String canonicalName, PasField.Visibility visibility,
                                       String containingUnitName, boolean constructor, boolean function, String functionTypeStr,
-                                      List<String> parameterNames) {
+                                      List<String> parameterNames, List<PasField.Access> parameterAccess) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE, name, containingUnitName);
         this.canonicalName = canonicalName;
         this.visibility = visibility;
@@ -29,6 +29,7 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
         this.function = function;
         this.functionTypeStr = functionTypeStr;
         this.parameterNames = parameterNames;
+        this.parameterAccess = parameterAccess;
     }
 
     @Override
@@ -64,5 +65,10 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     @Override
     public List<String> getFormalParameterNames() {
         return parameterNames;
+    }
+
+    @Override
+    public List<PasField.Access> getFormalParameterAccess() {
+        return parameterAccess;
     }
 }

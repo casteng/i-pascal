@@ -6,6 +6,7 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -30,6 +31,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     private PasTypeID typeId;
     private ReentrantLock typeIdLock = new ReentrantLock();
     private List<String> formalParameterNames;
+    private List<PasField.Access> formalParameterAccess;
     private ReentrantLock parametersLock = new ReentrantLock();
 
     public PascalExportedRoutineImpl(ASTNode node) {
@@ -157,16 +159,33 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         if (stub != null) {
             return stub.getFormalParameterNames();
         }
+        calcFormalParameters();
+        return formalParameterNames;
+    }
+
+    @NotNull
+    @Override
+    public List<PasField.Access> getFormalParameterAccess() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getFormalParameterAccess();
+        }
+        calcFormalParameters();
+        return formalParameterAccess;
+    }
+
+    private void calcFormalParameters() {
         if (SyncUtil.lockOrCancel(parametersLock)) {
             try {
                 if (null == formalParameterNames) {
-                    formalParameterNames = RoutineUtil.calcFormalParameterNames(getFormalParameterSection());
+                    formalParameterNames = new SmartList<>();
+                    formalParameterAccess = new SmartList<>();
+                    RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParameterNames, formalParameterAccess);
                 }
             } finally {
                 parametersLock.unlock();
             }
         }
-        return formalParameterNames;
     }
 
     @Override

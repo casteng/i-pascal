@@ -10,6 +10,7 @@ import com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStub;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 public class StubUtil {
     public static final String ENUM_NULL = "-";
@@ -64,6 +65,20 @@ public class StubUtil {
         }
     }
 
+    public static void writeEnumCollection(StubOutputStream dataStream, List<? extends Enum> collection) throws IOException {
+        dataStream.writeInt(collection.size());
+        for (Enum entry : collection) {
+            dataStream.writeInt(entry.ordinal());
+        }
+    }
+
+    public static <T extends Enum<T>> void readEnumCollection(StubInputStream dataStream, List<T> result, T[] values) throws IOException {
+        int size = dataStream.readInt();
+        for (int i = 0; i < size; i++) {
+            result.add(values[dataStream.readInt()]);
+        }
+    }
+
     public static PasEntityScope retrieveScope(PascalStubElement el) {
         if (el instanceof PasEntityScope) {
             return (PasEntityScope) el;
@@ -73,4 +88,5 @@ public class StubUtil {
             return stub != null ? (PasEntityScope) stub.getParentStub().getPsi() : null;
         }
     }
+
 }

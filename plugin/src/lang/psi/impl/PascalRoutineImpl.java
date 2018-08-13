@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -38,6 +39,9 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     private ReentrantLock parentLock = new ReentrantLock();
     private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
+    private List<String> formalParameterNames;
+    private List<PasField.Access> formalParameterAccess;
+    private ReentrantLock parametersLock = new ReentrantLock();
 
     private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
 
@@ -174,7 +178,29 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @NotNull
     @Override
     public List<String> getFormalParameterNames() {
-        return RoutineUtil.calcFormalParameterNames(getFormalParameterSection());
+        calcFormalParameters();
+        return formalParameterNames;
+    }
+
+    @NotNull
+    @Override
+    public List<PasField.Access> getFormalParameterAccess() {
+        calcFormalParameters();
+        return formalParameterAccess;
+    }
+
+    private void calcFormalParameters() {
+        if (SyncUtil.lockOrCancel(parametersLock)) {
+            try {
+                if (null == formalParameterNames) {
+                    formalParameterNames = new SmartList<>();
+                    formalParameterAccess = new SmartList<>();
+                    RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParameterNames, formalParameterAccess);
+                }
+            } finally {
+                parametersLock.unlock();
+            }
+        }
     }
 
     public boolean isConstructor() {
