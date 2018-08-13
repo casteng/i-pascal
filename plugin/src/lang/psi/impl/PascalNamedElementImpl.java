@@ -136,6 +136,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     private void calcNameElement() {
         if ((this instanceof PasNamespaceIdent) || (this instanceof PascalQualifiedIdent)) {
             myCachedNameEl = this;
+            return;
         }
         PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
         if (null == result) {
