@@ -5,6 +5,7 @@ import com.intellij.openapi.progress.ProgressManager;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: George Bakhtadze
@@ -34,6 +35,16 @@ public class SyncUtil {
         } catch (InterruptedException e) {
             LOG.warn("Interrupted thread", e);
             return false;
+        }
+    }
+
+    public static void doWithLock(ReentrantLock nameLock, Runnable runnable) {
+        if (SyncUtil.lockOrCancel(nameLock)) {
+            try {
+                runnable.run();
+            } finally {
+                nameLock.unlock();
+            }
         }
     }
 }

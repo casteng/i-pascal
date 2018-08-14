@@ -12,15 +12,23 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,6 +48,8 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     private String myCachedName;
     private ReentrantLock nameLock = new ReentrantLock();
     private String containingUnitName;
+    private Boolean local;
+    private ReentrantLock localityLock = new ReentrantLock();
 
     @Override
     public ItemPresentation getPresentation() {
@@ -54,6 +64,10 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
             myCachedUniqueName = null;
             containingUnitName = null;
             nameLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(localityLock)) {
+            local = null;
+            localityLock.unlock();
         }
     }
 
@@ -100,21 +114,51 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         return PsiUtil.getFieldType(this);
     }
 
+    @Override
+    public boolean isLocal() {
+        B stub = retrieveStub();
+        if (stub != null) {
+            return stub.isLocal();
+        }
+        if (SyncUtil.lockOrCancel(localityLock)) {
+            try {
+                if (null == local) {
+                    if (this instanceof PasExportedRoutine) {
+                        PasEntityScope scope = ((PasEntityScope) this).getContainingScope();
+                        local = (scope != null) && scope.isLocal();
+                    } else if (this instanceof PascalStructType) {
+                        PsiElement parent = getParent().getParent();
+                        local = (parent instanceof PasTypeDeclaration) && PsiUtil.isImplementationScope(parent.getParent().getParent());
+                    } else {
+                        PsiElement parent = getParent();
+                        if (parent instanceof PasGenericTypeIdent) {
+                            parent = parent.getParent();
+                        }
+                        if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration) {
+                            local = PsiUtil.isImplementationScope(parent.getParent().getParent());
+                        } else {
+                            local = false;
+                        }
+                    }
+                }
+            } finally {
+                localityLock.unlock();
+            }
+        }
+        return local;
+    }
+
     // Name qualified with container names
     public String getUniqueName() {
         B stub = retrieveStub();
         if (stub != null) {
             return stub.getUniqueName();
         }
-        if (SyncUtil.lockOrCancel(nameLock)) {
-            try {
-                if ((myCachedUniqueName == null) || (myCachedUniqueName.length() == 0)) {
-                    myCachedUniqueName = calcUniqueName();
-                }
-            } finally {
-                nameLock.unlock();
+        SyncUtil.doWithLock(nameLock, () -> {
+            if (StringUtils.isEmpty(myCachedUniqueName)) {
+                myCachedUniqueName = calcUniqueName();
             }
-        }
+        });
         return myCachedUniqueName;
     }
 
@@ -125,15 +169,12 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getContainingUnitName();
         }
-        if (SyncUtil.lockOrCancel(nameLock)) {
-            try {
-                if (containingUnitName == null) {
-                    containingUnitName = calcContainingUnitName();
+        SyncUtil.doWithLock(nameLock, () -> {
+                    if (StringUtils.isEmpty(containingUnitName)) {
+                        containingUnitName = calcContainingUnitName();
+                    }
                 }
-            } finally {
-                nameLock.unlock();
-            }
-        }
+        );
         return containingUnitName;
     }
 
@@ -145,7 +186,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     @NotNull
     @Override
     public SearchScope getUseScope() {
-        if (PsiUtil.isLocalDeclaration(this)) {
+        if (isLocal()) {
             return new LocalSearchScope(this.getContainingFile());
         }
         return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));

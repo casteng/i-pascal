@@ -118,7 +118,22 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     @Override
+    public void subtreeChanged() {
+        super.subtreeChanged();
+        invalidateCaches();
+    }
+
+    @Override
     public void invalidateCaches() {
+        if (SyncUtil.lockOrCancel(parentLock)) {
+            parentScopes = null;
+            parentLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(parametersLock)) {
+            formalParameterNames = null;
+            formalParameterAccess = null;
+            parametersLock.unlock();
+        }
         invalidate(getKey());
     }
 

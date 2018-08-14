@@ -34,7 +34,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasStubStructTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
-import com.siberika.idea.pascal.lang.psi.impl.PascalNamedStubElement;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import org.apache.commons.lang.StringUtils;
@@ -803,24 +802,6 @@ public class PsiUtil {
         return routine.getClass() == PasRoutineImplDeclImpl.class;
     }
 
-    public static boolean isLocalDeclaration(@NotNull PascalNamedElement element) {
-        if (element instanceof PascalNamedStubElement) {
-            return false;
-        }
-        PsiElement parent = element.getParent();
-        if (parent instanceof PasGenericTypeIdent) {
-            parent = parent.getParent();
-        }
-        if (parent instanceof PasFormalParameter) {
-            return true;
-        } else if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration) {
-            PsiElement scope = parent.getParent().getParent();
-            return (scope instanceof PasImplDeclSection || scope instanceof PasBlockGlobal || scope instanceof PasBlockLocal);
-        } else {
-            return false;
-        }
-    }
-
     public static boolean isFormalParameterOfExportedRoutine(@NotNull PascalNamedElement element) {
         return ((element.getParent() instanceof PasFormalParameter) && (element.getParent().getParent() instanceof PasFormalParameterSection)
                 && (element.getParent().getParent().getParent() instanceof PasExportedRoutine));
@@ -874,5 +855,9 @@ public class PsiUtil {
 
     public static boolean isPropertyIndexIdent(PascalNamedElement element) {
         return (element.getParent() instanceof PasFormalParameter) && (element.getParent().getParent() instanceof PasClassPropertyArray);
+    }
+
+    public static boolean isImplementationScope(PsiElement scope) {
+        return scope instanceof PasImplDeclSection || scope instanceof PasBlockGlobal || scope instanceof PasBlockLocal;
     }
 }

@@ -160,7 +160,7 @@ public class SectionToggle {
 
     @Nullable
     public static PsiElement retrieveDeclaration(PascalRoutine routine, boolean strict) {
-        if (!PsiUtil.isNotNestedRoutine(routine)) {           // Filter out nested routines
+        if (!PsiUtil.isNotNestedRoutine(routine)) {           // Filter out nested routines and closures
             return null;
         }
         return retrieveDeclaration(calcPrefix(new Container(routine), false), strict);

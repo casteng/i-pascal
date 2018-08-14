@@ -195,6 +195,9 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
             formalParameterNames = null;
             parametersLock.unlock();
         }
-        typeId = null;
+        if (SyncUtil.lockOrCancel(typeIdLock)) {
+            typeId = null;
+            typeIdLock.unlock();
+        }
     }
 }

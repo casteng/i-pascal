@@ -22,7 +22,7 @@ public class PasRecordDeclStubElementType extends PasStructDeclStubElementType<P
 
     @Override
     public PasRecordDeclStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasRecordDeclStubImpl(parentStub, "-", ".", Collections.emptyList(), null, INSTANCE);
+        return new PasRecordDeclStubImpl(parentStub, "-", ".", false, Collections.emptyList(), null, INSTANCE);
     }
 
     @Override
@@ -35,13 +35,14 @@ public class PasRecordDeclStubElementType extends PasStructDeclStubElementType<P
     public PasRecordDeclStub createStub(@NotNull PascalRecordDecl psi, StubElement parentStub) {
         List<String> aliases = new SmartList<>();
         String stubName = calcStubName(psi, aliases);
-        PasRecordDeclStubImpl result = new PasRecordDeclStubImpl(parentStub, stubName, psi.getContainingUnitName(), psi.getParentNames(), aliases, INSTANCE);
+        PasRecordDeclStubImpl result = new PasRecordDeclStubImpl(parentStub, stubName, psi.getContainingUnitName(), psi.isLocal(), psi.getParentNames(), aliases, INSTANCE);
         return result;
     }
 
     @Override
-    protected PasRecordDeclStub createStub(StubElement parentStub, String name, String containingUnitName, List<String> parentNames, List<String> aliases) {
-        return new PasRecordDeclStubImpl(parentStub, name, containingUnitName, parentNames, aliases, INSTANCE);
+    protected PasRecordDeclStub createStub(StubElement parentStub, String name, String containingUnitName, boolean local,
+                                           List<String> parentNames, List<String> aliases) {
+        return new PasRecordDeclStubImpl(parentStub, name, containingUnitName, local, parentNames, aliases, INSTANCE);
     }
 
     @NotNull

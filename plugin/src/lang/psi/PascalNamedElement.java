@@ -17,4 +17,6 @@ public interface PascalNamedElement extends PascalPsiElement, PsiNameIdentifierO
     String getNamePart();
     @NotNull
     PasField.FieldType getType();
+    // can be available from other units
+    boolean isLocal();
 }

@@ -14,7 +14,7 @@ var
 
 const <warning descr="Identifier declared but never used">CCC</warning>=1;
 
-procedure a(const <warning descr="Identifier declared but never used">arg1</warning>: Integer);
+procedure <warning descr="Identifier declared but never used">a</warning>(const <warning descr="Identifier declared but never used">arg1</warning>: Integer);
 var <warning descr="Identifier declared but never used">local</warning>: Integer;
 begin
 end;

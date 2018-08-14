@@ -6,8 +6,8 @@ import com.siberika.idea.pascal.lang.psi.PascalObjectDecl;
 import java.util.List;
 
 public class PasObjectDeclStubImpl extends PasStructStubImpl<PascalObjectDecl> implements PasObjectDeclStub {
-    public PasObjectDeclStubImpl(StubElement parent, String name, String containingUnitName,
+    public PasObjectDeclStubImpl(StubElement parent, String name, String containingUnitName, boolean local,
                                  List<String> parentNames, List<String> aliases, PasObjectDeclStubElementType stubElementType) {
-        super(parent, name, containingUnitName, parentNames, aliases, stubElementType);
+        super(parent, name, containingUnitName, local, parentNames, aliases, stubElementType);
     }
 }

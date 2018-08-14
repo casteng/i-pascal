@@ -12,16 +12,21 @@ import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,6 +46,8 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     private ReentrantLock typeLock = new ReentrantLock();
     private volatile PsiElement myCachedNameEl;
     private ReentrantLock nameElLock = new ReentrantLock();
+    private Boolean local;
+    private ReentrantLock localityLock = new ReentrantLock();
 
     public PascalNamedElementImpl(ASTNode node) {
         super(node);
@@ -53,25 +60,33 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
             myCachedName = null;
             nameLock.unlock();
         }
+        if (SyncUtil.lockOrCancel(nameElLock)) {
+            myCachedNameEl = null;
+            nameElLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(typeLock)) {
+            myCachedType = null;
+            typeLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(localityLock)) {
+            local = null;
+            localityLock.unlock();
+        }
     }
 
     @NotNull
     @Override
     public String getName() {
-        if (SyncUtil.lockOrCancel(nameLock)) {
-            try {
-                if ((myCachedName == null) || (myCachedName.length() == 0)) {
-                    myCachedName = calcName(getNameElement());
-                }
-            } finally {
-                nameLock.unlock();
+        SyncUtil.doWithLock(nameLock, () -> {
+            if (StringUtils.isEmpty(myCachedName)) {
+                myCachedName = calcName(getNameElement());
             }
-        }
+        });
         return myCachedName;
     }
 
     public static String calcName(PsiElement nameElement) {
-        if ((nameElement != null) && (nameElement instanceof PascalQualifiedIdent)) {
+        if ((nameElement instanceof PascalQualifiedIdent)) {
             Iterator<PasSubIdent> it = ((PascalQualifiedIdent) nameElement).getSubIdentList().iterator();
             StringBuilder sb = new StringBuilder(it.next().getName());
             while (it.hasNext()) {
@@ -85,7 +100,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
                 String name = nameElement.getText();
                 return !name.startsWith("&") ? name : name.substring(1);
             } else {
-                return  "";
+                return "";
             }
         }
     }
@@ -107,29 +122,54 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public PasField.FieldType getType() {
-        if (SyncUtil.lockOrCancel(typeLock)) {
-            try {
-                if (null == myCachedType) {
-                    myCachedType = PsiUtil.getFieldType(this);
-                }
-            } finally {
-                typeLock.unlock();
+        SyncUtil.doWithLock(typeLock, () -> {
+            if (null == myCachedType) {
+                myCachedType = PsiUtil.getFieldType(this);
             }
-        }
+        });
         return myCachedType;
     }
 
-    @Nullable
-    protected PsiElement getNameElement() {
-        if (SyncUtil.lockOrCancel(nameElLock)) {
+    @Override
+    public boolean isLocal() {
+        if (SyncUtil.lockOrCancel(localityLock)) {
             try {
-                if (!PsiUtil.isElementUsable(myCachedNameEl)) {
-                    calcNameElement();
+                if (null == local) {
+                    local = false;
+                    if (this instanceof PascalRoutineImpl) {
+                        if (this instanceof PasRoutineImplDecl) {
+                            PsiElement decl = SectionToggle.retrieveDeclaration((PascalRoutine) this, true);
+                            if (decl instanceof PascalRoutine) {
+                                local = ((PascalRoutine) decl).isLocal();
+                            } else {
+                                local = true;
+                            }
+                        } else {
+                            local = true;
+                        }
+                    } else {
+                        PsiElement parent = getParent();
+                        if (parent instanceof PasFormalParameter) {
+                            return true;
+                        } else if (parent instanceof PascalNamedElement) {
+                            local = ((PascalNamedElement) parent).isLocal();
+                        }
+                    }
                 }
             } finally {
-                nameElLock.unlock();
+                localityLock.unlock();
             }
         }
+        return local;
+    }
+
+    @Nullable
+    private PsiElement getNameElement() {
+        SyncUtil.doWithLock(nameElLock, () -> {
+            if (!PsiUtil.isElementUsable(myCachedNameEl)) {
+                calcNameElement();
+            }
+        });
         return myCachedNameEl;
     }
 
@@ -170,10 +210,11 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public SearchScope getUseScope() {
-        if (PsiUtil.isLocalDeclaration(this)) {
+        if (isLocal()) {
             return new LocalSearchScope(this.getContainingFile());
+        } else {
+            return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));
         }
-        return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));
     }
 
     @Override
@@ -191,7 +232,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     }
 
     private static String getShortText(PsiElement parent) {
-        if (null == parent) { return ""; }
+        if (null == parent) {
+            return "";
+        }
         int lfPos = parent.getText().indexOf("\n");
         if (lfPos > 0) {
             return parent.getText().substring(0, lfPos);

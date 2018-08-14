@@ -33,13 +33,14 @@ public abstract class PasStructDeclStubElementType<StubT extends PasStructStub, 
         super(debugName, PascalLanguage.INSTANCE);
     }
 
-    protected abstract StubT createStub(StubElement parentStub, String name, String containingUnitName, List<String> parentNames, List<String> aliases);
+    protected abstract StubT createStub(StubElement parentStub, String name, String containingUnitName, boolean local, List<String> parentNames, List<String> aliases);
 
     @Override
     public void serialize(@NotNull StubT stub, @NotNull StubOutputStream dataStream) throws IOException {
         StubUtil.printStub("PasStructDeclStub.serialize", stub);
         dataStream.writeName(stub.getName());
         dataStream.writeName(stub.getContainingUnitName());
+        dataStream.writeBoolean(stub.isLocal());
         StubUtil.writeStringCollection(dataStream, stub.getParentNames());
         StubUtil.writeStringCollection(dataStream, stub.getAliases());
     }
@@ -49,11 +50,12 @@ public abstract class PasStructDeclStubElementType<StubT extends PasStructStub, 
     public StubT deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
         String name = StubUtil.readName(dataStream);
         String containingUnitName = StubUtil.readName(dataStream);
+        boolean local = dataStream.readBoolean();
         List<String> parentNames = new SmartList<>();
         StubUtil.readStringCollection(dataStream, parentNames);
         List<String> aliases = new SmartList<>();
         StubUtil.readStringCollection(dataStream, aliases);
-        return createStub(parentStub, name, containingUnitName, parentNames, aliases);
+        return createStub(parentStub, name, containingUnitName, local, parentNames, aliases);
     }
 
     @Override

@@ -32,7 +32,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @Override
     public PasIdentStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
         return new PasIdentStubImpl(parentStub, "-", ".", PasField.FieldType.VARIABLE, null, null,
-                PasField.Access.READWRITE, null, Collections.emptyList(), Collections.emptySet());
+                PasField.Access.READWRITE, null, false, Collections.emptyList(), Collections.emptySet());
     }
 
     @Override
@@ -44,7 +44,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @Override
     public PasIdentStub createStub(@NotNull PascalIdentDecl psi, StubElement parentStub) {
         return new PasIdentStubImpl(parentStub, psi.getName(), psi.getContainingUnitName(), psi.getType(), psi.getTypeString(), psi.getTypeKind(),
-                psi.getAccess(), psi.getValue(), psi.getSubMembers(), psi.getTypeParameters());
+                psi.getAccess(), psi.getValue(), psi.isLocal(), psi.getSubMembers(), psi.getTypeParameters());
     }
 
     @NotNull
@@ -63,6 +63,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         dataStream.writeName(stub.getTypeString());
         dataStream.writeName(stub.getTypeKind() != null ? stub.getTypeKind().name() : StubUtil.ENUM_NULL);
         dataStream.writeName(stub.getAccess().name());
+        dataStream.writeBoolean(stub.isLocal());
         dataStream.writeName(stub.getValue());
         StubUtil.writeStringCollection(dataStream, stub.getSubMembers());
         StubUtil.writeStringCollection(dataStream, stub.getTypeParameters());
@@ -77,12 +78,13 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         String typeString = StubUtil.readName(dataStream);
         PasField.Kind kind = StubUtil.readEnum(dataStream, PasField.Kind.class);
         PasField.Access access = StubUtil.readEnum(dataStream, PasField.Access.class);
+        boolean local = dataStream.readBoolean();
         String value = StubUtil.readName(dataStream);
         List<String> subMembers = new SmartList<>();
         StubUtil.readStringCollection(dataStream, subMembers);
         Set<String> typeParameters = new SmartHashSet<>();
         StubUtil.readStringCollection(dataStream, typeParameters);
-        return new PasIdentStubImpl(parentStub, name, containingUnitName, type, typeString, kind, access, value, subMembers, typeParameters);
+        return new PasIdentStubImpl(parentStub, name, containingUnitName, type, typeString, kind, access, value, local, subMembers, typeParameters);
     }
 
     @Override
