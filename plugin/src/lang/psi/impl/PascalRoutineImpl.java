@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +41,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     private ReentrantLock parentLock = new ReentrantLock();
     private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
     private List<String> formalParameterNames;
-    private List<PasField.Access> formalParameterAccess;
+    private List<String> formalParameterTypes;
+    private List<ParamModifier> formalParameterAccess;
     private ReentrantLock parametersLock = new ReentrantLock();
 
     private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
@@ -96,8 +98,14 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     @Override
+    protected String calcUniqueName() {
+        PasEntityScope scope = getContainingScope();
+        return (scope != null ? scope.getUniqueName() + "." : "") + getCanonicalName();
+    }
+
+    @Override
     public String getCanonicalName() {
-        return PsiUtil.normalizeRoutineName(this);
+        return RoutineUtil.calcCanonicalName(getName(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
     }
 
     @Override
@@ -131,6 +139,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         }
         if (SyncUtil.lockOrCancel(parametersLock)) {
             formalParameterNames = null;
+            formalParameterTypes = null;
             formalParameterAccess = null;
             parametersLock.unlock();
         }
@@ -199,23 +208,27 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     @NotNull
     @Override
-    public List<PasField.Access> getFormalParameterAccess() {
+    public List<String> getFormalParameterTypes() {
+        calcFormalParameters();
+        return formalParameterTypes;
+    }
+
+    @NotNull
+    @Override
+    public List<ParamModifier> getFormalParameterAccess() {
         calcFormalParameters();
         return formalParameterAccess;
     }
 
     private void calcFormalParameters() {
-        if (SyncUtil.lockOrCancel(parametersLock)) {
-            try {
-                if (null == formalParameterNames) {
-                    formalParameterNames = new SmartList<>();
-                    formalParameterAccess = new SmartList<>();
-                    RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParameterNames, formalParameterAccess);
-                }
-            } finally {
-                parametersLock.unlock();
+        SyncUtil.doWithLock(parametersLock, () -> {
+            if (null == formalParameterNames) {
+                formalParameterNames = new SmartList<>();
+                formalParameterAccess = new SmartList<>();
+                formalParameterTypes = new SmartList<>();
+                RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParameterNames, formalParameterTypes, formalParameterAccess);
             }
-        }
+        });
     }
 
     public boolean isConstructor() {
@@ -254,7 +267,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         PasEntityScope scope = getContainingScope();
         if ((scope != null) && (scope.getParent() instanceof PasTypeDecl)) {
             PasField field = new PasField(this, scope, BUILTIN_SELF, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE);
-            PasTypeDecl typeDecl =  (PasTypeDecl) scope.getParent();
+            PasTypeDecl typeDecl = (PasTypeDecl) scope.getParent();
             field.setValueType(new PasField.ValueType(field, PasField.Kind.STRUCT, null, typeDecl));
             res.all.put(BUILTIN_SELF.toUpperCase(), field);
         }

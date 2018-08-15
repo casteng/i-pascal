@@ -2,7 +2,9 @@ package com.siberika.idea.pascal.lang.stub;
 
 import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
 
 import java.util.List;
 
@@ -11,27 +13,28 @@ import java.util.List;
  * Date: 13/10/2015
  */
 public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedRoutine> implements PasExportedRoutineStub {
-    private String canonicalName;
     private PasField.Visibility visibility;
     private boolean constructor;
     private boolean function;
     private boolean local;
     private String functionTypeStr;
     private List<String> parameterNames;
-    private List<PasField.Access> parameterAccess;
+    private List<String> parameterTypes;
+    private List<ParamModifier> parameterAccess;
 
-    public PasExportedRoutineStubImpl(StubElement parent, String name, String canonicalName, PasField.Visibility visibility,
+    public PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility,
                                       String containingUnitName, boolean constructor, boolean function, boolean local, String functionTypeStr,
-                                      List<String> parameterNames, List<PasField.Access> parameterAccess) {
+                                      List<String> parameterNames, List<String> parameterTypes, List<ParamModifier> parameterAccess) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE, name, containingUnitName);
-        this.canonicalName = canonicalName;
         this.visibility = visibility;
         this.constructor = constructor;
         this.function = function;
         this.local = local;
         this.functionTypeStr = functionTypeStr;
         this.parameterNames = parameterNames;
+        this.parameterTypes = parameterTypes;
         this.parameterAccess = parameterAccess;
+        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + RoutineUtil.calcCanonicalName(name, parameterTypes, parameterAccess, functionTypeStr);
     }
 
     @Override
@@ -42,11 +45,6 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     @Override
     public boolean isLocal() {
         return local;
-    }
-
-    @Override
-    public String getCanonicalName() {
-        return canonicalName;
     }
 
     @Override
@@ -75,7 +73,12 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     }
 
     @Override
-    public List<PasField.Access> getFormalParameterAccess() {
+    public List<String> getFormalParameterTypes() {
+        return parameterTypes;
+    }
+
+    @Override
+    public List<ParamModifier> getFormalParameterAccess() {
         return parameterAccess;
     }
 }

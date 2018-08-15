@@ -12,6 +12,7 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -31,7 +32,8 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     private PasTypeID typeId;
     private ReentrantLock typeIdLock = new ReentrantLock();
     private List<String> formalParameterNames;
-    private List<PasField.Access> formalParameterAccess;
+    private List<String> formalParameterTypes;
+    private List<ParamModifier> formalParameterAccess;
     private ReentrantLock parametersLock = new ReentrantLock();
 
     public PascalExportedRoutineImpl(ASTNode node) {
@@ -66,12 +68,14 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     }
 
     @Override
+    protected String calcUniqueName() {
+        PasEntityScope scope = getContainingScope();
+        return (scope != null ? scope.getUniqueName() + "." : "") + getCanonicalName();
+    }
+
+    @Override
     public String getCanonicalName() {
-        PasExportedRoutineStub stub = retrieveStub();
-        if (stub != null) {
-            return stub.getCanonicalName();
-        }
-        return PsiUtil.normalizeRoutineName(this);
+        return RoutineUtil.calcCanonicalName(getName(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
     }
 
     @Override
@@ -165,7 +169,18 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @NotNull
     @Override
-    public List<PasField.Access> getFormalParameterAccess() {
+    public List<String> getFormalParameterTypes() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getFormalParameterTypes();
+        }
+        calcFormalParameters();
+        return formalParameterTypes;
+    }
+
+    @NotNull
+    @Override
+    public List<ParamModifier> getFormalParameterAccess() {
         PasExportedRoutineStub stub = retrieveStub();
         if (stub != null) {
             return stub.getFormalParameterAccess();
@@ -175,17 +190,14 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     }
 
     private void calcFormalParameters() {
-        if (SyncUtil.lockOrCancel(parametersLock)) {
-            try {
-                if (null == formalParameterNames) {
-                    formalParameterNames = new SmartList<>();
-                    formalParameterAccess = new SmartList<>();
-                    RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParameterNames, formalParameterAccess);
-                }
-            } finally {
-                parametersLock.unlock();
+        SyncUtil.doWithLock(parametersLock, () -> {
+            if (null == formalParameterNames) {
+                formalParameterNames = new SmartList<>();
+                formalParameterTypes = new SmartList<>();
+                formalParameterAccess = new SmartList<>();
+                RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParameterNames, formalParameterTypes, formalParameterAccess);
             }
-        }
+        });
     }
 
     @Override
@@ -193,6 +205,8 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         super.invalidateCaches();
         if (SyncUtil.lockOrCancel(parametersLock)) {
             formalParameterNames = null;
+            formalParameterTypes = null;
+            formalParameterAccess = null;
             parametersLock.unlock();
         }
         if (SyncUtil.lockOrCancel(typeIdLock)) {

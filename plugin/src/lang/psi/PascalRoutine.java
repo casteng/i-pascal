@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.psi;
 
+import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,5 +32,8 @@ public interface PascalRoutine extends PasEntityScope {
     List<String> getFormalParameterNames();
 
     @NotNull
-    List<PasField.Access> getFormalParameterAccess();
+    List<String> getFormalParameterTypes();
+
+    @NotNull
+    List<ParamModifier> getFormalParameterAccess();
 }

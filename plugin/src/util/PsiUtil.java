@@ -560,10 +560,8 @@ public class PsiUtil {
             boolean nonFirst = false;
             for (PasFormalParameter param : params.getFormalParameterList()) {
                 PasTypeDecl td = param.getTypeDecl();
-                String typeStr = TYPE_UNTYPED_NAME;
-                if (td != null) {
-                    typeStr = td.getText();
-                }
+                String typeStr = td != null ? td.getText() : null;
+                typeStr = StringUtils.isNotBlank(typeStr) ? typeStr : TYPE_UNTYPED_NAME;
                 for (int i = 0; i < param.getNamedIdentDeclList().size(); i++) {
                     res.append(nonFirst ? "," : "").append(typeStr);
                     nonFirst = true;

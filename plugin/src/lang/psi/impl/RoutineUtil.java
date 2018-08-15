@@ -10,10 +10,13 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasParamType;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -40,28 +43,35 @@ public class RoutineUtil {
         return routine.getFirstChild().getNode().getElementType() == PasTypes.CONSTRUCTOR;
     }
 
-    static void calcFormalParameterNames(PasFormalParameterSection formalParameterSection, List<String> formalParameterNames, List<PasField.Access> formalParameterAccess) {
+    static void calcFormalParameterNames(PasFormalParameterSection formalParameterSection, List<String> formalParameterNames, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess) {
         if (formalParameterSection != null) {
             for (PasFormalParameter parameter : formalParameterSection.getFormalParameterList()) {
-                PasField.Access access = calcAccess(parameter.getParamType());
+                PasTypeDecl td = parameter.getTypeDecl();
+                String typeStr = td != null ? td.getText() : null;
+                ParamModifier modifier = calcModifier(parameter.getParamType());
                 for (PascalNamedElement pasNamedIdent : parameter.getNamedIdentDeclList()) {
                     formalParameterNames.add(pasNamedIdent.getName());
-                    formalParameterAccess.add(access);
+                    formalParameterTypes.add(typeStr != null ? typeStr : "");
+                    formalParameterAccess.add(modifier);
                 }
             }
         }
     }
 
-    private static PasField.Access calcAccess(PasParamType paramType) {
+    private static ParamModifier calcModifier(PasParamType paramType) {
         if (paramType != null) {
             String text = paramType.getText().toUpperCase();
-            if ("VAR".equals(text)) {
-                return PasField.Access.READWRITE;
+            if ("CONST".equals(text)) {
+                return ParamModifier.CONST;
+            } else if ("VAR".equals(text)) {
+                return ParamModifier.VAR;
             } else if ("OUT".equals(text)) {
-                return PasField.Access.WRITEONLY;
+                return ParamModifier.OUT;
+            } else if ("CONSTREF".equals(text)) {
+                return ParamModifier.CONSTREF;
             }
         }
-        return PasField.Access.READONLY;
+        return ParamModifier.NONE;
     }
 
     public static PasCallExpr retrieveCallExpr(PascalNamedElement element) {
@@ -83,4 +93,23 @@ public class RoutineUtil {
         }
         return false;
     }
+
+    public static String calcCanonicalName(String name, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess, String typeStr) {
+        StringBuilder res = new StringBuilder(name);
+        res.append("(");
+        for (int i = 0; i < formalParameterTypes.size(); i++) {
+            res.append(i > 0 ? "," : "");
+            String typeName = formalParameterTypes.get(i);
+            typeName = StringUtils.isNotBlank(typeName) ? typeName : PsiUtil.TYPE_UNTYPED_NAME;
+            ParamModifier modifier = formalParameterAccess.get(i);
+            res.append(modifier == ParamModifier.NONE ? "" : modifier.name().toLowerCase());
+            res.append(typeName);
+        }
+        res.append(")");
+        if (StringUtils.isNotEmpty(typeStr)) {
+            res.append(":").append(typeStr);
+        }
+        return res.toString();
+    }
+
 }

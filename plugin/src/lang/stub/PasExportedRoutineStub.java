@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.lang.stub;
 
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 
 import java.util.List;
@@ -12,8 +13,6 @@ import java.util.List;
 public interface PasExportedRoutineStub extends PasNamedStub<PascalExportedRoutine> {
     String getName();
 
-    String getCanonicalName();
-
     PasField.Visibility getVisibility();
 
     boolean isConstructor();
@@ -24,6 +23,8 @@ public interface PasExportedRoutineStub extends PasNamedStub<PascalExportedRouti
 
     List<String> getFormalParameterNames();
 
+    List<String> getFormalParameterTypes();
+
     // How a passed actual parameter will be accessed
-    List<PasField.Access> getFormalParameterAccess();
+    List<ParamModifier> getFormalParameterAccess();
 }

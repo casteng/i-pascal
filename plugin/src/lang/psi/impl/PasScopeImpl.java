@@ -64,9 +64,9 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         return myCachedUniqueName;
     }
 
-    private String calcUniqueName() {
+    protected String calcUniqueName() {
         PasEntityScope scope = getContainingScope();
-        return (scope != null ? scope.getUniqueName() + "." : "") + PsiUtil.getFieldName(this);
+        return (scope != null ? scope.getUniqueName() + "." : "") + getName();
     }
 
     public final String getKey() {
