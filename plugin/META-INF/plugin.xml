@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.90</version>
+    <version>1.90.1</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,13 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.90.1</p>
+        <ul>
+            <li>Show identifier's one-line documentation on mouse hover</li>
+            <li>Retrieve from comments and show documentation for elements</li>
+            <li>Unused local identifier inspection now checks for unused local routines</li>
+            <li>Respect var and out parameters when calculating read/write access to identifier under cursor</li>
+        </ul>
         <p>1.90</p>
         <ul>
             <li>Unused local identifier inspection</li>
@@ -365,6 +372,8 @@
         <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.GotoSuper"/>
         <definitionsScopedSearch implementation="com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch"/>
         <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
+
+        <lang.documentationProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalDocumentationProvider"/>
 
         <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
         <moduleType id="PASCAL_MODULE" implementationClass="com.siberika.idea.pascal.module.PascalModuleType"/>
