@@ -43,6 +43,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     private List<String> formalParameterNames;
     private List<String> formalParameterTypes;
     private List<ParamModifier> formalParameterAccess;
+    private String canonicalName;
     private ReentrantLock parametersLock = new ReentrantLock();
 
     private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
@@ -105,7 +106,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     @Override
     public String getCanonicalName() {
-        return RoutineUtil.calcCanonicalName(getName(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
+        SyncUtil.doWithLock(parametersLock, () -> {
+            if (null == canonicalName) {
+                canonicalName = RoutineUtil.calcCanonicalName(getName(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
+            }
+        });
+        return canonicalName;
     }
 
     @Override
@@ -141,6 +147,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             formalParameterNames = null;
             formalParameterTypes = null;
             formalParameterAccess = null;
+            canonicalName = null;
             parametersLock.unlock();
         }
         invalidate(getKey());

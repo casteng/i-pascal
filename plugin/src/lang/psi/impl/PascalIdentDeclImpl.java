@@ -1,16 +1,20 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
+import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasVarValueSpec;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
@@ -31,13 +35,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIdentStub> implements PascalIdentDecl {
 
+    protected static final Logger LOG = Logger.getInstance(PascalIdentDeclImpl.class.getName());
+
     private Pair<String, PasField.Kind> myCachedType;
     private List<String> subMembers;                            // members which can be qualified by this ident as well as accessed directly (enums)
     private ReentrantLock typeLock = new ReentrantLock();
-    //TODO: cache
-    /*private PasField.Access access;
-    private String value;
-    private Set<String> typeParameters;*/
+    private Set<String> typeParameters;
     private ReentrantLock subMembersLock = new ReentrantLock();
 
     public PascalIdentDeclImpl(ASTNode node) {
@@ -90,11 +93,12 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         if (stub != null) {
             return stub.getAccess();
         }
-        if (getType() == PasField.FieldType.VARIABLE) {
+        PasField.FieldType type = getType();
+        if (type == PasField.FieldType.VARIABLE) {
             return PasField.Access.READWRITE;
-        } else if (getType() == PasField.FieldType.CONSTANT) {
+        } else if (type == PasField.FieldType.CONSTANT) {
             return StringUtils.isBlank(getTypeString()) ? PasField.Access.READONLY : PasField.Access.READWRITE;
-        } else if (getType() == PasField.FieldType.PROPERTY) {
+        } else if (type == PasField.FieldType.PROPERTY) {
             return getPropertyAccess();
         }
         return PasField.Access.READONLY;
@@ -189,7 +193,32 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     }
 
     private PasField.Access getPropertyAccess() {
-        return PasField.Access.READWRITE; //TODO
+        PasField.Access res = PasField.Access.READWRITE;
+        PsiElement parent = getParent();
+        if (parent instanceof PasClassProperty) {
+            boolean read = false;
+            boolean write = false;
+            for (PasClassPropertySpecifier specifier : ((PasClassProperty) parent).getClassPropertySpecifierList()) {
+                ASTNode node = specifier.getNode().getFirstChildNode();
+                if (node.getElementType() == PasTypes.READ) {
+                    read = true;
+                } else if (node.getElementType() == PasTypes.WRITE) {
+                    write = true;
+                }
+            }
+            if (read) {
+                res = write ? PasField.Access.READWRITE : PasField.Access.READONLY;
+            } else {
+                if (write) {
+                    res = PasField.Access.WRITEONLY;
+                } else {
+                    // TODO: refer to parent
+                }
+            }
+        } else {
+            LOG.info(String.format("ERROR: parent is not PasClassProperty but %s", parent != null ? parent.getClass().getSimpleName() : "<null>"));
+        }
+        return res;
     }
 
 }

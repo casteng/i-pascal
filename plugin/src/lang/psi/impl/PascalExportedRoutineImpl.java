@@ -34,6 +34,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     private List<String> formalParameterNames;
     private List<String> formalParameterTypes;
     private List<ParamModifier> formalParameterAccess;
+    private String canonicalName;
     private ReentrantLock parametersLock = new ReentrantLock();
 
     public PascalExportedRoutineImpl(ASTNode node) {
@@ -75,7 +76,12 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @Override
     public String getCanonicalName() {
-        return RoutineUtil.calcCanonicalName(getName(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
+        SyncUtil.doWithLock(parametersLock, () -> {
+            if (null == canonicalName) {
+                canonicalName = RoutineUtil.calcCanonicalName(getName(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
+            }
+        });
+        return canonicalName;
     }
 
     @Override
@@ -207,6 +213,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
             formalParameterNames = null;
             formalParameterTypes = null;
             formalParameterAccess = null;
+            canonicalName = null;
             parametersLock.unlock();
         }
         if (SyncUtil.lockOrCancel(typeIdLock)) {
