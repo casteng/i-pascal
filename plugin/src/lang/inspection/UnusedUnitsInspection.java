@@ -30,7 +30,7 @@ public class UnusedUnitsInspection extends LocalInspectionTool {
                 result.add(res);
             }
         }
-        return result.toArray(new ProblemDescriptor[result.size()]);
+        return result.toArray(new ProblemDescriptor[0]);
     }
 
     private ProblemDescriptor annotateUnit(InspectionManager holder, PascalQualifiedIdent usedUnitName, boolean isOnTheFly) {

@@ -34,6 +34,7 @@ public class PascalSdkData implements SdkAdditionalData {
     public enum Keys {
         COMPILER_COMMAND("compilerCommand"),
         COMPILER_FAMILY("compilerFamily"),
+        COMPILER_NAMESPACES("compilerNamespaces"),
         COMPILER_OPTIONS("compilerOptions"),
         DECOMPILER_CACHE("decompilerCache"),
         DECOMPILER_COMMAND("decompilerCommand"),

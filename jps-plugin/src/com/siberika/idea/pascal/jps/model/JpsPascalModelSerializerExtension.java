@@ -64,6 +64,8 @@ public class JpsPascalModelSerializerExtension extends JpsModelSerializerExtensi
             return JpsElementFactory.getInstance().createSimpleElement(new ParamMap()
                     .addPair(PascalSdkData.Keys.COMPILER_COMMAND.getKey(),
                             propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.Keys.COMPILER_COMMAND.getKey()) : "")
+                    .addPair(PascalSdkData.Keys.COMPILER_NAMESPACES.getKey(),
+                            propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.Keys.COMPILER_NAMESPACES.getKey()) : "")
                     .addPair(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(),
                             propertiesElement != null ? propertiesElement.getAttributeValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey()) : "")
                     .addPair(PascalSdkData.Keys.COMPILER_FAMILY.getKey(),

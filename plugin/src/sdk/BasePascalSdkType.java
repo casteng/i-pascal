@@ -107,7 +107,7 @@ public abstract class BasePascalSdkType extends SdkType {
         }
         String[] compilerOptions = options.split("\\s+");
         for (String opt : compilerOptions) {
-            if (opt.startsWith("-d")) {
+            if (opt.startsWith("-d") || opt.startsWith("-D")) {
                 defines.put(opt.substring(2).toUpperCase(), new Define(opt.substring(2), null, 0));
             }
         }

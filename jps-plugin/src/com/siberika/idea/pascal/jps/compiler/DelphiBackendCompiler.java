@@ -30,6 +30,7 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
     private static final String COMPILER_SETTING_INCPATH = "-I";
     private static final String COMPILER_SETTING_BUILDALL = "-B";
     private static final String COMPILER_SETTING_BUILDMODIFIED = "-M";
+    private static final String COMPILER_SETTING_NAMESPACE = "-NS";
     private static final String NAME = "Delphi";
 
     public DelphiBackendCompiler(CompilerMessager compilerMessager) {
@@ -63,6 +64,10 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
         if (pascalSdkData != null) {
             String[] compilerOptions = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS.getKey()).split("\\s+");
             Collections.addAll(commandLine, compilerOptions);
+            String namespaces = pascalSdkData.get(PascalSdkData.Keys.COMPILER_NAMESPACES.getKey());
+            if (StringUtil.isNotEmpty(namespaces)) {
+                commandLine.add(COMPILER_SETTING_NAMESPACE + namespaces);
+            }
         }
         commandLine.add(COMPILER_SETTING_COMMON);
 

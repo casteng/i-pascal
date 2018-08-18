@@ -29,6 +29,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.FileContentUtil;
 import com.intellij.util.indexing.FileBasedIndex;
+import com.intellij.util.ui.JBUI;
 import com.siberika.idea.pascal.DCUFileType;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalBundle;
@@ -54,6 +55,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private TextFieldWithBrowseButton compilerCommandEdit;
 
     private Sdk sdk;
+    private JTextField namespacesEdit;
     private JTextField compilerOptionsEdit;
     private TextFieldWithBrowseButton decompilerCommandEdit;
     private TextFieldWithBrowseButton gdbCommandEdit;
@@ -66,6 +68,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private JCheckBox gdbUseGdbInit;
     private final Map<String, JComponent> keyComponentMap = new HashMap<String, JComponent>();
 
+    @Override
     public JComponent createComponent() {
         TabbedPaneWrapper myTabbedPane = new TabbedPaneWrapper(myDisposable);
         myTabbedPane.addTab(PascalBundle.message("ui.sdkSettings.tab.general"), createGeneralOptionsPanel());
@@ -76,6 +79,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
 
         keyComponentMap.clear();
         keyComponentMap.put(PascalSdkData.Keys.COMPILER_COMMAND.getKey(), compilerCommandEdit);
+        keyComponentMap.put(PascalSdkData.Keys.COMPILER_NAMESPACES.getKey(), namespacesEdit);
         keyComponentMap.put(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(), compilerOptionsEdit);
         keyComponentMap.put(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey(), decompilerCommandEdit);
 
@@ -94,20 +98,27 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private JPanel createGeneralOptionsPanel() {
         JPanel panel = new JPanel();
         panel.setBorder(new LineBorder(JBColor.border()));
-        panel.setLayout(new GridLayoutManager(4, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel.setLayout(new GridLayoutManager(5, 2, JBUI.emptyInsets(), -1, -1));
 
-        addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.command"), 0);
-        compilerCommandEdit = addFileFieldWithBrowse(panel, 0);
+        int row = 0;
+        addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.command"), row);
+        compilerCommandEdit = addFileFieldWithBrowse(panel, row++);
 
-        addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.options"), 1);
+        addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.namespaces"), row);
+        namespacesEdit = new JTextField();
+        panel.add(namespacesEdit, new GridConstraints(row++, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                null, null, null, 0, false));
+
+        addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.options"), row);
         compilerOptionsEdit = new JTextField();
-        panel.add(compilerOptionsEdit, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        panel.add(compilerOptionsEdit, new GridConstraints(row++, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 
-        addLabel(panel, PascalBundle.message("ui.sdkSettings.decompiler.command"), 2);
-        decompilerCommandEdit = addFileFieldWithBrowse(panel, 2);
+        addLabel(panel, PascalBundle.message("ui.sdkSettings.decompiler.command"), row);
+        decompilerCommandEdit = addFileFieldWithBrowse(panel, row++);
 
         JLabel statusLabel = new JLabel();
-        panel.add(statusLabel, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL,
+        panel.add(statusLabel, new GridConstraints(row, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL,
                 GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 1, false));
         if (BasePascalSdkType.getAdditionalData(sdk).getBoolean(PascalSdkData.Keys.DELPHI_IS_STARTER)) {
             statusLabel.setText(PascalBundle.message("ui.sdkSettings.delphi.starter.warning"));
@@ -118,7 +129,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private JPanel createDebuggerOptionsPanel() {
         JPanel panel = new JPanel();
         panel.setBorder(new LineBorder(JBColor.border()));
-        panel.setLayout(new GridLayoutManager(9, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel.setLayout(new GridLayoutManager(9, 2, JBUI.emptyInsets(), -1, -1));
 
         int row = 0;
         addLabel(panel, PascalBundle.message("ui.sdkSettings.debug.backend"), row);
