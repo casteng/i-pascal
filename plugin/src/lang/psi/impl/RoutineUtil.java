@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.psi.impl;
 
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
@@ -16,7 +17,6 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.util.PsiUtil;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -100,13 +100,13 @@ public class RoutineUtil {
         for (int i = 0; i < formalParameterTypes.size(); i++) {
             res.append(i > 0 ? "," : "");
             String typeName = formalParameterTypes.get(i);
-            typeName = StringUtils.isNotBlank(typeName) ? typeName : PsiUtil.TYPE_UNTYPED_NAME;
+            typeName = StringUtil.isNotEmpty(typeName) ? typeName : PsiUtil.TYPE_UNTYPED_NAME;
             ParamModifier modifier = formalParameterAccess.get(i);
             res.append(modifier == ParamModifier.NONE ? "" : modifier.name().toLowerCase());
             res.append(typeName);
         }
         res.append(")");
-        if (StringUtils.isNotEmpty(typeStr)) {
+        if (StringUtil.isNotEmpty(typeStr)) {
             res.append(":").append(typeStr);
         }
         return res.toString();

@@ -49,6 +49,7 @@ import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.lang.stub.PascalModuleIndex;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
@@ -76,6 +77,12 @@ public class ResolveUtil {
         final GlobalSearchScope scope = module != null ? GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false) : ProjectScope.getAllScope(project);
         if (key != null) {
             modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key.toUpperCase(), project, scope, PascalModule.class));
+            if (key.indexOf('.') < 0) {
+                String dotKey = "." + key.toUpperCase();
+                for (String namespace : ModuleUtil.retrieveUnitNamespaces(module, project)) {
+                    modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, namespace.toUpperCase() + dotKey, project, scope, PascalModule.class));
+                }
+            }
         } else {
             Processor<String> processor = new Processor<String>() {
                 @Override
@@ -207,7 +214,7 @@ public class ResolveUtil {
             return null;
         }
         String type = element.getFunctionTypeStr();
-        return resolveTypeForStub(type, element, new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null), recursionCount);
+        return resolveTypeForStub(type, element, new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null, context.unitNamespaces), recursionCount);
     }
 
     private static PasField.ValueType resolveIdentDeclType(@NotNull PascalIdentDecl element, ResolveContext context, int recursionCount) {
@@ -216,7 +223,7 @@ public class ResolveUtil {
         if (!(scope instanceof PasEntityScope)) {
             return null;
         }
-        ResolveContext typeResolveContext = new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null);
+        ResolveContext typeResolveContext = new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null, context.unitNamespaces);
         String type = element.getTypeString();
         if ((type != null) && KINDS_FOLLOW_TYPE.contains(element.getTypeKind())) {
             if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
@@ -260,6 +267,7 @@ public class ResolveUtil {
      */
     public static Collection<PasField> resolveWithStubs(final NamespaceRec fqn, ResolveContext context, final int recursionCount) {
         assert(context.scope instanceof PascalStubElement);
+        assert(context.unitNamespaces != null);
         StubElement stub = ((PascalStubElement) context.scope).retrieveStub();
         assert(stub != null);
         PasEntityScope scope = context.scope;
@@ -298,7 +306,7 @@ public class ResolveUtil {
 
                 PasEntityScope unitNamespace = null;
                 if (((null == field) && fqn.isFirst()) || ((field != null ? field.fieldType : null) == PasField.FieldType.UNIT)) {
-                    unitNamespace = PasReferenceUtil.handleUnitScope(result, namespaces, fqn, fieldTypes);
+                    unitNamespace = PasReferenceUtil.handleUnitScope(result, namespaces, fqn, fieldTypes, context.unitNamespaces);
                     field = unitNamespace != null ? null : field;
                 }
                 namespaces = unitNamespace != null ? namespaces : null;
@@ -346,7 +354,7 @@ public class ResolveUtil {
                     }
                 }
                 if (result.isEmpty() && fqn.isFirst()) {
-                    PasReferenceUtil.handleUnitScope(result, namespaces, fqn, fieldTypes);
+                    PasReferenceUtil.handleUnitScope(result, namespaces, fqn, fieldTypes, context.unitNamespaces);
                 }
                 if (result.isEmpty() && (context.resultScope != null)) {
                     context.resultScope.clear();

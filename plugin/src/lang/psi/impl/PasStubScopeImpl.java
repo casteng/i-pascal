@@ -316,7 +316,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
         if (null == field) {
             return null;
         }
-        PasEntityScope scope = PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null));
+        PasEntityScope scope = PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, null));
         if (scope != null) {
             containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
         }

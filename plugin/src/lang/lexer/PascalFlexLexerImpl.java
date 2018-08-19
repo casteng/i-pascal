@@ -8,12 +8,9 @@ import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectLocator;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.AsyncResult;
 import com.intellij.openapi.util.Pair;
@@ -207,12 +204,6 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return (project != null) && !project.isDisposed() && (ProjectRootManager.getInstance(project) != null);
     }
 
-    private static Sdk getSdk(Project project, VirtualFile virtualFile) {
-        Module module = virtualFile != null ? ModuleUtil.findModuleForFile(virtualFile, project) : null;
-        Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
-        return sdk != null ? sdk : ProjectRootManager.getInstance(project).getProjectSdk();
-    }
-
     @Override
     public void define(int pos, CharSequence sequence) {
         String name = extractDefineName(sequence);
@@ -244,7 +235,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         actualDefines = new HashSet<String>();
         allDefines = new HashMap<String, Define>();
         if ((project != null)) {
-            final Sdk sdk = getSdk(project, virtualFile);
+            final Sdk sdk = com.siberika.idea.pascal.util.ModuleUtil.getSdk(project, virtualFile);
             if ((sdk != null) && (sdk.getVersionString() != null)) {
                 allDefines.putAll(BasePascalSdkType.getDefaultDefines(sdk, sdk.getVersionString()));
             }

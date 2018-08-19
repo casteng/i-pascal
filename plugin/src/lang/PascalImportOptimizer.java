@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
@@ -29,6 +30,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.DocUtil;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +67,8 @@ public class PascalImportOptimizer implements ImportOptimizer {
     }
 
     public static UsedUnitStatus getUsedUnitStatus(PascalQualifiedIdent usedUnitName, Module module) {
-        Collection<PascalModule> units = ResolveUtil.findUnitsWithStub(usedUnitName.getProject(), module, usedUnitName.getName());
+        Project project = usedUnitName.getProject();
+        Collection<PascalModule> units = ResolveUtil.findUnitsWithStub(project, module, usedUnitName.getName());
 //        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(usedUnitName.getProject(),
 //                PasReferenceUtil.findUnitFiles(usedUnitName.getProject(), module), usedUnitName.getName());
         PascalModule mod = units.isEmpty() ? null : units.iterator().next();
@@ -78,7 +81,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         }
         PascalModule pasModule = PsiUtil.getElementPasModule(usedUnitName);
         if ((pasModule != null)) {
-            Pair<List<PascalNamedElement>, List<PascalNamedElement>> idents = pasModule.getIdentsFrom(usedUnitName.getName());
+            Pair<List<PascalNamedElement>, List<PascalNamedElement>> idents = pasModule.getIdentsFrom(usedUnitName.getName(), ModuleUtil.retrieveUnitNamespaces(module, project));
             if (ContextUtil.belongsToInterface(usedUnitName)) {
                 if (idents.getFirst().size() + idents.getSecond().size() == 0) {
                     res = UsedUnitStatus.UNUSED;

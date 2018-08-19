@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
@@ -214,9 +215,10 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     private void addUnits(List<SmartPsiElementPointer<PasEntityScope>> result, Collection<String> units) {
+        Project project = getProject();
         for (String unitName : units) {
             for (PascalModule pascalModule : ResolveUtil.findUnitsWithStub(getProject(), ModuleUtilCore.findModuleForPsiElement(this), unitName)) {
-                result.add(SmartPointerManager.createPointer(pascalModule));
+                result.add(SmartPointerManager.getInstance(project).createSmartPsiElementPointer(pascalModule));
             }
         }
     }
@@ -250,7 +252,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     @Override
-    public Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@NotNull String module) {
+    public Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@NotNull String module, List<String> unitPrefixes) {
         Idents idents = getIdents(identCache, IDENTS_BUILDER);
         Pair<List<PascalNamedElement>, List<PascalNamedElement>> res = new Pair<List<PascalNamedElement>, List<PascalNamedElement>>(
                 new SmartList<PascalNamedElement>(), new SmartList<PascalNamedElement>());
@@ -258,7 +260,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             PasField field = entry.getValue();
             if ((field != null) && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
                                 && PasField.TYPES_STRUCTURE.contains(field.fieldType)
-                                && (field.owner != null) && (module.equalsIgnoreCase(field.owner.getName()))) {
+                                && (field.owner != null) && nameMatch(module, field.owner.getName(), unitPrefixes)) {
                 if (entry.getKey().startsWith(INTERFACE_PREFIX)) {
                     res.getFirst().add(field.getElement());
                 } else {
@@ -267,6 +269,21 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             }
         }
         return res;
+    }
+
+    private static boolean nameMatch(String moduleName, String fieldName, List<String> unitPrefixes) {
+        if (moduleName.equalsIgnoreCase(fieldName) || (moduleName.indexOf('.') >= 0)) {
+            return true;
+        }
+        moduleName = moduleName.toUpperCase();
+        fieldName = fieldName.toUpperCase();
+        for (String prefix : unitPrefixes) {
+            String prefixed = prefix.toUpperCase() + "." + moduleName;
+            if (prefixed.equals(fieldName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @NotNull

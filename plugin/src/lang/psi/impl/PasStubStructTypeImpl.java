@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
@@ -34,6 +35,7 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
@@ -325,18 +327,21 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
             if ((parEl instanceof PascalClassDecl) || (parEl instanceof PascalInterfaceDecl)) {         // Nested type
                 res = new SmartList<>(((PascalStructType) parEl).getParentScope());
-                res.add(SmartPointerManager.createPointer((PasEntityScope) parEl));
+                res.add(SmartPointerManager.getInstance(getProject()).createSmartPsiElementPointer((PasEntityScope) parEl));
             } else {
                 res = new ArrayList<>(parentNames.size() + 1);
             }
             addDefaultScopes(res);
+            Project project = getProject();
+            final ResolveContext context = new ResolveContext(this.getContainingScope(), PasField.TYPES_TYPE, true,
+                    null, ModuleUtil.retrieveUnitNamespaces(this));
             for (String parentName : parentNames) {
                 Collection<PasField> types = ResolveUtil.resolveWithStubs(NamespaceRec.fromFQN(this, parentName + ResolveUtil.STRUCT_SUFFIX),
-                        new ResolveContext(this.getContainingScope(), PasField.TYPES_TYPE, true, null), 0);
+                        context, 0);
                 for (PasField type : types) {
                     PascalNamedElement el = type.getElement();
                     if (el instanceof PasEntityScope) {
-                        res.add(SmartPointerManager.createPointer((PasEntityScope) el));
+                        res.add(SmartPointerManager.getInstance(project).createSmartPsiElementPointer((PasEntityScope) el));
                     }
                 }
             }

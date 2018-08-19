@@ -227,7 +227,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         if (null == field) {
             return null;
         }
-        PasEntityScope scope = PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null));
+        PasEntityScope scope = PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, null));
         if (scope != null) {
             containingScope = SmartPointerManager.getInstance(scope.getProject()).createSmartPsiElementPointer(scope);
         }

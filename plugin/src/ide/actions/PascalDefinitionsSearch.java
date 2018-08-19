@@ -140,7 +140,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
     }
 
     private static PasEntityScope resolveParent(PascalStructType parent, PascalStructType descendant, String name) {
-        ResolveContext ctx = new ResolveContext(descendant, PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null);
+        ResolveContext ctx = new ResolveContext(descendant, PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null, null);
         NamespaceRec rec = NamespaceRec.fromFQN(descendant, name);
         Collection<PasField> fields = PasReferenceUtil.resolve(rec, ctx, 0);
         for (PasField field : fields) {
@@ -148,7 +148,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
             if (el instanceof PasGenericTypeIdent) {
                 return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(el, name), null, PsiUtil.isFromLibrary(parent));
             } else if (ResolveUtil.isStubPowered(el)) {          // not tested
-                ctx = new ResolveContext(StubUtil.retrieveScope((PascalStubElement) el), PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null);
+                ctx = new ResolveContext(StubUtil.retrieveScope((PascalStubElement) el), PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null, null);
                 PasField.ValueType types = ResolveUtil.resolveTypeWithStub((PascalStubElement) el, ctx, 0);
                 if (types != null) {
                     return types.getTypeScopeStub();

@@ -55,6 +55,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.apache.commons.lang.StringUtils;
@@ -240,7 +241,7 @@ public class PasReferenceUtil {
             PasField type = types.iterator().next();
             PascalNamedElement el = type.getElement();
             if (ResolveUtil.isStubPowered(el)) {
-                return ResolveUtil.resolveTypeWithStub((PascalStubElement) el, new ResolveContext(type.owner, PasField.TYPES_TYPE, context.includeLibrary, null), recursionCount);
+                return ResolveUtil.resolveTypeWithStub((PascalStubElement) el, new ResolveContext(type.owner, PasField.TYPES_TYPE, context.includeLibrary, null, context.unitNamespaces), recursionCount);
             }
             return resolveFieldType(type, includeLibrary, ++recursionCount);          // resolve next type in chain
         }
@@ -317,7 +318,7 @@ public class PasReferenceUtil {
 
     @Nullable
     public static PasEntityScope resolveTypeScope(NamespaceRec fqn, @Nullable PasEntityScope scope, boolean includeLibrary) {
-        ResolveContext context = new ResolveContext(scope, PasField.TYPES_TYPE, includeLibrary, null);
+        ResolveContext context = new ResolveContext(scope, PasField.TYPES_TYPE, includeLibrary, null, null);
         Collection<PasField> types = resolve(fqn, context, 0);
         for (PasField field : types) {
             PascalNamedElement el = field.getElement();
@@ -362,6 +363,9 @@ public class PasReferenceUtil {
         ProgressManager.checkCanceled();
         if (recursionCount > MAX_RECURSION_COUNT) {
             throw new PascalRTException("Too much recursion during resolving identifier: " + fqn.getParentIdent());
+        }
+        if (null == context.unitNamespaces) {
+            context.unitNamespaces = ModuleUtil.retrieveUnitNamespaces(fqn.getParentIdent());
         }
         boolean implAffects = fqn.isFirst()
                 && !ResolveUtil.isStubPowered(context.scope)
@@ -408,7 +412,7 @@ public class PasReferenceUtil {
 
                 PasEntityScope unitNamespace = null;
                 if (((null == field) && fqn.isFirst()) || ((field != null ? field.fieldType : null) == PasField.FieldType.UNIT)) {
-                    unitNamespace = handleUnitScope(result, namespaces, fqn, fieldTypes);
+                    unitNamespace = handleUnitScope(result, namespaces, fqn, fieldTypes, context.unitNamespaces);
                     field = unitNamespace != null ? null : field;
                 }
                 namespaces = unitNamespace != null ? namespaces : null;
@@ -464,7 +468,7 @@ public class PasReferenceUtil {
                     }
                 }
                 if (result.isEmpty() && fqn.isFirst()) {
-                    handleUnitScope(result, namespaces, fqn, fieldTypes);
+                    handleUnitScope(result, namespaces, fqn, fieldTypes, context.unitNamespaces);
                 }
                 if (result.isEmpty() && (context.resultScope != null)) {
                     context.resultScope.clear();
@@ -484,8 +488,11 @@ public class PasReferenceUtil {
         return result;
     }
 
-    static PasEntityScope handleUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes) {
-        PasEntityScope unitNamespace = fqn.isFirst() ? checkUnitScope(result, namespaces, fqn) : null;
+    static PasEntityScope handleUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn, Set<PasField.FieldType> fieldTypes, List<String> unitNamespaces) {
+        PasEntityScope unitNamespace = null;
+        if (fqn.isFirst()) {
+            unitNamespace = checkUnitScope(result, namespaces, fqn, unitNamespaces);
+        }
         if (unitNamespace != null) {
             namespaces.clear();
             namespaces.add(unitNamespace);
@@ -504,7 +511,7 @@ public class PasReferenceUtil {
         if (namespace instanceof PascalStubElement) {
             StubElement stub = ((PascalStubElement) namespace).retrieveStub();
             if (stub != null) {
-                ResolveContext ctx = new ResolveContext(namespace, context.fieldTypes, context.includeLibrary, context.resultScope);
+                ResolveContext ctx = new ResolveContext(namespace, context.fieldTypes, context.includeLibrary, context.resultScope, context.unitNamespaces);
                 ctx.disableParentNamespaces = true;
                 result = ResolveUtil.resolveWithStubs(new NamespaceRec(fqn), ctx, ++recursionCount);
             }
@@ -521,7 +528,7 @@ public class PasReferenceUtil {
         }
     }
 
-    static PasEntityScope checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn) {
+    static PasEntityScope checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn, List<String> unitPrefixes) {
         List<PasEntityScope> sorted = new ArrayList<PasEntityScope>(namespaces.size());
         for (PasEntityScope namespace : namespaces) {
             if ((namespace instanceof PasModule) && !StringUtils.isEmpty(namespace.getName())) {
@@ -535,16 +542,35 @@ public class PasReferenceUtil {
                 return StringLenComparator.getInstance().compare(o2.getName(), o1.getName());
             }
         });
-        for (PasEntityScope namespace : sorted) {
-            if (fqn.advance(namespace.getName())) {
-                if (fqn.isComplete()) {
-                    PasField field = namespace.getField(namespace.getName());
-                    if (field != null) {
-                        result.add(field);
-                    } else {
-                        LOG.info("ERROR: field is null. FQN: " + fqn.toString());
-                    }
+        PasEntityScope res;
+        res = tryUnit(fqn, sorted, "");
+        if ((null == res) && (fqn.isTarget())) {        // don't check with prefixes if fqn has more than one level
+            NamespaceRec oldFqn = new NamespaceRec(fqn);
+            for (String prefix : unitPrefixes) {
+                fqn.addPrefix(oldFqn, prefix);
+                res = tryUnit(fqn, sorted, prefix);
+                if (res != null) {
+                    break;
                 }
+            }
+        }
+        if (res != null) {
+            if (fqn.isComplete()) {
+                PasField field = res.getField(res.getName());
+                if (field != null) {
+                    result.add(field);
+                } else {
+                    LOG.info("ERROR: field is null. FQN: " + fqn.toString());
+                }
+            }
+            return res;
+        }
+        return null;
+    }
+
+    private static PasEntityScope tryUnit(NamespaceRec fqn, List<PasEntityScope> sortedScopes, String prefix) {
+        for (PasEntityScope namespace : sortedScopes) {
+            if (fqn.advance(namespace.getName())) {
                 return namespace;
             }
         }

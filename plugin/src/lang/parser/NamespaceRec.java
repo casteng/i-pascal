@@ -16,9 +16,9 @@ import java.util.List;
 * Date: 12/08/2013
 */
 public class NamespaceRec {
-    private final String[] levels;
+    private String[] levels;
     private final PsiElement parentIdent;
-    private final int target;
+    private int target;
     private int current;
 
     private static final String[] EMPTY_LEVELS = {};
@@ -44,6 +44,20 @@ public class NamespaceRec {
     private NamespaceRec(@NotNull PasRefNamedIdent element) {
         this(new String[] {!element.getName().startsWith("&") ? element.getName() : element.getName().substring(1)},
                 element.getParent() != null ? element.getParent() : element, 0);
+    }
+
+    public void addPrefix(NamespaceRec original, String prefix) {
+        String[] lvls = prefix.split("\\.", 100);
+        String[] newLevels = new String[lvls.length + original.levels.length];
+        int ind = 0;
+        for (String lvl : lvls) {
+            newLevels[ind++] = lvl;
+        }
+        for (String lvl : original.levels) {
+            newLevels[ind++] = lvl;
+        }
+        levels = newLevels;
+        target = original.target + lvls.length;
     }
 
     /**

@@ -149,7 +149,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        return Collections.singletonList(SmartPointerManager.createPointer(Objects.requireNonNull(getContainingScope())));
+        return Collections.singletonList(SmartPointerManager.getInstance(this.getProject()).createSmartPsiElementPointer(Objects.requireNonNull(getContainingScope())));
     }
 
     @Override

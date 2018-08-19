@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 public class TestUtil {
     public static PasEntityScope findClass(PasModule module, String name) {
         PasField parentField = module.getField(name);
-        return PasReferenceUtil.retrieveFieldTypeScope(parentField, new ResolveContext(module, PasField.TYPES_TYPE, true, null));
+        return PasReferenceUtil.retrieveFieldTypeScope(parentField, new ResolveContext(module, PasField.TYPES_TYPE, true, null, null));
     }
 
     @NotNull

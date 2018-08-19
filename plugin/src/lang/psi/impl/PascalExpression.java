@@ -105,11 +105,11 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     private static PasField.ValueType resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
-        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null);
+        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null, null);
         final Collection<PasField> references = PasReferenceUtil.resolve(NamespaceRec.fromElement(fullyQualifiedIdent), context, 0);
         if (!references.isEmpty()) {
             PasField field = references.iterator().next();
-            PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null));
+            PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, null));
             return field.getValueType();
         }
         return null;

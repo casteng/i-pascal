@@ -316,10 +316,10 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(el);
         NamespaceRec fqn = NamespaceRec.fromFQN(myFixture.getFile(), "");
         fqn.setIgnoreVisibility(true);
-        ResolveContext context = new ResolveContext(scope, EnumSet.of(PasField.FieldType.VARIABLE), false, null);
+        ResolveContext context = new ResolveContext(scope, EnumSet.of(PasField.FieldType.VARIABLE), false, null, null);
         Collection<PasField> fields = PasReferenceUtil.resolve(fqn, context, 0);
         assertTrue(fields.iterator().hasNext());
-        assertTrue("local".equals(fields.iterator().next().name));
+        assertEquals("local", fields.iterator().next().name);
     }
 
     public void testForwardStructure() {

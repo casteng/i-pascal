@@ -14,15 +14,17 @@ public class ResolveContext {
     final List<PsiElement> resultScope;
     public boolean disableParentNamespaces;
     boolean stubsOnly = false;
+    List<String> unitNamespaces;
 
-    public ResolveContext(PasEntityScope scope, Set<PasField.FieldType> fieldTypes, boolean includeLibrary, List<PsiElement> resultScope) {
+    public ResolveContext(PasEntityScope scope, Set<PasField.FieldType> fieldTypes, boolean includeLibrary, List<PsiElement> resultScope, List<String> unitPrefixes) {
         this.scope = scope;
         this.fieldTypes = fieldTypes;
         this.includeLibrary = includeLibrary;
         this.resultScope = resultScope;
+        this.unitNamespaces = unitPrefixes;
     }
 
     public ResolveContext(Set<PasField.FieldType> fieldTypes, boolean includeLibrary) {
-        this(null, fieldTypes, includeLibrary, null);
+        this(null, fieldTypes, includeLibrary, null, null);
     }
 }

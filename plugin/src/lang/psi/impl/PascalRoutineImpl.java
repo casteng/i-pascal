@@ -306,7 +306,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         parentScopes = Collections.emptyList();                             // To prevent infinite recursion
         PasEntityScope scope = getContainingScope();
         if (scope != null) {
-            parentScopes = Collections.singletonList(SmartPointerManager.createPointer(scope));
+            parentScopes = Collections.singletonList(SmartPointerManager.getInstance(getProject()).createSmartPsiElementPointer(scope));
         }
     }
 

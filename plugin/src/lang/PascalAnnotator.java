@@ -71,7 +71,7 @@ public class PascalAnnotator implements Annotator {
             //noinspection ConstantConditions
             PascalNamedElement namedElement = (PascalNamedElement) element;
             List<PsiElement> scopes = new SmartList<PsiElement>();
-            ResolveContext resolveContext = new ResolveContext(null, PasField.TYPES_ALL, true, scopes);
+            ResolveContext resolveContext = new ResolveContext(null, PasField.TYPES_ALL, true, scopes, null);
             Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(element), resolveContext, 0);
 
             if (refs.isEmpty() && !isVariantField(scopes)) {

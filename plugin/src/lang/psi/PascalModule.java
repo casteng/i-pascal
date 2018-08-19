@@ -40,7 +40,7 @@ public interface PascalModule extends PasEntityScope, PascalStubElement<PasModul
     List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits();
 
     // Used in interface and implementation identifiers list
-    Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@NotNull String module);
+    Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@NotNull String module, List<String> strings);
 
     @NotNull
     Set<String> getUsedUnitsPublic();

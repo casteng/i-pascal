@@ -6,8 +6,14 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SdkAdditionalData;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -15,6 +21,7 @@ import com.intellij.util.SmartList;
 import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
 import org.jetbrains.annotations.NotNull;
@@ -137,6 +144,22 @@ public class ModuleUtil {
         }
     }
 
+    public static Sdk getSdk(Project project, VirtualFile virtualFile) {
+        Module module = virtualFile != null ? com.intellij.openapi.module.ModuleUtil.findModuleForFile(virtualFile, project) : null;
+        Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
+        return sdk != null ? sdk : ProjectRootManager.getInstance(project).getProjectSdk();
+    }
+
+    public static boolean hasPascalModules(Project project) {
+        Module[] modules = ModuleManager.getInstance(project).getModules();
+        for (Module module : modules) {
+            if (PascalModuleType.isPascalModule(module)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static VirtualFile trySearchPath(String name, GlobalSearchScope filter) {
         Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
                 filter);
@@ -166,13 +189,21 @@ public class ModuleUtil {
         return FileUtil.getVirtualFile(file.getPath());
     }
 
-    public static boolean hasPascalModules(Project project) {
-        Module[] modules = ModuleManager.getInstance(project).getModules();
-        for (Module module : modules) {
-            if (PascalModuleType.isPascalModule(module)) {
-                return true;
+    public static List<String> retrieveUnitNamespaces(PsiElement parentIdent) {
+        return retrieveUnitNamespaces(com.intellij.openapi.module.ModuleUtil.findModuleForPsiElement(parentIdent), parentIdent.getProject());
+    }
+
+    public static List<String> retrieveUnitNamespaces(@Nullable Module module, Project project) {
+        Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : ProjectRootManager.getInstance(project).getProjectSdk();
+        if (sdk != null) {
+            final SdkAdditionalData data = sdk.getSdkAdditionalData();
+            if (data instanceof PascalSdkData) {
+                String namespaces = (String) ((PascalSdkData) data).getValue(PascalSdkData.Keys.COMPILER_NAMESPACES.getKey());
+                if (StringUtil.isNotEmpty(namespaces)) {
+                    return Arrays.asList(namespaces.split(";"));
+                }
             }
         }
-        return false;
+        return Collections.emptyList();
     }
 }

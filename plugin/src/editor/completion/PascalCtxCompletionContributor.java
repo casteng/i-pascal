@@ -429,7 +429,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             namespace.setIgnoreVisibility(true);
             namespace.clearTarget();
             ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) file.getVirtualFile()).getContextElement()),
-                    PasField.TYPES_ALL, false, null);
+                    PasField.TYPES_ALL, false, null, null);
             fieldsToEntities(entities, PasReferenceUtil.resolve(namespace, resolveContext, 0), parameters);
             addEntitiesToResult(result, entities);
             result.stopHere();

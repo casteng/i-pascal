@@ -638,7 +638,7 @@ public class PsiUtil {
     public static <T extends PsiElement> List<SmartPsiElementPointer<T>> packSmartPointers(List<? extends T> elements) {
         List<SmartPsiElementPointer<T>> res = new ArrayList<SmartPsiElementPointer<T>>(elements.size());
         for (T element : elements) {
-            res.add(SmartPointerManager.createPointer(element));
+            res.add(createSmartPointer(element));
         }
         return res;
     }
@@ -828,7 +828,7 @@ public class PsiUtil {
 
     public static <T extends PsiElement> SmartPsiElementPointer<T> createSmartPointer(T element) {
         try {
-            return SmartPointerManager.createPointer(element);
+            return SmartPointerManager.getInstance(element.getProject()).createSmartPsiElementPointer(element);
         } catch (Throwable e) {
             LOG.info(e.getMessage(), e);
             return null;
