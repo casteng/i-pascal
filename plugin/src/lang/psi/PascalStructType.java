@@ -10,7 +10,7 @@ import java.util.List;
  * Author: George Bakhtadze
  * Date: 29/01/2015
  */
-public interface PascalStructType<StubT extends PasStructStub> extends PasEntityScope, PascalStubElement<StubT> {
+public interface PascalStructType<StubT extends PasStructStub> extends PasEntityScope, PascalStubElement<StubT>, HasTypeParameters {
     @Nullable
     PasClassParent getClassParent();
     @NotNull
@@ -30,4 +30,5 @@ public interface PascalStructType<StubT extends PasStructStub> extends PasEntity
 
     @NotNull
     List<String> getParentNames();
+
 }

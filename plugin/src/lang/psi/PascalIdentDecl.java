@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Set;
 
 public interface PascalIdentDecl extends PascalStubElement<PasIdentStub>, PasNamedIdent {
 
@@ -21,9 +20,6 @@ public interface PascalIdentDecl extends PascalStubElement<PasIdentStub>, PasNam
 
     @Nullable
     String getValue();
-
-    @NotNull
-    Set<String> getTypeParameters();
 
     @NotNull
     List<String> getSubMembers();

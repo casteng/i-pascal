@@ -8,7 +8,6 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.intellij.util.SmartList;
-import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -18,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub, PascalIdentDecl> {
 
@@ -32,7 +30,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @Override
     public PasIdentStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
         return new PasIdentStubImpl(parentStub, "-", ".", PasField.FieldType.VARIABLE, null, null,
-                PasField.Access.READWRITE, null, false, Collections.emptyList(), Collections.emptySet());
+                PasField.Access.READWRITE, null, false, Collections.emptyList());
     }
 
     @Override
@@ -44,7 +42,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @Override
     public PasIdentStub createStub(@NotNull PascalIdentDecl psi, StubElement parentStub) {
         return new PasIdentStubImpl(parentStub, psi.getName(), psi.getContainingUnitName(), psi.getType(), psi.getTypeString(), psi.getTypeKind(),
-                psi.getAccess(), psi.getValue(), psi.isLocal(), psi.getSubMembers(), psi.getTypeParameters());
+                psi.getAccess(), psi.getValue(), psi.isLocal(), psi.getSubMembers());
     }
 
     @NotNull
@@ -66,7 +64,6 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         dataStream.writeBoolean(stub.isLocal());
         dataStream.writeName(stub.getValue());
         StubUtil.writeStringCollection(dataStream, stub.getSubMembers());
-        StubUtil.writeStringCollection(dataStream, stub.getTypeParameters());
     }
 
     @NotNull
@@ -82,9 +79,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         String value = StubUtil.readName(dataStream);
         List<String> subMembers = new SmartList<>();
         StubUtil.readStringCollection(dataStream, subMembers);
-        Set<String> typeParameters = new SmartHashSet<>();
-        StubUtil.readStringCollection(dataStream, typeParameters);
-        return new PasIdentStubImpl(parentStub, name, containingUnitName, type, typeString, kind, access, value, local, subMembers, typeParameters);
+        return new PasIdentStubImpl(parentStub, name, containingUnitName, type, typeString, kind, access, value, local, subMembers);
     }
 
     @Override

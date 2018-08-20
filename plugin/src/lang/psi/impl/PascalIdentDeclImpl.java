@@ -30,7 +30,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIdentStub> implements PascalIdentDecl {
@@ -40,7 +39,6 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     private Pair<String, PasField.Kind> myCachedType;
     private List<String> subMembers;                            // members which can be qualified by this ident as well as accessed directly (enums)
     private ReentrantLock typeLock = new ReentrantLock();
-    private Set<String> typeParameters;
     private ReentrantLock subMembersLock = new ReentrantLock();
 
     public PascalIdentDeclImpl(ASTNode node) {
@@ -121,15 +119,6 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         } else {
             return null;
         }
-    }
-    @NotNull
-    @Override
-    public Set<String> getTypeParameters() {
-        PasIdentStub stub = retrieveStub();
-        if (stub != null) {
-            return stub.getTypeParameters();
-        }
-        return Collections.emptySet();
     }
 
     @NotNull
