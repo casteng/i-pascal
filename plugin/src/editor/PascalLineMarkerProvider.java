@@ -10,6 +10,7 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ConstantFunction;
@@ -31,6 +32,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -96,10 +98,26 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         if (null == namespaceIdent) {
             return Collections.emptyList();
         }
+        String name = namespaceIdent.getName();
+        String namespace = namespaceIdent.getNamespace();
+        String namespaceless = namespaceIdent.getNamePart();
+        boolean checkNamespaceless = false;
+        if (StringUtil.isNotEmpty(namespace)) {
+            for (String prefix : ModuleUtil.retrieveUnitNamespaces(namespaceIdent)) {
+                if (namespace.equalsIgnoreCase(prefix)) {
+                    checkNamespaceless = true;
+                    break;
+                }
+            }
+        }
         Collection<PascalModule> res = new SmartList<>();
         for (PascalModule module : ResolveUtil.findUnitsWithStub(namespaceIdent.getProject(), null, null)) {
-            collectUnits(res, namespaceIdent.getName(), module, module.getUsedUnitsPublic());
-            collectUnits(res, namespaceIdent.getName(), module, module.getUsedUnitsPrivate());
+            collectUnits(res, name, module, module.getUsedUnitsPublic());
+            collectUnits(res, name, module, module.getUsedUnitsPrivate());
+            if (checkNamespaceless) {
+                collectUnits(res, namespaceless, module, module.getUsedUnitsPublic());
+                collectUnits(res, namespaceless, module, module.getUsedUnitsPrivate());
+            }
         }
         return res;
     }
