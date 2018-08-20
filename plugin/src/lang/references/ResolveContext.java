@@ -14,7 +14,7 @@ public class ResolveContext {
     final List<PsiElement> resultScope;
     public boolean disableParentNamespaces;
     boolean stubsOnly = false;
-    List<String> unitNamespaces;
+    public List<String> unitNamespaces;
 
     public ResolveContext(PasEntityScope scope, Set<PasField.FieldType> fieldTypes, boolean includeLibrary, List<PsiElement> resultScope, List<String> unitPrefixes) {
         this.scope = scope;
