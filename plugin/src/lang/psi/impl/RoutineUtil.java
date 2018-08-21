@@ -18,6 +18,8 @@ import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.util.PsiUtil;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class RoutineUtil {
@@ -40,7 +42,15 @@ public class RoutineUtil {
     }
 
     static boolean isConstructor(PsiElement routine) {
-        return routine.getFirstChild().getNode().getElementType() == PasTypes.CONSTRUCTOR;
+        PsiElement first = routine.getFirstChild();
+        if (first.getNode().getElementType() == PasTypes.CONSTRUCTOR) {
+            return true;
+        } else if (first.getNode().getElementType() == PasTypes.CLASS) {
+            PsiElement second = PsiUtil.getNextSibling(first);
+            return (second != null) && (second.getNode().getElementType() == PasTypes.CONSTRUCTOR);
+        } else {
+            return false;
+        }
     }
 
     static void calcFormalParameterNames(PasFormalParameterSection formalParameterSection, List<String> formalParameterNames, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess) {
@@ -102,7 +112,9 @@ public class RoutineUtil {
             String typeName = formalParameterTypes.get(i);
             typeName = StringUtil.isNotEmpty(typeName) ? typeName : PsiUtil.TYPE_UNTYPED_NAME;
             ParamModifier modifier = formalParameterAccess.get(i);
-            res.append(modifier == ParamModifier.NONE ? "" : modifier.name().toLowerCase());
+            if (modifier != ParamModifier.NONE) {
+                res.append(modifier.name().toLowerCase()).append(" ");
+            }
             res.append(typeName);
         }
         res.append(")");
@@ -112,4 +124,13 @@ public class RoutineUtil {
         return res.toString();
     }
 
+    static List<String> parseTypeParametersStr(String typeParamText) {
+        List<String> result;
+        if (typeParamText != null) {
+            result = Arrays.asList(typeParamText.substring(1, typeParamText.length()-1).replaceAll("\\s*:\\s*\\w+", "").split("[,;]\\s*", 100));
+        } else {
+            result = Collections.emptyList();
+        }
+        return result;
+    }
 }

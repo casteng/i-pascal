@@ -10,9 +10,12 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
+import com.siberika.idea.pascal.lang.psi.HasTypeParameters;
+import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasGenericPostfix;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -34,7 +37,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Author: George Bakhtadze
  * Date: 06/09/2013
  */
-public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRoutine, PasDeclSection {
+public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRoutine, PasDeclSection, HasTypeParameters {
 
     private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
 
@@ -45,6 +48,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     private List<ParamModifier> formalParameterAccess;
     private String canonicalName;
     private ReentrantLock parametersLock = new ReentrantLock();
+    private List<String> typeParameters;
+    private ReentrantLock typeParametersLock = new ReentrantLock();
 
     private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
 
@@ -59,6 +64,23 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @Override
     public PasField.FieldType getType() {
         return PasField.FieldType.ROUTINE;
+    }
+
+    @NotNull
+    @Override
+    public List<String> getTypeParameters() {
+        if (SyncUtil.lockOrCancel(typeParametersLock)) {
+            try {
+                if (null == typeParameters) {
+                    PsiElement nameIdent = getNameIdentifier();
+                    List<PasGenericPostfix> postfixes = nameIdent instanceof PasClassQualifiedIdent ? ((PasClassQualifiedIdent) nameIdent).getGenericPostfixList() : Collections.emptyList();
+                    typeParameters = postfixes.isEmpty() ? Collections.emptyList() : RoutineUtil.parseTypeParametersStr(postfixes.get(0).getText());
+                }
+            } finally {
+                typeParametersLock.unlock();
+            }
+        }
+        return typeParameters;
     }
 
     @Override
@@ -255,7 +277,21 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     public String getFunctionTypeStr() {
         if (isConstructor()) {                                 // Return namespace part of constructor implementation name as type name
             String ns = getNamespace();
-            return ns.substring(ns.lastIndexOf('.') + 1);
+            ns = ns.substring(ns.lastIndexOf('.') + 1);
+            List<String> typeParams = getTypeParameters();
+            if (!typeParams.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("<");
+                for (String typeParam : typeParams) {
+                    if (sb.length() > 1) {
+                        sb.append(", ");
+                    }
+                    sb.append(typeParam);
+                }
+                sb.append(">");
+                ns = ns + sb.toString();
+            } 
+            return ns;
         }
         PasTypeDecl type = findChildByClass(PasTypeDecl.class);
         PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);

@@ -22,7 +22,7 @@ public class PasObjectDeclStubElementType extends PasStructDeclStubElementType<P
 
     @Override
     public PasObjectDeclStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasObjectDeclStubImpl(parentStub, "-", ".", false, Collections.emptyList(), null, INSTANCE);
+        return new PasObjectDeclStubImpl(parentStub, "-", ".", false, Collections.emptyList(), null, INSTANCE, null);
     }
 
     @Override
@@ -35,13 +35,13 @@ public class PasObjectDeclStubElementType extends PasStructDeclStubElementType<P
     public PasObjectDeclStub createStub(@NotNull PascalObjectDecl psi, StubElement parentStub) {
         List<String> aliases = new SmartList<>();
         String stubName = calcStubName(psi, aliases);
-        return new PasObjectDeclStubImpl(parentStub, stubName, psi.getContainingUnitName(), psi.isLocal(), psi.getParentNames(), aliases, INSTANCE);
+        return new PasObjectDeclStubImpl(parentStub, stubName, psi.getContainingUnitName(), psi.isLocal(), psi.getParentNames(), aliases, INSTANCE, psi.getTypeParameters());
     }
 
     @Override
     protected PasObjectDeclStub createStub(StubElement parentStub, String name, String containingUnitName, boolean local,
-                                           List<String> parentNames, List<String> aliases) {
-        return new PasObjectDeclStubImpl(parentStub, name, containingUnitName, local, parentNames, aliases, INSTANCE);
+                                           List<String> parentNames, List<String> aliases, List<String> typeParameters) {
+        return new PasObjectDeclStubImpl(parentStub, name, containingUnitName, local, parentNames, aliases, INSTANCE, typeParameters);
     }
 
     @NotNull

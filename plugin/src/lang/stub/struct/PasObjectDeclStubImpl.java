@@ -7,7 +7,7 @@ import java.util.List;
 
 public class PasObjectDeclStubImpl extends PasStructStubImpl<PascalObjectDecl> implements PasObjectDeclStub {
     public PasObjectDeclStubImpl(StubElement parent, String name, String containingUnitName, boolean local,
-                                 List<String> parentNames, List<String> aliases, PasObjectDeclStubElementType stubElementType) {
-        super(parent, name, containingUnitName, local, parentNames, aliases, stubElementType);
+                                 List<String> parentNames, List<String> aliases, PasObjectDeclStubElementType stubElementType, List<String> typeParameters) {
+        super(parent, name, containingUnitName, local, parentNames, aliases, stubElementType, typeParameters);
     }
 }

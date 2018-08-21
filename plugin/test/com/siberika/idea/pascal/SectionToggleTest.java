@@ -32,6 +32,16 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
         doTestSectionToggle(symbols, true);
     }
 
+    public void testSectionToggleGeneric() {
+        List<PascalNamedElement> symbols = retrieveSymbols("sectionToggleGeneric.pas");
+        doTestSectionToggle(symbols, true);
+    }
+
+    public void testSectionToggleGenericConstrained() {
+        List<PascalNamedElement> symbols = retrieveSymbols("sectionToggleGenericConstrained.pas");
+        doTestSectionToggle(symbols, true);
+    }
+
     public void testRoutinesFwd() {
         PsiElement ref = myFixture.configureByFile("routinesFwd.pas").findElementAt(95);
         PsiElement decl = SectionToggle.getRoutineForwardDeclaration((PasRoutineImplDeclImpl) ref.getParent().getParent());

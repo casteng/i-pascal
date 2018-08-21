@@ -20,6 +20,7 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasGenericDefinition;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -95,6 +96,22 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     @NotNull
     @Override
+    public List<String> getTypeParameters() {
+        B stub = retrieveStub();
+        if (stub != null) {
+            return stub.getTypeParameters();
+        }
+        PsiElement nameElement = getNameElement();
+        if (nameElement instanceof PasGenericTypeIdent) {
+            PasGenericDefinition genericDefinition = ((PasGenericTypeIdent) nameElement).getGenericDefinition();
+            return genericDefinition != null ? RoutineUtil.parseTypeParametersStr(genericDefinition.getText()) : Collections.emptyList();
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @NotNull
+    @Override
     public List<String> getParentNames() {
         B stub = retrieveStub();
         if (stub != null) {
@@ -137,6 +154,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     /**
      * Returns structured type declaration element by its name element
+     *
      * @param namedElement name element
      * @return structured type declaration element
      */

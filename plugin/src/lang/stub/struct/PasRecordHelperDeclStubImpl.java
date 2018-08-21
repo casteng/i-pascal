@@ -7,7 +7,7 @@ import java.util.List;
 
 public class PasRecordHelperDeclStubImpl extends PasStructStubImpl<PascalRecordHelperDecl> implements PasRecordHelperDeclStub {
     public PasRecordHelperDeclStubImpl(StubElement parent, String name, String containingUnitName, boolean local,
-                                       List<String> parentNames, List<String> aliases, PasRecordHelperDeclStubElementType stubElementType) {
-        super(parent, name, containingUnitName, local, parentNames, aliases, stubElementType);
+                                       List<String> parentNames, List<String> aliases, PasRecordHelperDeclStubElementType stubElementType, List<String> typeParameters) {
+        super(parent, name, containingUnitName, local, parentNames, aliases, stubElementType, typeParameters);
     }
 }
