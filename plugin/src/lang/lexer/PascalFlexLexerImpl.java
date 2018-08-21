@@ -98,8 +98,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             curLevel = 0;
             inactiveLevel = 0;
         } else {
-            curLevel = (levels.get(levels.size()-1).intValue() >> 16) & 0xFF;
-            inactiveLevel = levels.get(levels.size()-1).intValue() & 0xFF;
+            curLevel = (levels.get(levels.size() - 1).intValue() >> 16) & 0xFF;
+            inactiveLevel = levels.get(levels.size() - 1).intValue() & 0xFF;
         }
         actualDefines = null;
         allDefines = null;
@@ -285,7 +285,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if (isConditionalsDisabled()) {
             return PasTypes.COMMENT;
         }
-        if (curLevel <= 0) { return TokenType.BAD_CHARACTER; }
+        if (curLevel <= 0) {
+            return TokenType.BAD_CHARACTER;
+        }
         if (isInactive()) {
             if (curLevel == inactiveLevel) {
                 yybegin(YYINITIAL);
@@ -303,7 +305,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if (isConditionalsDisabled()) {
             return PasTypes.COMMENT;
         }
-        if (curLevel <= 0) { return TokenType.BAD_CHARACTER; }
+        if (curLevel <= 0) {
+            return TokenType.BAD_CHARACTER;
+        }
         if (curLevel == inactiveLevel) {
             yybegin(YYINITIAL);
         }
@@ -389,9 +393,16 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private static final Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\s*}");
+    private static final Pattern PATTERN_IF_DEFINED = Pattern.compile("(?i)\\{\\$if\\s+defined\\((\\w+)\\)\\s*}");
+
     private static String extractDefineName(CharSequence sequence) {
         Matcher m = PATTERN_DEFINE.matcher(sequence);
-        return m.matches() ? m.group(1) : null;
+        if (m.matches()) {
+            return m.group(1);
+        } else {
+            m = PATTERN_IF_DEFINED.matcher(sequence);
+            return m.matches() ? m.group(1) : null;
+        }
     }
 
     private static String extractIncludeName(CharSequence sequence) {
