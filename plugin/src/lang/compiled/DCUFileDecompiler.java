@@ -44,6 +44,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Pattern ROUTINE = Pattern.compile("(\\s*)(procedure|function|operator)(\\s+)(@)(\\w+)");
     private static final Pattern INLINE_TYPE = Pattern.compile("\\s*:\\d+\\s+=\\s+.*");
     private static final File NULL_FILE = new File("");
+    private static final Pattern WARNING_WITH_UNITHEAD = Pattern.compile("(?i)Warning at 0x[A-F0-9]+.*unit\\s+.+;$");
 
     @NotNull
     @Override
@@ -133,6 +134,10 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
                 inConst = false;
             }
             if (shouldCommentOut(line)) {                          // Comment out all decompiler warnings
+                if (WARNING_WITH_UNITHEAD.matcher(line).matches()) {
+                    line = line.replaceAll("(?i)unit\\s+", "\nunit ");
+                    unitDone = true;
+                }
                 res.append("// ");
             } else if (!unitDone) {                                // Comment out all lines before unit declaration
                 if (line.startsWith("unit")) {
