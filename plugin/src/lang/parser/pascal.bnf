@@ -380,6 +380,7 @@ private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | P
 private rec_section         ::= !rec__routine_key & rec_section_nested
 private rec_section_global  ::= !(".") & rec_section
 private rec_routine         ::= !(EXTERNAL | FORWARD) & rec_name & rec_interface
+private rec_routine_decl    ::= !(EXTERNAL | FORWARD | CASE) & rec_name & rec_interface
 private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";") & rec_section
 private rec_struct_field    ::= !(";" | ")" | END | CASE | identifier ) & rec_section
@@ -418,7 +419,7 @@ ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implemen
                              stubClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub"
                              elementTypeClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStubElementType"}
 
-private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine}
+private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine_decl}
 private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=2}
 private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=2}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
@@ -467,7 +468,7 @@ BlockBody	                ::=	CompoundStatement |	AssemblerStatement
 
 AssemblerStatement          ::= ASM asmBlock END {pin=1}
 private asmBlock            ::= assemblerItem* {recoverWhile=rec_struct_outer}
-private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | RefNamedIdent | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN
+private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | RefNamedIdent | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | '.NOFRAME'
 
 FunctionDirective           ::= overloadDirective | oldCallConventionDirectiveSemi
                               | inlineDirectiveSemi | callConventionSemi | hintingDirective ";"
@@ -608,7 +609,7 @@ ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="meta
 
 Visibility                  ::= [STRICT] PRIVATE | [STRICT] PROTECTED | PUBLIC | PUBLISHED | AUTOMATED
 
-ClassProperty ::= customAttributes* [CLASS] PROPERTY NamedIdentDecl [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] hintingDirective* [";"] {pin=3 recoverWhile=rec_routine}
+ClassProperty ::= customAttributes* [CLASS] PROPERTY NamedIdentDecl [ClassPropertyArray] [":" TypeID] [ClassPropertyIndex] ClassPropertySpecifier* ";" [DEFAULT] hintingDirective* [";"] {pin=3 recoverWhile=rec_routine_decl}
 ClassPropertyArray ::= "[" formalParameterList "]" {pin=1}
 ClassPropertyIndex ::= INDEX ConstExpressionOrd {pin=1}
 ClassPropertySpecifier ::= classPropertyReadWrite | classPropertyDispInterface | "stored" Expression
@@ -725,7 +726,7 @@ private identifier          ::= EscapedIdent | KeywordIdent | NAME
 KeywordIdent                ::= OUT | SELF | NEW
                               | EXIT | BREAK | CONTINUE
                               | VIRTUAL | DYNAMIC | ABSTRACT | OVERLOAD | OVERRIDE | REINTRODUCE | MESSAGE | STATIC | SEALED | FINAL | ASSEMBLER
-                              | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT
+                              | CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT | OPERATOR
                               | AUTOMATED | DISPID | EXTERNAL | FORWARD | HELPER | IMPLEMENTS
                               | DEFAULT | INDEX | READ | WRITE | DEPRECATED | EXPERIMENTAL | PLATFORM | REFERENCE
                               | PACKAGE | CONTAINS | REQUIRES
