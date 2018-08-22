@@ -52,6 +52,7 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
+import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -653,7 +654,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                         routine = routine != null ? routine.getParent() : null;
                     }
                     if (scope instanceof PascalStructType) {
-                        if (null == callScope) {                   // Scope specified as FQN part
+                        if (!(scope instanceof PasInterfaceTypeDecl) && null == callScope) {                // Scope specified as FQN part
                             if (routine instanceof PascalRoutine) {
                                 PascalRoutineActions.ActionImplement act = new PascalRoutineActions.ActionImplement(message("action.implement"), (PascalNamedElement) routine);
                                 act.invoke(editor.getProject(), editor, routine.getContainingFile());
