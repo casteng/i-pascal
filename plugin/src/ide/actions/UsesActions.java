@@ -15,6 +15,7 @@ import com.intellij.psi.stubs.StubIndex;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.Processor;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -143,7 +144,7 @@ public class UsesActions {
 
         @Override
         public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
-            return true;
+            return (file != null) && PascalLanguage.INSTANCE.equals(file.getLanguage());
         }
 
         @NotNull

@@ -39,6 +39,7 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
     private static final Pattern CONSTANT1 = Pattern.compile("\\s*[A-F0-9]+:\\s*.+([|\\[])[A-F0-9 (]+\\|.*");
     private static final Pattern CONSTANT2 = Pattern.compile("\\s*raw\\s*\\[\\$[0-9A-F]+\\.\\.\\$[0-9A-F]+]\\s*at \\$[0-9A-F]+");
     private static final Pattern VAR = Pattern.compile("\\s*spec var\\s+\\w+\\.\\$\\w+.*");
+    private static final Pattern VAR_PREFIXED = Pattern.compile("\\s*@\\w+.*");
     private static final Pattern TYPE = Pattern.compile("\\s*\\w+\\.\\w+\\s*=.*");
     private static final Pattern COMMENTED_TYPE = Pattern.compile("\\s*\\{type}\\s*");
     private static final Pattern ROUTINE = Pattern.compile("(\\s*)(procedure|function|operator)(\\s+)(@)(\\w+)");
@@ -152,6 +153,8 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
                 res.append("  type\n    ");
             } else if (INLINE_TYPE.matcher(line).matches()) {
                 res.append(line.replaceFirst(":", "_"));
+            } else if (VAR_PREFIXED.matcher(line).matches()) {
+                res.append(line.replaceFirst("@", "_"));
             } else {
                 Matcher m = ROUTINE.matcher(line);
                 if (m.find()) {
