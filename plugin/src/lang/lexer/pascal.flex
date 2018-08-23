@@ -38,6 +38,8 @@ BLOCK_COMMENT   = "(*" !([^]* "*)" [^]*) ("*)")?
 BRACE_COMMENT   = "{" !([^]* "}" [^]*) ("}")?
 COMMENT         = {LINE_COMMENT}|{BLOCK_COMMENT}|{BRACE_COMMENT}
 
+INACTIVE_CODE   = [^{\r\n]*
+
 IDENTIFIER=[:jletter:] [:jletterdigit:]{0,126}
 IDENTIFIER_="&"{IDENTIFIER}
 //identifier      = [_a-zA-Z][_a-zA-Z0-9]{0,126}
@@ -52,7 +54,8 @@ CT_IF           = "{$IF " !([^]* "}" [^]*) ("}")?
 CT_IFDEF        = "{$IFDEF " !([^]* "}" [^]*) ("}")?
 CT_IFNDEF       = "{$IFNDEF " !([^]* "}" [^]*) ("}")?
 CT_IFOPT        = "{$IFOPT " !([^]* "}" [^]*) ("}")?
-CT_ELSE         = "{$ELSE" !([^]* "}" [^]*) ("}")?
+CT_ELSEIF       = "{$ELSEIF " !([^]* "}" [^]*) ("}")?
+CT_ELSE         = "{$ELSE}" | ("{$ELSE " !([^]* "}" [^]*) ("}")?)
 CT_ENDIF        = "{$ENDIF" !([^]* "}" [^]*) ("}")?
 CT_IFEND        = "{$IFEND" !([^]* "}" [^]*) ("}")?
 
@@ -75,9 +78,10 @@ NUM_OCT         = \&[0-7]+
     {CT_IFNDEF}     { return handleIfNDef(zzCurrentPos, yytext()); }
     {CT_IFOPT}      { return handleIfOpt(zzCurrentPos, yytext()); }
     {CT_ELSE}       { return handleElse(zzCurrentPos); }
+    {CT_ELSEIF}     { return handleElseIf(zzCurrentPos, yytext()); }
     {CT_ENDIF}      { return handleEndIf(zzCurrentPos); }
     {CT_IFEND}      { return handleEndIf(zzCurrentPos); }
-    {IDENTIFIER}    { return COMMENT; }
+    {INACTIVE_CODE} { return COMMENT; }
     {WHITESPACE}    { return TokenType.WHITE_SPACE; }
     .               { return COMMENT; }
 }
@@ -381,6 +385,7 @@ NUM_OCT         = \&[0-7]+
     {CT_IFNDEF}     { return handleIfNDef(zzCurrentPos, yytext()); }
     {CT_IFOPT}      { return handleIfOpt(zzCurrentPos, yytext()); }
     {CT_ELSE}       { return handleElse(zzCurrentPos); }
+    {CT_ELSEIF}     { return handleElseIf(zzCurrentPos, yytext()); }
     {CT_ENDIF}      { return handleEndIf(zzCurrentPos); }
     {CT_IFEND}      { return handleEndIf(zzCurrentPos); }
 

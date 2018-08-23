@@ -266,6 +266,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     @Override
+    public IElementType handleElseIf(int pos, CharSequence sequence) {
+        return doHandleIfDef(pos, sequence, true);
+    }
+
+    @Override
     public IElementType handleIfDef(int pos, CharSequence sequence) {
         return doHandleIfDef(pos, sequence, false);
     }
