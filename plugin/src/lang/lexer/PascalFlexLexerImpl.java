@@ -51,6 +51,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     private int curLevel = 0;
     // level on which inactive code branch started
     private int inactiveLevel = 0;
+    // IF with True condition flag
+    private boolean trueIf = false;
 
     // (Offset, curLevel, inactiveLevel) - offset, current conditional compilation level, level on which inactive code branch started
     private List<Long> levels = new SmartList<Long>();
@@ -97,9 +99,12 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if (levels.isEmpty()) {
             curLevel = 0;
             inactiveLevel = 0;
+            trueIf = false;
         } else {
-            curLevel = (levels.get(levels.size() - 1).intValue() >> 16) & 0xFF;
-            inactiveLevel = levels.get(levels.size() - 1).intValue() & 0xFF;
+            int value = levels.get(levels.size() - 1).intValue();
+            curLevel = (value >> 16) & 0xFF;
+            inactiveLevel = value & 0x7F;
+            trueIf = (value & 0x80) > 0;
         }
         actualDefines = null;
         allDefines = null;
@@ -260,14 +265,51 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return CT_DEFINE;
     }
 
+    private IElementType doHandleIf(int pos, CharSequence sequence) {
+        if (isConditionalsDisabled()) {
+            return PasTypes.COMMENT;
+        }
+        curLevel++;
+        String condition = extractCondition(sequence);
+        if (!isInactive()) {
+            if (StringUtils.isNotEmpty(condition) && (!ConditionParser.checkCondition(condition, getActualDefines()))) {
+                inactiveLevel = curLevel;
+                yybegin(INACTIVE_BRANCH);
+                //if (incremental)System.out.println(String.format("%s is NOT %sdefined", name, negate ? "un" : ""));
+            } else {
+                trueIf = true;
+            }
+        }
+        pushLevels(pos);
+        return CT_DEFINE;
+    }
+
     @Override
     public IElementType handleIf(int pos, CharSequence sequence) {
-        return doHandleIfDef(pos, sequence, false);
+        return doHandleIf(pos, sequence);
     }
 
     @Override
     public IElementType handleElseIf(int pos, CharSequence sequence) {
-        return doHandleIfDef(pos, sequence, true);
+        if (isConditionalsDisabled()) {
+            return PasTypes.COMMENT;
+        }
+        if (trueIf) {
+            if (!isInactive()) {
+                inactiveLevel = curLevel;
+                yybegin(INACTIVE_BRANCH);
+                pushLevels(pos);
+            }
+        } else {
+            String condition = extractCondition(sequence);
+            if (isInactive() && StringUtils.isNotEmpty(condition) && ConditionParser.checkCondition(condition, getActualDefines())) {
+                if (curLevel == inactiveLevel) {
+                    yybegin(YYINITIAL);
+                    trueIf = true;
+                }
+            }
+        }
+        return CT_DEFINE;
     }
 
     @Override
@@ -294,7 +336,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             return TokenType.BAD_CHARACTER;
         }
         if (isInactive()) {
-            if (curLevel == inactiveLevel) {
+            if (!trueIf && (curLevel == inactiveLevel)) {
                 yybegin(YYINITIAL);
             }
         } else {
@@ -348,7 +390,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private void pushLevels(int pos) {
-        levels.add((long) (pos) << 32 + curLevel << 16 + inactiveLevel);
+        levels.add((long) (pos) << 32 + curLevel << 16 + inactiveLevel + (trueIf ? 0x80 : 0));
     }
 
     // Process the file and return the new instance of lexer which processed it
@@ -398,16 +440,17 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     }
 
     private static final Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\s*}");
-    private static final Pattern PATTERN_IF_DEFINED = Pattern.compile("(?i)\\{\\$if\\s+defined\\((\\w+)\\)\\s*}");
 
     private static String extractDefineName(CharSequence sequence) {
         Matcher m = PATTERN_DEFINE.matcher(sequence);
-        if (m.matches()) {
-            return m.group(1);
-        } else {
-            m = PATTERN_IF_DEFINED.matcher(sequence);
-            return m.matches() ? m.group(1) : null;
-        }
+        return m.matches() ? m.group(1) : null;
+    }
+
+    private static final Pattern PATTERN_CONDITION = Pattern.compile("(?i)\\{\\$(IF|ELSEIF)\\s+(\\w[\\w() ]*)\\s*}?");
+
+    private static String extractCondition(CharSequence sequence) {
+        Matcher m = PATTERN_CONDITION.matcher(sequence);
+        return m.matches() ? m.group(2) : null;
     }
 
     private static String extractIncludeName(CharSequence sequence) {
