@@ -487,7 +487,7 @@ FunctionDirective           ::= overloadDirective | oldCallConventionDirectiveSe
 private overloadDirective   ::= OVERLOAD ";"
 private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
 private oldCallConventionDirective ::= "far" | "local" | "near"
-ExternalDirective           ::= varagrs ";" | EXTERNAL ";" | EXTERNAL externalSpecifier [libLoadSpec] ";" | EXTERNAL ConstExpression [externalSpecifier] [libLoadSpec] ";"
+ExternalDirective           ::= EXTERNAL ";" | EXTERNAL externalSpecifier [libLoadSpec] ";" | EXTERNAL ConstExpression [externalSpecifier] [libLoadSpec] ";"
 private varagrs             ::= "varargs"
 private libLoadSpec         ::= "delayed" | "dependency" constExpr libListRest*
 private libListRest         ::= COMMA constExpr
@@ -497,7 +497,7 @@ ProcForwardDecl             ::= FORWARD ";" FunctionDirective*
 
 private dispIDDirective     ::= DISPID Expression {pin=1}
 private callConventionSemi  ::= callConvention ";"
-private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT
+private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT | varagrs
 private inlineDirectiveSemi ::= inlineDirective ";"
 private inlineDirective     ::= INLINE | ASSEMBLER
 private abstractDirectiveSemi ::= abstractDirective ";"
@@ -651,8 +651,7 @@ private procedureReference  ::= REFERENCE TO procedureTypeHeading
 private procedureTypeHeading ::= (funcHeading | procHeading) [OF OBJECT]
 private funcHeading         ::= FUNCTION [FormalParameterSection] ":" customAttributes* TypeDecl procTypeDirectives {pin=1}
 private procHeading         ::= PROCEDURE [FormalParameterSection] procTypeDirectives {pin=1}
-private procTypeDirectives  ::= (";" ProcTypeDirective)* ([";"] ProcTypeDirective)*
-ProcTypeDirective           ::= callConvention | varagrs {name="directive"}
+private procTypeDirectives  ::= (";" callConvention)* ([";"] callConvention)*
 
 private simpleType          ::= EnumType | SubRangeType
 SubRangeType        ::= RangeBound RANGE RangeBound
