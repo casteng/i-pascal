@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -52,9 +51,9 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     // level on which inactive code branch started
     private int inactiveLevel = 0;
     // IF with True condition flag
-    private boolean trueIf = false;
+    private int conditionStack = 0;
 
-    // (Offset, curLevel, inactiveLevel) - offset, current conditional compilation level, level on which inactive code branch started
+    // (Offset(32), ifValueStack(16), curLevel(8), inactiveLevel(8)) - offset, stack of IF condition values, current conditional compilation level, level on which inactive code branch started
     private List<Long> levels = new SmartList<Long>();
     // (Offset, defineName). Negative offset - undefine.
     private List<Pair<Integer, String>> defines = new SmartList<Pair<Integer, String>>();
@@ -99,12 +98,12 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if (levels.isEmpty()) {
             curLevel = 0;
             inactiveLevel = 0;
-            trueIf = false;
+            conditionStack = 0;
         } else {
             int value = levels.get(levels.size() - 1).intValue();
-            curLevel = (value >> 16) & 0xFF;
-            inactiveLevel = value & 0x7F;
-            trueIf = (value & 0x80) > 0;
+            conditionStack = (value >> 16) & 0xFFFF;
+            curLevel = (value >> 8) & 0xFF;
+            inactiveLevel = value & 0xFF;
         }
         actualDefines = null;
         allDefines = null;
@@ -261,6 +260,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             yybegin(INACTIVE_BRANCH);
             //if (incremental)System.out.println(String.format("%s is NOT %sdefined", name, negate ? "un" : ""));
         }
+        pushCondition(false);                  // not needed for IFDEFs
         pushLevels(pos);
         return CT_DEFINE;
     }
@@ -274,10 +274,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if (!isInactive()) {
             if (StringUtils.isNotEmpty(condition) && (!ConditionParser.checkCondition(condition, getActualDefines()))) {
                 inactiveLevel = curLevel;
+                pushCondition(false);
                 yybegin(INACTIVE_BRANCH);
                 //if (incremental)System.out.println(String.format("%s is NOT %sdefined", name, negate ? "un" : ""));
             } else {
-                trueIf = true;
+                pushCondition(true);
             }
         }
         pushLevels(pos);
@@ -294,7 +295,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if (isConditionalsDisabled()) {
             return PasTypes.COMMENT;
         }
-        if (trueIf) {
+        if (isLastConditionTrue()) {
             if (!isInactive()) {
                 inactiveLevel = curLevel;
                 yybegin(INACTIVE_BRANCH);
@@ -305,7 +306,8 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             if (isInactive() && StringUtils.isNotEmpty(condition) && ConditionParser.checkCondition(condition, getActualDefines())) {
                 if (curLevel == inactiveLevel) {
                     yybegin(YYINITIAL);
-                    trueIf = true;
+                    pushCondition(true);
+                    pushLevels(pos);
                 }
             }
         }
@@ -336,7 +338,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             return TokenType.BAD_CHARACTER;
         }
         if (isInactive()) {
-            if (!trueIf && (curLevel == inactiveLevel)) {
+            if (!isLastConditionTrue() && (curLevel == inactiveLevel)) {
                 yybegin(YYINITIAL);
             }
         } else {
@@ -358,6 +360,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         if (curLevel == inactiveLevel) {
             yybegin(YYINITIAL);
         }
+        popCondition();
         curLevel--;
         pushLevels(pos);
         return CT_DEFINE;
@@ -385,12 +388,24 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return INCLUDE;
     }
 
+    private void pushCondition(boolean result) {
+        conditionStack = (conditionStack << 1) | (result ? 1 : 0);
+    }
+
+    private void popCondition() {
+        conditionStack = (conditionStack >> 1);
+    }
+
+    private boolean isLastConditionTrue() {
+        return (conditionStack & 1) == 1;
+    }
+
     private boolean isConditionalsDisabled() {
         return getActualDefines().contains(BasePascalSdkType.DEFINE_IDE_DISABLE_CONDITIONALS_);
     }
 
     private void pushLevels(int pos) {
-        levels.add((long) (pos) << 32 + curLevel << 16 + inactiveLevel + (trueIf ? 0x80 : 0));
+        levels.add((long) (pos) << 32 + (conditionStack & 0xFF) << 16 + (curLevel << 8) + inactiveLevel);
     }
 
     // Process the file and return the new instance of lexer which processed it
@@ -439,14 +454,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return yystate() == INACTIVE_BRANCH;
     }
 
-    private static final Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\s*}");
 
     private static String extractDefineName(CharSequence sequence) {
         Matcher m = PATTERN_DEFINE.matcher(sequence);
         return m.matches() ? m.group(1) : null;
     }
-
-    private static final Pattern PATTERN_CONDITION = Pattern.compile("(?i)\\{\\$(IF|ELSEIF)\\s+(\\w[\\w() ]*)\\s*}?");
 
     private static String extractCondition(CharSequence sequence) {
         Matcher m = PATTERN_CONDITION.matcher(sequence);
