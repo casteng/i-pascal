@@ -39,13 +39,11 @@ import java.util.concurrent.locks.ReentrantLock;
  * Date: 1/4/13
  */
 public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
-    private static final int MAX_SHORT_TEXT_LENGTH = 32;
     private volatile String myCachedName;
     private ReentrantLock nameLock = new ReentrantLock();
     private volatile PasField.FieldType myCachedType;
     private ReentrantLock typeLock = new ReentrantLock();
     private volatile PsiElement myCachedNameEl;
-    private ReentrantLock nameElLock = new ReentrantLock();
     private Boolean local;
     private ReentrantLock localityLock = new ReentrantLock();
 
@@ -58,11 +56,8 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         super.subtreeChanged();
         if (SyncUtil.lockOrCancel(nameLock)) {
             myCachedName = null;
-            nameLock.unlock();
-        }
-        if (SyncUtil.lockOrCancel(nameElLock)) {
             myCachedNameEl = null;
-            nameElLock.unlock();
+            nameLock.unlock();
         }
         if (SyncUtil.lockOrCancel(typeLock)) {
             myCachedType = null;
@@ -85,7 +80,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         return myCachedName;
     }
 
-    public static String calcName(PsiElement nameElement) {
+    static String calcName(PsiElement nameElement) {
         if ((nameElement instanceof PascalQualifiedIdent)) {
             Iterator<PasSubIdent> it = ((PascalQualifiedIdent) nameElement).getSubIdentList().iterator();
             StringBuilder sb = new StringBuilder(it.next().getName());
@@ -165,7 +160,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Nullable
     private PsiElement getNameElement() {
-        SyncUtil.doWithLock(nameElLock, () -> {
+        SyncUtil.doWithLock(nameLock, () -> {
             if (!PsiUtil.isElementUsable(myCachedNameEl)) {
                 calcNameElement();
             }
@@ -223,27 +218,6 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     }
 
     @Override
-    public String toString() {
-        try {
-            return "[" + getClass().getSimpleName() + "]\"" + getName() + "\" ^" + getParent() + "..." + getShortText(getParent());
-        } catch (NullPointerException e) {
-            return "<NPE>";
-        }
-    }
-
-    private static String getShortText(PsiElement parent) {
-        if (null == parent) {
-            return "";
-        }
-        int lfPos = parent.getText().indexOf("\n");
-        if (lfPos > 0) {
-            return parent.getText().substring(0, lfPos);
-        } else {
-            return parent.getText().substring(0, Math.min(parent.getText().length(), MAX_SHORT_TEXT_LENGTH));
-        }
-    }
-
-    @Override
     public ItemPresentation getPresentation() {
         return PascalParserUtil.getPresentation(this);
     }
@@ -265,29 +239,6 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
             }
         }
         return PsiReference.EMPTY_ARRAY;
-    }
-
-    @Override
-    public boolean equals(Object o) {                                        // TODO: remove
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        PascalNamedElementImpl that = (PascalNamedElementImpl) o;
-
-        if (getParent() != that.getParent()) return false;
-        if (!getName().equalsIgnoreCase(that.getName())) return false;
-        /*if ((this instanceof PascalRoutineImpl) && (this != that)) {
-            return false;
-        }*/
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = getName().toUpperCase().hashCode();
-        result = 31 * result + (getParent() != null ? getParent().hashCode() : 0);
-        return result;
     }
 
 }

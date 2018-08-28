@@ -36,11 +36,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalStubElement<B>, PascalNamedElement {
 
-    public PascalNamedStubElement(ASTNode node) {
+    PascalNamedStubElement(ASTNode node) {
         super(node);
     }
 
-    public PascalNamedStubElement(B stub, IStubElementType nodeType) {
+    PascalNamedStubElement(B stub, IStubElementType nodeType) {
         super(stub, nodeType);
     }
 

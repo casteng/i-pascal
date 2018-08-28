@@ -3,8 +3,10 @@ package com.siberika.idea.pascal.util;
 import com.intellij.codeInspection.SmartHashMap;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.lexer.PascalFlexLexer;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,7 +20,10 @@ import java.util.regex.Pattern;
  * Date: 09/04/2015
  */
 public class StrUtil {
+
     public static final Pattern PATTERN_FIELD = Pattern.compile("[fF][A-Z]\\w*");
+
+    private static final int MAX_SHORT_TEXT_LENGTH = 32;
 
     public static boolean hasLowerCaseChar(String s) {
         for (char c : s.toCharArray()) {
@@ -123,4 +128,30 @@ public class StrUtil {
             }
         }
     }
+
+    public static String toDebugString(PsiElement element) {
+        if (element instanceof PascalNamedElement) {
+            try {
+                return "[" + element.getClass().getSimpleName() + "]\"" + ((PascalNamedElement) element).getName()
+                        + "\" ^" + toDebugString(element.getParent()) + "..." + getShortText(element.getParent());
+            } catch (NullPointerException e) {
+                return "<NPE>";
+            }
+        } else {
+            return element != null ? element.toString() : "";
+        }
+    }
+
+    private static String getShortText(PsiElement parent) {
+        if (null == parent) {
+            return "";
+        }
+        int lfPos = parent.getText().indexOf("\n");
+        if (lfPos > 0) {
+            return parent.getText().substring(0, lfPos);
+        } else {
+            return parent.getText().substring(0, Math.min(parent.getText().length(), MAX_SHORT_TEXT_LENGTH));
+        }
+    }
+
 }
