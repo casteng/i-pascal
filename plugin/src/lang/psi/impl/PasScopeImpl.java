@@ -40,7 +40,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     private String myCachedUniqueName;
 
     volatile boolean building = false;
-    private volatile String cachedKey;
+    volatile String cachedKey;
 
     private ReentrantLock nameLock = new ReentrantLock();
     private ReentrantLock containingScopeLock = new ReentrantLock();

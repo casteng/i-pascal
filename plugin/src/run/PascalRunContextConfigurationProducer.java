@@ -4,6 +4,7 @@ import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.ConfigurationFromContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.execution.configurations.RunConfiguration;
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -13,6 +14,7 @@ import com.siberika.idea.pascal.lang.psi.PasBlockBody;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.module.PascalModuleType;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -81,6 +83,10 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
     }
 
     public static boolean isProgramLeafElement(PsiElement element) {
+        ASTNode node = element.getNode();
+        if ((null == node) || ((node.getElementType() != PasTypes.BEGIN) && (node.getElementType() != PasTypes.PROGRAM))) {
+            return false;
+        }
         if ((element.getFirstChild() == null) && (element.getParent().getFirstChild() == element) &&
                 (element.getParent() instanceof PasProgramModuleHead
                         || element.getParent().getParent() instanceof PasBlockBody && element.getParent().getParent().getParent() instanceof PasBlockGlobal)

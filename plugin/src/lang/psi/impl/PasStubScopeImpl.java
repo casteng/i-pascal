@@ -167,14 +167,16 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
 
     @Override
     public void invalidateCaches() {
-        PascalModuleImpl.invalidate(getKey());
-        PascalRoutineImpl.invalidate(getKey());
-        PasStubStructTypeImpl.invalidate(getKey());
+        if (cachedKey != null) {
+            PascalModuleImpl.invalidate(cachedKey);
+            PascalRoutineImpl.invalidate(cachedKey);
+            PasStubStructTypeImpl.invalidate(cachedKey);
+            cachedKey = null;
+        }
         if (SyncUtil.lockOrCancel(containingScopeLock)) {
             containingScope = null;
             containingScopeLock.unlock();
         }
-        cachedKey = null;
         fieldsMap.clear();                                     // TODO: probably not safe
     }
 

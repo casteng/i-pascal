@@ -172,10 +172,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             canonicalName = null;
             parametersLock.unlock();
         }
-        invalidate(getKey());
+        if (cachedKey != null) {
+            invalidate(cachedKey);
+        }
     }
 
-    public static void invalidate(String key) {
+    static void invalidate(String key) {
         cache.invalidate(key);
     }
 
