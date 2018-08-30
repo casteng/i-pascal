@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
@@ -45,7 +46,6 @@ import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -211,7 +211,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 String typeString = "";
                 if (element instanceof PascalIdentDecl) {
                     typeString = ((PascalIdentDecl) element).getTypeString();
-                    if (!StringUtils.isEmpty(typeString)) {
+                    if (!StringUtil.isEmpty(typeString)) {
                         typeString = ": " + typeString;
                     }
                 }

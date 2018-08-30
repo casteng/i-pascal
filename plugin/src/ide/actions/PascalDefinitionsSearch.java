@@ -47,7 +47,7 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
     }
 
     @Override
-    public void processQuery(@NotNull DefinitionsScopedSearch.SearchParameters queryParameters, @NotNull Processor<PsiElement> consumer) {
+    public void processQuery(@NotNull DefinitionsScopedSearch.SearchParameters queryParameters, @NotNull Processor<? super PsiElement> consumer) {
         Collection<PasEntityScope> targets = findImplementations(queryParameters.getElement(), GotoSuper.LIMIT_NONE, 0);
         for (PsiElement target : targets) {
             consumer.process(target);

@@ -20,6 +20,7 @@
   tokenTypeClass="com.siberika.idea.pascal.lang.lexer.PascalElementType"
 
   consumeTokenMethod(".*_Expr|Expr")="consumeTokenFast"
+  consumeTokenMethod("rec_.*")="consumeTokenFast"
 
   tokens = [
        COMMENT="COMMENT"
@@ -375,7 +376,7 @@ private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
 private rec_implementation  ::= !(INITIALIZATION | FINALIZATION | BEGIN | ASM)
 private rec_implementation_dot  ::= !(".") & rec_implementation
-private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | PROPERTY | Visibility | LABEL |
+private rec_section_nested  ::= !(CLASS | TYPE | EXPORTS | varKey | constKey | PROPERTY | Visibility | LABEL | CASE |
                                  (identifier "<") | (END DOT) | "[") & rec_interface
 private rec_section         ::= !rec__routine_key & rec_section_nested
 private rec_section_global  ::= !(".") & rec_section
@@ -833,7 +834,7 @@ setExpr                     ::= '[' [ !']' Expr setTail * ] ']' {pin(".*")=1}
 private setTail             ::= ("," | ".." | ) Expr //{}
 private primaryGroup        ::= simpleRefExpr | literalExpr | parenExpr | setExpr | ClosureExpr
 private callGroup           ::= callExpr | indexExpr | dereferenceExpr
-literalExpr                 ::= NUMBER_INT | NUMBER_REAL | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
+literalExpr                 ::= NUMBER_REAL | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
 FormalParameterSection      ::= formalParameterSect
 private formalParameterSect ::= "(" [ formalParameterList ] ")" {pin=1 recoverWhile=rec_formal_param}

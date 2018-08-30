@@ -1,8 +1,8 @@
 package com.siberika.idea.pascal.lang.compiled;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.text.StringUtil;
 import com.siberika.idea.pascal.PascalBundle;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -231,10 +231,10 @@ public class PPUDumpParser {
                         result.symidNameMap = symidNameMap;
                     }
                 } else {
-                    if (!StringUtils.isBlank(sec.getDataStr("id"))) {
+                    if (!StringUtil.isEmpty(sec.getDataStr("id"))) {
                         idNameMap.put(sec.getDataStr("id"), sec.sb.toString());
                     }
-                    if (!StringUtils.isBlank(sec.getDataStr("symid"))) {
+                    if (!StringUtil.isEmpty(sec.getDataStr("symid"))) {
                         symidNameMap.put(sec.getDataStr("symid"), sec.sb.toString());
                     }
                 }
@@ -323,14 +323,14 @@ public class PPUDumpParser {
                 StringBuilder psb = new StringBuilder(LF + "type ");
                 psb.append(sec.name).append(" = ").append(sec.getDataStr("objtype"));
                 int pos = psb.length();
-                if (!StringUtils.isBlank(sec.getDataStr("iid"))) {
+                if (!StringUtil.isEmpty(sec.getDataStr("iid"))) {
                     psb.append(LF).append(INDENT).append("['").append(sec.getDataStr("iid")).append("']");
                 }
                 sec.insertText(0, psb.toString());
                 appendReference(sec, pos, "ancestor", "(", ")", UNRESOLVED_INTERNAL);
             } else if ("/rec".equalsIgnoreCase(sec.type)) {
                 StringBuilder psb = new StringBuilder("");
-                if (!StringUtils.isBlank(sec.name)) {
+                if (!StringUtil.isEmpty(sec.name)) {
                     psb.append(LF).append("type ").append(sec.name).append(" = record");
                 } else {
                     psb.append("record ");
@@ -353,7 +353,7 @@ public class PPUDumpParser {
                 appendLineEnd(sec);
             } else if ("/proctype".equalsIgnoreCase(sec.type)) {
                 String returnTypeId = sec.getDataStr("rettype/id");
-                if (StringUtils.isBlank(returnTypeId) || "$void".equalsIgnoreCase(idNameMap.get(returnTypeId))) {
+                if (StringUtil.isEmpty(returnTypeId) || "$void".equalsIgnoreCase(idNameMap.get(returnTypeId))) {
                     sec.insertText(0, "procedure ");
                 } else {
                     sec.insertText(0, "function ");
@@ -389,20 +389,20 @@ public class PPUDumpParser {
         }
 
         private void appendLineEnd(Section sec) {
-            if (!StringUtils.isBlank(sec.name)) {
+            if (!StringUtil.isEmpty(sec.name)) {
                 sec.sb.append(";\n");
             }
         }
 
         private void insertTypeDeclName(Section sec) {
-            if (!StringUtils.isBlank(sec.name)) {
+            if (!StringUtil.isEmpty(sec.name)) {
                 sec.sb.append(LF).append("type ").append(sec.name).append(" = ");
             }
         }
 
         private void appendIfAllNotBlank(StringBuilder sb, String...args) {
             for (String arg : args) {
-                if (StringUtils.isBlank(arg)) {
+                if (StringUtil.isEmpty(arg)) {
                     return;
                 }
             }
@@ -450,7 +450,7 @@ public class PPUDumpParser {
             if (id != null) {
                 @SuppressWarnings("SuspiciousMethodCalls")
                 String ref = nameMap != null ? nameMap.get(id) : null;
-                if (StringUtils.isBlank(ref)) {
+                if (StringUtil.isEmpty(ref)) {
                     pos = sec.insertText(pos, prefix + postfix);
                     if (idNameMap != null) {
                         if (sec.undefined != null) {
@@ -503,7 +503,7 @@ public class PPUDumpParser {
                 } else {
                     @SuppressWarnings("SuspiciousMethodCalls")
                     String ref = nameMap.get(id);
-                    if (StringUtils.isBlank(ref) || (ref.startsWith("$"))) {
+                    if (StringUtil.isEmpty(ref) || (ref.startsWith("$"))) {
                         res = defalut;
                     } else {
                         res = res + ref;
@@ -748,7 +748,7 @@ public class PPUDumpParser {
         }
 
         public void insertVisibility(int pos, String defaultVisibility) {
-            insertText(pos, StringUtils.isBlank(getDataStr("visibility")) ? defaultVisibility : getDataStr("visibility") + " ");
+            insertText(pos, StringUtil.isEmpty(getDataStr("visibility")) ? defaultVisibility : getDataStr("visibility") + " ");
         }
 
         public void merge(Section sec) {
@@ -781,7 +781,7 @@ public class PPUDumpParser {
         }
 
         public int insertText(int pos, String text) {
-            if (!StringUtils.isBlank(text)) {
+            if (!StringUtil.isEmpty(text)) {
                 return doInsertText(pos, text);
             } else {
                 return pos;
@@ -803,8 +803,8 @@ public class PPUDumpParser {
         }
 
         public boolean isAnonimous() {
-            return StringUtils.isBlank(name) &&
-                    (!StringUtils.isBlank(getDataStr("id")) || !StringUtils.isBlank(getDataStr("symid")));
+            return StringUtil.isEmpty(name) &&
+                    (!StringUtil.isEmpty(getDataStr("id")) || !StringUtil.isEmpty(getDataStr("symid")));
         }
 
         public void setIndent(int size) {

@@ -25,7 +25,7 @@ public class PascalReferencesSearcher extends QueryExecutorBase<PascalCommentRef
     }
 
     @Override
-    public void processQuery(@NotNull ReferencesSearch.SearchParameters p, @NotNull final Processor<PascalCommentReference> consumer) {
+    public void processQuery(@NotNull ReferencesSearch.SearchParameters p, @NotNull Processor<? super PascalCommentReference> consumer) {
         final PsiElement element = p.getElementToSearch();
         if (element instanceof PsiComment) {
             List<Pair<Integer, String>> directives = StrUtil.parseDirectives(element.getText());
@@ -33,7 +33,7 @@ public class PascalReferencesSearcher extends QueryExecutorBase<PascalCommentRef
                 p.getOptimizer().searchWord(directive.getSecond(), p.getEffectiveSearchScope(), UsageSearchContext.IN_COMMENTS, false, element,
                         new RequestResultProcessor() {
                             @Override
-                            public boolean processTextOccurrence(@NotNull PsiElement el, int offsetInElement, @NotNull Processor<PsiReference> c) {
+                            public boolean processTextOccurrence(@NotNull PsiElement el, int offsetInElement, @NotNull Processor<? super PsiReference> c) {
                                 if (el.getNode().getElementType() == PasTypes.CT_DEFINE) {
                                     PsiReference ref = el.getReference();
                                     ref = ref != null ? ref : new PascalCommentReference(el);
