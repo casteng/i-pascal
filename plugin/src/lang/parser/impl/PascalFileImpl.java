@@ -9,6 +9,7 @@ import com.intellij.psi.PsiNameIdentifierOwner;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,14 +18,10 @@ import org.jetbrains.annotations.Nullable;
  * Date: 12/9/12
  */
 public class PascalFileImpl extends PsiFileBase implements PascalFile, PsiNameIdentifierOwner {
+    volatile private PsiElement cachedSection;
+
     public PascalFileImpl(@NotNull FileViewProvider viewProvider) {
         super(viewProvider, PascalLanguage.INSTANCE);
-    }
-
-    @Nullable
-    @Override
-    public String getModuleName() {
-        return "Fixed module name";
     }
 
     @NotNull
@@ -56,5 +53,14 @@ public class PascalFileImpl extends PsiFileBase implements PascalFile, PsiNameId
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
+        cachedSection = null;
+    }
+
+    @Override
+    public PsiElement getImplementationSection() {
+        if (!PsiUtil.isElementUsable(cachedSection)) {
+            cachedSection = PsiUtil.getModuleImplementationSection(this);
+        }
+        return cachedSection;
     }
 }

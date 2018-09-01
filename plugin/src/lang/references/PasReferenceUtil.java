@@ -22,6 +22,7 @@ import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
@@ -367,9 +368,10 @@ public class PasReferenceUtil {
         if (null == context.unitNamespaces) {
             context.unitNamespaces = ModuleUtil.retrieveUnitNamespaces(fqn.getParentIdent());
         }
+        PsiFile file = fqn.getParentIdent().getContainingFile();
         boolean implAffects = fqn.isFirst()
                 && !ResolveUtil.isStubPowered(context.scope)
-                && PsiUtil.isBefore(PsiUtil.getModuleImplementationSection(fqn.getParentIdent().getContainingFile()), fqn.getParentIdent());
+                && file instanceof PascalFile && PsiUtil.isBefore(((PascalFile) file).getImplementationSection(), fqn.getParentIdent());
         if (context.scope != null) {
             if (context.scope instanceof PascalStubElement) {
                 StubElement stub = ((PascalStubElement) context.scope).retrieveStub();

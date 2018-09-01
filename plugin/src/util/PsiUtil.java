@@ -445,7 +445,6 @@ public class PsiUtil {
 
     public static boolean isElementValid(PsiElement element) {
         return element.isValid();
-        //return (ModuleUtilCore.findModuleForPsiElement(element) != null);
     }
 
     public static boolean isElementUsable(PsiElement element) {
