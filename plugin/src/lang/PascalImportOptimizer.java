@@ -69,8 +69,6 @@ public class PascalImportOptimizer implements ImportOptimizer {
     public static UsedUnitStatus getUsedUnitStatus(PascalQualifiedIdent usedUnitName, Module module) {
         Project project = usedUnitName.getProject();
         Collection<PascalModule> units = ResolveUtil.findUnitsWithStub(project, module, usedUnitName.getName());
-//        PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(usedUnitName.getProject(),
-//                PasReferenceUtil.findUnitFiles(usedUnitName.getProject(), module), usedUnitName.getName());
         PascalModule mod = units.isEmpty() ? null : units.iterator().next();
         if (null == mod) {
             return UsedUnitStatus.UNKNOWN;

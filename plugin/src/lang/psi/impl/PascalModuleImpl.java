@@ -11,13 +11,16 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
+import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
@@ -66,6 +69,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     private ReentrantLock unitsLock = new ReentrantLock();
     private ReentrantLock publicUnitsLock = new ReentrantLock();
     private ReentrantLock privateUnitsLock = new ReentrantLock();
+    volatile private Collection<PasWithStatement> withStatements;
 
     public PascalModuleImpl(ASTNode node) {
         super(node);
@@ -260,7 +264,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             PasField field = entry.getValue();
             if ((field != null) && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
                                 && PasField.TYPES_STRUCTURE.contains(field.fieldType)
-                                && (field.owner != null) && nameMatch(module, field.owner.getName(), unitPrefixes)) {
+                                && (field.owner instanceof PascalModule) && nameMatch(module, field.owner.getName(), unitPrefixes)) {
                 if (entry.getKey().startsWith(INTERFACE_PREFIX)) {
                     res.getFirst().add(field.getElement());
                 } else {
@@ -445,4 +449,25 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         return null;
     }
 
+    @NotNull
+    @Override
+    public Collection<PasWithStatement> getWithStatements() {
+        if (null == withStatements) {
+            PsiElement base;
+            switch (getModuleType()) {
+                case UNIT:
+                    base = ((PasModule) this).getUnitImplementation();
+                    break;
+                case PROGRAM:
+                case LIBRARY:
+                    PasBlockGlobal blockGlobal = ((PasModule) this).getBlockGlobal();
+                    base = blockGlobal != null ? blockGlobal.getBlockBody() : this;
+                    break;
+                default:
+                    base = null;
+            }
+            withStatements = base != null ? PsiTreeUtil.findChildrenOfType(base, PasWithStatement.class) : Collections.emptyList();
+        }
+        return withStatements;
+    }
 }

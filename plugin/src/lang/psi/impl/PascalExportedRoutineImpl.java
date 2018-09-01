@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
@@ -193,6 +194,11 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         }
         calcFormalParameters();
         return formalParameterAccess;
+    }
+
+    @Override
+    public Collection<PasWithStatement> getWithStatements() {
+        return Collections.emptyList();
     }
 
     private void calcFormalParameters() {

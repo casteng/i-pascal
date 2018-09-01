@@ -19,6 +19,7 @@ import com.siberika.idea.pascal.lang.psi.PasGenericPostfix;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
@@ -52,6 +53,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     private ReentrantLock typeParametersLock = new ReentrantLock();
 
     private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
+    volatile private Collection<PasWithStatement> withStatements;
 
     @Nullable
     public abstract PasFormalParameterSection getFormalParameterSection();
@@ -338,6 +340,15 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             parentLock.unlock();
         }
         return parentScopes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<PasWithStatement> getWithStatements() {
+        if (null == withStatements) {
+            withStatements = PsiTreeUtil.findChildrenOfType(this, PasWithStatement.class);
+        }
+        return withStatements;
     }
 
     private void calcParentScopes() {

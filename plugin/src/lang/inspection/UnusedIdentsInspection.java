@@ -13,6 +13,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.Query;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
@@ -33,7 +34,12 @@ public class UnusedIdentsInspection extends LocalInspectionTool {
     @Override
     public ProblemDescriptor[] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly) {
         List<ProblemDescriptor> result = new SmartList<>();
-        PsiElement impl = PsiUtil.getModuleImplementationSection(file);
+        PsiElement impl;
+        if (file instanceof PascalFile) {
+            impl = ((PascalFile) file).getImplementationSection();
+        } else {
+            impl = PsiUtil.getModuleImplementationSection(file);
+        }
         LocalSearchScope fileScope = new LocalSearchScope(file);
         Collection<PascalNamedElement> idents = PsiTreeUtil.findChildrenOfAnyType(impl, PasNamedIdentDecl.class, PasNamedIdent.class);
         for (PascalNamedElement ident : idents) {

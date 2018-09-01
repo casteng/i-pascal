@@ -583,7 +583,7 @@ public class PasReferenceUtil {
         if (null == scope) {
             return;
         }
-        Collection<PasWithStatement> statements = PsiTreeUtil.findChildrenOfType(scope, PasWithStatement.class);
+        Collection<PasWithStatement> statements = scope.getWithStatements();
         for (PasWithStatement ws : statements) {
             if (PsiUtil.isParentOf(ident, ws.getStatement()) && PsiUtil.isParentOf(ws, scope)) {
                 for (PasExpression expr : ws.getExpressionList()) {

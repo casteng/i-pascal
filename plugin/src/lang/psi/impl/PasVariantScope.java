@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,6 +46,12 @@ public class PasVariantScope extends PasScopeImpl {
 
     @Override
     public void invalidateCaches() {
+    }
+
+    @NotNull
+    @Override
+    public Collection<PasWithStatement> getWithStatements() {
+        return Collections.emptyList();
     }
 
 }

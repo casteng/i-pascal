@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
 import com.siberika.idea.pascal.lang.psi.PascalInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -314,6 +315,12 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             }
         }
         return parentScopes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<PasWithStatement> getWithStatements() {
+        return Collections.emptyList();
     }
 
     private void calcParentScopes() {
