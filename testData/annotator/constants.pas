@@ -21,7 +21,7 @@ const
     real8 = 8.005E-45;
 
     real9 = 1.<error>;</error>
-    real10 = <error>.</error>02;
+    real10 = <error>.</error>02<error>;</error>
 
 implementation
 

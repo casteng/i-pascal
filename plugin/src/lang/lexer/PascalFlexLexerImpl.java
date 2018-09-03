@@ -215,7 +215,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             String key = name.toUpperCase();
             getActualDefines().add(key);
             defines.add(Pair.create(pos, key));
-            Map<String, Define> defs = getAllDefines();
+            Map<String, Define> defs = allDefines;
             if (!BasePascalSdkType.DEFINE_IDE_PARSER.equals(key) || !defs.containsKey(key)) {
                 defs.put(key, new Define(name, virtualFile, pos));
             }
@@ -230,7 +230,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             String key = name.toUpperCase();
             getActualDefines().remove(key);
             defines.add(Pair.create(-pos, key));
-            getAllDefines().put(key, new Define(name, virtualFile, pos));
+            allDefines.put(key, new Define(name, virtualFile, pos));
             //if (incremental)System.out.println("Undefine: " + name);
         }
     }
@@ -255,12 +255,17 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         }
         String name = extractDefineName(sequence);
         curLevel++;
-        if (StringUtils.isNotEmpty(name) && (!getActualDefines().contains(name.toUpperCase()) ^ negate) && (!isInactive())) {
-            inactiveLevel = curLevel;
-            yybegin(INACTIVE_BRANCH);
-            //if (incremental)System.out.println(String.format("%s is NOT %sdefined", name, negate ? "un" : ""));
+        if (!isInactive()) {
+            if (StringUtils.isNotEmpty(name) && (!getActualDefines().contains(name.toUpperCase()) ^ negate)) {
+                inactiveLevel = curLevel;
+                pushCondition(false);
+                yybegin(INACTIVE_BRANCH);
+            } else {
+                pushCondition(true);
+            }
+        } else {
+            pushCondition(false);    // to balance with $endif directives
         }
-        pushCondition(false);                  // not needed for IFDEFs
         pushLevels(pos);
         return CT_DEFINE;
     }
@@ -276,10 +281,11 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                 inactiveLevel = curLevel;
                 pushCondition(false);
                 yybegin(INACTIVE_BRANCH);
-                //if (incremental)System.out.println(String.format("%s is NOT %sdefined", name, negate ? "un" : ""));
             } else {
                 pushCondition(true);
             }
+        } else {
+            pushCondition(false);    // to balance with $endif directives
         }
         pushLevels(pos);
         return CT_DEFINE;
@@ -294,6 +300,12 @@ public class PascalFlexLexerImpl extends _PascalLexer {
     public IElementType handleElseIf(int pos, CharSequence sequence) {
         if (isConditionalsDisabled()) {
             return PasTypes.COMMENT;
+        }
+        if (0 == curLevel) {
+            VirtualFile virtualFile = getVirtualFile();
+            getVFName(virtualFile);
+            LOG.info(String.format("ERROR: $ELSEIF w/o $IF. Text: %s, file: %s", sequence, getVFName(virtualFile)));
+            return doHandleIf(pos, sequence);
         }
         if (isLastConditionTrue()) {
             if (!isInactive()) {
@@ -376,7 +388,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
             PascalFlexLexerImpl lexer = !ObjectUtils.equals(virtualFile, file) ? processFile(project, file) : null;
             if (lexer != null) {
                 getActualDefines().addAll(lexer.getActualDefines());
-                getAllDefines().putAll(lexer.getAllDefines());
+                allDefines.putAll(lexer.getAllDefines());
                 for (Pair<Integer, String> define : lexer.defines) {
                     defines.add(Pair.create(define.first > 0 ? pos : -pos, define.second));
                 }

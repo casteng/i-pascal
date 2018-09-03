@@ -86,7 +86,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         assertTrue(String.format(prefix + "%s\nLack of: %s", exp, lacking), strings.containsAll(exp));
     }
 
-    private void checkCompletionNotContains(CodeInsightTestFixture myFixture, String...unexpected) {
+    public static void checkCompletionNotContains(CodeInsightTestFixture myFixture, String...unexpected) {
         completeBasicAllCarets(myFixture);
         List<String> strings = myFixture.getLookupElementStrings();
         assertTrue(strings != null);
@@ -100,7 +100,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         assertTrue(sb.toString(), sb.length() == 0);
     }
 
-    public final List<List<String>> completeBasicAllCarets(CodeInsightTestFixture myFixture) {
+    public static final List<List<String>> completeBasicAllCarets(CodeInsightTestFixture myFixture) {
         final CaretModel caretModel = myFixture.getEditor().getCaretModel();
         final List<Caret> carets = caretModel.getAllCarets();
 
