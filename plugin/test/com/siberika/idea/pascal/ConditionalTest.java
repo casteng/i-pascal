@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal;
 
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
-import org.junit.Assert;
 
 public class ConditionalTest extends LightPlatformCodeInsightFixtureTestCase {
     @Override
@@ -31,10 +30,6 @@ public class ConditionalTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("ifnested.pas");
         CompletionTest.checkCompletionContains(myFixture, "active1");
         CompletionTest.checkCompletionNotContains(myFixture, "inactive1", "inactive2", "inactive3");
-    }
-
-    public void testFail() {
-        Assert.assertTrue(false);
     }
 
 }
