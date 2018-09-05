@@ -393,7 +393,7 @@ private rec_section_global  ::= !(".") & rec_section
 private rec_routine         ::= !(EXTERNAL | FORWARD) & rec_name & rec_interface
 private rec_routine_decl    ::= !(EXTERNAL | FORWARD | CASE) & rec_name & rec_interface
 private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
-private rec_semi            ::= !(";") & rec_section
+private rec_semi            ::= !(";" | "deprecated" | "platform") & rec_section
 private rec_struct_field    ::= !(";" | ")" | END | CASE | identifier ) & rec_section
 private rec_struct_outer    ::= !(END)
 private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
@@ -784,7 +784,7 @@ private recordValueRest     ::= ";" recordValue
 private recordValue         ::= identifier ":" constExpr
 
 private rec_record_colon    ::= !(")" | END)
-private rec_expr_colon      ::= !(")" | ";" | INDEX | "name" | "delayed" | "dependency") & rec_section
+private rec_expr_colon      ::= !(")" | ";" | INDEX | "name" | "delayed" | "dependency" | "deprecated" | "platform") & rec_section
 
 /*private Designator                  ::= //[ "inherited" ] , [ QualifiedIdent | TypeID ] , { DesignatorItem } ===***
                                 INHERITED [TypeID] exprParentheses? | EntityID DesignatorItemEx* | DesignatorItemEx+

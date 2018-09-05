@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
  */
 public interface PascalFlexLexer {
     Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\s*}");
-    Pattern PATTERN_CONDITION = Pattern.compile("(?i)\\{\\$(IF|ELSEIF)\\s+([\\w(][\\w() ]*)\\s*}?");
+    Pattern PATTERN_CONDITION = Pattern.compile("(?i)\\{\\$(IF|ELSEIF)\\s+([\\w(][\\w()\\s]*)\\s*}?");
 
     void define(int pos, CharSequence sequence);
     void unDefine(int pos, CharSequence sequence);
