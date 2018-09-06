@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasCaseStatement;
@@ -58,22 +59,54 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
     public FoldingDescriptor[] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
         final List<FoldingDescriptor> descriptors = new ArrayList<FoldingDescriptor>();
 
-        foldCommon(root, descriptors);
-        foldCase(root, descriptors);
-        foldUses(root, descriptors);
-        foldEnums(root, descriptors);
-        foldRoutines(root, descriptors);
+        Collection<PascalPsiElement> commonElements = new ArrayList<>();
+        Collection<PasCaseStatement> caseElements = new ArrayList<>();
+        Collection<PasUsesClause> usesElements = new ArrayList<>();
+        Collection<PasEnumType> enumElements = new ArrayList<>();
+        Collection<PasRoutineImplDeclImpl> routineElements = new ArrayList<>();
+        Collection<PsiComment> commentElements = new ArrayList<>();
+
+        PsiElementProcessor<PsiElement> processor = new PsiElementProcessor<PsiElement>() {
+            @Override
+            public boolean execute(@NotNull PsiElement each) {
+                if (each == root) return true;
+                if (each instanceof PasCaseStatement) {
+                    caseElements.add((PasCaseStatement) each);
+                } else if (each instanceof PasUsesClause) {
+                    usesElements.add((PasUsesClause) each);
+                } else if (each instanceof PasEnumType) {
+                    enumElements.add((PasEnumType) each);
+                } else if (each instanceof PasRoutineImplDeclImpl) {
+                    routineElements.add((PasRoutineImplDeclImpl) each);
+                } else if (each instanceof PsiComment) {
+                    commentElements.add((PsiComment) each);
+                } else if (PsiTreeUtil.instanceOf(each,
+                        PasUnitInterface.class, PasUnitImplementation.class, PasUnitInitialization.class, PasUnitFinalization.class,
+                        PasVarSection.class, PasTypeSection.class, PasConstSection.class,
+                        PasClassTypeTypeDecl.class, PasClassHelperDecl.class, PasClassTypeDecl.class,
+                        PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordHelperDecl.class, PasRecordDecl.class,
+                        PasCompoundStatement.class, PasHandler.class, PasRepeatStatement.class)) {
+                    commonElements.add((PascalPsiElement) each);
+                }
+                return true;
+            }
+        };
+        PsiTreeUtil.processElements(root, processor);
+
+        foldCommon(descriptors, commonElements);
+        foldCase(descriptors, caseElements);
+        foldUses(descriptors, usesElements);
+        foldEnums(descriptors, enumElements);
+        foldRoutines(descriptors, routineElements);
 
         if (!quick) {
-            foldComments(root, descriptors, document);
+            foldComments(descriptors, document, commentElements);
         }
 
-        return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
+        return descriptors.toArray(new FoldingDescriptor[0]);
     }
 
-    private void foldRoutines(PsiElement root, List<FoldingDescriptor> descriptors) {
-        @SuppressWarnings("unchecked")
-        Collection<PasRoutineImplDeclImpl> routineList = PsiUtil.findChildrenOfAnyType(root, PasRoutineImplDeclImpl.class);
+    private void foldRoutines(List<FoldingDescriptor> descriptors, Collection<PasRoutineImplDeclImpl> routineList) {
         for (PasRoutineImplDeclImpl routine : routineList) {
             int foldStart = getStartOffset(routine);
             TextRange range = getRange(foldStart, routine.getTextRange().getEndOffset());
@@ -84,15 +117,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         }
     }
 
-    private void foldCommon(PsiElement root, List<FoldingDescriptor> descriptors) {
-        @SuppressWarnings("unchecked")
-        Collection<PascalPsiElement> blocks = PsiUtil.findChildrenOfAnyType(root,
-                PasUnitInterface.class, PasUnitImplementation.class, PasUnitInitialization.class, PasUnitFinalization.class,
-                PasVarSection.class, PasTypeSection.class, PasConstSection.class,
-                PasClassTypeTypeDecl.class, PasClassHelperDecl.class, PasClassTypeDecl.class,
-                PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordHelperDecl.class, PasRecordDecl.class,
-                PasCompoundStatement.class, PasHandler.class, PasRepeatStatement.class);
-
+    private void foldCommon(List<FoldingDescriptor> descriptors, Collection<PascalPsiElement> blocks) {
         for (final PsiElement block : blocks) {
             int foldStart = getStartOffset(block);
             TextRange range = getRange(foldStart, block.getTextRange().getEndOffset());
@@ -110,8 +135,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         return new TextRange(start, end);
     }
 
-    private void foldCase(PsiElement root, List<FoldingDescriptor> descriptors) {
-        Collection<PasCaseStatement> caseStatements = PsiTreeUtil.findChildrenOfType(root, PasCaseStatement.class);
+    private void foldCase(List<FoldingDescriptor> descriptors, Collection<PasCaseStatement> caseStatements) {
         for (final PasCaseStatement caseStatement : caseStatements) {
             PsiElement caseItem = PsiUtil.getNextSibling(caseStatement.getFirstChild());
             if (caseItem != null) {
@@ -125,9 +149,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         }
     }
 
-    private void foldUses(PsiElement root, List<FoldingDescriptor> descriptors) {
-        @SuppressWarnings("unchecked")
-        Collection<PasUsesClause> usesList = PsiUtil.findChildrenOfAnyType(root, PasUsesClause.class);
+    private void foldUses(List<FoldingDescriptor> descriptors, Collection<PasUsesClause> usesList) {
         for (final PasUsesClause uses : usesList) {
             int foldStart = getStartOffset(uses);
             TextRange range = getRange(foldStart, uses.getTextRange().getEndOffset());
@@ -154,9 +176,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         }
     }
 
-    private void foldEnums(PsiElement root, List<FoldingDescriptor> descriptors) {
-        @SuppressWarnings("unchecked")
-        Collection<PasEnumType> enums = PsiUtil.findChildrenOfAnyType(root, PasEnumType.class);
+    private void foldEnums(List<FoldingDescriptor> descriptors, Collection<PasEnumType> enums) {
         for (final PasEnumType enumType : enums) {
             final PasTypeDeclaration decl = PsiTreeUtil.getParentOfType(enumType, PasTypeDeclaration.class);
             if (decl != null) {
@@ -185,8 +205,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         }
     }
 
-    private void foldComments(PsiElement root, List<FoldingDescriptor> descriptors, Document document) {
-        final Collection<PsiComment> comments = PsiTreeUtil.findChildrenOfType(root, PsiComment.class);
+    private void foldComments(List<FoldingDescriptor> descriptors, Document document, final Collection<PsiComment> comments) {
         TextRange commentRange = null;
         PsiComment lastComment = null;
         for (final PsiComment comment : comments) {
