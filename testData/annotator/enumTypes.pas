@@ -8,6 +8,10 @@ type
       eTwo = 2,
       eThree);
   TEnumArr = array[TEnum.eOne..TEnum.eThree] of TEnum;
+  TRec = record
+    private type
+      TNestedEnum = (CONST1, CONST2);
+  end;
 
 implementation
 
@@ -18,4 +22,5 @@ begin
   eOne;
   TEnum.default;
   Integer.default;
+  TRec.TNestedEnum.CONST1;
 end.

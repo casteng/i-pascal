@@ -379,7 +379,7 @@ public class ResolveUtil {
             for (String subName : ((PasNamedIdentDecl) el).getSubMembers()) {
                 if (name.equals(subName.toUpperCase())) {
                     PasField enumField = owner.getField(name);
-                    if (PasReferenceUtil.isFieldMatches(enumField, fqn, fieldTypes)) {
+                    if ((enumField != null) && PasReferenceUtil.isFieldMatches(enumField, fqn, fieldTypes)) {
                         result.add(enumField);
                         found = true;
                     }

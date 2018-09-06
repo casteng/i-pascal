@@ -20,10 +20,12 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasGenericDefinition;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -282,6 +284,13 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                 }
             } else if (child.getClass() == PasTypeDeclarationImpl.class) {
                 addField(res, ((PasTypeDeclarationImpl) child).getGenericTypeIdent(), fieldType, visibility);
+                PasTypeDecl decl = ((PasTypeDeclarationImpl) child).getTypeDecl();
+                PasEnumType enumType = decl != null ? decl.getEnumType() : null;
+                if (enumType != null) {
+                    for (PasNamedIdentDecl ident : enumType.getNamedIdentDeclList()) {
+                        addField(res, ident, PasField.FieldType.CONSTANT, visibility);
+                    }
+                }
             } else if (child.getClass() == PasRecordVariantImpl.class) {
                 addFields(res, child, fieldType, visibility);
             }
