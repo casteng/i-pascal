@@ -63,11 +63,12 @@ import java.util.Set;
 public class PascalParserUtil extends GeneratedParserUtilBase {
     private static final Logger LOG = Logger.getInstance(PascalParserUtil.class);
 
-    public static final Collection<String> EXPLICIT_UNITS = Arrays.asList("system", BuiltinsParser.UNIT_NAME_BUILTINS);
+    public static final String UNIT_NAME_SYSTEM = "system";
+    public static final Collection<String> EXPLICIT_UNITS = Arrays.asList(UNIT_NAME_SYSTEM, BuiltinsParser.UNIT_NAME_BUILTINS);
     public static final int MAX_STRUCT_TYPE_RESOLVE_RECURSION = 1000;
 
     public static boolean parsePascal(PsiBuilder builder_, int level, Parser parser) {
-        PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
+        PsiFile file = builder_.getUserData(FileContextUtil.CONTAINING_FILE_KEY);
         if ((file != null) && (file.getVirtualFile() != null)) {
             try {
                 String name = file.getVirtualFile().getName();

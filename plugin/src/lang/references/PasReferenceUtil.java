@@ -498,6 +498,9 @@ public class PasReferenceUtil {
         if (unitNamespace != null) {
             namespaces.clear();
             namespaces.add(unitNamespace);
+            if (PascalParserUtil.UNIT_NAME_SYSTEM.equalsIgnoreCase(unitNamespace.getName())) {
+                namespaces.add(BuiltinsParser.getBuiltinsModule(unitNamespace.getProject()));
+            }
             removeFirstOnlyTypes(fieldTypes);
         }
         return unitNamespace;
