@@ -707,8 +707,8 @@ private caseLabelPart	    ::=	ConstExpressionOrd [RANGE ConstExpressionOrd]
 TryStatement                ::= TRY statementList (tryExcept | tryFinally) END {pin=1}
 private tryFinally          ::= FINALLY statementList
 private tryExcept           ::= exceptKey handlerList {pin=1 recoverWhile=rec_statement_mid}
-private exceptKey           ::= EXCEPT {recoverWhile=rec_statement_mid}
-private handlerList         ::= Handler+ [ELSE statementList] | statementList
+private exceptKey           ::= EXCEPT {recoverWhile=rec_doKey}
+private handlerList         ::= (Handler+ [ELSE statementList]) | statementList
 Handler                     ::= handlerStart doStatement ";" {pin=1}
 private handlerStart        ::= ON [NamedIdent ":"] TypeID {pin=1 recoverWhile=rec_statement_mid}
 

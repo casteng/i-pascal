@@ -24,4 +24,9 @@ begin
         on TException do
             print(nil);
     end;
+
+    try
+    except
+        print(nil);
+    end;
 end.
