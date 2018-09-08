@@ -1,6 +1,8 @@
 package com.siberika.idea.pascal.editor;
 
 import com.intellij.codeInsight.intention.LowPriorityAction;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
@@ -19,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
@@ -115,22 +118,42 @@ public class PascalRoutineActions {
     }
 
     public static class ActionImplementAll extends ActionImplement implements LowPriorityAction {
+        private boolean initDone = false;
+
         public ActionImplementAll(String name, PascalNamedElement element) {
             super(name, element);
+        }
+
+        @Override
+        public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
+            lazyInit();
+            return super.isAvailable(project, editor, file);
+        }
+
+        synchronized private void lazyInit() {
+            if (initDone) {
+                return;
+            }
+            PascalNamedElement element = fixActionDataArray.isEmpty() ? null : fixActionDataArray.get(0).element;
+            if (!(element instanceof PascalRoutine)) {
+                return;
+            }
             PascalRoutine routine = (PascalRoutine) element;
             List<PasExportedRoutineImpl> fields = SectionToggle.collectFields(SectionToggle.getDeclFields(routine.getContainingScope()),
                     PasField.FieldType.ROUTINE, new Filter<PasField>() {
-                @Override
-                public boolean allow(PasField value) {
-                    return value.getElement() instanceof PasExportedRoutineImpl;
-                }
-            });
+                        @Override
+                        public boolean allow(PasField value) {
+                            return value.getElement() instanceof PasExportedRoutineImpl;
+                        }
+                    });
             for (PasExportedRoutineImpl field : fields) {
                 if ((field != routine) && (PsiUtil.needImplementation(field)) && (null == SectionToggle.retrieveImplementation(field, true))) {
                     addData(new FixActionData(field));
                 }
             }
+            initDone = true;
         }
+
     }
 
 }

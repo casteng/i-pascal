@@ -310,9 +310,11 @@ public class Context {
 
     private void checkIdent(PsiElement element, PsiElement originalPos) {
         PsiElement pos;
-        if (originalPos.getParent() instanceof PasStringFactor) {
+        if (originalPos instanceof PascalNamedElement) {
+            pos = originalPos;
+        } else if ((originalPos != null) && (originalPos.getParent() instanceof PasStringFactor)) {
             pos = originalPos.getParent().getParent();
-        } else if (originalPos.getParent() instanceof PascalNamedElement) {
+        } else if ((originalPos != null) && originalPos.getParent() instanceof PascalNamedElement) {
             pos = originalPos.getParent();
         } else {
             pos = element.getParent();

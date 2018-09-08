@@ -185,8 +185,7 @@ public class PascalAnnotator implements Annotator {
                             break;
                         }
                         case UNIT_FIND: {
-                            ann.registerFix(new UsesActions.SearchUnitAction(message("action.unit.search", namedElement.getName()),
-                                    namedElement.getName(), ContextUtil.belongsToInterface(namedElement)));
+                            ann.registerFix(new UsesActions.SearchUnitAction(namedElement, ContextUtil.belongsToInterface(namedElement)));
                             break;
                         }
                     }

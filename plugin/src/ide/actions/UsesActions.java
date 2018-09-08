@@ -7,6 +7,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -17,6 +19,8 @@ import com.intellij.util.Processor;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
+import com.siberika.idea.pascal.lang.context.CodePlace;
+import com.siberika.idea.pascal.lang.context.Context;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
@@ -24,15 +28,14 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex;
-import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.intellij.openapi.actionSystem.ActionPlaces.EDITOR_POPUP;
+import static com.siberika.idea.pascal.PascalBundle.message;
 
 /**
  * Author: George Bakhtadze
@@ -81,51 +84,72 @@ public class UsesActions {
     }
 
     public static class SearchUnitAction extends BaseUsesAction {
-        private final String searchFor;
         private final boolean toInterface;
+        private final PascalNamedElement namedElement;
+        private String unitName;
 
-        public SearchUnitAction(String name, String searchFor, boolean toInterface) {
-            super(name);
-            this.searchFor = searchFor;
+        public SearchUnitAction(PascalNamedElement namedElement, boolean toInterface) {
+            super(message("action.unit.search", namedElement.getName()));
+            this.namedElement = namedElement;
             this.toInterface = toInterface;
         }
 
         @Override
         public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
-            final GlobalSearchScope scope = ProjectScope.getAllScope(project);
-            final AtomicBoolean found = new AtomicBoolean();
+            if (unitName != null) {
+                PascalImportOptimizer.addUnitToSection(PsiUtil.getElementPasModule(file), Collections.singletonList(unitName), toInterface);
+                ApplicationManager.getApplication().invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        HintManager.getInstance().showInformationHint(editor, PascalBundle.message("action.unit.search.added", unitName));
+                    }
+                });
+            }
+        }
+
+        @Override
+        public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
+            Context context = new Context(namedElement, namedElement, file);
+            if ((file != null) && PascalLanguage.INSTANCE.equals(file.getLanguage()) && context.contains(CodePlace.FIRST_IN_NAME)) {
+                lazyInit();
+                return unitName != null;
+            } else {
+                return false;
+            }
+        }
+
+        @NotNull
+        @Override
+        public String getText() {
+            lazyInit();
+            return unitName != null ? PascalBundle.message("action.unit.search.found", unitName) : PascalBundle.message("action.unit.search.notfound", namedElement.getName());
+        }
+
+        synchronized private void lazyInit() {
+            Module module = ModuleUtil.findModuleForPsiElement(namedElement);
+            final GlobalSearchScope scope = module != null ? GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false) : ProjectScope.getAllScope(namedElement.getProject());
+            String searchFor = namedElement.getName();
             String searchForUpper = searchFor.toUpperCase();
-            StubIndex.getInstance().processElements(PascalUnitSymbolIndex.KEY, searchForUpper, project, scope,
+            StubIndex.getInstance().processElements(PascalUnitSymbolIndex.KEY, searchForUpper, namedElement.getProject(), scope,
                     PascalNamedElement.class, new Processor<PascalNamedElement>() {
                         @Override
                         public boolean process(PascalNamedElement element) {
                             String name = element.getName();
                             if ((element instanceof PascalStubElement) &&
                                     (searchFor.equalsIgnoreCase(element.getName())
-                                  || (name.toUpperCase().startsWith(searchForUpper) && (element instanceof PascalRoutine)))) {
-                                String unitName = ((PascalStubElement) element).getContainingUnitName();
-                                if (unitName != null) {
-                                    PasEntityScope affScope = PsiUtil.getNearestAffectingScope(element);
-                                    if ((affScope instanceof PasModule) && (((PasModule) affScope).getModuleType() == PascalModule.ModuleType.UNIT)) {
-                                        PascalImportOptimizer.addUnitToSection(PsiUtil.getElementPasModule(file), Collections.singletonList(unitName), toInterface);
-                                        found.set(true);
-                                        ApplicationManager.getApplication().invokeLater(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                HintManager.getInstance().showInformationHint(editor, PascalBundle.message("action.unit.search.added", unitName));
-                                            }
-                                        });
-                                        return false;
-                                    }
+                                            || (name.toUpperCase().startsWith(searchForUpper) && (element instanceof PascalRoutine)))) {
+                                String uName = ((PascalStubElement) element).getContainingUnitName();
+                                PasEntityScope affScope = PsiUtil.getNearestAffectingScope(element);
+                                if ((uName != null) && (affScope instanceof PasModule) && (((PasModule) affScope).getModuleType() == PascalModule.ModuleType.UNIT)) {
+                                    unitName = uName;
+                                    return false;
                                 }
                             }
                             return true;
                         }
                     });
-            if (!found.get()) {
-                EditorUtil.showErrorHint(PascalBundle.message("action.unit.search.notfound", searchFor), EditorUtil.getHintPos(editor));
-            }
         }
+
     }
 
     private static abstract class BaseUsesAction extends BaseIntentionAction {
