@@ -1,8 +1,8 @@
 package com.siberika.idea.pascal.lang;
 
+import com.intellij.lang.documentation.DocumentationMarkup;
 import com.intellij.lang.documentation.DocumentationProvider;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiCompiledFile;
 import com.intellij.psi.PsiDocumentManager;
@@ -10,6 +10,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
@@ -17,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasParamType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
@@ -27,6 +29,8 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PascalDocumentationProvider implements DocumentationProvider {
 
@@ -101,22 +105,43 @@ public class PascalDocumentationProvider implements DocumentationProvider {
         if (element instanceof PsiCompiledFile) {
             return null;
         }
-        TextRange commentRange = findElementComment(file, element);
-        return commentRange.isEmpty() ? null : formatDocumentation(file, getQuickNavigateInfo(element, originalElement), file.getText().substring(commentRange.getStartOffset(), commentRange.getEndOffset()));
+        StringBuilder sb = new StringBuilder();
+        String comment = findElementComment(file, element);
+        if (comment != null) {
+            sb.append(comment);
+            if (element instanceof PascalExportedRoutine) {
+                if (comment.endsWith(DOC_LF)) {
+                    sb.delete(sb.length() - DOC_LF.length(), sb.length());
+                }
+                PsiElement impl = SectionToggle.retrieveImplementation((PascalRoutine) element, true);
+                String commentImpl = impl != null ? findElementComment(file, impl) : null;
+                if (commentImpl != null) {
+                    sb.append(DOC_LF).append(commentImpl);
+                }
+            }
+        }
+        return comment != null ? formatDocumentation(file, getQuickNavigateInfo(element, originalElement), sb.toString()) : null;
     }
 
     private String formatDocumentation(PsiFile file, String quickNavigateInfo, String text) {
-        return quickNavigateInfo + DOC_LF + text.replace("\n", DOC_LF);
+        return
+                DocumentationMarkup.DEFINITION_START +
+                        quickNavigateInfo +
+                        DocumentationMarkup.DEFINITION_END
+                        + DocumentationMarkup.CONTENT_START
+                        + text
+                        + DocumentationMarkup.CONTENT_END
+                ;
     }
 
     /* Search for comments above element, empty line breaks the search
        If not found search for comment at the end of line where the element starts */
-    private static TextRange findElementComment(PsiFile file, PsiElement element) {
+    private static String findElementComment(PsiFile file, PsiElement element) {
         int start = element.getTextRange().getStartOffset();
         int end = start;
         Document doc = PsiDocumentManager.getInstance(element.getProject()).getDocument(file);
         if (null == doc) {
-            return TextRange.EMPTY_RANGE;
+            return null;
         }
         PsiElement el = PsiTreeUtil.prevVisibleLeaf(element);
         int line = doc.getLineNumber(start);
@@ -137,7 +162,49 @@ public class PascalDocumentationProvider implements DocumentationProvider {
                 end = el.getTextRange().getEndOffset();
             }
         }
-        return TextRange.create(start, end);
+        return end > start ? formatComment(file.getText().substring(start, end)) : null;
+    }
+
+    private static final String[] COMMENT_STARTS = {"{", "(*"};
+    private static final String[] COMMENT_ENDS = {"}", "*)"};
+    private static final Pattern LINE_START = Pattern.compile("\\s*(//)|(\\*)");
+
+    private static String formatComment(String comment) {
+        String[] lines = handleStarts(handleEnds(comment)).split("\\s*\\n");
+        StringBuilder sb = new StringBuilder();
+        for (String line : lines) {
+            if (sb.length() != 0) {
+                sb.append(DOC_LF);
+            }
+            sb.append(handleLineStarts(line));
+        }
+        return sb.toString();
+    }
+
+    private static String handleLineStarts(String line) {
+        Matcher m = LINE_START.matcher(line);
+        if (m.find()) {
+            return line.substring(m.group(0).length());
+        }
+        return line;
+    }
+
+    private static String handleStarts(String comment) {
+        for (String commentStart : COMMENT_STARTS) {
+            if (comment.startsWith(commentStart)) {
+                return comment.substring(commentStart.length());
+            }
+        }
+        return comment;
+    }
+
+    private static String handleEnds(String comment) {
+        for (String commentEnd : COMMENT_ENDS) {
+            if (comment.endsWith(commentEnd)) {
+                return comment.substring(0, comment.length() - commentEnd.length());
+            }
+        }
+        return comment;
     }
 
     @Nullable
