@@ -176,7 +176,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             return infereUnaryExprType((PasUnaryExpr) expression);
         } else if (expression instanceof PasSumExpr) {
             PasSumExpr sumExpr = (PasSumExpr) expression;
-            return combineType("-".equals(sumExpr.getAddOp().getText()) ? Operation.SUBSTRACT : Operation.SUM, sumExpr.getExprList());
+            return combineType("-".equals(sumExpr.getAddOp().getText()) ? Operation.SUBTRACT : Operation.SUM, sumExpr.getExprList());
         } else if (expression instanceof PasRelationalExpr) {
             return Primitive.BOOLEAN.name;
         } else if (expression instanceof PasProductExpr) {
@@ -418,7 +418,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     public enum Operation {
-        SUM, SUBSTRACT, PRODUCT, DIVISION
+        SUM, SUBTRACT, PRODUCT, DIVISION
     }
 
     public enum Primitive {

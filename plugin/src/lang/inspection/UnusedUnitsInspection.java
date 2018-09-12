@@ -39,12 +39,12 @@ public class UnusedUnitsInspection extends LocalInspectionTool {
         }
         switch (PascalImportOptimizer.getUsedUnitStatus(usedUnitName, ModuleUtilCore.findModuleForPsiElement(usedUnitName))) {
             case UNUSED: {
-                return holder.createProblemDescriptor(usedUnitName, message("ann.warn.unused.unit"), true,
+                return holder.createProblemDescriptor(usedUnitName, message("inspection.warn.unused.unit"), true,
                         ProblemHighlightType.LIKE_UNUSED_SYMBOL, isOnTheFly,
                         new UsesQuickFixes.RemoveUnitAction(), new UsesQuickFixes.ExcludeUnitAction(), new UsesQuickFixes.OptimizeUsesAction());
             }
             case USED_IN_IMPL: {
-                return holder.createProblemDescriptor(usedUnitName, message("ann.warn.unused.unit.interface"),
+                return holder.createProblemDescriptor(usedUnitName, message("inspection.warn.unused.unit.interface"),
                         true, ProblemHighlightType.LIKE_UNUSED_SYMBOL, isOnTheFly,
                         new UsesQuickFixes.MoveUnitAction(), new UsesQuickFixes.RemoveUnitAction(), new UsesQuickFixes.ExcludeUnitAction(), new UsesQuickFixes.OptimizeUsesAction());
             }

@@ -55,11 +55,12 @@ public class UnusedIdentsInspection extends LocalInspectionTool {
         if (element.isLocal() && !PsiUtil.isFormalParameterOfExportedRoutine(element) && !PsiUtil.isPropertyIndexIdent(element)) {
             Query<PsiReference> usages = ReferencesSearch.search(element, fileScope);
             final boolean structDecl = PsiUtil.isStructDecl(element);
+            final boolean method = PsiUtil.isRoutineName(element);
             if (usages.forEach(new Processor<PsiReference>() {
                 @Override
                 public boolean process(PsiReference psiReference) {
                     PsiElement el = psiReference.getElement();
-                    if (structDecl && (el instanceof PasSubIdent) && (el.getParent() instanceof PasClassQualifiedIdent)
+                    if ((structDecl || method) && (el instanceof PasSubIdent) && (el.getParent() instanceof PasClassQualifiedIdent)
                             && (el.getParent().getParent() instanceof PasRoutineImplDecl)) {
                         return true;
                     } else {
@@ -67,7 +68,7 @@ public class UnusedIdentsInspection extends LocalInspectionTool {
                     }
                 }
             })) {
-                return holder.createProblemDescriptor(element, message("inspection.unused.local.ident"), true,
+                return holder.createProblemDescriptor(element, message("inspection.warn.unused.local.ident"), true,
                         ProblemHighlightType.LIKE_UNUSED_SYMBOL, isOnTheFly);
             }
         }

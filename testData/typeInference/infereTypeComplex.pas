@@ -1,4 +1,4 @@
-unit infereTypePath;
+unit infereTypeComplex;
 
 interface
 

@@ -2,20 +2,20 @@ unit unusedIdents;
 interface
 implementation
 type
-    <warning descr="Identifier declared but never used">TC</warning> = class
-        function testf1(): Integer; override;
+    <warning descr="W0003: Identifier declared but never used">TC</warning> = class
+        function <warning descr="W0003: Identifier declared but never used">testf1</warning>(): Integer; override;
     end;
 
 var
-    <warning descr="Identifier declared but never used">var1</warning>: Integer;
-    <warning descr="Identifier declared but never used">Rec</warning>: record
+    <warning descr="W0003: Identifier declared but never used">var1</warning>: Integer;
+    <warning descr="W0003: Identifier declared but never used">Rec</warning>: record
         yyy: Integer;
     end;
 
-const <warning descr="Identifier declared but never used">CCC</warning>=1;
+const <warning descr="W0003: Identifier declared but never used">CCC</warning>=1;
 
-procedure <warning descr="Identifier declared but never used">a</warning>(const <warning descr="Identifier declared but never used">arg1</warning>: Integer);
-var <warning descr="Identifier declared but never used">local</warning>: Integer;
+procedure <warning descr="W0003: Identifier declared but never used">a</warning>(const <warning descr="W0003: Identifier declared but never used">arg1</warning>: Integer);
+var <warning descr="W0003: Identifier declared but never used">local</warning>: Integer;
 begin
 end;
 
