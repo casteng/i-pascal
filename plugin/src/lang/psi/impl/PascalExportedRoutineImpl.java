@@ -137,14 +137,14 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     private String resolveFunctionTypeStr() {
         if (isConstructor()) {                                      // Return struct type name
             PasEntityScope scope = getContainingScope();
-            return scope != null ? scope.getName() : "";
+            return scope != null ? RoutineUtil.calcCanonicalTypeName(scope.getName()) : "";
         }
         PasTypeDecl type = findChildByClass(PasTypeDecl.class);
         PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);
         if (typeId != null) {
             return typeId.getFullyQualifiedIdent().getName();
         }
-        return type != null ? type.getText() : "";
+        return type != null ? RoutineUtil.calcCanonicalTypeName(type.getText()) : "";
     }
 
     @NotNull

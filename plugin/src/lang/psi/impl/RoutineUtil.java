@@ -21,9 +21,13 @@ import com.siberika.idea.pascal.util.PsiUtil;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class RoutineUtil {
+
     static final TokenSet FUNCTION_KEYWORDS = TokenSet.create(PasTypes.FUNCTION, PasTypes.OPERATOR);
+
+    private static final Pattern PATTERN_CONSTRAINT = Pattern.compile(":\\s*\\w+");
 
     static String calcKey(PascalRoutine routine) {
         StringBuilder sb = new StringBuilder(PsiUtil.getFieldName(routine));
@@ -132,5 +136,9 @@ public class RoutineUtil {
             result = Collections.emptyList();
         }
         return result;
+    }
+
+    public static String calcCanonicalTypeName(String name) {
+        return PATTERN_CONSTRAINT.matcher(name).replaceAll("");
     }
 }

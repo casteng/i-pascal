@@ -75,6 +75,7 @@ public class PascalRoutineActions {
     }
 
     public static class ActionImplement extends PascalActionDeclare {
+
         public ActionImplement(String name, PascalNamedElement element) {
             super(name, element, null);
         }
@@ -83,7 +84,6 @@ public class PascalRoutineActions {
         void calcData(final PsiFile file, final FixActionData data) {
             PascalRoutine routine = (PascalRoutine) data.element;
             String prefix = SectionToggle.getPrefix(routine);
-
             data.text = data.element.getText();
             Collection<PasFunctionDirective> directives = PsiTreeUtil.findChildrenOfType(data.element, PasFunctionDirective.class);
             for (PasFunctionDirective directive : directives) {

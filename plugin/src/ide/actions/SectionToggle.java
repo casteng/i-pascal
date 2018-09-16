@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasModuleImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
 import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PosUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -210,7 +211,7 @@ public class SectionToggle {
                 if (!genericAware && (nameEl instanceof PasGenericTypeIdent)) {
                     current.prefix = ((PasGenericTypeIdent) nameEl).getNamedIdentDecl().getName() + "." + current.prefix;
                 } else {
-                    current.prefix = current.scope.getName() + "." + current.prefix;
+                    current.prefix = RoutineUtil.calcCanonicalTypeName(current.scope.getName()) + "." + current.prefix;
                 }
             } else if (current.scope instanceof PascalRoutine) {
                 current.element = current.scope;
