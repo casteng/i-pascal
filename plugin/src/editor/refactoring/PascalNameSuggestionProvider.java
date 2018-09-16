@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.editor.refactoring;
 
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.codeStyle.NameUtil;
 import com.intellij.psi.codeStyle.SuggestedNameInfo;
@@ -19,6 +20,7 @@ import com.siberika.idea.pascal.lang.psi.PasSetType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -75,8 +77,36 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
                 result.add("Get" + ((PasClassProperty) prop).getName());
                 result.add("Set" + ((PasClassProperty) prop).getName());
             }
+        } else if (position instanceof PascalRoutine) {
+            PascalRoutine routine = (PascalRoutine) position;
+            if (routine.isConstructor()) {
+                result.add("Create");
+            } else {
+                String typeStr = routine.getFunctionTypeStr();
+                List<String> paramTypes = routine.getFormalParameterTypes();
+                if (!StringUtil.isEmpty(typeStr)) {
+                    if (paramTypes.size() > 0) {
+                        suggestNames(typeStr, "Calc", result);
+                        suggestNames(typeStr, "Create", result);
+                    } else {
+                        suggestNames(typeStr, "Get", result);
+                    }
+                }
+                if (paramTypes.size() == 1) {
+                    suggestNames(paramTypes.get(0), "Set", result);
+                }
+            }
         }
         return result;
+    }
+
+    private static void suggestNames(String name, String prefix, Set<String> result) {
+        if (name.startsWith("T")) {
+            name = name.substring(1);
+        }
+        for (String word : extractWords(name, ElementType.TYPE)) {
+            result.add(prefix + word);
+        }
     }
 
     private static final String[] POINTER_SUFFIXES = {"Ptr", "Pointer"};
