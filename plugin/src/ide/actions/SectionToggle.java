@@ -9,7 +9,6 @@ import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
@@ -106,7 +105,7 @@ public class SectionToggle {
         if (container.scope instanceof PasModuleImpl) {
             field = ((PasModuleImpl) container.scope).getPrivateField(container.prefix + PsiUtil.getFieldName(container.element));
             field = checkRoutineField(field);
-            if (null == field && (!strict || !isOverloaded((PasExportedRoutine) container.element))) {                          // Try to find implementation w/o parameters
+            if (null == field && (!strict || !RoutineUtil.isOverloaded((PasExportedRoutine) container.element))) {                          // Try to find implementation w/o parameters
                 field = checkRoutineField(((PasModuleImpl) container.scope).getPrivateField(container.prefix + container.element.getName()));
                 if (strict && (field != null) && hasParametersOrReturnType((PascalRoutine) field.getElement())) {           // Only empty parameters list and return type allowed in strict mode
                     field = null;
@@ -118,15 +117,6 @@ public class SectionToggle {
 
     public static boolean hasParametersOrReturnType(@Nullable PascalRoutine routine) {
         return (routine != null) && (routine.hasParameters() || (!routine.isConstructor() && routine.getFunctionTypeStr().length() > 0));
-    }
-
-    private static boolean isOverloaded(PasExportedRoutine routine) {
-        for (PasFunctionDirective directive : routine.getFunctionDirectiveList()) {
-            if (directive.getText().toUpperCase().startsWith("OVERLOAD")) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static PasField checkRoutineField(PasField field) {
@@ -183,7 +173,7 @@ public class SectionToggle {
                 field = retrieveField(scope, name.substring(0, name.indexOf('(')));
                 field = checkRoutineField(field);
                 if ((field != null) && strict &&
-                        (isOverloaded((PasExportedRoutine) field.getElement()) || hasParametersOrReturnType((PascalRoutine) container.element))) {
+                        (RoutineUtil.isOverloaded((PasExportedRoutine) field.getElement()) || hasParametersOrReturnType((PascalRoutine) container.element))) {
                     field = null;               // Overloaded routines must repeat parameters
                 }
             }

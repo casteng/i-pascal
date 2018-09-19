@@ -11,11 +11,14 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.containers.SmartHashSet;
+import com.siberika.idea.pascal.ide.actions.GotoSuper;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -32,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalStubElement<B>, PascalNamedElement {
@@ -124,8 +128,30 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
             try {
                 if (null == local) {
                     if (this instanceof PasExportedRoutine) {
-                        PasEntityScope scope = ((PasEntityScope) this).getContainingScope();
-                        local = (scope != null) && scope.isLocal();
+                        if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this)) {
+                            local = false;
+                        } else {
+                            PasEntityScope scope = ((PasEntityScope) this).getContainingScope();
+                            if (scope != null) {
+                                if (!scope.isLocal()) {
+                                    local = false;
+                                } else {
+                                    Collection<PasEntityScope> structs = new SmartHashSet<>();
+                                    GotoSuper.retrieveParentInterfaces(structs, scope);
+                                    local = true;
+                                    for (PasEntityScope struct : structs) {
+                                        if (struct instanceof PasInterfaceTypeDecl) {
+                                            if (struct.getField(((PasExportedRoutine) this).getCanonicalName()) != null) {
+                                                local = false;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                local = true;
+                            }
+                        }
                     } else if (this instanceof PascalStructType) {
                         PsiElement parent = getParent().getParent();
                         local = (parent instanceof PasTypeDeclaration) && PsiUtil.isImplementationScope(parent.getParent().getParent());

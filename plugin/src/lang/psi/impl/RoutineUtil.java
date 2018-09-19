@@ -9,6 +9,7 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasParamType;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -141,4 +142,27 @@ public class RoutineUtil {
     public static String calcCanonicalTypeName(String name) {
         return PATTERN_CONSTRAINT.matcher(name).replaceAll("");
     }
+
+    public static boolean isOverloaded(PasExportedRoutine routine) {
+        for (PasFunctionDirective directive : routine.getFunctionDirectiveList()) {
+            if (directive.getText().toUpperCase().startsWith("OVERLOAD")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isOverridden(PasExportedRoutine routine) {
+        for (PasFunctionDirective directive : routine.getFunctionDirectiveList()) {
+            if (directive.getText().toUpperCase().startsWith("OVERRIDE")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isExternal(PasExportedRoutine routine) {
+        return routine.getExternalDirective() != null;
+    }
+    
 }
