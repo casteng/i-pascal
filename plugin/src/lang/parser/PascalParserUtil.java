@@ -73,7 +73,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             try {
                 String name = file.getVirtualFile().getName();
                 if (!name.startsWith("test") && !name.startsWith("$")) {
-                    throw new PascalRTException("===*** Parse: " + name);
+//                    throw new PascalRTException("===*** Parse: " + name);
                 }
             } catch (PascalRTException e) {
 //                e.printStackTrace();
