@@ -10,6 +10,7 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PascalInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -58,17 +59,29 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         if (routine != null) {
             getRoutineTarget(targets, routine);
         } else {
-            getParentStructs(targets, PsiUtil.getStructByElement(el));
+            retrieveParentStructs(targets, PsiUtil.getStructByElement(el));
         }
         return targets;
     }
 
-    public static void getParentStructs(Collection<PasEntityScope> targets, PasEntityScope struct) {
+    public static void retrieveParentStructs(Collection<PasEntityScope> targets, PasEntityScope struct) {
         if (struct instanceof PascalStructType) {
             for (SmartPsiElementPointer<PasEntityScope> parent : struct.getParentScope()) {
                 PasEntityScope el = parent.getElement();
                 addTarget(targets, el);
-                getParentStructs(targets, el);
+                retrieveParentStructs(targets, el);
+            }
+        }
+    }
+
+    public static void retrieveParentInterfaces(Collection<PasEntityScope> targets, PasEntityScope struct) {
+        if (struct instanceof PascalStructType) {
+            for (SmartPsiElementPointer<PasEntityScope> parent : struct.getParentScope()) {
+                PasEntityScope el = parent.getElement();
+                if (el instanceof PascalInterfaceDecl) {
+                    targets.add(el);
+                }
+                retrieveParentInterfaces(targets, el);
             }
         }
     }

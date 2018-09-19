@@ -12,7 +12,6 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.PascalRoutineActions;
@@ -31,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,8 +60,8 @@ public class ActionImplement extends PascalAction {
             EditorUtil.showErrorHint(PascalBundle.message("action.error.notinstruct"), EditorUtil.getHintPos(editor));
             return;
         }
-        Collection<PasEntityScope> structs = new SmartList<PasEntityScope>();
-        GotoSuper.getParentStructs(structs, scope);
+        Collection<PasEntityScope> structs = new LinkedHashSet<>();
+        GotoSuper.retrieveParentStructs(structs, scope);
         final Set<String> existing = new HashSet<String>();
         for (PasField field : scope.getAllFields()) {
             allowNonExistingRoutines(field, existing);

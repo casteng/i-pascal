@@ -23,7 +23,6 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
-import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
@@ -64,7 +63,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -268,8 +267,8 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             return false;
         }
 
-        List<PasEntityScope> parents = new SmartList<>();
-        GotoSuper.getParentStructs(parents, scope);
+        Collection<PasEntityScope> parents = new LinkedHashSet<>();
+        GotoSuper.retrieveParentStructs(parents, scope);
         for (PasEntityScope parent : parents) {
             for (PasField field : parent.getAllFields()) {
                 if (field.fieldType == PasField.FieldType.ROUTINE) {
