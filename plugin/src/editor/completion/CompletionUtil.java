@@ -289,7 +289,9 @@ class CompletionUtil {
     }
 
     static LookupElementBuilder createLookupElement(final Editor editor, @NotNull PasField field) {
-        assert field.getElement() != null;
+        if (!PsiUtil.isElementUsable(field.getElement())) {
+            return null;
+        }
         LookupElementBuilder res = LookupElementBuilder.create(field.getElement()).withPresentableText(getFieldText(field));
         if (field.fieldType == PasField.FieldType.ROUTINE) {
             PascalNamedElement el = field.getElement();

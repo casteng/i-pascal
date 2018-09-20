@@ -544,6 +544,9 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         if ((field.name != null) && !field.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
             LookupElement lookupElement;
             LookupElementBuilder el = buildFromElement(field) ? CompletionUtil.createLookupElement(parameters.getEditor(), field) : LookupElementBuilder.create(field.name);
+            if (null == el) {
+                return;
+            }
             lookupElement = el.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
                     withCaseSensitivity(true).withTypeText(field.owner != null ? field.owner.getName() : "-", false);
             if (lookupElement.getLookupString().startsWith("_")) {
