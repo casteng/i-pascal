@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang;
 
+import com.intellij.codeInsight.folding.JavaCodeFoldingSettings;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilderEx;
 import com.intellij.lang.folding.FoldingDescriptor;
@@ -8,16 +9,21 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.search.PsiElementProcessor;
-import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.lang.folding.PascalCodeFoldingSettings;
 import com.siberika.idea.pascal.lang.psi.PasCaseStatement;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
+import com.siberika.idea.pascal.lang.psi.PasExpr;
+import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
@@ -25,6 +31,7 @@ import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
+import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
@@ -34,16 +41,23 @@ import com.siberika.idea.pascal.lang.psi.PasUnitInitialization;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
+import com.siberika.idea.pascal.lang.psi.PasWithStatement;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.util.PsiUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,8 +65,6 @@ import java.util.List;
  * Date: 24/03/2013
  */
 public class PascalFoldingBuilder extends FoldingBuilderEx {
-
-    private static final TokenSet TOKENS_COLLAPSED = TokenSet.create(PasTypes.COMMENT, PasTypes.USES_CLAUSE);
 
     @NotNull
     @Override
@@ -65,6 +77,8 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
         Collection<PasEnumType> enumElements = new ArrayList<>();
         Collection<PasRoutineImplDeclImpl> routineElements = new ArrayList<>();
         Collection<PsiComment> commentElements = new ArrayList<>();
+        Collection<PasWithStatement> withElements = new ArrayList<>();
+        Collection<PascalNamedElement> namedElements = new ArrayList<>();
 
         PsiElementProcessor<PsiElement> processor = new PsiElementProcessor<PsiElement>() {
             @Override
@@ -80,6 +94,10 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                     routineElements.add((PasRoutineImplDeclImpl) each);
                 } else if (each instanceof PsiComment) {
                     commentElements.add((PsiComment) each);
+                } else if (each instanceof PasWithStatement) {
+                    withElements.add((PasWithStatement) each);
+                } else if (each instanceof PasFullyQualifiedIdent) {
+                    namedElements.add((PascalNamedElement) each);
                 } else if (PsiTreeUtil.instanceOf(each,
                         PasUnitInterface.class, PasUnitImplementation.class, PasUnitInitialization.class, PasUnitFinalization.class,
                         PasVarSection.class, PasTypeSection.class, PasConstSection.class,
@@ -101,9 +119,66 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
 
         if (!quick) {
             foldComments(descriptors, document, commentElements);
+            if (PascalCodeFoldingSettings.getInstance().isFoldWithBlocks()) {
+                foldWithIdents(descriptors, document, withElements, namedElements);
+            }
         }
 
         return descriptors.toArray(new FoldingDescriptor[0]);
+    }
+
+    private void foldWithIdents(List<FoldingDescriptor> descriptors, Document document, Collection<PasWithStatement> withElements, Collection<PascalNamedElement> namedElements) {
+        for (PascalNamedElement namedElement : namedElements) {
+            if (namedElement instanceof PasFullyQualifiedIdent) {
+                for (PasWithStatement withElement : withElements) {
+                    if (affects(withElement, namedElement)) {
+                        List<PasEntityScope> scopes = getScopes(withElement);
+                        List<PasSubIdent> subidents = ((PasFullyQualifiedIdent) namedElement).getSubIdentList();
+                        if (!subidents.isEmpty()) {
+                            PasSubIdent sub = subidents.get(0);
+                            for (int i = 0; i < scopes.size(); i++) {
+                                PasEntityScope scope = scopes.get(i);
+                                if (scope instanceof PascalStructType) {
+                                    PasField field = scope.getField(sub.getName());
+                                    if (field != null) {
+                                        descriptors.add(new NamedFoldingDescriptor(sub.getNode(), sub.getTextRange(), null,
+                                                withElement.getExpressionList().get(i).getExpr().getText() + "." + sub.getName(),
+                                                PascalCodeFoldingSettings.getInstance().isFoldWithBlocks(), Collections.singleton(withElement)));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private List<PasEntityScope> getScopes(PasWithStatement withElement) {
+        List<PasEntityScope> result = new SmartList<>();
+        for (PasExpression expr : withElement.getExpressionList()) {
+            PasExpr expression = expr != null ? expr.getExpr() : null;
+            if (expression instanceof PascalExpression) {
+                List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) expr.getExpr());
+                if (!types.isEmpty()) {
+                    PasEntityScope ns = PascalExpression.retrieveScope(types);
+                    if (ns != null) {
+                        result.add(ns);
+                        if (ns instanceof PascalStructType) {
+                            for (SmartPsiElementPointer<PasEntityScope> scopePtr : ns.getParentScope()) {
+                                result.add(scopePtr.getElement());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private boolean affects(PasWithStatement withElement, PascalNamedElement namedElement) {
+        return PsiUtil.isParentOf(namedElement, withElement.getStatement());
     }
 
     private void foldRoutines(List<FoldingDescriptor> descriptors, Collection<PasRoutineImplDeclImpl> routineList) {
@@ -112,7 +187,8 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
             TextRange range = getRange(foldStart, routine.getTextRange().getEndOffset());
             if (range.getLength() > 1) {
                 descriptors.add(new NamedFoldingDescriptor(routine.getNode(), range, null,
-                        " " + PsiUtil.normalizeRoutineName(routine) + ";"));
+                        " " + PsiUtil.normalizeRoutineName(routine) + ";",
+                        JavaCodeFoldingSettings.getInstance().isCollapseMethods(), Collections.emptySet()));
             }
         }
     }
@@ -181,25 +257,20 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
             final PasTypeDeclaration decl = PsiTreeUtil.getParentOfType(enumType, PasTypeDeclaration.class);
             if (decl != null) {
                 TextRange range = getRange(decl.getGenericTypeIdent().getTextRange().getEndOffset(), decl.getTextRange().getEndOffset());
+                StringBuilder sb = new StringBuilder(" = (");
+                boolean first = true;
+                for (PasNamedIdentDecl ident : enumType.getNamedIdentDeclList()) {
+                    if (!first) {
+                        sb.append(", ").append(ident.getName());
+                    } else {
+                        sb.append(ident.getName());
+                        first = false;
+                    }
+                }
+                sb.append(");");
                 if (range.getLength() > 0) {
-                    descriptors.add(new FoldingDescriptor(decl.getNode(), range, null) {
-                        @Nullable
-                        @Override
-                        public String getPlaceholderText() {
-                            StringBuilder sb = new StringBuilder(" = (");
-                            boolean first = true;
-                            for (PasNamedIdentDecl ident : enumType.getNamedIdentDeclList()) {
-                                if (!first) {
-                                    sb.append(", ").append(ident.getName());
-                                } else {
-                                    sb.append(ident.getName());
-                                    first = false;
-                                }
-                            }
-                            sb.append(");");
-                            return sb.toString();
-                        }
-                    });
+                    descriptors.add(new NamedFoldingDescriptor(decl.getNode(), range, null, sb.toString(),
+                            PascalCodeFoldingSettings.getInstance().isCollapseEnums(), Collections.emptySet()));
                 }
             }
         }
@@ -230,13 +301,9 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
                     lfPos = lastComment.getTextRange().getEndOffset();
                 }
                 if (lfPos < commentRange.getEndOffset()) {
-                    descriptors.add(new FoldingDescriptor(lastComment.getNode(), getRange(lfPos, commentRange.getEndOffset()), null) {
-                        @Nullable
-                        @Override
-                        public String getPlaceholderText() {
-                            return "..." + endSymbol;
-                        }
-                    });
+                    descriptors.add(new NamedFoldingDescriptor(lastComment.getNode(), getRange(lfPos, commentRange.getEndOffset()),
+                            null, "..." + endSymbol,
+                            JavaCodeFoldingSettings.getInstance().isCollapseJavadocs(), Collections.emptySet()));
                 }
             }
         }
@@ -261,6 +328,6 @@ public class PascalFoldingBuilder extends FoldingBuilderEx {
 
     @Override
     public boolean isCollapsedByDefault(@NotNull ASTNode node) {
-        return TOKENS_COLLAPSED.contains(node.getElementType());
+        return JavaCodeFoldingSettings.getInstance().isCollapseImports() && (node.getElementType() == PasTypes.USES_CLAUSE);
     }
 }
