@@ -27,7 +27,6 @@ import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
@@ -589,22 +588,7 @@ public class PasReferenceUtil {
         Collection<PasWithStatement> statements = scope.getWithStatements();
         for (PasWithStatement ws : statements) {
             if (PsiUtil.isParentOf(ident, ws.getStatement()) && PsiUtil.isParentOf(ws, scope)) {
-                for (PasExpression expr : ws.getExpressionList()) {
-                    if ((expr != null) && (expr.getExpr() instanceof PascalExpression)) {
-                        List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) expr.getExpr());
-                        if (!types.isEmpty()) {
-                            PasEntityScope ns = PascalExpression.retrieveScope(types);
-                            if (ns != null) {
-                                namespaces.add(ns);
-                                if (ns instanceof PascalStructType) {
-                                    for (SmartPsiElementPointer<PasEntityScope> scopePtr : ns.getParentScope()) {
-                                        namespaces.add(scopePtr.getElement());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                ResolveUtil.getScopes(namespaces, ws);
             }
         }
     }
