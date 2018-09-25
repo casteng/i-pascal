@@ -268,7 +268,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         }
 
         Collection<PasEntityScope> parents = new LinkedHashSet<>();
-        GotoSuper.retrieveParentStructs(parents, scope);
+        GotoSuper.retrieveParentStructs(parents, scope, 0);
         for (PasEntityScope parent : parents) {
             for (PasField field : parent.getAllFields()) {
                 if (field.fieldType == PasField.FieldType.ROUTINE) {

@@ -61,7 +61,7 @@ public class ActionImplement extends PascalAction {
             return;
         }
         Collection<PasEntityScope> structs = new LinkedHashSet<>();
-        GotoSuper.retrieveParentStructs(structs, scope);
+        GotoSuper.retrieveParentStructs(structs, scope, 0);
         final Set<String> existing = new HashSet<String>();
         for (PasField field : scope.getAllFields()) {
             allowNonExistingRoutines(field, existing);

@@ -79,7 +79,7 @@ public class PasReferenceUtil {
 
     private static final Logger LOG = Logger.getInstance(PasReferenceUtil.class.getName());
 
-    static final int MAX_RECURSION_COUNT = 1000;
+    public static final int MAX_RECURSION_COUNT = 1000;
     static final int MAX_NAMESPACES = 300;
 
     /**

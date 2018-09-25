@@ -9,11 +9,13 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
@@ -59,29 +61,39 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         if (routine != null) {
             getRoutineTarget(targets, routine);
         } else {
-            retrieveParentStructs(targets, PsiUtil.getStructByElement(el));
+            retrieveParentStructs(targets, PsiUtil.getStructByElement(el), 0);
         }
         return targets;
     }
 
-    public static void retrieveParentStructs(Collection<PasEntityScope> targets, PasEntityScope struct) {
+    public static void retrieveParentStructs(Collection<PasEntityScope> targets, PasEntityScope struct, final int recursionCount) {
+        if (recursionCount > PasReferenceUtil.MAX_RECURSION_COUNT) {
+            throw new PascalRTException("Too much recursion during retrieving parents: " + struct.getUniqueName());
+        }
         if (struct instanceof PascalStructType) {
             for (SmartPsiElementPointer<PasEntityScope> parent : struct.getParentScope()) {
                 PasEntityScope el = parent.getElement();
                 addTarget(targets, el);
-                retrieveParentStructs(targets, el);
+                if (!struct.equals(el)) {
+                    retrieveParentStructs(targets, el, recursionCount + 1);
+                }
             }
         }
     }
 
-    public static void retrieveParentInterfaces(Collection<PasEntityScope> targets, PasEntityScope struct) {
+    public static void retrieveParentInterfaces(Collection<PasEntityScope> targets, PasEntityScope struct, final int recursionCount) {
+        if (recursionCount > PasReferenceUtil.MAX_RECURSION_COUNT) {
+            throw new PascalRTException("Too much recursion during retrieving parents: " + struct.getUniqueName());
+        }
         if (struct instanceof PascalStructType) {
             for (SmartPsiElementPointer<PasEntityScope> parent : struct.getParentScope()) {
                 PasEntityScope el = parent.getElement();
                 if (el instanceof PascalInterfaceDecl) {
                     targets.add(el);
                 }
-                retrieveParentInterfaces(targets, el);
+                if (!struct.equals(el)) {
+                    retrieveParentInterfaces(targets, el, recursionCount + 1);
+                }
             }
         }
     }

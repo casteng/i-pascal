@@ -137,7 +137,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
                                     local = false;
                                 } else {
                                     Collection<PasEntityScope> structs = new SmartHashSet<>();
-                                    GotoSuper.retrieveParentInterfaces(structs, scope);
+                                    GotoSuper.retrieveParentInterfaces(structs, scope, 0);
                                     local = true;
                                     for (PasEntityScope struct : structs) {
                                         if (struct instanceof PasInterfaceTypeDecl) {
