@@ -17,6 +17,7 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
+import com.siberika.idea.pascal.lang.psi.PasInSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -72,11 +73,15 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public String getName() {
-        SyncUtil.doWithLock(nameLock, () -> {
-            if (StringUtil.isEmpty(myCachedName)) {
-                myCachedName = calcName(getNameElement());
-            }
-        });
+        if (this instanceof PasInSubIdent) {
+            myCachedName = getText();
+        } else {
+            SyncUtil.doWithLock(nameLock, () -> {
+                if (StringUtil.isEmpty(myCachedName)) {
+                    myCachedName = calcName(getNameElement());
+                }
+            });
+        }
         return myCachedName;
     }
 
@@ -160,11 +165,15 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Nullable
     private PsiElement getNameElement() {
-        SyncUtil.doWithLock(nameLock, () -> {
-            if (!PsiUtil.isElementUsable(myCachedNameEl)) {
-                calcNameElement();
-            }
-        });
+        if (this instanceof PasInSubIdent) {
+            myCachedNameEl = this;
+        } else {
+            SyncUtil.doWithLock(nameLock, () -> {
+                if (!PsiUtil.isElementUsable(myCachedNameEl)) {
+                    calcNameElement();
+                }
+            });
+        }
         return myCachedNameEl;
     }
 

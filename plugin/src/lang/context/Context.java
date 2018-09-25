@@ -80,6 +80,9 @@ public class Context {
 
     @NotNull
     private CodePlace retrieveContext(PsiElement element, PsiElement originalPos, PsiFile file, Set<CodePlace> context) {
+        if (!PsiUtil.isElementUsable(element)) {
+            return CodePlace.UNKNOWN;
+        }
         if (PsiTreeUtil.findChildOfType(file, PasModule.class) == null) {
             return CodePlace.UNKNOWN;
         }

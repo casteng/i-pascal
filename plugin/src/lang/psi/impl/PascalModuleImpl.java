@@ -350,6 +350,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             publicUnits = null;
             publicUnitsLock.unlock();
         }
+        withStatements = null;
     }
 
     public static void invalidate(String key) {
