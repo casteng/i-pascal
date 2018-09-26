@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.90.1</version>
+    <version>1.95</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,12 +9,16 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>1.90.1</p>
+        <p>1.95</p>
         <ul>
+            <li>Errors annotation is now really fast (~100 times faster)</li>
+            <li>Delphi Community Edition RTL sources compatibility. Use sources by default.</li>
+            <li>Show fully qualified identifiers in WITH blocks</li>
             <li>Show identifier's one-line documentation on mouse hover</li>
-            <li>Retrieve from comments and show documentation for elements</li>
-            <li>Unused local identifier inspection now checks for unused local routines</li>
+            <li>Retrieve documentation for named elements from comments (HTML allowed)</li>
             <li>Respect var and out parameters when calculating read/write access to identifier under cursor</li>
+            <li>Unused local identifier inspection now checks for unused local routines</li>
+            <li>Respect code folding settings</li>
         </ul>
         <p>1.90</p>
         <ul>
@@ -366,9 +370,6 @@
         <codeInsight.overrideMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalOverrideMethodsHandler"/>
         <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
 
-
-        <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
-
         <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.GotoSuper"/>
         <definitionsScopedSearch implementation="com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch"/>
         <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
@@ -389,12 +390,16 @@
         <!--<problemFileHighlightFilter implementation="com.siberika.idea.pascal.editor.highlighter.PascalProblemFileHighlightFilter"/>-->
 
         <lang.foldingBuilder language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalFoldingBuilder"/>
+        <codeFoldingOptionsProvider instance="com.siberika.idea.pascal.lang.folding.PascalFoldingOptionsProvider"/>
+        <applicationService serviceInterface="com.siberika.idea.pascal.lang.folding.PascalCodeFoldingSettings"
+                            serviceImplementation="com.siberika.idea.pascal.lang.folding.PascalCodeFoldingSettingsImpl"/>
 
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
         <localInspection language="Pascal" displayName="Unused units detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection"/>
         <localInspection language="Pascal" displayName="Unused local identifiers detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedIdentsInspection"/>
+        <lang.inspectionSuppressor language="Pascal" implementationClass="com.siberika.idea.pascal.lang.inspection.PascalInspectionSuppressor"/>
 
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>

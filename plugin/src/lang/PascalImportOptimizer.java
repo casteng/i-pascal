@@ -8,7 +8,6 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -56,15 +55,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
 
     private static final Pattern RE_UNITNAME_PREFIX = Pattern.compile("[{}!]");
 
-    public static final List<String> EXCLUDED_UNITS = Arrays.asList("CMEM", "HEAPTRC", "CTHREADS", "CWSTRING", "FASTMM4");
-
-    public static boolean isExcludedFromCheck(PascalQualifiedIdent usedUnitName) {
-        if (EXCLUDED_UNITS.contains(usedUnitName.getName().toUpperCase())) {
-            return true;
-        }
-        PsiElement prev = usedUnitName.getPrevSibling();
-        return (prev instanceof PsiComment) && "{!}".equals(prev.getText());
-    }
+    private static final List<String> EXCLUDED_UNITS = Arrays.asList("CMEM", "HEAPTRC", "CTHREADS", "CWSTRING", "FASTMM4");
 
     public static UsedUnitStatus getUsedUnitStatus(PascalQualifiedIdent usedUnitName, Module module) {
         Project project = usedUnitName.getProject();
@@ -74,7 +65,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
             return UsedUnitStatus.UNKNOWN;
         }
         UsedUnitStatus res = UsedUnitStatus.USED;
-        if (isExcludedFromCheck(usedUnitName)) {
+        if (EXCLUDED_UNITS.contains(usedUnitName.getName().toUpperCase())) {
             return res;
         }
         PascalModule pasModule = PsiUtil.getElementPasModule(usedUnitName);
@@ -98,7 +89,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         return supportsOptimization(file);
     }
 
-    public static boolean supportsOptimization(PsiFile file) {
+    private static boolean supportsOptimization(PsiFile file) {
         return (file instanceof PascalFile) && (file.getFileType() == PascalFileType.INSTANCE);
     }
 

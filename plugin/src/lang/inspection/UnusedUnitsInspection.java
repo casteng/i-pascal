@@ -34,9 +34,6 @@ public class UnusedUnitsInspection extends LocalInspectionTool {
     }
 
     private ProblemDescriptor annotateUnit(InspectionManager holder, PascalQualifiedIdent usedUnitName, boolean isOnTheFly) {
-        if (PascalImportOptimizer.isExcludedFromCheck(usedUnitName)) {
-            return null;
-        }
         switch (PascalImportOptimizer.getUsedUnitStatus(usedUnitName, ModuleUtilCore.findModuleForPsiElement(usedUnitName))) {
             case UNUSED: {
                 return holder.createProblemDescriptor(usedUnitName, message("inspection.warn.unused.unit"), true,
