@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.95</version>
+    <version>1.951</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[

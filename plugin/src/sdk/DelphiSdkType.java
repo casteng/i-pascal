@@ -66,7 +66,7 @@ public class DelphiSdkType extends BasePascalSdkType {
     @Nullable
     @Override
     public String suggestHomePath() {
-        List<String> dirs = Arrays.asList("", "program files");
+        List<String> dirs = Arrays.asList("", "program files", "embarcadero", "program files/embarcadero");
         for (File drive : File.listRoots()) {
             if (drive.isDirectory()) {
                 for (String dir : dirs) {
@@ -79,7 +79,7 @@ public class DelphiSdkType extends BasePascalSdkType {
     }
 
     private String checkDir(@NotNull File file) {
-        List<String> ides = Arrays.asList("delphi", "rad studio");
+        List<String> ides = Arrays.asList("delphi", "studio", "rad studio");
         for (String ide : ides) {
             File f = new File(file, ide);
             LOG.info("=== checking directory " + f.getAbsolutePath());

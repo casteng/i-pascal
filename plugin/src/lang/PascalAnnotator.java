@@ -177,7 +177,7 @@ public class PascalAnnotator implements Annotator {
                             break;
                         }
                         case UNIT: {
-                            ann.registerFix(new UsesActions.AddUnitAction(message("action.add.uses"), namedElement.getName(), ContextUtil.belongsToInterface(namedElement)));
+                            ann.registerFix(new UsesActions.AddUnitAction(message("action.add.uses", namedElement.getName()), namedElement.getName(), ContextUtil.belongsToInterface(namedElement)));
                             break;
                         }
                         case NEW_UNIT: {
