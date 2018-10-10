@@ -15,11 +15,10 @@ public class PasIdentStubImpl extends PasNamedStubBase<PascalIdentDecl> implemen
     private PasField.Access access;
     private String value;
     private PasField.Kind typeKind;
-    private boolean local;
     private List<String> subMembers;                            // members which can be qualified by this ident as well as accessed directly (enums)
 
     public PasIdentStubImpl(StubElement parent, String name, String containingUnitName, PasField.FieldType kind, String typeString, PasField.Kind typeKind,
-                            PasField.Access access, String value, boolean local, List<String> subMembers) {
+                            PasField.Access access, String value, List<String> subMembers) {
         super(parent, PasIdentStubElementType.INSTANCE, name, containingUnitName);
         this.kind = kind;
         this.typeString = typeString;
@@ -27,17 +26,11 @@ public class PasIdentStubImpl extends PasNamedStubBase<PascalIdentDecl> implemen
         this.subMembers = subMembers;
         this.access = access;
         this.value = value;
-        this.local = local;
     }
 
     @Override
     public PasField.FieldType getType() {
         return kind;
-    }
-
-    @Override
-    public boolean isLocal() {
-        return local;
     }
 
     @Nullable

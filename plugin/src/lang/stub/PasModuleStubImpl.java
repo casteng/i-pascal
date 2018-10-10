@@ -30,11 +30,6 @@ public class PasModuleStubImpl extends PasNamedStubBase<PascalModule> implements
         return PasField.FieldType.UNIT;
     }
 
-    @Override
-    public boolean isLocal() {
-        return false;
-    }
-
     @NotNull
     @Override
     public PascalModule.ModuleType getModuleType() {

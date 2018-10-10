@@ -6,8 +6,8 @@ import com.siberika.idea.pascal.lang.psi.PascalRecordDecl;
 import java.util.List;
 
 public class PasRecordDeclStubImpl extends PasStructStubImpl<PascalRecordDecl> implements PasRecordDeclStub {
-    public PasRecordDeclStubImpl(StubElement parent, String name, String containingUnitName, boolean local,
+    public PasRecordDeclStubImpl(StubElement parent, String name, String containingUnitName,
                                  List<String> parentNames, List<String> aliases, PasRecordDeclStubElementType stubElementType, List<String> typeParameters) {
-        super(parent, name, containingUnitName, local, parentNames, aliases, stubElementType, typeParameters);
+        super(parent, name, containingUnitName, parentNames, aliases, stubElementType, typeParameters);
     }
 }

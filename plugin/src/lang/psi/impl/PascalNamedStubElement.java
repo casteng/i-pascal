@@ -120,10 +120,6 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
 
     @Override
     public boolean isLocal() {
-        B stub = retrieveStub();
-        if (stub != null) {
-            return stub.isLocal();
-        }
         if (SyncUtil.lockOrCancel(localityLock)) {
             try {
                 if (null == local) {

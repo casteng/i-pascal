@@ -10,15 +10,13 @@ import java.util.List;
 
 public class PasStructStubImpl<T extends PascalStructType> extends PasNamedStubBase<T> implements PasStructStub<T> {
 
-    boolean local;
     private List<String> parentNames;
     private List<String> aliases;
     private List<String> typeParameters;
 
-    public PasStructStubImpl(StubElement parent, String name, String containingUnitName, boolean local, List<String> parentNames,
+    public PasStructStubImpl(StubElement parent, String name, String containingUnitName, List<String> parentNames,
                              List<String> aliases, PasStructDeclStubElementType elementType, List<String> typeParameters) {
         super(parent, elementType, name, containingUnitName);
-        this.local = local;
         this.parentNames = parentNames;
         this.aliases = aliases;
         this.typeParameters = typeParameters;
@@ -27,11 +25,6 @@ public class PasStructStubImpl<T extends PascalStructType> extends PasNamedStubB
     @Override
     public PasField.FieldType getType() {
         return PasField.FieldType.TYPE;
-    }
-
-    @Override
-    public boolean isLocal() {
-        return local;
     }
 
     @NotNull

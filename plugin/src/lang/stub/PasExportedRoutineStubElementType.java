@@ -35,7 +35,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @Override
     public PasExportedRoutineStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
         return new PasExportedRoutineStubImpl(parentStub, "-", PasField.Visibility.PUBLIC,
-                "", false, false, false, "--", null, Collections.emptyList(), null);
+                "", false, false, "--", null, Collections.emptyList(), null);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @Override
     public PasExportedRoutineStub createStub(@NotNull PascalExportedRoutine psi, StubElement parentStub) {
         return new PasExportedRoutineStubImpl(parentStub, psi.getName(), psi.getVisibility(),
-                psi.getContainingUnitName(), psi.isConstructor(), psi.isFunction(), psi.isLocal(),
+                psi.getContainingUnitName(), psi.isConstructor(), psi.isFunction(),
                 psi.getFunctionTypeStr(), psi.getFormalParameterNames(), psi.getFormalParameterTypes(), psi.getFormalParameterAccess());
     }
 
@@ -66,7 +66,6 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         dataStream.writeName(stub.getContainingUnitName());
         dataStream.writeBoolean(stub.isConstructor());
         dataStream.writeBoolean(stub.isFunction());
-        dataStream.writeBoolean(stub.isLocal());
         dataStream.writeName(stub.getFunctionTypeStr());
         StubUtil.writeStringCollection(dataStream, stub.getFormalParameterNames());
         StubUtil.writeStringCollection(dataStream, stub.getFormalParameterTypes());
@@ -81,7 +80,6 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         String containingUnitName = StubUtil.readName(dataStream);
         boolean constructor = dataStream.readBoolean();
         boolean function = dataStream.readBoolean();
-        boolean local = dataStream.readBoolean();
         String typeStr = StubUtil.readName(dataStream);
         List<String> parameterNames = new SmartList<>();
         StubUtil.readStringCollection(dataStream, parameterNames);
@@ -89,7 +87,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         StubUtil.readStringCollection(dataStream, parameterTypes);
         List<ParamModifier> parameterAccess = new SmartList<>();
         StubUtil.readEnumCollection(dataStream, parameterAccess, ParamModifier.values());
-        return new PasExportedRoutineStubImpl(parentStub, name, visibility, containingUnitName, constructor, function, local,
+        return new PasExportedRoutineStubImpl(parentStub, name, visibility, containingUnitName, constructor, function,
                 typeStr, parameterNames, parameterTypes, parameterAccess);
     }
 

@@ -16,20 +16,18 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     private PasField.Visibility visibility;
     private boolean constructor;
     private boolean function;
-    private boolean local;
     private String functionTypeStr;
     private List<String> parameterNames;
     private List<String> parameterTypes;
     private List<ParamModifier> parameterAccess;
 
     public PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility,
-                                      String containingUnitName, boolean constructor, boolean function, boolean local, String functionTypeStr,
+                                      String containingUnitName, boolean constructor, boolean function, String functionTypeStr,
                                       List<String> parameterNames, List<String> parameterTypes, List<ParamModifier> parameterAccess) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE, name, containingUnitName);
         this.visibility = visibility;
         this.constructor = constructor;
         this.function = function;
-        this.local = local;
         this.functionTypeStr = functionTypeStr;
         this.parameterNames = parameterNames;
         this.parameterTypes = parameterTypes;
@@ -40,11 +38,6 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     @Override
     public PasField.FieldType getType() {
         return PasField.FieldType.ROUTINE;
-    }
-
-    @Override
-    public boolean isLocal() {
-        return local;
     }
 
     @Override
