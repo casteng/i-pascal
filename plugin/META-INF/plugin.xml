@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.951</version>
+    <version>1.970</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.970</p>
+        <ul>
+            <li></li>
+        </ul>
         <p>1.95</p>
         <ul>
             <li>Errors annotation is now really fast (~100 times faster)</li>
@@ -360,6 +364,11 @@
         <action id="Pascal.OverrideMethod" class="com.siberika.idea.pascal.ide.actions.ActionImplement"
                 text="Override Pascal Methods" description="Override methods from a superclass/interface">
             <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="OverrideMethods"/>
+        </action>
+
+        <action id="Pascal.SDKSwitch" class="com.siberika.idea.pascal.ui.SdkSwitchAction"
+                text="Switch SDK" description="Allows to switch project SDK" icon="AllIcons.General.AddJdk">
+            <add-to-group group-id="ToolbarRunGroup" anchor="first" />
         </action>
     </actions>
 
