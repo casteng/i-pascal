@@ -66,6 +66,8 @@ import java.util.List;
  */
 public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware {
 
+    private static final int PLACEHOLDER_MAX_SIZE = 256;
+
     @NotNull
     @Override
     public FoldingDescriptor[] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
@@ -141,9 +143,9 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
                         if (!types.isEmpty()) {
                             PasEntityScope ns = PascalExpression.retrieveScope(types);
                             if (ns instanceof PascalStructType) {
-                                addFolding(descriptors, namedElement, ns, withExpr);
+                                addWithFolding(descriptors, namedElement, ns, withExpr);
                                 for (SmartPsiElementPointer<PasEntityScope> scopePtr : ns.getParentScope()) {
-                                    addFolding(descriptors, namedElement, scopePtr.getElement(), withExpr);
+                                    addWithFolding(descriptors, namedElement, scopePtr.getElement(), withExpr);
                                 }
                             }
                         }
@@ -153,7 +155,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
         }
     }
 
-    private void addFolding(List<FoldingDescriptor> descriptors, PasFullyQualifiedIdent namedElement, PasEntityScope scope, PasExpression withExpr) {
+    private void addWithFolding(List<FoldingDescriptor> descriptors, PasFullyQualifiedIdent namedElement, PasEntityScope scope, PasExpression withExpr) {
         List<PasSubIdent> subidents = namedElement.getSubIdentList();
         if (!subidents.isEmpty()) {
             PasSubIdent sub = subidents.get(0);
@@ -189,7 +191,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
             if (range.getLength() > 1) {
                 descriptors.add(new NamedFoldingDescriptor(routine.getNode(), range, null,
                         " " + PsiUtil.normalizeRoutineName(routine) + ";",
-                        JavaCodeFoldingSettings.getInstance().isCollapseMethods(), Collections.emptySet()));
+                        isCollapseMethods(), Collections.emptySet()));
             }
         }
     }
@@ -243,6 +245,10 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
                                 sb.append(ident.getName());
                                 first = false;
                             }
+                            if (sb.length() > PLACEHOLDER_MAX_SIZE) {
+                                sb.append(",...");
+                                break;
+                            }
                         }
                         sb.append(";");
                         return sb.toString();
@@ -265,6 +271,10 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
                     } else {
                         sb.append(ident.getName());
                         first = false;
+                    }
+                    if (sb.length() > PLACEHOLDER_MAX_SIZE) {
+                        sb.append(",...");
+                        break;
                     }
                 }
                 sb.append(");");
@@ -303,7 +313,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
                 if (lfPos < commentRange.getEndOffset()) {
                     descriptors.add(new NamedFoldingDescriptor(lastComment.getNode(), getRange(lfPos, commentRange.getEndOffset()),
                             null, "..." + endSymbol,
-                            JavaCodeFoldingSettings.getInstance().isCollapseJavadocs(), Collections.emptySet()));
+                            isCollapseDocs(), Collections.emptySet()));
                 }
             }
         }
@@ -328,6 +338,27 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
 
     @Override
     public boolean isCollapsedByDefault(@NotNull ASTNode node) {
-        return JavaCodeFoldingSettings.getInstance().isCollapseImports() && (node.getElementType() == PasTypes.USES_CLAUSE);
+        try {
+            return JavaCodeFoldingSettings.getInstance().isCollapseImports() && (node.getElementType() == PasTypes.USES_CLAUSE);
+        } catch (Throwable t) {
+            return node.getElementType() == PasTypes.USES_CLAUSE;
+        }
     }
+
+    private boolean isCollapseDocs() {
+        try {
+            return JavaCodeFoldingSettings.getInstance().isCollapseJavadocs();
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private boolean isCollapseMethods() {
+        try {
+            return JavaCodeFoldingSettings.getInstance().isCollapseMethods();
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
 }
