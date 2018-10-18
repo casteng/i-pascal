@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.debugger.gdb;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -108,22 +109,26 @@ public class GdbStackFrame extends XStackFrame {
         if (!process.options.resolveNames() || (null == sourcePosition)) {
             return null;
         }
-        return ApplicationManager.getApplication().runReadAction(new Computable<PasField>() {
-            @Override
-            public PasField compute() {
-                PsiElement el = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), process.getSession().getProject(), false);
-                if (el != null) {
-                    Collection<PasField> fields = getFields(el, name);
-                    String id = name.substring(name.lastIndexOf('.') + 1);
-                    for (PasField field : fields) {
-                        if (types.contains(field.fieldType) && id.equalsIgnoreCase(field.name)) {
-                            return field;
+        if (DumbService.isDumb(process.getSession().getProject())) {
+            return null;
+        } else {
+            return ApplicationManager.getApplication().runReadAction(new Computable<PasField>() {
+                @Override
+                public PasField compute() {
+                    PsiElement el = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), process.getSession().getProject(), false);
+                    if (el != null) {
+                        Collection<PasField> fields = getFields(el, name);
+                        String id = name.substring(name.lastIndexOf('.') + 1);
+                        for (PasField field : fields) {
+                            if (types.contains(field.fieldType) && id.equalsIgnoreCase(field.name)) {
+                                return field;
+                            }
                         }
                     }
+                    return null;
                 }
-                return null;
-            }
-        });
+            });
+        }
     }
 
     private Collection<PasField> getFields(@NotNull PsiElement el, String name) {

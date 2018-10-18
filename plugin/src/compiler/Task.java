@@ -77,13 +77,18 @@ public class Task implements CompileTask {
         @Override
         public void compilationFinished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
             CompilerManager.getInstance(compileContext.getProject()).removeCompilationStatusListener(this);
-            for (CompilerMessage message : compileContext.getMessages(CompilerMessageCategory.ERROR)) {
-                Navigatable nav = message.getNavigatable();
-                if ((nav != null) && (nav.canNavigateToSource())) {
-                    message.getNavigatable().navigate(true);
-                    break;
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (CompilerMessage message : compileContext.getMessages(CompilerMessageCategory.ERROR)) {
+                        Navigatable nav = message.getNavigatable();
+                        if ((nav != null) && (nav.canNavigateToSource())) {
+                            message.getNavigatable().navigate(true);
+                            break;
+                        }
+                    }
                 }
-            }
+            });
         }
 
         @Override
