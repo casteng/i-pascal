@@ -6,6 +6,7 @@ import com.intellij.lang.folding.FoldingBuilderEx;
 import com.intellij.lang.folding.FoldingDescriptor;
 import com.intellij.lang.folding.NamedFoldingDescriptor;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.TextRange;
@@ -59,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -162,7 +164,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
             if (scope instanceof PascalStructType) {
                 PasField field = scope.getField(sub.getName());
                 if (field != null) {
-                    descriptors.add(new NamedFoldingDescriptor(sub.getNode(), sub.getTextRange(), null,
+                    descriptors.add(createNamedFoldingDescriptor(sub.getNode(), sub.getTextRange(), null,
                             withExpr.getExpr().getText() + "." + sub.getName(),
                             true, Collections.singleton(withExpr)));
                 }
@@ -189,7 +191,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
             int foldStart = getStartOffset(routine);
             TextRange range = getRange(foldStart, routine.getTextRange().getEndOffset());
             if (range.getLength() > 1) {
-                descriptors.add(new NamedFoldingDescriptor(routine.getNode(), range, null,
+                descriptors.add(createNamedFoldingDescriptor(routine.getNode(), range, null,
                         " " + PsiUtil.normalizeRoutineName(routine) + ";",
                         isCollapseMethods(), Collections.emptySet()));
             }
@@ -279,7 +281,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
                 }
                 sb.append(");");
                 if (range.getLength() > 0) {
-                    descriptors.add(new NamedFoldingDescriptor(decl.getNode(), range, null, sb.toString(),
+                    descriptors.add(createNamedFoldingDescriptor(decl.getNode(), range, null, sb.toString(),
                             PascalCodeFoldingSettings.getInstance().isCollapseEnums(), Collections.emptySet()));
                 }
             }
@@ -311,7 +313,7 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
                     lfPos = lastComment.getTextRange().getEndOffset();
                 }
                 if (lfPos < commentRange.getEndOffset()) {
-                    descriptors.add(new NamedFoldingDescriptor(lastComment.getNode(), getRange(lfPos, commentRange.getEndOffset()),
+                    descriptors.add(createNamedFoldingDescriptor(lastComment.getNode(), getRange(lfPos, commentRange.getEndOffset()),
                             null, "..." + endSymbol,
                             isCollapseDocs(), Collections.emptySet()));
                 }
@@ -342,6 +344,14 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
             return JavaCodeFoldingSettings.getInstance().isCollapseImports() && (node.getElementType() == PasTypes.USES_CLAUSE);
         } catch (Throwable t) {
             return node.getElementType() == PasTypes.USES_CLAUSE;
+        }
+    }
+
+    private FoldingDescriptor createNamedFoldingDescriptor(ASTNode node, TextRange textRange, FoldingGroup group, String placeholderText, boolean collapseByDefault, Set<Object> dependencies) {
+        try {
+            return new NamedFoldingDescriptor(node, textRange, group, placeholderText, collapseByDefault, dependencies);
+        } catch (Throwable t) {
+            return new NamedFoldingDescriptor(node, textRange, group, placeholderText);
         }
     }
 
