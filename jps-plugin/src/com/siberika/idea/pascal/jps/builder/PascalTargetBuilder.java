@@ -1,8 +1,10 @@
 package com.siberika.idea.pascal.jps.builder;
 
+import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
@@ -59,6 +61,8 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
     private static final Logger LOG = Logger.getInstance(PascalTargetBuilder.class);
     private static final String NAME = "Pascal builder";
 
+    public static final Key<RunConfiguration> RUN_CONFIGURATION_KEY = Key.create("RUN_CONFIGURATION");
+
     protected PascalTargetBuilder(Collection<? extends BuildTargetType<? extends PascalTarget>> buildTargetTypes) {
         super(buildTargetTypes);
 
@@ -101,6 +105,9 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
         }
 
         CompilerMessager messager = new PascalCompilerMessager(getPresentableName(), context);
+
+        RunConfiguration rc = context.getUserData(RUN_CONFIGURATION_KEY);
+        messager.info("===*** Run conf: " + (rc != null ? rc.getName() : "<null>"), "", -1, -1);
 
         JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
         if (sdk != null) {

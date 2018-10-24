@@ -393,6 +393,7 @@
         <syntaxHighlighter key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <syntaxHighlighter key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
+        <highlightUsagesHandlerFactory implementation="com.siberika.idea.pascal.editor.highlighter.PascalHighlightHandlerFactory" />
 
         <readWriteAccessDetector implementation="com.siberika.idea.pascal.editor.highlighter.PascalReadWriteAccessDetector"/>
 

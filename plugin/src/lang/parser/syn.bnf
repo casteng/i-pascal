@@ -672,7 +672,7 @@ private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | IfStatement | TryStatement | simpleStatement | CompoundStatement | stmtEmpty
 
-private simpleStatement     ::= GotoStatement | stmtSimpleOrAssign | Expression
+private simpleStatement     ::= flowStatement | stmtSimpleOrAssign | Expression
 private stmtSimpleOrAssign  ::= Expression AssignPart
 AssignOp                    ::= ":=" | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN
 AssignPart                  ::= AssignOp (NewStatement | Expression) {pin=1 recoverWhile=rec_statement}
@@ -718,7 +718,11 @@ private designatorsRest     ::= "," Expression {}
 
 RaiseStatement              ::= RAISE [Expression] ["at" Expression] {pin=1}
 
-GotoStatement               ::= GOTO LabelId | EXIT [ "(" Expression ")" ] | BREAK | CONTINUE
+private flowStatement       ::= ExitStatement | BreakStatement | ContinueStatement | GotoStatement
+ExitStatement               ::= EXIT [ "(" Expression ")" ]
+BreakStatement              ::= BREAK
+ContinueStatement           ::= CONTINUE
+GotoStatement               ::= GOTO LabelId
 
 LabelId                     ::= label
 

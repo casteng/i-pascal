@@ -103,8 +103,8 @@ public class PascalImportOptimizer implements ImportOptimizer {
         final Map<PascalQualifiedIdent, UsedUnitStatus> units = new TreeMap<PascalQualifiedIdent, UsedUnitStatus>(new ByOffsetComparator<PascalQualifiedIdent>());
         Collection<PasUsesClause> usesClauses = PsiTreeUtil.findChildrenOfType(file, PasUsesClause.class);
 
-        //noinspection unchecked
         Module module = ModuleUtilCore.findModuleForPsiElement(file);
+        //noinspection unchecked
         for (PascalQualifiedIdent usedUnitName : PsiUtil.findChildrenOfAnyType(PsiUtil.getElementPasModule(file), PascalQualifiedIdent.class)) {
             if (PsiUtil.isUsedUnitName(usedUnitName)) {
                 UsedUnitStatus status = PascalImportOptimizer.getUsedUnitStatus(usedUnitName, module);
