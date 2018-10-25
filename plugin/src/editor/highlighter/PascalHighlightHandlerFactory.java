@@ -9,13 +9,14 @@ import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
+import com.siberika.idea.pascal.lang.psi.PasWithStatement;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PascalHighlightHandlerFactory extends HighlightUsagesHandlerFactoryBase {
 
     /*
-     * when unit in uses is highlighted: all identifiers from the unit
      * when on argument of a WITH statement: all identifiers from the argument's scope within WITH statement scope
      */
 
@@ -28,8 +29,11 @@ public class PascalHighlightHandlerFactory extends HighlightUsagesHandlerFactory
         if ("CONTINUE".equalsIgnoreCase(target.getText()) || "BREAK".equalsIgnoreCase(target.getText())) {
             return new PasHighlightBreakOutsHandler(editor, file, target);
         }
-        if (getUnitReference(target) != null) {
+        if ("USES".equalsIgnoreCase(target.getText()) || getUnitReference(target) != null) {
             return new PasHighlightUnitIdentsHandler(editor, file, target);
+        }
+        if ("WITH".equalsIgnoreCase(target.getText()) || getWithStatement(target) != null) {
+            return new PasHighlightWithIdentsHandler(editor, file, target);
         }
         return null;
     }
@@ -51,5 +55,10 @@ public class PascalHighlightHandlerFactory extends HighlightUsagesHandlerFactory
         } else {
             return null;
         }
+    }
+
+    static PasWithStatement getWithStatement(PsiElement target) {
+        PsiElement parent = PsiUtil.skipToExpressionParent(target.getParent());
+        return (parent instanceof PasWithStatement) ? (PasWithStatement) parent : null;
     }
 }

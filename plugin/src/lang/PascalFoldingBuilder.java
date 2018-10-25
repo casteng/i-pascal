@@ -12,9 +12,9 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.editor.highlighter.PasHighlightWithIdentsHandler;
 import com.siberika.idea.pascal.lang.folding.PascalCodeFoldingSettings;
 import com.siberika.idea.pascal.lang.psi.PasCaseStatement;
 import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
@@ -22,9 +22,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
-import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
-import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
@@ -34,7 +32,6 @@ import com.siberika.idea.pascal.lang.psi.PasObjectDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
-import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
@@ -47,10 +44,7 @@ import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PascalStructType;
-import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -139,37 +133,14 @@ public class PascalFoldingBuilder extends FoldingBuilderEx implements DumbAware 
             PasWithStatement withElement = getAffectedBy(withElements, namedElement);
             if (withElement != null) {
                 for (PasExpression withExpr : withElement.getExpressionList()) {
-                    PasExpr expression = withExpr != null ? withExpr.getExpr() : null;
-                    if (expression instanceof PascalExpression) {
-                        List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) withExpr.getExpr());
-                        if (!types.isEmpty()) {
-                            PasEntityScope ns = PascalExpression.retrieveScope(types);
-                            if (ns instanceof PascalStructType) {
-                                addWithFolding(descriptors, namedElement, ns, withExpr);
-                                for (SmartPsiElementPointer<PasEntityScope> scopePtr : ns.getParentScope()) {
-                                    addWithFolding(descriptors, namedElement, scopePtr.getElement(), withExpr);
-                                }
-                            }
-                        }
-                    }
+                    PasHighlightWithIdentsHandler.processElementsFromWith(withExpr, namedElement, element -> {
+                        descriptors.add(createNamedFoldingDescriptor(element.getNode(), element.getTextRange(), null,
+                                withExpr.getExpr().getText() + "." + element.getName(),
+                                true, Collections.singleton(withExpr)));
+                        return true;
+                    });
                 }
             }
-        }
-    }
-
-    private void addWithFolding(List<FoldingDescriptor> descriptors, PasFullyQualifiedIdent namedElement, PasEntityScope scope, PasExpression withExpr) {
-        List<PasSubIdent> subidents = namedElement.getSubIdentList();
-        if (!subidents.isEmpty()) {
-            PasSubIdent sub = subidents.get(0);
-            if (scope instanceof PascalStructType) {
-                PasField field = scope.getField(sub.getName());
-                if (field != null) {
-                    descriptors.add(createNamedFoldingDescriptor(sub.getNode(), sub.getTextRange(), null,
-                            withExpr.getExpr().getText() + "." + sub.getName(),
-                            true, Collections.singleton(withExpr)));
-                }
-            }
-
         }
     }
 

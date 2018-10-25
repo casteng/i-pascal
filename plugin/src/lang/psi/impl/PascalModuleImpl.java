@@ -56,7 +56,6 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().softValues().build();
     private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().softValues().build();
     private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().softValues().build();
-    private static final String INTERFACE_PREFIX = "interface.";
 
     private final Callable<? extends Members> PRIVATE_BUILDER = this.new PrivateBuilder();
     private final Callable<? extends Members> PUBLIC_BUILDER = this.new PublicBuilder();
@@ -256,28 +255,34 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     @Override
-    public Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@NotNull String module, List<String> unitPrefixes) {
+    public Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@Nullable String module, boolean includeInterface, List<String> unitPrefixes) {
         Idents idents = getIdents(identCache, IDENTS_BUILDER);
         Pair<List<PascalNamedElement>, List<PascalNamedElement>> res = new Pair<List<PascalNamedElement>, List<PascalNamedElement>>(
                 new SmartList<PascalNamedElement>(), new SmartList<PascalNamedElement>());
-        for (Map.Entry<String, PasField> entry : idents.idents.entrySet()) {
-            PasField field = entry.getValue();
-            if ((field != null) && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
-                                && PasField.TYPES_STRUCTURE.contains(field.fieldType)
-                                && (field.owner instanceof PascalModule) && nameMatch(module, field.owner.getName(), unitPrefixes)) {
-                if (entry.getKey().startsWith(INTERFACE_PREFIX)) {
-                    res.getFirst().add(field.getElement());
-                } else {
-                    res.getSecond().add(field.getElement());
-                }
-            }
+        if (includeInterface) {
+            collectElements(module, idents.identsIntf, res.first, unitPrefixes);
         }
+        collectElements(module, idents.identsImpl, res.second, unitPrefixes);
         return res;
     }
 
-    private static boolean nameMatch(String moduleName, String fieldName, List<String> unitPrefixes) {
-        if (moduleName.equalsIgnoreCase(fieldName) || (moduleName.indexOf('.') >= 0)) {
+    private void collectElements(@Nullable String module, Map<PascalNamedElement, PasField> idents, List<PascalNamedElement> result, List<String> unitPrefixes) {
+        for (Map.Entry<PascalNamedElement, PasField> entry : idents.entrySet()) {
+            PasField field = entry.getValue();
+            if ((field != null) && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
+                    && PasField.TYPES_STRUCTURE.contains(field.fieldType)
+                    && (field.owner instanceof PascalModule) && !this.equals(field.owner) && nameMatch(module, field.owner.getName(), unitPrefixes)) {
+                result.add(entry.getKey());
+            }
+        }
+    }
+
+    private static boolean nameMatch(@Nullable String moduleName, String fieldName, List<String> unitPrefixes) {
+        if ((null == moduleName) || moduleName.equalsIgnoreCase(fieldName)) {
             return true;
+        }
+        if (moduleName.indexOf('.') >= 0) {
+            return false;
         }
         moduleName = moduleName.toUpperCase();
         fieldName = fieldName.toUpperCase();
@@ -360,7 +365,8 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     private static class Idents extends Cached {
-        Map<String, PasField> idents = new HashMap<String, PasField>();
+        Map<PascalNamedElement, PasField> identsIntf = new HashMap<PascalNamedElement, PasField>();
+        Map<PascalNamedElement, PasField> identsImpl = new HashMap<PascalNamedElement, PasField>();
     }
 
     private class IdentsBuilder implements Callable<Idents> {
@@ -372,8 +378,11 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
                 if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
                     Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(namedElement), new ResolveContext(PasField.TYPES_ALL, true), 0);
                     if (!refs.isEmpty()) {
-                        String name = (ContextUtil.belongsToInterface(namedElement) ? INTERFACE_PREFIX : "") + PsiUtil.getUniqueName(namedElement);
-                        res.idents.put(name, refs.iterator().next());
+                        if (ContextUtil.belongsToInterface(namedElement)) {
+                            res.identsIntf.put(namedElement, refs.iterator().next());
+                        } else {
+                            res.identsImpl.put(namedElement, refs.iterator().next());
+                        }
                     }
                 }
             }

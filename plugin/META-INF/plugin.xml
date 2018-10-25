@@ -11,7 +11,10 @@
     <change-notes><![CDATA[
         <p>1.970</p>
         <ul>
-            <li></li>
+            <li>Quick project SDK switch action</li>
+            <li>Routine and loops exit points highlighting</li>
+            <li>Unit identifiers highlighting</li>
+            <li>WITH scope identifiers highlighting</li>
         </ul>
         <p>1.95</p>
         <ul>

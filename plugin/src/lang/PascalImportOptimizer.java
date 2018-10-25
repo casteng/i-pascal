@@ -70,7 +70,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
         }
         PascalModule pasModule = PsiUtil.getElementPasModule(usedUnitName);
         if ((pasModule != null)) {
-            Pair<List<PascalNamedElement>, List<PascalNamedElement>> idents = pasModule.getIdentsFrom(usedUnitName.getName(), ModuleUtil.retrieveUnitNamespaces(module, project));
+            Pair<List<PascalNamedElement>, List<PascalNamedElement>> idents = pasModule.getIdentsFrom(usedUnitName.getName(), true, ModuleUtil.retrieveUnitNamespaces(module, project));
             if (ContextUtil.belongsToInterface(usedUnitName)) {
                 if (idents.getFirst().size() + idents.getSecond().size() == 0) {
                     res = UsedUnitStatus.UNUSED;
