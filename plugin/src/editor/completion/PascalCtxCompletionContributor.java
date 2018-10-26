@@ -287,7 +287,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     }
 
     private static void handleSuggestions(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
-        for (String name : PascalNameSuggestionProvider.suggestForElement(ctx.getPosition())) {
+        for (String name : PascalNameSuggestionProvider.suggestForElement(ctx)) {
             result.caseInsensitive().addElement(CompletionUtil.getElement(name, null));
         }
     }

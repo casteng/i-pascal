@@ -168,9 +168,10 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     @Override
     public void invalidateCaches() {
         if (cachedKey != null) {
-            PascalModuleImpl.invalidate(cachedKey);
-            PascalRoutineImpl.invalidate(cachedKey);
-            PasStubStructTypeImpl.invalidate(cachedKey);
+            String key = cachedKey;
+            PascalModuleImpl.invalidate(key);
+            PascalRoutineImpl.invalidate(key);
+            PasStubStructTypeImpl.invalidate(key);
             cachedKey = null;
         }
         if (SyncUtil.lockOrCancel(containingScopeLock)) {

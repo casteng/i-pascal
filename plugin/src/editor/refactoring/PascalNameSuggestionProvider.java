@@ -8,6 +8,8 @@ import com.intellij.refactoring.rename.NameSuggestionProvider;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.lang.context.CodePlace;
+import com.siberika.idea.pascal.lang.context.Context;
 import com.siberika.idea.pascal.lang.psi.PasArrayType;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
@@ -41,17 +43,17 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
         if (!element.getLanguage().isKindOf(PascalLanguage.INSTANCE)) {
             return null;
         }
-        suggestForElement(element.getParent(), result);
+        suggestForElement(null, element.getParent(), result);
         return null;
     }
 
-    public static Set<String> suggestForElement(PsiElement position) {
+    public static Set<String> suggestForElement(Context context) {
         Set<String> result = new SmartHashSet<>();
-        suggestForElement(position, result);
+        suggestForElement(context, context.getPosition(), result);
         return result;
     }
 
-    public static Set<String> suggestForElement(PsiElement position, Set<String> result) {
+    public static Set<String> suggestForElement(@Nullable Context context, PsiElement position, Set<String> result) {
         while (position instanceof PasGenericTypeIdent) {
             position = position.getParent();
         }
@@ -77,7 +79,7 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
                 result.add("Get" + ((PasClassProperty) prop).getName());
                 result.add("Set" + ((PasClassProperty) prop).getName());
             }
-        } else if (position instanceof PascalRoutine) {
+        } else if ((position instanceof PascalRoutine) && ((context == null) || context.contains(CodePlace.ROUTINE_HEADER))) {
             PascalRoutine routine = (PascalRoutine) position;
             if (routine.isConstructor()) {
                 result.add("Create");

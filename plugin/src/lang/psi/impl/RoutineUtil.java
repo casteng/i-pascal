@@ -131,7 +131,7 @@ public class RoutineUtil {
 
     static List<String> parseTypeParametersStr(String typeParamText) {
         List<String> result;
-        if (typeParamText != null) {
+        if (typeParamText != null && typeParamText.length() > 1) {
             result = Arrays.asList(typeParamText.substring(1, typeParamText.length()-1).replaceAll("\\s*:\\s*\\w+", "").split("[,;]\\s*", 100));
         } else {
             result = Collections.emptyList();
