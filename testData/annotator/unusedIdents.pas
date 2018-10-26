@@ -3,7 +3,7 @@ interface
 implementation
 type
     <warning descr="W0003: Identifier declared but never used">TC</warning> = class
-        function <warning descr="W0003: Identifier declared but never used">testf1</warning>(): Integer; override;
+        function <warning descr="W0003: Identifier declared but never used">testf1</warning>(): Integer;
     end;
 
 var
