@@ -57,7 +57,7 @@ public class PascalReadWriteAccessDetector extends ReadWriteAccessDetector {
         return isWriteAccess(reference.getElement()) ? Access.Write : Access.Read;
     }
 
-    static boolean isWriteAccess(PsiElement element) {
+    public static boolean isWriteAccess(PsiElement element) {
         if (element instanceof PascalNamedElement) {
             if (ContextUtil.isAssignLeftPart((PascalNamedElement) element)) {
                 return true;

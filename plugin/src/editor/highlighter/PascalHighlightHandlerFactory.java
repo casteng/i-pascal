@@ -5,20 +5,17 @@ import com.intellij.codeInsight.highlighting.HighlightUsagesHandlerFactoryBase;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.siberika.idea.pascal.lang.context.ContextUtil;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PascalHighlightHandlerFactory extends HighlightUsagesHandlerFactoryBase {
-
-    /*
-     * when on argument of a WITH statement: all identifiers from the argument's scope within WITH statement scope
-     */
 
     @Nullable
     @Override
@@ -38,13 +35,19 @@ public class PascalHighlightHandlerFactory extends HighlightUsagesHandlerFactory
         return null;
     }
 
+    static boolean isFunction(PasEntityScope scope) {
+        return scope instanceof PascalRoutine && ((PascalRoutine) scope).isFunction();
+    }
+
     static boolean isResultReference(PsiElement target) {
         if (target.getParent() instanceof PasSubIdent) {
             PasSubIdent ident = (PasSubIdent) target.getParent();
-            return "RESULT".equalsIgnoreCase(ident.getName()) && ContextUtil.isAssignLeftPart((ident));
-        } else {
-            return false;
+            if ("RESULT".equalsIgnoreCase(ident.getName())) {
+                PasEntityScope scope = PsiUtil.getNearestAffectingScope(target);
+                return isFunction(scope);
+            }
         }
+        return false;
     }
 
     static PasNamespaceIdent getUnitReference(PsiElement target) {

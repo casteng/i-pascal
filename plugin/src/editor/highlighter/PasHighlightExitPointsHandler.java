@@ -2,20 +2,21 @@ package com.siberika.idea.pascal.editor.highlighter;
 
 import com.intellij.codeInsight.highlighting.HighlightUsagesHandlerBase;
 import com.intellij.featureStatistics.ProductivityFeatureNames;
+import com.intellij.lang.injection.InjectedLanguageManager;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Consumer;
-import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExitStatement;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRaiseStatement;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
-import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -60,13 +61,17 @@ public class PasHighlightExitPointsHandler extends HighlightUsagesHandlerBase<Ps
         }
 
         @SuppressWarnings("unchecked")
-        Collection<PascalPsiElement> sts = PsiTreeUtil.findChildrenOfAnyType(scope, isFunction(scope) ? CLASSES_FOR_FUNCTION : CLASSES);
+        Collection<PascalPsiElement> sts = PsiTreeUtil.findChildrenOfAnyType(scope, PascalHighlightHandlerFactory.isFunction(scope) ? CLASSES_FOR_FUNCTION : CLASSES);
         for (PascalPsiElement st : sts) {
             if (PsiUtil.getNearestAffectingScope(st) == scope) {
                 if (st instanceof PasFullyQualifiedIdent) {
-                    PascalNamedElement ident = (PascalNamedElement) st;
-                    if (ContextUtil.isAssignLeftPart(ident) && "RESULT".equalsIgnoreCase(ident.getName())) {
-                        addOccurrence(st.getFirstChild());
+                    List<PasSubIdent> subidents = ((PasFullyQualifiedIdent) st).getSubIdentList();
+                    if (!subidents.isEmpty() && "RESULT".equalsIgnoreCase(subidents.get(0).getName())) {
+                        if (PascalReadWriteAccessDetector.isWriteAccess(st)) {
+                            addWriteOccurrence(st.getFirstChild());
+                        } else {
+                            addOccurrence(st.getFirstChild());
+                        }
                     }
                 } else {
                     addOccurrence(st.getFirstChild());
@@ -75,8 +80,12 @@ public class PasHighlightExitPointsHandler extends HighlightUsagesHandlerBase<Ps
         }
     }
 
-    private boolean isFunction(PasEntityScope scope) {
-        return scope instanceof PascalRoutine && ((PascalRoutine) scope).isFunction();
+    private void addWriteOccurrence(@NotNull PsiElement element) {
+        TextRange range = element.getTextRange();
+        if (range != null) {
+            range = InjectedLanguageManager.getInstance(element.getProject()).injectedToHost(element, range);
+            myWriteUsages.add(range);
+        }
     }
 
     @Nullable
