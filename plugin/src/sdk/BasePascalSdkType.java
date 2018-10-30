@@ -128,6 +128,8 @@ public abstract class BasePascalSdkType extends SdkType {
                         if (data instanceof PascalSdkData) {
                             String options = (String) ((PascalSdkData) data).getValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey());
                             getDefinesFromCmdLine(result, options);
+                            options = (String) ((PascalSdkData) data).getValue(PascalSdkData.Keys.COMPILER_OPTIONS_DEBUG.getKey());
+                            getDefinesFromCmdLine(result, options);
                         }
                         Map<String, Map<String, Define>> compilerDefines = ((BasePascalSdkType) id).defines;
                         for (Map.Entry<String, Map<String, Define>> entry : compilerDefines.entrySet()) {

@@ -367,10 +367,6 @@
             <keyboard-shortcut first-keystroke="shift control KP_UP" keymap="$default"/>
             <add-to-group group-id="GoToMenu" relative-to-action="GotoRelated" anchor="after" />
         </action>
-        <action id="Pascal.OverrideMethod" class="com.siberika.idea.pascal.ide.actions.ActionImplement"
-                text="Override Pascal Methods" description="Override methods from a superclass/interface">
-            <add-to-group group-id="GenerateGroup" anchor="before" relative-to-action="OverrideMethods"/>
-        </action>
 
         <action id="Pascal.SDKSwitch" class="com.siberika.idea.pascal.ui.SdkSwitchAction"
                 text="Switch SDK" description="Allows to switch project SDK" icon="AllIcons.General.AddJdk">
@@ -400,6 +396,9 @@
         <syntaxHighlighter key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
         <highlightUsagesHandlerFactory implementation="com.siberika.idea.pascal.editor.highlighter.PascalHighlightHandlerFactory" />
+        <lang.quoteHandler language="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalQuoteHandler" />
+
+        <projectStructureDetector implementation="com.siberika.idea.pascal.module.PascalProjectStructureDetector" />
 
         <readWriteAccessDetector implementation="com.siberika.idea.pascal.editor.highlighter.PascalReadWriteAccessDetector"/>
 

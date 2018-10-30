@@ -440,7 +440,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
 
     private static void handleExpressionAndStatement(CompletionResultSet result, Context ctx, Map<String, LookupElement> entities, CompletionParameters parameters) {
         if (ctx.getPrimary() == EXPR) {
-            if (ctx.contains(FIRST_IN_NAME) && ctx.contains(FIRST_IN_EXPR) && !ctx.withinBraces()) {
+            if (ctx.contains(FIRST_IN_NAME) && ctx.contains(FIRST_IN_EXPR) && !ctx.withinBraces() && ctx.contains(STATEMENT)) {
                 CompletionUtil.appendTokenSet(result, STATEMENTS);
                 if (ctx.contains(STMT_TRY)) {
                     CompletionUtil.appendTokenSetUnique(result, PasTypes.EXCEPT, ctx.getPosition().getParent());

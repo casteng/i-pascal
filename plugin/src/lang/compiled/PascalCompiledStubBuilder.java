@@ -1,5 +1,7 @@
 package com.siberika.idea.pascal.lang.compiled;
 
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -13,6 +15,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class PascalCompiledStubBuilder extends ClsStubBuilder {
 
+    private static final Logger LOG = Logger.getInstance(PascalCompiledStubBuilder.class);
+
     static final ClsStubBuilder INSTANCE = new PascalCompiledStubBuilder();
 
     @Override
@@ -25,11 +29,18 @@ public class PascalCompiledStubBuilder extends ClsStubBuilder {
     public PsiFileStub<?> buildFileStub(@NotNull FileContent fileContent) {
         PsiManager manager = PsiManager.getInstance(fileContent.getProject());
         FileViewProvider vp = manager.findViewProvider(fileContent.getFile());
-        PsiFile file = vp.getPsi(PascalLanguage.INSTANCE);
+        PsiFile file = vp != null ? vp.getPsi(PascalLanguage.INSTANCE) : null;
         if (file instanceof CompiledFileImpl) {
             return (PsiFileStub<?>) ((CompiledFileImpl) file).calcStubTree().getRoot();
         } else {
-            throw new IllegalArgumentException("buildFileStub: Invalid file class: " + (file != null ? file.getClass().getName() : "null"));
+            VirtualFile vf = fileContent.getFile();
+            if (file != null) {
+                throw new IllegalArgumentException(String.format("buildFileStub: Invalid file class: %s, viewProvider: %s, content: %s",
+                        file.getClass().getName(), vp.getClass().getSimpleName(), vf.getPath()));
+            } else {
+                LOG.info(String.format("WARN: can't index file %s. Probably decompiler is not properly setup.", vf.getPath()));
+                return null;
+            }
         }
     }
 
