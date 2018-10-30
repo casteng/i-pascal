@@ -43,6 +43,11 @@ public class PascalRunConfigurationForm implements PascalRunConfigurationParams 
     }
 
     @Override
+    public boolean getDebugMode() {
+        return false;
+    }
+
+    @Override
     public void setParameters(String parameters) {
         this.parametersEdit.setText(parameters);
     }
@@ -55,6 +60,11 @@ public class PascalRunConfigurationForm implements PascalRunConfigurationParams 
     @Override
     public void setFixIOBuffering(boolean value) {
         fixIOBufferingCBox.setSelected(value);
+    }
+
+    @Override
+    public void setDebugMode(boolean value) {
+
     }
 
     {

@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.jps.builder;
 
-import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.diagnostic.Logger;
@@ -61,7 +60,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
     private static final Logger LOG = Logger.getInstance(PascalTargetBuilder.class);
     private static final String NAME = "Pascal builder";
 
-    public static final Key<RunConfiguration> RUN_CONFIGURATION_KEY = Key.create("RUN_CONFIGURATION");
+    public static final Key<String> RUN_CONFIGURATION_KEY = Key.create("RUN_CONFIGURATION");
 
     protected PascalTargetBuilder(Collection<? extends BuildTargetType<? extends PascalTarget>> buildTargetTypes) {
         super(buildTargetTypes);
@@ -106,8 +105,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
 
         CompilerMessager messager = new PascalCompilerMessager(getPresentableName(), context);
 
-        RunConfiguration rc = context.getUserData(RUN_CONFIGURATION_KEY);
-        messager.info("===*** Run conf: " + (rc != null ? rc.getName() : "<null>"), "", -1, -1);
+        boolean isDebug = isDebugBuild(context);
 
         JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
         if (sdk != null) {
@@ -129,7 +127,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                 String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
                         sdkFiles, sourcePaths,
                         files.get(target), ParamMap.getJpsParams(module.getProperties()),
-                        isRebuild,
+                        isRebuild, isDebug,
                         ParamMap.getJpsParams(sdk.getSdkProperties()));
                 if (cmdLine != null) {
                     // For Delphi workingDirectory should be null otherwise file paths in compiler messages will be relative
@@ -147,6 +145,11 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
         } else {
             log(context, "Pascal SDK is not defined for module " + module.getName());
         }
+    }
+
+    private boolean isDebugBuild(CompileContext context) {
+        String runConfigName = context.getBuilderParameter(RUN_CONFIGURATION_KEY.toString());
+        return (runConfigName != null) && runConfigName.startsWith("[debug]");
     }
 
     private boolean isDependencyTarget(PascalTarget target, CompileContext context) {

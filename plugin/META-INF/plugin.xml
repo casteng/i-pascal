@@ -425,6 +425,8 @@
         <programRunner implementation="com.siberika.idea.pascal.debugger.PascalDebugRunner"/>
         <xdebugger.breakpointType implementation="com.siberika.idea.pascal.debugger.PascalLineBreakpointType"/>
 
+        <stepsBeforeRunProvider implementation="com.siberika.idea.pascal.run.PascalBeforeRunProvider" order="first"/>
+
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
         <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
         <referencesSearch implementation="com.siberika.idea.pascal.lang.references.PascalReferencesSearcher"/>

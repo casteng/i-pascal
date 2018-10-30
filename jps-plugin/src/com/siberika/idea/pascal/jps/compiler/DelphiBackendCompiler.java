@@ -54,7 +54,7 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
 
     @Override
     protected boolean createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
-                                          List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild,
+                                          List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild, boolean isDebug,
                                           @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine) {
         String compilerCommand = pascalSdkData != null ? pascalSdkData.get(PascalSdkData.Keys.COMPILER_COMMAND.getKey()) : null;
         File executable = checkCompilerExe(sdkHomePath, moduleName, compilerMessager, PascalSdkUtil.getDCC32Executable(sdkHomePath), compilerCommand);

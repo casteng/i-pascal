@@ -8,7 +8,9 @@ public interface PascalRunConfigurationParams {
     String getParameters();
     String getWorkingDirectory();
     boolean getFixIOBuffering();
+    boolean getDebugMode();
     void setParameters(String parameters);
     void setWorkingDirectory(String workingDirectory);
     void setFixIOBuffering(boolean value);
+    void setDebugMode(boolean value);
 }

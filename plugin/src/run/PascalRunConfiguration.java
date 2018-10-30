@@ -55,6 +55,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     private String workingDirectory;
     private String programFileName;
     private boolean fixIOBuffering = true;
+    private boolean debugMode = false;
 
     public PascalRunConfiguration(String name, RunConfigurationModule configurationModule, ConfigurationFactory factory) {
         super(name, configurationModule, factory);
@@ -121,6 +122,11 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     }
 
     @Override
+    public boolean getDebugMode() {
+        return debugMode;
+    }
+
+    @Override
     public void setParameters(String parameters) {
         this.parameters = parameters;
     }
@@ -133,6 +139,11 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     @Override
     public void setFixIOBuffering(boolean value) {
         fixIOBuffering = value;
+    }
+
+    @Override
+    public void setDebugMode(boolean value) {
+        debugMode = value;
     }
 
     public String getProgramFileName() {
@@ -154,16 +165,20 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
                 ProjectRootManager.getInstance(getProject()).getProjectSdk();
     }
 
-    public void readExternal(Element element) throws InvalidDataException {
+    public void readExternal(@NotNull Element element) throws InvalidDataException {
         super.readExternal(element);
         setProgramFileName(element.getAttributeValue(ATTR_PROGRAM_FILE_NAME));
     }
 
-    public void writeExternal(Element element) throws WriteExternalException {
+    public void writeExternal(@NotNull Element element) throws WriteExternalException {
         super.writeExternal(element);
         if (programFileName != null) {
             element.setAttribute(ATTR_PROGRAM_FILE_NAME, programFileName);
         }
     }
 
+    @Override
+    public String toString() {
+        return (debugMode ? "[debug]" : "[]") + super.toString();
+    }
 }

@@ -27,7 +27,7 @@ public abstract class PascalBackendCompiler {
     }
 
     abstract protected boolean createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
-                                          List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild,
+                                          List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild, boolean isDebug,
                                           @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine);
     @NotNull
     public abstract String getId();
@@ -39,11 +39,12 @@ public abstract class PascalBackendCompiler {
     public String[] createStartupCommand(final String sdkHomePath, final String moduleName, final String outputDir,
                                          final List<File> sdkLibFiles, final List<File> moduleLibFiles,
                                          final List<File> files, @Nullable final ParamMap moduleData,
-                                         final boolean isRebuild,
+                                         final boolean isRebuild, boolean isDebug,
                                          @Nullable final ParamMap pascalSdkData) throws IOException, IllegalArgumentException {
         final ArrayList<String> commandLine = new ArrayList<String>();
         if (outputDir != null) {
-            if (!createStartupCommandImpl(sdkHomePath, moduleName, getExeOutputPath(moduleData), outputDir, sdkLibFiles, moduleLibFiles, isRebuild, pascalSdkData, commandLine)) {
+            if (!createStartupCommandImpl(sdkHomePath, moduleName, getExeOutputPath(moduleData), outputDir, sdkLibFiles, moduleLibFiles,
+                    isRebuild, isDebug, pascalSdkData, commandLine)) {
                 return null;
             }
             File mainFile = getMainFile(moduleData);

@@ -96,7 +96,7 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
                     String[] cmdLine = compiler.createStartupCommand(sdk.getHomePath(), module.getName(), outputDir.getAbsolutePath(),
                             sdkFiles, getFiles(module.getSourceRoots()),
                             files.get(target), ParamMap.getJpsParams(module.getProperties()),
-                            JavaBuilderUtil.isForcedRecompilationAllJavaModules(context),
+                            JavaBuilderUtil.isForcedRecompilationAllJavaModules(context), false,
                             ParamMap.getJpsParams(sdk.getSdkProperties()));
                     if (cmdLine != null) {
                         int exitCode = launchCompiler(compiler, messager, cmdLine);

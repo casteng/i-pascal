@@ -57,6 +57,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private Sdk sdk;
     private JTextField namespacesEdit;
     private JTextField compilerOptionsEdit;
+    private JTextField compilerOptionsDebugEdit;
     private TextFieldWithBrowseButton decompilerCommandEdit;
     private TextFieldWithBrowseButton gdbCommandEdit;
     private ComboBox debugBackendCBox;
@@ -81,6 +82,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         keyComponentMap.put(PascalSdkData.Keys.COMPILER_COMMAND.getKey(), compilerCommandEdit);
         keyComponentMap.put(PascalSdkData.Keys.COMPILER_NAMESPACES.getKey(), namespacesEdit);
         keyComponentMap.put(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(), compilerOptionsEdit);
+        keyComponentMap.put(PascalSdkData.Keys.COMPILER_OPTIONS_DEBUG.getKey(), compilerOptionsDebugEdit);
         keyComponentMap.put(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey(), decompilerCommandEdit);
 
         keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_BACKEND.getKey(), debugBackendCBox);
@@ -98,7 +100,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private JPanel createGeneralOptionsPanel() {
         JPanel panel = new JPanel();
         panel.setBorder(new LineBorder(JBColor.border()));
-        panel.setLayout(new GridLayoutManager(5, 2, JBUI.emptyInsets(), -1, -1));
+        panel.setLayout(new GridLayoutManager(6, 2, JBUI.emptyInsets(), -1, -1));
 
         int row = 0;
         addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.command"), row);
@@ -113,6 +115,10 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.options"), row);
         compilerOptionsEdit = new JTextField();
         panel.add(compilerOptionsEdit, new GridConstraints(row++, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+
+        addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.options.debug"), row);
+        compilerOptionsDebugEdit = new JTextField();
+        panel.add(compilerOptionsDebugEdit, new GridConstraints(row++, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 
         addLabel(panel, PascalBundle.message("ui.sdkSettings.decompiler.command"), row);
         decompilerCommandEdit = addFileFieldWithBrowse(panel, row++);
