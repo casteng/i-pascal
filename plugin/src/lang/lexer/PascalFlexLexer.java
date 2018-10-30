@@ -12,6 +12,8 @@ public interface PascalFlexLexer {
     Pattern PATTERN_DEFINE = Pattern.compile("\\{\\$\\w+\\s+(\\w+)\\s*}");
     Pattern PATTERN_CONDITION = Pattern.compile("(?i)\\{\\$(IF|ELSEIF)\\s+([\\w(][\\w()\\s]*)\\s*}?");
 
+    IElementType STRING_LITERAL_UNC = new PascalElementType("STRING_LITERAL_UNC");
+
     void define(int pos, CharSequence sequence);
     void unDefine(int pos, CharSequence sequence);
 

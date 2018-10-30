@@ -46,6 +46,7 @@ IDENTIFIER_="&"{IDENTIFIER}
 
 STRING_ELEMENT  = "''"|[^'\n\r]
 STRING_LITERAL  = "'"{STRING_ELEMENT}*"'"
+STRING_LITERAL_UNC  = "'"{STRING_ELEMENT}*[\n\r]
 
 CT_DEFINE          = "{$DEFINE " !([^]* "}" [^]*) ("}")?
 CT_UNDEFINE        = "{$UNDEF " !([^]* "}" [^]*) ("}")?
@@ -394,6 +395,7 @@ NUM_OCT         = \&[0-7]+
     {COMP_OPTION}   { return getElement(COMP_OPTION); }
 
     {STRING_LITERAL} { return getElement(STRING_LITERAL); }
+    {STRING_LITERAL_UNC} { return getElement(STRING_LITERAL_UNC); }
 
     {NUM_INT}       { return getElement(NUMBER_INT); }
     {NUM_REAL}      { return getElement(NUMBER_REAL); }
