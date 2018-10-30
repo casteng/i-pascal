@@ -7,9 +7,13 @@ import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
+import com.siberika.idea.pascal.lang.psi.PasParenExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasUnaryExpr;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
@@ -52,8 +56,10 @@ public class ContextUtil {
     public static boolean isAssignLeftPart(PascalNamedElement element) {
         PsiElement expr = PsiUtil.skipToExpression(element);
         if (expr instanceof PasReferenceExpr) {
-            if (expr.getParent() instanceof PasExpression) {
-                return PsiTreeUtil.skipSiblingsForward(expr.getParent(), PsiUtil.ELEMENT_WS_COMMENTS) instanceof PasAssignPart;
+            PsiElement parent = expr.getParent();
+            parent = parent instanceof PasExpression ? parent : PsiTreeUtil.skipParentsOfType(expr, PasUnaryExpr.class, PasParenExpr.class, PasDereferenceExpr.class, PasIndexExpr.class);
+            if (parent instanceof PasExpression) {
+                return PsiTreeUtil.skipSiblingsForward(parent, PsiUtil.ELEMENT_WS_COMMENTS) instanceof PasAssignPart;
             }
         }
         return false;

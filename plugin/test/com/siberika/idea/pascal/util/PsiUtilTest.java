@@ -22,6 +22,10 @@ public class PsiUtilTest extends LightPlatformCodeInsightFixtureTestCase {
         Map<String, PascalNamedElement> named = collectNamed("psiUtilTest");
         assertTrue(ContextUtil.isAssignLeftPart(named.get("AssignLeftPart")));
         assertFalse(ContextUtil.isAssignLeftPart(named.get("AssignRightPart")));
+        assertTrue(ContextUtil.isAssignLeftPart(named.get("LeftPart1")));
+        assertTrue(ContextUtil.isAssignLeftPart(named.get("LeftPart2")));
+        assertTrue(ContextUtil.isAssignLeftPart(named.get("LeftPart3")));
+        assertTrue(ContextUtil.isAssignLeftPart(named.get("LeftPart4")));
     }
 
     private Map<String, PascalNamedElement> collectNamed(String unitName) {
