@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.970</version>
+    <version>1.980</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,12 +9,15 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>1.970</p>
+        <p>1.980</p>
         <ul>
+            <li>Highlighting of exit points for routine and loops</li>
+            <li>Compilation in debug mode when debug runner is executed</li>
+            <li>Highlighting of identifiers declared in selected unit</li>
             <li>Quick project SDK switch action</li>
-            <li>Routine and loops exit points highlighting</li>
-            <li>Unit identifiers highlighting</li>
             <li>WITH scope identifiers highlighting</li>
+            <li>Left/right mover</li>
+            <li>Fixed incorrect highlighting of string literals with incremental lexer (Issue #43)</li>
         </ul>
         <p>1.95</p>
         <ul>
@@ -472,6 +475,7 @@
         <runLineMarkerContributor language="Pascal" implementationClass="com.siberika.idea.pascal.run.PascalRunLineMarkerContributor"/>
 
         <statementUpDownMover implementation="com.siberika.idea.pascal.lang.PascalStatementMover"/>
+        <moveLeftRightHandler language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalLeftRightMover" />
 
         <codeInsight.parameterNameHints language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterNameHints"/>
 
