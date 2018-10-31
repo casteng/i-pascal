@@ -12,8 +12,10 @@ import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
+import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasVarValueSpec;
@@ -164,7 +166,18 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
 
     protected String calcUniqueName() {
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(this);
-        return (scope != null ? scope.getUniqueName() + "." : "") + PsiUtil.getFieldName(this);
+        PsiElement parent = getParent();
+        if (parent instanceof PasEnumType) {
+            parent = parent.getParent();
+            if (parent instanceof PasTypeDecl && parent.getParent() instanceof PasTypeDeclaration) {
+                PasGenericTypeIdent typeId = ((PasTypeDeclaration) parent.getParent()).getGenericTypeIdent();
+                String parentName = typeId.getNamedIdentDecl().getName();
+                if (!StringUtils.isEmpty(parentName)) {
+                    return calcScopeUniqueName(scope) + "." + parentName + "." + PsiUtil.getFieldName(this);
+                }
+            }
+        }
+        return calcScopeUniqueName(scope) + "." + PsiUtil.getFieldName(this);
     }
 
     private Pair<String, PasField.Kind> ensureTypeResolved() {

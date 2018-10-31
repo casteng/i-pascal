@@ -72,7 +72,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @Override
     protected String calcUniqueName() {
         PasEntityScope scope = getContainingScope();
-        return (scope != null ? scope.getUniqueName() + "." : "") + getCanonicalName();
+        return calcScopeUniqueName(scope) + "." + getCanonicalName();
     }
 
     @Override

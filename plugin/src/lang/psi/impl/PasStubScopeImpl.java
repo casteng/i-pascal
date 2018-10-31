@@ -76,7 +76,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     @Override
     protected String calcUniqueName() {
         PasEntityScope scope = getContainingScope();
-        return (scope != null ? scope.getUniqueName() + "." : "") + getName();
+        return calcScopeUniqueName(scope) + "." + getName();
     }
 
     public final String getKey() {

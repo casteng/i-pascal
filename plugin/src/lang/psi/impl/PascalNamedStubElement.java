@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
@@ -28,6 +29,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
+import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -36,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalStubElement<B>, PascalNamedElement {
@@ -185,6 +188,24 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     }
 
     protected abstract String calcUniqueName();
+
+    static String calcScopeUniqueName(@Nullable PasEntityScope scope) {
+        String scopeName = scope != null ? scope.getUniqueName() : "";
+        if ((null == scopeName) || scopeName.endsWith(".")) {      // anonymous scope
+            scopeName = scopeName != null ? scopeName : "" + "#";
+            PsiElement parent = scope.getParent();
+            if (parent instanceof PasTypeDecl) {
+                parent = parent.getParent();
+                if (parent instanceof PascalVariableDeclaration) {
+                    List<? extends PascalNamedElement> idents = ((PascalVariableDeclaration) parent).getNamedIdentDeclList();
+                    if (!idents.isEmpty()) {
+                        scopeName = scopeName + idents.get(0).getName();
+                    }
+                }
+            }
+        }
+        return scopeName;
+    }
 
     public String getContainingUnitName() {
         B stub = retrieveStub();
