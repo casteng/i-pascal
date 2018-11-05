@@ -174,7 +174,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     @Nullable
     public final PasField getPrivateField(final String name) {
-        return getMembers(privateCache, PRIVATE_BUILDER).all.get(name.toUpperCase());
+        return getPasField(name, privateCache, PRIVATE_BUILDER);
     }
 
     @Override
@@ -229,7 +229,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     @Nullable
     public final PasField getPublicField(final String name) {
-        return getMembers(publicCache, PUBLIC_BUILDER).all.get(name.toUpperCase());
+        return getPasField(name, publicCache, PUBLIC_BUILDER);
     }
 
     @Override
@@ -264,6 +264,17 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         }
         collectElements(module, idents.identsImpl, res.second, unitPrefixes);
         return res;
+    }
+
+    private PasField getPasField(String name, Cache<String, Members> cache, Callable<? extends Members> builder) {
+        PasField res = getMembers(cache, builder).all.get(name.toUpperCase());
+        if ((res != null) && !PsiUtil.isElementUsable(res.getElement())) {
+            LOG.info(String.format("WARN: element for name %s in %s is invalid. Clearing caches.", name, getUniqueName()));
+            invalidateCaches();
+            return getMembers(cache, builder).all.get(name.toUpperCase());
+        } else {
+            return res;
+        }
     }
 
     private void collectElements(@Nullable String module, Map<PascalNamedElement, PasField> idents, List<PascalNamedElement> result, List<String> unitPrefixes) {
