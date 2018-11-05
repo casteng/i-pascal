@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.jps.util;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -7,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,6 +18,9 @@ import java.util.Set;
  * Date: 1/6/13
  */
 public class FileUtil {
+
+    private static final Logger LOG = Logger.getInstance(FileUtil.class);
+
     public static String getPath(@NotNull final String fileName) {
         String res = new File(fileName).getParent();
         return res != null ? res : "";
@@ -86,6 +91,15 @@ public class FileUtil {
             } else {
                 result.add(file.getParentFile());
             }
+        }
+    }
+
+    public static String getCanonicalPath(File file) {
+        try {
+            return file != null ? file.getCanonicalPath() : null;
+        } catch (IOException e) {
+            LOG.error("Error getting canonical path", e);
+            return null;
         }
     }
 }
