@@ -150,7 +150,7 @@ public class FPCSdkType extends BasePascalSdkType {
             sb.append("-dCPUX86 ");
         }
         data.setValue(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(), sb.toString());
-        data.setValue(PascalSdkData.Keys.COMPILER_OPTIONS_DEBUG.getKey(), "-Ddebug -glh -godwarfsets");
+        data.setValue(PascalSdkData.Keys.COMPILER_OPTIONS_DEBUG.getKey(), "-Ddebug -glh -CroiO -godwarfsets");
     }
 
     private static void configureSdkPaths(@NotNull final Sdk sdk, String target) {
