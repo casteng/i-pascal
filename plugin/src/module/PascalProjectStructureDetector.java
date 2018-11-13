@@ -45,7 +45,7 @@ public class PascalProjectStructureDetector extends ProjectStructureDetector {
                 addPaths(projectData.getUnits(), projectData.getIncludeFilesPath());
                 for (String unit : projectData.getUnits()) {
                     File file = new File(dir, unit);
-                    File parent = file.getParentFile();
+                    File parent = file.isDirectory() ? file : file.getParentFile();
                     try {
                         parent = parent.getCanonicalFile();
                     } catch (IOException e) {
@@ -135,6 +135,9 @@ public class PascalProjectStructureDetector extends ProjectStructureDetector {
         } else if (name.endsWith(".DPROJ")) {
             LOG.debug("Parsing Delphi project file: " + child.getPath());
             return DProjParser.parse(child);
+        } else if (name.endsWith(".DPR")) {
+            LOG.debug("Parsing Delphi program file: " + child.getPath());
+            return DPRParser.parse(child);
         }
         return null;
     }

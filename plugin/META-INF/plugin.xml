@@ -11,13 +11,16 @@
     <change-notes><![CDATA[
         <p>1.980</p>
         <ul>
-            <li>Highlighting of exit points for routine and loops</li>
+            <li>Exit points highlighting for routine and loops</li>
+            <li>Import from Delphi and Lazarus project files</li>
             <li>Compilation in debug mode when debug runner is executed</li>
             <li>Highlighting of identifiers declared in selected unit</li>
             <li>Quick project SDK switch action</li>
             <li>WITH scope identifiers highlighting</li>
             <li>Left/right mover</li>
             <li>Fixed incorrect highlighting of string literals with incremental lexer (Issue #43)</li>
+            <li>Fixed breakpoints in files which path contains spaces (Issue #??)</li>
+            <li>Fixed NoClassDefFoundError (Issue #82)</li>
         </ul>
         <p>1.95</p>
         <ul>
@@ -365,7 +368,12 @@
                 text="Toggle section" description="Navigate to routine or method interface/implementation">
             <keyboard-shortcut first-keystroke="shift control KP_DOWN" keymap="$default"/>
             <keyboard-shortcut first-keystroke="shift control KP_UP" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="shift control DOWN" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="shift control UP" keymap="$default"/>
             <add-to-group group-id="GoToMenu" relative-to-action="GotoRelated" anchor="after" />
+        </action>
+        <action id="Pascal.OverrideMethod" class="com.siberika.idea.pascal.ide.actions.ActionImplement"
+                text="Override Pascal Methods" description="Override methods from a superclass/interface">
         </action>
 
         <action id="Pascal.SDKSwitch" class="com.siberika.idea.pascal.ui.SdkSwitchAction"
@@ -430,6 +438,7 @@
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
         <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
         <referencesSearch implementation="com.siberika.idea.pascal.lang.references.PascalReferencesSearcher"/>
+        <targetElementEvaluator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalTargetElementEvaluator"/>
 
         <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
         <gotoClassContributor implementation="com.siberika.idea.pascal.lang.references.PascalClassByNameContributor"/>
@@ -497,6 +506,11 @@
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalStructIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalSymbolIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex"/>
+
+<!--        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.RemoveWithAction</className>
+            <category>Pascal/Control Flow</category>
+        </intentionAction>-->
 
     </extensions>
 </idea-plugin>

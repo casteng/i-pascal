@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.module;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,9 @@ public class ProjectData {
     }
 
     public void addUnitPath(String filename) {
-        units.add(filename);
+        if (filename != null) {
+            units.add(filename.replace("\\", File.separator));
+        }
     }
 
     public List<String> getUnits() {
