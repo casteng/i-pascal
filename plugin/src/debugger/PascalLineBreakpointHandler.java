@@ -54,7 +54,7 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
         if (!PascalXDebugProcess.getData(PascalXDebugProcess.retrieveSdk(debugProcess.environment)).getBoolean(PascalSdkData.Keys.DEBUGGER_BREAK_FULL_NAME)) {
             filename = FileUtil.getFilename(filename);
         }
-        debugProcess.sendCommand(String.format("-break-insert %s -f %s:%d", debugProcess.isInferiorRunning() ? "-h" : "", filename, line));
+        debugProcess.sendCommand(String.format("-break-insert %s -f \"%s:%d\"", debugProcess.isInferiorRunning() ? "-h" : "", filename, line));
     }
 
     @Override

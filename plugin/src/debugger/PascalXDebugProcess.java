@@ -189,7 +189,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     @Override
     public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-        sendCommand(String.format("-exec-until %s:%d", position.getFile().getCanonicalPath(), position.getLine()));
+        sendCommand(String.format("-exec-until \"%s:%d\"", position.getFile().getCanonicalPath(), position.getLine()));
     }
 
     public void sendCommand(String command) {
