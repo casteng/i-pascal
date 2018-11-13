@@ -37,7 +37,7 @@ public class PascalQuoteHandler extends SimpleTokenSetQuoteHandler implements Ja
 
     @Override
     public boolean isAppropriateElementTypeForLiteral(@NotNull IElementType tokenType) {
-        return false;
+        return true;
     }
 
     @Override

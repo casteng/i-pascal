@@ -70,7 +70,8 @@ public class PascalBlock extends AbstractBlock implements Block {
             PasTypes.VAR_SECTION, PasTypes.CONST_SECTION, PasTypes.TYPE_SECTION, PasTypes.USES_CLAUSE,
             PasTypes.COMPOUND_STATEMENT, PasTypes.SUM_EXPR, PasTypes.FULLY_QUALIFIED_IDENT, PasTypes.STATEMENT, PasTypes.EXPRESSION);
 
-    private static final TokenSet TOKEN_COMMENT_NORMALINDENT = TokenSet.create(PasTypes.COMPOUND_STATEMENT, PasTypes.USES_CLAUSE);
+    private static final TokenSet TOKEN_COMMENT_NORMALINDENT = TokenSet.create(PasTypes.COMPOUND_STATEMENT, PasTypes.USES_CLAUSE,
+            PasTypes.UNIT_INTERFACE, PasTypes.UNIT_IMPLEMENTATION, PasTypes.TYPE_SECTION, PasTypes.CONST_SECTION, PasTypes.VAR_SECTION);
 
     private static final TokenSet TOKEN_STATEMENT_OR_DECL = TokenSet.create(PasTypes.STATEMENT,
             PasTypes.INTERFACE, PasTypes.IMPLEMENTATION, PasTypes.MODULE,
@@ -305,7 +306,9 @@ public class PascalBlock extends AbstractBlock implements Block {
                 Indent commentIndent = Indent.getAbsoluteNoneIndent();
                 int curInd = getCurrentIndent(childNode);
                 if (curInd > 0) {
-                    if (TOKEN_COMMENT_NORMALINDENT.contains(myNode.getElementType())) {
+                    if (myNode.getElementType() == PasTypes.ENUM_TYPE) {
+                        commentIndent = Indent.getNormalIndent(true);
+                    } else if (TOKEN_COMMENT_NORMALINDENT.contains(myNode.getElementType())) {
                         commentIndent = Indent.getNormalIndent(false);
                     } else {
                         commentIndent = Indent.getContinuationIndent();
