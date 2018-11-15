@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>1.980</version>
+    <version>2.0</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>2.0</p>
+        <ul>
+            <li>Parameter info for variables of procedural types</li>
+        </ul>
         <p>1.980</p>
         <ul>
             <li>Exit points highlighting for routine and loops</li>
@@ -17,9 +21,9 @@
             <li>Highlighting of identifiers declared in selected unit</li>
             <li>Quick project SDK switch action</li>
             <li>WITH scope identifiers highlighting</li>
-            <li>Left/right mover</li>
+            <li>Left/right mover (Alt + Shift + Left/Right)</li>
             <li>Fixed incorrect highlighting of string literals with incremental lexer (Issue #43)</li>
-            <li>Fixed breakpoints in files which path contains spaces (Issue #??)</li>
+            <li>Fixed breakpoints in files which path contains spaces</li>
             <li>Fixed NoClassDefFoundError (Issue #82)</li>
         </ul>
         <p>1.95</p>

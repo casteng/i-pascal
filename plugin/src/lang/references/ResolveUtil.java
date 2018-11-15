@@ -453,7 +453,7 @@ public class ResolveUtil {
                              ResolveContext context, VisibilityChecker visibilityChecker) {
         if (PasReferenceUtil.isCollectingAll(fqn)) {
             for (PasField pasField : namespace.getAllFields()) {
-                if (PasReferenceUtil.isFieldMatches(pasField, fqn, fieldTypes) &&
+                if (PasReferenceUtil.isFieldTypeMatches(pasField, fqn, fieldTypes) &&
                         !result.contains(pasField) &&
                         visibilityChecker.check(pasField, fqn)) {
                     PasReferenceUtil.saveScope(context.resultScope, namespace, false);
@@ -465,7 +465,7 @@ public class ResolveUtil {
             }
         } else if (fqn.getCurrentName() != null) {
             PasField pasField = namespace.getField(fqn.getCurrentName());
-            if ((pasField != null) && !result.contains(pasField) && visibilityChecker.check(pasField, fqn)) {
+            if ((pasField != null) && PasReferenceUtil.isFieldTypeMatches(pasField, fqn, fieldTypes) && !result.contains(pasField) && visibilityChecker.check(pasField, fqn)) {
                 PasReferenceUtil.saveScope(context.resultScope, namespace, false);
                 result.add(pasField);
             }
