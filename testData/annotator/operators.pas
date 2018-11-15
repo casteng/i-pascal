@@ -14,6 +14,12 @@ type
         class operator in(a: Integer): Integer;
     end;
 
+    TIntArray = array of Integer;
+    TMyRec = record
+        a: TIntArray;
+        class operator := (right: TIntArray): TMyRec;
+    end;
+
     operator Explicit(AVariant: Single) z: Single;
 
 implementation
@@ -34,6 +40,11 @@ end;
 
 class operator typeName<T>.in(a: Integer): Integer;
 begin
+end;
+
+class operator TMyRec.:= (right: TIntArray): TMyRec;
+begin
+    result.a := right;
 end;
 
 begin

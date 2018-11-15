@@ -409,10 +409,11 @@ private exportItem          ::= [FormalParameterSection] [INDEX Expression] ["na
 
 private operatorRedef       ::= ASSIGN | PLUS | MINUS | MULT | DIV | POWER | EQ | LTEQ | LT | GT | "<>" | IN | "explicit"
 private procName            ::= ClassQualifiedIdent | NamedIdent {recoverWhile=rec_procName}
-private rec_procName        ::= !("(" | "<" | ":" | ";") & rec_section
+private operName            ::= procName ["." operatorRedef]
+private rec_procName        ::= !("(" | "<" | ":" | ";" | ".") & rec_section
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
-private operatorName        ::= InOperatorQualifiedIdent | procName
+private operatorName        ::= InOperatorQualifiedIdent | operatorRedef | operName
 InOperatorQualifiedIdent    ::= (SubIdent [GenericPostfix] ".")* InSubIdent {extends=ClassQualifiedIdent}
 InSubIdent                  ::= IN {extends=SubIdent}
 
@@ -533,7 +534,7 @@ private genericConstraintsRest ::= ("," | ";") constrainedGeneric {pin=1}
 GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"             // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
-TypeID                      ::=	"specialize"? FullyQualifiedIdent [GenericPostfix]
+TypeID                      ::=	SPECIALIZE? FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
 
@@ -826,7 +827,7 @@ productExpr                 ::= Expr mulOp Expr
 unaryExpr                   ::= unaryOp Expr
 dereferenceExpr             ::= Expr '^'
 referenceExpr               ::= Expr '.' FullyQualifiedIdent [GenericPostfix]
-simpleRefExpr               ::= (INHERITED? FullyQualifiedIdent [GenericPostfix]) | INHERITED {elementType=referenceExpr}  // let qualified and simple references have the same type
+simpleRefExpr               ::= ((INHERITED | SPECIALIZE)? FullyQualifiedIdent [GenericPostfix]) | INHERITED {elementType=referenceExpr}  // let qualified and simple references have the same type
 callExpr                    ::= Expr ArgumentList
 indexExpr                   ::= Expr indexList
 ArgumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
