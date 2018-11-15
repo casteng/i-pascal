@@ -177,6 +177,7 @@ public class PascalBlock extends AbstractBlock implements Block {
         CommonCodeStyleSettings commonSettings = mySettings.getCommonSettings(PascalLanguage.INSTANCE);
         final boolean keepBreaks = commonSettings.KEEP_LINE_BREAKS;
         final int spSemiA = commonSettings.SPACE_AFTER_SEMICOLON ? 1 : 0;
+        int spMax = blockIs(child2, PasTypes.COMMENT) ? Integer.MAX_VALUE : spSemiA;
         if (myNode.getElementType() == PasTypes.COMPOUND_STATEMENT) {
             boolean singleLine = isSimpleStatement(myNode) &&
                    (   commonSettings.KEEP_SIMPLE_BLOCKS_IN_ONE_LINE && nodeIs(myNode.getTreeParent(), PasTypes.STATEMENT)
@@ -198,11 +199,15 @@ public class PascalBlock extends AbstractBlock implements Block {
             } else if (nodeIs(myNode.getTreeParent(), PasTypes.TYPE_DECL)) {
                 return Spacing.createSpacing(spSemiA, spSemiA, 1, keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
             } else {
-                return Spacing.createSpacing(spSemiA, spSemiA, 0, keepBreaks, getKeepLines(myNode));
+                return Spacing.createSpacing(spSemiA, spMax, 0, keepBreaks, getKeepLines(myNode));
             }
+        } else if (blockIs(child2, PasTypes.COMMENT)) {
+            return Spacing.createSpacing(1, spMax, 0, keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
         } else if (blockIs(child1, TOKENS_IN_STRUCT_LF_AFTER) && nodeIs(myNode.getTreeParent(), PasTypes.TYPE_DECL)) {
-            return Spacing.createSpacing(spSemiA, spSemiA, commonSettings.BLANK_LINES_AROUND_FIELD + 1,
+            return Spacing.createSpacing(spSemiA, spMax, commonSettings.BLANK_LINES_AROUND_FIELD + 1,
                     keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
+        } else if (blockIs(child2, PasTypes.END)) {
+            return Spacing.createSpacing(1, 1, 1, keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
         } else if (blockIs(child2, PasTypes.UNIT_INTERFACE) || blockIs(child2, PasTypes.UNIT_IMPLEMENTATION)) {
             return Spacing.createSpacing(1, 1, commonSettings.BLANK_LINES_AFTER_PACKAGE + 1,
                     keepBreaks, commonSettings.KEEP_BLANK_LINES_IN_DECLARATIONS);
