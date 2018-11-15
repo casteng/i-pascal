@@ -31,6 +31,7 @@ import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -38,6 +39,7 @@ import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
@@ -417,7 +419,7 @@ public class PasReferenceUtil {
                     field = unitNamespace != null ? null : field;
                 }
                 namespaces = unitNamespace != null ? namespaces : null;
-                
+
                 if (field != null) {
                     PasEntityScope newNS;
                     if (field.fieldType == PasField.FieldType.UNIT) {
@@ -657,12 +659,29 @@ public class PasReferenceUtil {
     }
 
     @NotNull
-    public static Collection<PasField> resolveRoutines(PasCallExpr callExpr) {
+    public static Collection<PascalRoutineEntity> resolveRoutines(PasCallExpr callExpr) {
         PasFullyQualifiedIdent ident = callExpr != null ? PsiTreeUtil.findChildOfType(callExpr.getExpr(), PasFullyQualifiedIdent.class) : null;
         if (null == ident) {
             return Collections.emptyList();
         }
-        Collection<PasField> routines = resolveExpr(NamespaceRec.fromElement(ident), new ResolveContext(PasField.TYPES_ROUTINE, true), 0);
-        return !routines.isEmpty() ? routines : Collections.<PasField>emptyList();
+        Collection<PascalRoutineEntity> result = new SmartList<>();
+        for (PasField field : resolveExpr(NamespaceRec.fromElement(ident), new ResolveContext(PasField.TYPES_PROPERTY_SPECIFIER, true), 0)) {
+            if (field.fieldType == PasField.FieldType.ROUTINE) {
+                PascalNamedElement el = field.getElement();
+                if ((el instanceof PascalRoutineEntity) && el.isValid()) {
+                    result.add((PascalRoutineEntity) el);
+                }
+            } else {
+                PasField.ValueType type = resolveFieldType(field, true, 0);
+                if (type != null) {
+                    PsiElement decl = type.declaration != null ? type.declaration.getElement() : null;
+                    PsiElement procType = decl != null ? decl.getFirstChild() : null;
+                    if (procType instanceof PasProcedureType) {
+                        result.add((PascalRoutineEntity) procType);
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

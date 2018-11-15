@@ -13,7 +13,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
@@ -82,19 +82,15 @@ public class PascalReadWriteAccessDetector extends ReadWriteAccessDetector {
     }
 
     private static ParamModifier retrieveActualParamAccess(PasCallExpr callExpr, PascalNamedElement element) {
-        Collection<PasField> routines = PasReferenceUtil.resolveRoutines(callExpr);
+        Collection<PascalRoutineEntity> routines = PasReferenceUtil.resolveRoutines(callExpr);
         int paramIndex = ParameterInfoUtils.getCurrentParameterIndex(callExpr.getArgumentList().getNode(), element.getTextRange().getStartOffset(), PasTypes.COMMA);
-        PascalRoutine first = null;
-        for (PasField field : routines) {
-            PascalNamedElement el = field.getElement();
-            if (el instanceof PascalRoutine) {
-                PascalRoutine routine = (PascalRoutine) el;
-                first = first != null ? first : routine;
-                if (RoutineUtil.isSuitable(callExpr, routine)) {
-                    ParamModifier res = getFormalParamModifier(routine, paramIndex);
-                    if (res != null) {
-                        return res;
-                    }
+        PascalRoutineEntity first = null;
+        for (PascalRoutineEntity routine : routines) {
+            first = first != null ? first : routine;
+            if (RoutineUtil.isSuitable(callExpr, routine)) {
+                ParamModifier res = getFormalParamModifier(routine, paramIndex);
+                if (res != null) {
+                    return res;
                 }
             }
         }
@@ -104,7 +100,7 @@ public class PascalReadWriteAccessDetector extends ReadWriteAccessDetector {
         return ParamModifier.NONE;
     }
 
-    private static ParamModifier getFormalParamModifier(PascalRoutine routine, int paramIndex) {
+    private static ParamModifier getFormalParamModifier(PascalRoutineEntity routine, int paramIndex) {
         List<ParamModifier> modifierList = routine.getFormalParameterAccess();
         if ((paramIndex >= 0) && (paramIndex < modifierList.size())) {
             return modifierList.get(paramIndex);

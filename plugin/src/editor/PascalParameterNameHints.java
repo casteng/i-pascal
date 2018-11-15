@@ -10,9 +10,7 @@ import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasLiteralExpr;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalRoutine;
-import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -65,11 +63,12 @@ public class PascalParameterNameHints implements InlayParameterHintsProvider {
 
     private List<InlayInfo> getParameters(PasCallExpr callExpr) {
         int count = callExpr.getArgumentList().getExprList().size();
-        if (count > 0) for (PasField field : PasReferenceUtil.resolveRoutines(callExpr)) {
-            PascalNamedElement el = field.getElement();
-            List<String> params = el instanceof PascalRoutine ? ((PascalRoutine) el).getFormalParameterNames() : null;
-            if ((params != null) && (count == params.size())) {
-                return retrieveInlayInfo(callExpr, params);
+        if (count > 0) {
+            for (PascalRoutineEntity el : PasReferenceUtil.resolveRoutines(callExpr)) {
+                List<String> params = el.getFormalParameterNames();
+                if (count == params.size()) {
+                    return retrieveInlayInfo(callExpr, params);
+                }
             }
         }
         return Collections.emptyList();

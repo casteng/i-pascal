@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.util.PsiUtil;
 
@@ -100,7 +101,7 @@ public class RoutineUtil {
         return null;
     }
 
-    public static boolean isSuitable(PasCallExpr expression, PascalRoutine routine) {
+    public static boolean isSuitable(PasCallExpr expression, PascalRoutineEntity routine) {
         List<String> params = routine.getFormalParameterNames();
         // TODO: make type check and handle overload
         if (params.size() == expression.getArgumentList().getExprList().size()) {

@@ -341,6 +341,7 @@ NUM_OCT         = \&[0-7]+
     "&self"              { return getElement(SELF_); }
     "new"               { return getElement(NEW); }
     "&new"               { return getElement(NEW_); }
+    "specialize"         { return getElement(SPECIALIZE); }
 
     ":="            { return getElement(ASSIGN); }
     "+="            { return getElement(PLUS_ASSIGN); }

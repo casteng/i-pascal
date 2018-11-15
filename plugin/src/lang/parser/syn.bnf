@@ -643,7 +643,7 @@ PointerType         ::= "^" TypeDecl {pin=1}
 StringType                  ::= "string" ["[" Expression "]"] | "AnsiString" [codePageNumber]
 private codePageNumber      ::= "(" ConstExpressionOrd ")" {pin=1}
 
-ProcedureType               ::= procedureReference | simpleProcedureType
+ProcedureType               ::= procedureReference | simpleProcedureType {implements="com.siberika.idea.pascal.lang.psi.PascalRoutineEntity" extends="com.siberika.idea.pascal.lang.psi.impl.PascalProcedureTypeImpl"}
 private simpleProcedureType ::= procedureTypeHeading {recoverWhile=rec_semi_section}
 ClosureExpr                 ::= ClosureRoutine
 ClosureRoutine              ::= (funcHeading | procHeading) BlockLocal
