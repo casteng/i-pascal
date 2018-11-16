@@ -425,9 +425,9 @@ private operName            ::= procName ["." operatorRedef]
 private rec_procName        ::= !("(" | "<" | ":" | ";" | ".") & rec_section
 private methodKey           ::= PROCEDURE | CONSTRUCTOR | DESTRUCTOR
 private procKey             ::= FUNCTION | PROCEDURE
-private operatorName        ::= InOperatorQualifiedIdent | operatorRedef | operName
-InOperatorQualifiedIdent    ::= (SubIdent [GenericPostfix] ".")* InSubIdent {extends=ClassQualifiedIdent}
-InSubIdent                  ::= IN {extends=SubIdent}
+private operatorName        ::= InOperatorQualifiedIdent | operName
+InOperatorQualifiedIdent    ::= (SubIdent [GenericPostfix] ".")* OperatorSubIdent {extends=ClassQualifiedIdent}
+OperatorSubIdent            ::= IN | operatorRedef {extends=SubIdent}
 
 ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implements="com.siberika.idea.pascal.lang.psi.PascalExportedRoutine"
                              stubClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub"

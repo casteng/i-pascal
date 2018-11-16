@@ -17,8 +17,8 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
-import com.siberika.idea.pascal.lang.psi.PasInSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasOperatorSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
@@ -73,7 +73,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public String getName() {
-        if (this instanceof PasInSubIdent) {
+        if (this instanceof PasOperatorSubIdent) {
             myCachedName = getText();
         } else {
             SyncUtil.doWithLock(nameLock, () -> {
@@ -165,7 +165,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Nullable
     private PsiElement getNameElement() {
-        if (this instanceof PasInSubIdent) {
+        if (this instanceof PasOperatorSubIdent) {
             myCachedNameEl = this;
         } else {
             SyncUtil.doWithLock(nameLock, () -> {
