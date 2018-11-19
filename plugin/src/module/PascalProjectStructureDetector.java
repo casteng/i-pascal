@@ -49,7 +49,7 @@ public class PascalProjectStructureDetector extends ProjectStructureDetector {
                     try {
                         parent = parent.getCanonicalFile();
                     } catch (IOException e) {
-                        LOG.error(e);
+                        LOG.error("Error getting canonical file: " + parent.getPath(), e);
                     }
                     if (parent.isDirectory()) {
                         if (dirs.add(parent)) {
