@@ -157,7 +157,7 @@ public class ResolveUtil {
         } else if (type instanceof PasPointerType) {
             Pair<String, PasField.Kind> baseType = retrieveType(((PasPointerType) type).getTypeDecl(), null);
             if (baseType != null) {
-                return Pair.create(baseType.first, baseType.second != PasField.Kind.STRUCT ? PasField.Kind.POINTER : PasField.Kind.STRUCT);
+                return Pair.create("^" + baseType.first, baseType.second != PasField.Kind.STRUCT ? PasField.Kind.POINTER : PasField.Kind.STRUCT);
             } else {
                 return Pair.create(null, PasField.Kind.POINTER);
             }
@@ -165,11 +165,11 @@ public class ResolveUtil {
             Pair<String, PasField.Kind> baseType = retrieveType(((PasProcedureType) type).getTypeDecl(), null);
             return Pair.create(baseType != null ? baseType.first : null, PasField.Kind.PROCEDURE);
         } else if (type instanceof PasStringType) {
-            return Pair.create(null, PasField.Kind.STRING);
+            return Pair.create(type.getText(), PasField.Kind.STRING);
         } else if (type.getClass() == PasEnumTypeImpl.class) {
-            return Pair.create(null, PasField.Kind.ENUM);
+            return Pair.create(type.getText(), PasField.Kind.ENUM);
         } else if (type.getClass() == PasSubRangeTypeImpl.class) {
-            return Pair.create(null, PasField.Kind.SUBRANGE);
+            return Pair.create(type.getText(), PasField.Kind.SUBRANGE);
         }
         return null;
     }

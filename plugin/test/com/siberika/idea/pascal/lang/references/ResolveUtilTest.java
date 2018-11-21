@@ -35,7 +35,7 @@ public class ResolveUtilTest extends LightPlatformCodeInsightFixtureTestCase {
                 .put("CA", Pair.create("TA", TYPEREF))
                 .put("A", Pair.create("TA", TYPEREF))
                 .put("B", Pair.create("TB", TYPEREF))
-                .put("PB", Pair.create("TB", POINTER))
+                .put("PB", Pair.create("^TB", POINTER))
                 .put("AB", Pair.create("TB", ARRAY))
                 .put("R", Pair.create(null, STRUCT))
                 .put("y", Pair.create("integer", TYPEREF))
