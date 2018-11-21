@@ -14,6 +14,7 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.HasUniqueName;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -75,8 +76,10 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
                 return ResolveResult.EMPTY_ARRAY;
             }
 
-            if (named.getParent() instanceof PasRoutineImplDeclImpl) {
-                return resolveRoutineImpl((PasRoutineImplDeclImpl) named.getParent());
+            PsiElement parent = named.getParent();
+            parent = parent instanceof PascalQualifiedIdent ? parent.getParent() : parent;
+            if (parent instanceof PasRoutineImplDeclImpl) {
+                return resolveRoutineImpl((PasRoutineImplDeclImpl) parent);
             }
 
             final Collection<PasField> references = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(named),

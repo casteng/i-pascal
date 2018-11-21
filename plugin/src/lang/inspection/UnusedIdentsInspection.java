@@ -4,8 +4,10 @@ import com.intellij.codeInspection.InspectionManager;
 import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -48,10 +50,11 @@ public class UnusedIdentsInspection extends LocalInspectionTool {
                 result.add(res);
             }
         }
-        return result.toArray(new ProblemDescriptor[result.size()]);
+        return result.toArray(new ProblemDescriptor[0]);
     }
 
     private ProblemDescriptor annotateIdent(InspectionManager holder, PascalNamedElement element, boolean isOnTheFly, LocalSearchScope fileScope) {
+        Project project = element.getProject();
         if (element.isLocal() && !PsiUtil.isFormalParameterOfExportedRoutine(element) && !PsiUtil.isPropertyIndexIdent(element)) {
             Query<PsiReference> usages = ReferencesSearch.search(element, fileScope);
             final boolean structDecl = PsiUtil.isStructDecl(element);
@@ -60,8 +63,9 @@ public class UnusedIdentsInspection extends LocalInspectionTool {
                 @Override
                 public boolean process(PsiReference psiReference) {
                     PsiElement el = psiReference.getElement();
-                    if ((structDecl || method) && (el instanceof PasSubIdent) && (el.getParent() instanceof PasClassQualifiedIdent)
-                            && (el.getParent().getParent() instanceof PasRoutineImplDecl)) {
+                    if (PsiManager.getInstance(project).areElementsEquivalent(element, el) ||
+                            ((structDecl || method) && (el instanceof PasSubIdent) && (el.getParent() instanceof PasClassQualifiedIdent)
+                                    && (el.getParent().getParent() instanceof PasRoutineImplDecl))) {
                         return true;
                     } else {
                         return false;

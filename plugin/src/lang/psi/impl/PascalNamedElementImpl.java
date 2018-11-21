@@ -17,6 +17,7 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasOperatorSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
@@ -240,12 +241,16 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     @NotNull
     public PsiReference[] getReferences() {
-        if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent) /*|| (this.getParent() instanceof PascalRoutine)*/) {
+        if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent)) {
             if ((getNameElement() != null) && getTextRange().intersects(getNameElement().getTextRange())) {
                 return new PsiReference[]{
                         new PascalReference(this, new TextRange(0, getName().length()))
                 };
             }
+        } else if (this instanceof PasNamedIdent && this.getParent() instanceof PasRoutineImplDecl) {
+            return new PsiReference[]{
+                    new PascalReference(this, new TextRange(0, getName().length()))
+            };
         }
         return PsiReference.EMPTY_ARRAY;
     }
