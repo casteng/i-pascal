@@ -857,4 +857,10 @@ public class PsiUtil {
     public static boolean isImplementationScope(PsiElement scope) {
         return scope instanceof PasImplDeclSection || scope instanceof PasBlockGlobal || scope instanceof PasBlockLocal;
     }
+
+    public static long getModificationStamp(PsiElement element) {
+        PsiFile file = element != null ? element.getContainingFile() : null;
+        return file != null ? file.getModificationStamp() : 0;
+    }
+
 }

@@ -56,6 +56,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     private ReentrantLock nameLock = new ReentrantLock();
     private String containingUnitName;
     private Boolean local;
+    private long modificationStamp;
     private ReentrantLock localityLock = new ReentrantLock();
 
     @Override
@@ -125,7 +126,9 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     public boolean isLocal() {
         if (SyncUtil.lockOrCancel(localityLock)) {
             try {
-                if (null == local) {
+                long modStamp = PsiUtil.getModificationStamp(this);
+                if ((null == local) || (modificationStamp != modStamp)) {
+                    modificationStamp = modStamp;
                     if (this instanceof PasExportedRoutine) {
                         if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this)) {
                             local = false;

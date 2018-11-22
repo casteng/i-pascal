@@ -47,6 +47,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     private ReentrantLock typeLock = new ReentrantLock();
     private volatile PsiElement myCachedNameEl;
     private Boolean local;
+    private long modificationStamp;
     private ReentrantLock localityLock = new ReentrantLock();
 
     public PascalNamedElementImpl(ASTNode node) {
@@ -135,7 +136,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     public boolean isLocal() {
         if (SyncUtil.lockOrCancel(localityLock)) {
             try {
-                if (null == local) {
+                long modStamp = PsiUtil.getModificationStamp(this);
+                if ((null == local) || (modificationStamp != modStamp)) {
+                    modificationStamp = modStamp;
                     local = false;
                     if (this instanceof PascalRoutineImpl) {
                         if (this instanceof PasRoutineImplDecl) {
