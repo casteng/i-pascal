@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.documentation.DocumentationMarkup;
 import com.intellij.lang.documentation.DocumentationProvider;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiCompiledFile;
 import com.intellij.psi.PsiDocumentManager;
@@ -137,6 +138,11 @@ public class PascalDocumentationProvider implements DocumentationProvider {
     /* Search for comments above element, empty line breaks the search
        If not found search for comment at the end of line where the element starts */
     private static String findElementComment(PsiFile file, PsiElement element) {
+        TextRange range = findElementCommentRange(file, element);
+        return range != null ? formatComment(file.getText().substring(range.getStartOffset(), range.getEndOffset())) : null;
+    }
+
+    public static TextRange findElementCommentRange(PsiFile file, PsiElement element) {
         int start = element.getTextRange().getStartOffset();
         int end = start;
         Document doc = PsiDocumentManager.getInstance(element.getProject()).getDocument(file);
@@ -162,7 +168,7 @@ public class PascalDocumentationProvider implements DocumentationProvider {
                 end = el.getTextRange().getEndOffset();
             }
         }
-        return end > start ? formatComment(file.getText().substring(start, end)) : null;
+        return end > start ? TextRange.create(start, end) : null;
     }
 
     private static final String[] COMMENT_STARTS = {"{", "(*"};

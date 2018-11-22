@@ -5,14 +5,30 @@ import com.intellij.codeInsight.editorActions.moveUpDown.LineRange;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.LogicalPosition;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
+import com.siberika.idea.pascal.lang.psi.PasClassMethodResolution;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
+import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
+import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasConstSection;
+import com.siberika.idea.pascal.lang.psi.PasExportsSection;
+import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasImplDeclSection;
+import com.siberika.idea.pascal.lang.psi.PasLabelDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
+import com.siberika.idea.pascal.lang.psi.PasStatement;
+import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasTypeSection;
+import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasVarSection;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -23,30 +39,57 @@ public class PascalStatementMover extends LineMover {
         if ((file instanceof PascalFile) && super.checkAvailable(editor, file, info, down)) {
             info.indentTarget = false;
             PsiElement el = getFirstElementOnLine(editor, file, info.toMove.startLine);
-            if (el != null) {
-                Document d = editor.getDocument();
-                int endLine = info.toMove.endLine;
-                if (!DocUtil.isSingleLine(editor.getDocument(), el)) {
-                    endLine = d.getLineNumber(el.getTextRange().getEndOffset()) + 1;
-                }
-                info.toMove = new LineRange(info.toMove.startLine, endLine);
+            if (isMovable(el)) {
+                TextRange outerRange = getOuterRange(el);
+                LineRange range = findElementRange(editor, file, info.toMove.startLine, el);
+                LineRange range2;
+                boolean crossSection;
                 if (down) {
-                    info.toMove2 = findLineRangeDown(editor, file, endLine);
+                    range2 = findElementRange(editor, file, range.endLine, getFirstElementOnLine(editor, file, range.endLine));
+                    crossSection = editor.getDocument().getLineNumber(outerRange.getEndOffset()) < range2.endLine;
                 } else {
-                    info.toMove2 = findLineRangeUp(editor, file, info.toMove2.startLine);
+                    range2 = findElementRange(editor, file, range.startLine-1, getLastElementOnLine(editor, file, range.startLine-1));
+                    crossSection = editor.getDocument().getLineNumber(outerRange.getStartOffset()) >= range2.startLine;
+                }
+                if (!crossSection) {
+                    info.toMove = range;
+                    info.toMove2 = range2;
                 }
                 expandRanges(editor.getDocument(), file, info, down);
-                return true;
             }
+            return true;
         }
         return false;
     }
 
+    private TextRange getOuterRange(PsiElement el) {
+        TextRange range = el.getTextRange();
+        PsiElement parent = el.getParent();
+        if (parent != null) {
+            PsiElement start = parent;
+            PsiElement end = parent;
+            start = PsiTreeUtil.skipSiblingsBackward(start, PsiUtil.ELEMENT_WS_COMMENTS);
+            end = PsiTreeUtil.skipSiblingsForward(end, PsiUtil.ELEMENT_WS_COMMENTS);
+            range = TextRange.create(start != null ? start.getTextRange().getEndOffset() : parent.getTextRange().getStartOffset(),
+                    end != null ? end.getTextRange().getStartOffset() : parent.getTextRange().getEndOffset());
+        }
+        return range;
+    }
+
+    private boolean isMovable(PsiElement el) {
+        return PsiUtil.isInstanceOfAny(el, PasVarSection.class, PasClassProperty.class, PasConstSection.class, PasTypeSection.class,
+                PasVarDeclaration.class, PasConstDeclaration.class, PasTypeDeclaration.class,
+                PasHandler.class,
+                PasClassMethodResolution.class, PascalRoutine.class,
+                PasExportsSection.class, PasLabelDeclSection.class,
+                PasStatement.class, PsiComment.class) && !(el instanceof PasCompoundStatement);
+    }
+
     private void expandRanges(Document document, PsiFile file, MoveInfo info, boolean down) {
-        if ((down || (info.toMove.startLine > info.toMove2.endLine)) && DocUtil.isLineEmpty(document, file, info.toMove.startLine - 1)) {
+        if ((down || (info.toMove.startLine > info.toMove2.endLine)) && (info.toMove.startLine > 0) && DocUtil.isLineEmpty(document, file, info.toMove.startLine - 1)) {
             info.toMove = new LineRange(info.toMove.startLine-1, info.toMove.endLine);
         }
-        if (DocUtil.isLineEmpty(document, file, info.toMove2.startLine - 1)) {
+        if ((info.toMove2.startLine > 0) && DocUtil.isLineEmpty(document, file, info.toMove2.startLine - 1)) {
             info.toMove2 = new LineRange(info.toMove2.startLine-1, info.toMove2.endLine);
         }
     }
@@ -57,24 +100,19 @@ public class PascalStatementMover extends LineMover {
         file.subtreeChanged();
     }
 
-    private LineRange findLineRangeUp(Editor editor, PsiFile file, int startLine) {
+    private LineRange findElementRange(Editor editor, PsiFile file, int startLine, PsiElement el) {
         int endLine = startLine + 1;
-        PsiElement el = getLastElementOnLine(editor, file, startLine);
-        Document d = editor.getDocument();
-        if ((el != null) && !DocUtil.isSingleLine(editor.getDocument(), el)) {
-            startLine = d.getLineNumber(el.getTextRange().getStartOffset());
-            endLine = d.getLineNumber(el.getTextRange().getEndOffset()) + 1;
-        }
-        return new LineRange(startLine, endLine);
-    }
-
-    private LineRange findLineRangeDown(Editor editor, PsiFile file, int startLine) {
-        int endLine = startLine + 1;
-        PsiElement el = getFirstElementOnLine(editor, file, startLine);
-        Document d = editor.getDocument();
-        if ((el != null) && !DocUtil.isSingleLine(editor.getDocument(), el)) {
-            startLine = d.getLineNumber(el.getTextRange().getStartOffset());
-            endLine = d.getLineNumber(el.getTextRange().getEndOffset()) + 1;
+        if (isMovable(el)) {
+            TextRange range = el.getTextRange();
+            TextRange commentRange = PascalDocumentationProvider.findElementCommentRange(file, el);
+            if (commentRange != null) {
+                range = commentRange.union(range);
+            }
+            Document d = editor.getDocument();
+            if (!DocUtil.isSingleLine(d, range)) {
+                startLine = d.getLineNumber(range.getStartOffset());
+                endLine = d.getLineNumber(range.getEndOffset()) + 1;
+            }
         }
         return new LineRange(startLine, endLine);
     }
@@ -116,6 +154,6 @@ public class PascalStatementMover extends LineMover {
     }
 
     private boolean isStopper(PsiElement parent) {
-        return PsiUtil.isInstanceOfAny(parent, PasBlockLocal.class, PasBlockGlobal.class, PasImplDeclSection.class, PasProcBodyBlock.class);
+        return PsiUtil.isInstanceOfAny(parent, PsiFile.class, PasBlockLocal.class, PasBlockGlobal.class, PasImplDeclSection.class, PasProcBodyBlock.class);
     }
 }

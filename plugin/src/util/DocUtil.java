@@ -239,7 +239,11 @@ public class DocUtil {
     }
 
     public static boolean isSingleLine(@NotNull Document document, @NotNull PsiElement element) {
-        return document.getLineNumber(element.getTextRange().getStartOffset()) == document.getLineNumber(element.getTextRange().getEndOffset());
+        return isSingleLine(document, element.getTextRange());
+    }
+
+    public static boolean isSingleLine(@NotNull Document document, @NotNull TextRange range) {
+        return document.getLineNumber(range.getStartOffset()) == document.getLineNumber(range.getEndOffset());
     }
 
     public static boolean isLineEmpty(Document document, PsiFile file, int line) {
