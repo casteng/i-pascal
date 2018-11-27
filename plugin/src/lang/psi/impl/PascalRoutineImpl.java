@@ -328,17 +328,17 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        try {
             if (SyncUtil.tryLockQuiet(parentLock, SyncUtil.LOCK_TIMEOUT_MS)) {
-                if (null == parentScopes) {
-                    calcParentScopes();
+                try {
+                    if (null == parentScopes) {
+                        calcParentScopes();
+                    }
+                } finally {
+                    parentLock.unlock();
                 }
             } else {
                 LOG.info("ERROR: can't lock for calculate parent scope for: " + getName());
             }
-        } finally {
-            parentLock.unlock();
-        }
         return parentScopes;
     }
 
