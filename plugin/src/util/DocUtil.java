@@ -118,8 +118,9 @@ public class DocUtil {
             @Override
             public void run() {
                 PsiManager manager = element.getManager();
-                if (manager != null) {
-                    CodeStyleManager.getInstance(manager).reformatNewlyAddedElement(element.getParent().getNode(), element.getNode());
+                PsiElement parent = element.getParent();
+                if ((manager != null) && (parent != null)) {
+                    CodeStyleManager.getInstance(manager).reformatNewlyAddedElement(parent.getNode(), element.getNode());
                 }
             }
         };

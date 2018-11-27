@@ -15,6 +15,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.Query;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.ide.actions.quickfix.IdentQuickFixes;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -73,7 +74,8 @@ public class UnusedIdentsInspection extends LocalInspectionTool {
                 }
             })) {
                 return holder.createProblemDescriptor(element, message("inspection.warn.unused.local.ident"), true,
-                        ProblemHighlightType.LIKE_UNUSED_SYMBOL, isOnTheFly);
+                        ProblemHighlightType.LIKE_UNUSED_SYMBOL, isOnTheFly,
+                        new IdentQuickFixes.RemoveIdentAction(), new IdentQuickFixes.ExcludeIdentAction());
             }
         }
         return null;

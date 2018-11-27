@@ -863,4 +863,7 @@ public class PsiUtil {
         return file != null ? file.getModificationStamp() : 0;
     }
 
+    public static boolean isComma(PsiElement element) {
+        return (element instanceof LeafPsiElement) && ",".equals(element.getText());
+    }
 }

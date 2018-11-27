@@ -26,7 +26,9 @@ import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.HasUniqueName;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.PsiUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -143,32 +145,37 @@ public class PascalDocumentationProvider implements DocumentationProvider {
     }
 
     public static TextRange findElementCommentRange(PsiFile file, PsiElement element) {
-        int start = element.getTextRange().getStartOffset();
-        int end = start;
+        List<PsiElement> elements = findElementCommentElements(file, element);
+        return elements.isEmpty() ? TextRange.EMPTY_RANGE : TextRange.create(elements.get(0).getTextRange().getStartOffset(), elements.get(elements.size()-1).getTextRange().getEndOffset());
+    }
+
+    @NotNull
+    public static List<PsiElement> findElementCommentElements(PsiFile file, PsiElement element) {
+        List<PsiElement> res = new SmartList<>();
         Document doc = PsiDocumentManager.getInstance(element.getProject()).getDocument(file);
         if (null == doc) {
-            return null;
+            return res;
         }
         PsiElement el = PsiTreeUtil.prevVisibleLeaf(element);
-        int line = doc.getLineNumber(start);
+        int line = doc.getLineNumber(element.getTextRange().getStartOffset());
         while (el instanceof PsiComment) {
-            if ((line - doc.getLineNumber(el.getTextRange().getEndOffset())) < 2) {
-                start = el.getTextRange().getStartOffset();
-                line = doc.getLineNumber(start);
+            TextRange range = el.getTextRange();
+            if ((line - doc.getLineNumber(range.getEndOffset())) < 2) {
+                line = doc.getLineNumber(range.getStartOffset());
+                res.add(el);
                 el = PsiTreeUtil.prevVisibleLeaf(el);
             } else {
                 break;
             }
         }
-        if (start >= end) {
+        if (res.isEmpty()) {
             int offs = doc.getLineEndOffset(line);
             el = file.findElementAt(offs - 1);
             if (el instanceof PsiComment) {
-                start = el.getTextRange().getStartOffset();
-                end = el.getTextRange().getEndOffset();
+                res.add(el);
             }
         }
-        return end > start ? TextRange.create(start, end) : null;
+        return res;
     }
 
     private static final String[] COMMENT_STARTS = {"{", "(*"};
