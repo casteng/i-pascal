@@ -24,6 +24,7 @@ import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.lang.psi.PascalInlineDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
@@ -153,8 +154,8 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
                         }
                     } else {
                         PsiElement parent = getParent();
-                        if (parent instanceof PasFormalParameter) {
-                            return true;
+                        if ((parent instanceof PasFormalParameter) || (parent instanceof PascalInlineDeclaration)) {
+                            local = true;
                         } else if (parent instanceof PascalNamedElement) {
                             local = ((PascalNamedElement) parent).isLocal();
                         }

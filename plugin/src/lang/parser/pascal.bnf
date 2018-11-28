@@ -331,7 +331,8 @@
   extends(".*Expr")=Expr
   extends(".*Expression.*")="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"
   implements(".*Op")="com.siberika.idea.pascal.lang.psi.PascalOperation"
-  implements("VarDeclaration|FormalParameter|ClassField")="com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration"
+  implements("VarDeclaration|FormalParameter|ClassField|InlineVarDeclaration|ForInlineDeclaration")="com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration"
+  implements("InlineVarDeclaration|InlineConstDeclaration|ForInlineDeclaration")="com.siberika.idea.pascal.lang.psi.PascalInlineDeclaration"
   name(".*Ident")="Identifier"
 }
 
@@ -663,8 +664,11 @@ private statementPart       ::= RepeatStatement | WhileStatement | ForStatement
                               | CaseStatement | WithStatement | RaiseStatement | AssemblerStatement
                               | IfStatement | TryStatement | simpleStatement | CompoundStatement | stmtEmpty
 
-private simpleStatement     ::= flowStatement | stmtSimpleOrAssign | Expression
-private stmtSimpleOrAssign  ::= Expression AssignPart
+private simpleStatement     ::= flowStatement | stmtSimpleOrAssign | Expression | InlineConstDeclaration
+private stmtSimpleOrAssign  ::= assignLeftPart [AssignPart]
+private assignLeftPart      ::= InlineVarDeclaration | Expression
+InlineVarDeclaration        ::= VAR customAttributes* identList [":" TypeDecl] {pin=1 methods=[getNamedIdentDeclList]}
+InlineConstDeclaration      ::= CONST customAttributes* NamedIdent [":" TypeDecl] "=" ConstExpression {pin=1}
 AssignOp                    ::= ":=" | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN
 AssignPart                  ::= AssignOp (NewStatement | Expression) {pin=1 recoverWhile=rec_statement}
 NewStatement                ::= NEW "(" [ Expression ] ("," [ Expression ])* [ "," ConstExpression ] ")"// {pin=1 }
@@ -673,7 +677,9 @@ stmtEmpty                   ::= //empty
 RepeatStatement             ::= REPEAT [statementList] UNTIL Expression {pin=1}
 WhileStatement              ::= WHILE whileExpression doStatement {pin=1}
 private whileExpression     ::= Expression {recoverWhile=rec_statement_mid}
-ForStatement                ::= FOR FullyQualifiedIdent forCycleCondition doStatement {pin=1}
+ForStatement                ::= FOR forCycleIdent forCycleCondition doStatement {pin=1}
+private forCycleIdent       ::= ForInlineDeclaration | FullyQualifiedIdent
+ForInlineDeclaration        ::= VAR NamedIdent [":" TypeDecl] {pin=1 methods=[getCustomAttributeDeclList getNamedIdentDeclList]}
 private forCycleCondition   ::= (forCycle | IN) Expression {recoverWhile=rec_statement_mid}
 private forCycle            ::= ":=" FromExpression (TO | DOWNTO) {pin=1}
 FromExpression              ::= Expression {recoverWhile=rec_statement_mid}

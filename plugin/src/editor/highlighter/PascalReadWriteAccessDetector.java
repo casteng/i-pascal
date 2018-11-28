@@ -7,10 +7,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.context.ContextUtil;
+import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
+import com.siberika.idea.pascal.lang.psi.PasForInlineDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
+import com.siberika.idea.pascal.lang.psi.PasInlineConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasInlineVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
+import com.siberika.idea.pascal.lang.psi.PascalInlineDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
@@ -32,7 +37,8 @@ public class PascalReadWriteAccessDetector extends ReadWriteAccessDetector {
     public boolean isReadWriteAccessible(@NotNull PsiElement element) {
         if (element instanceof PascalIdentDecl) {
             return ((PascalIdentDecl) element).getAccess() == PasField.Access.READWRITE;
-        } else if ((element instanceof PascalNamedElement) && PsiUtil.isFormalParameterName((PascalNamedElement) element)) {
+        } else if ((element instanceof PascalNamedElement) && (
+                PsiUtil.isFormalParameterName((PascalNamedElement) element) || element.getParent() instanceof PascalInlineDeclaration)) {
             return true;
         } else {
             return false;
@@ -43,9 +49,19 @@ public class PascalReadWriteAccessDetector extends ReadWriteAccessDetector {
     public boolean isDeclarationWriteAccess(@NotNull PsiElement element) {
         if (element instanceof PascalIdentDecl) {
             return ((PascalIdentDecl) element).getValue() != null;
-        } else if ((element instanceof PascalNamedElement) && PsiUtil.isFormalParameterName((PascalNamedElement) element)) {
-            PasFormalParameter pasFormalParameter = (PasFormalParameter) element.getParent();
-            return pasFormalParameter.getConstExpression() != null;
+        } else if (element instanceof PascalNamedElement) {
+            PsiElement parent = element.getParent();
+            if (PsiUtil.isFormalParameterName((PascalNamedElement) element)) {
+                PasFormalParameter pasFormalParameter = (PasFormalParameter) parent;
+                return pasFormalParameter.getConstExpression() != null;
+            } else if (parent instanceof PasInlineVarDeclaration) {
+                PsiElement next = PsiTreeUtil.skipSiblingsForward(parent, PsiUtil.ELEMENT_WS_COMMENTS);
+                return next instanceof PasAssignPart;
+            } else if (parent instanceof PasInlineConstDeclaration || parent instanceof PasForInlineDeclaration) {
+                return true;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
