@@ -4,9 +4,11 @@ import com.intellij.codeInspection.SmartHashMap;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.codeStyle.NameUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.lexer.PascalFlexLexer;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +26,8 @@ public class StrUtil {
     public static final Pattern PATTERN_FIELD = Pattern.compile("[fF][A-Z]\\w*");
 
     private static final int MAX_SHORT_TEXT_LENGTH = 32;
+
+    public enum ElementType {VAR, CONST, TYPE, FIELD, PROPERTY, ACTUAL_PARAMETER}
 
     public static boolean hasLowerCaseChar(String s) {
         for (char c : s.toCharArray()) {
@@ -152,6 +156,31 @@ public class StrUtil {
         } else {
             return parent.getText().substring(0, Math.min(parent.getText().length(), MAX_SHORT_TEXT_LENGTH));
         }
+    }
+
+    public static String removePrefixes(@NotNull String name, String[] prefixes) {
+        String nameUpper = name.toUpperCase();
+        for (String prefix : prefixes) {
+            if (nameUpper.startsWith(prefix)) {
+                return name.substring(prefix.length());
+            }
+        }
+        return name;
+    }
+
+    public static String[] extractWords(String s, ElementType type) {
+        String[] splitNameIntoWords = NameUtil.splitNameIntoWords(s);
+        String[] result = new String[splitNameIntoWords.length];
+        String lastWord = "";
+        for (int i = splitNameIntoWords.length - 1; i >= 0; i--) {
+            String curWord = splitNameIntoWords[i];
+            if (ElementType.CONST == type) {
+                curWord = curWord.toUpperCase() + (lastWord.length() == 0 ? "" : "_");
+            }
+            lastWord = curWord + lastWord;
+            result[i] = lastWord;
+        }
+        return result;
     }
 
 }

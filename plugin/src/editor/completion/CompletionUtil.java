@@ -14,6 +14,7 @@ import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
@@ -29,22 +30,35 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.lang.context.CodePlace;
+import com.siberika.idea.pascal.lang.context.Context;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
+import com.siberika.idea.pascal.lang.psi.PasArgumentList;
+import com.siberika.idea.pascal.lang.psi.PasAssignPart;
+import com.siberika.idea.pascal.lang.psi.PasCallExpr;
+import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
+import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
+import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
+import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasTryStatement;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.stub.PascalSymbolIndex;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -52,6 +66,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -86,8 +101,78 @@ class CompletionUtil {
         }
     };
     private static final TokenSet TS_DO_THEN_OF = TokenSet.create(PasTypes.DO, PasTypes.THEN, PasTypes.OF, PasTypes.ELSE);
-    private static final TokenSet TS_CONTROL_STATEMENT = TokenSet.create(PasTypes.IF_STATEMENT, PasTypes.FOR_STATEMENT, PasTypes.WHILE_STATEMENT, PasTypes.WITH_STATEMENT, PasTypes.CASE_STATEMENT, PasTypes.CASE_ELSE);
     private static final String TYPE_UNTYPED = "<untyped>";
+    static final TokenSet UNIT_SECTIONS = TokenSet.create(
+            PasTypes.INTERFACE, PasTypes.IMPLEMENTATION,
+            PasTypes.INITIALIZATION, PasTypes.FINALIZATION
+    );
+    static final TokenSet TOP_LEVEL_DECLARATIONS = TokenSet.create(PasTypes.CONTAINS, PasTypes.REQUIRES);
+    static final TokenSet DIRECTIVE_METHOD = TokenSet.create(
+            PasTypes.REINTRODUCE, PasTypes.OVERLOAD, PasTypes.MESSAGE, PasTypes.STATIC, PasTypes.DYNAMIC, PasTypes.OVERRIDE, PasTypes.VIRTUAL,
+            PasTypes.CDECL, PasTypes.PASCAL, PasTypes.REGISTER, PasTypes.SAFECALL, PasTypes.STDCALL, PasTypes.EXPORT,
+            PasTypes.ABSTRACT, PasTypes.FINAL, PasTypes.INLINE, PasTypes.ASSEMBLER,
+            PasTypes.DEPRECATED, PasTypes.EXPERIMENTAL, PasTypes.PLATFORM, PasTypes.LIBRARY, PasTypes.DISPID
+    );
+    static final TokenSet DIRECTIVE_ROUTINE = TokenSet.create(
+            PasTypes.OVERLOAD, PasTypes.INLINE, PasTypes.ASSEMBLER,
+            PasTypes.CDECL, PasTypes.PASCAL, PasTypes.REGISTER, PasTypes.SAFECALL, PasTypes.STDCALL, PasTypes.EXPORT,
+            PasTypes.DEPRECATED, PasTypes.EXPERIMENTAL, PasTypes.PLATFORM, PasTypes.LIBRARY
+    );
+    static final TokenSet VALUES = TokenSet.create(PasTypes.NIL, PasTypes.FALSE, PasTypes.TRUE);
+    static final TokenSet STATEMENTS_IN_CYCLE = TokenSet.create(PasTypes.BREAK, PasTypes.CONTINUE);
+    static final TokenSet STATEMENTS = TokenSet.create(
+            PasTypes.FOR, PasTypes.WHILE, PasTypes.REPEAT,
+            PasTypes.IF, PasTypes.CASE, PasTypes.WITH,
+            PasTypes.GOTO, PasTypes.EXIT,
+            PasTypes.TRY, PasTypes.RAISE,
+            PasTypes.END
+    );
+    static final TokenSet DECLARATIONS_IMPL = TokenSet.create(
+            PasTypes.CONSTRUCTOR, PasTypes.DESTRUCTOR
+    );
+    static final TokenSet DECLARATIONS_INTF = TokenSet.create(
+            PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.THREADVAR, PasTypes.RESOURCESTRING,
+            PasTypes.PROCEDURE, PasTypes.FUNCTION
+    );
+    static final TokenSet MODULE_HEADERS = TokenSet.create(PasTypes.PROGRAM, PasTypes.UNIT, PasTypes.LIBRARY, PasTypes.PACKAGE);
+    static final TokenSet STRUCT_DECLARATIONS = TokenSet.create(
+            PasTypes.PROCEDURE, PasTypes.FUNCTION, PasTypes.CONSTRUCTOR, PasTypes.DESTRUCTOR,
+            PasTypes.OPERATOR, PasTypes.PROPERTY, PasTypes.END
+    );
+    static final TokenSet VISIBILITY = TokenSet.create(PasTypes.PRIVATE, PasTypes.PROTECTED, PasTypes.PUBLIC, PasTypes.PUBLISHED, PasTypes.AUTOMATED);
+    static final TokenSet TS_BEGIN = TokenSet.create(PasTypes.BEGIN);
+    static final TokenSet TS_ELSE = TokenSet.create(PasTypes.ELSE);
+    static final TokenSet DECLARATIONS_LOCAL = TokenSet.create(PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.PROCEDURE, PasTypes.FUNCTION);
+    static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
+            PasTypes.CLASS, PasTypes.OBJC_CLASS, PasTypes.DISPINTERFACE, PasTypes.RECORD, PasTypes.OBJECT,
+            PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.ARRAY
+    );
+    static final TokenSet PROPERTY_SPECIFIERS = TokenSet.create(PasTypes.READ, PasTypes.WRITE);
+
+    static final InsertHandler<LookupElement> RECORD_INSERT_HANDLER = new InsertHandler<LookupElement>() {
+        @Override
+        public void handleInsert(final InsertionContext context, LookupElement item) {
+            PasRecordDecl record = (PasRecordDecl) item.getObject();
+            StringBuilder sb = new StringBuilder("(");
+            for (PasClassField field : record.getClassFieldList()) {
+                for (PasNamedIdentDecl namedIdentDecl : field.getNamedIdentDeclList()) {
+                    String caretPH;
+                    if (sb.length() != 1) {
+                        caretPH = "";
+                        sb.append("; ");
+                    } else {
+                        caretPH = DocUtil.PLACEHOLDER_CARET;
+                    }
+                    sb.append(namedIdentDecl.getName()).append(": ").append(caretPH);
+                }
+            }
+            sb.append(");");
+            int caretPos = context.getEditor().getCaretModel().getOffset();
+            DocUtil.adjustDocument(context.getEditor(), caretPos, sb.toString());
+            context.commitDocument();
+        }
+    };
+    private static final String[] ROUTINE_NAME_PREFIXES = {"GET", "SET", "IS", "AS", "RETRIEVE", "CALC"};
 
     private static Map<IElementType, TokenSet> TOKEN_TO_PAS = initTokenToPasToken();
 
@@ -275,10 +360,6 @@ class CompletionUtil {
         }
     }
 
-    static boolean isControlStatement(PsiElement pos) {
-        return TS_CONTROL_STATEMENT.contains(pos.getNode().getElementType()) || pos.getNode().getElementType() == PasTypes.IF_THEN_STATEMENT;
-    }
-
     static ASTNode getDoThenOf(PsiElement statement) {
         ASTNode[] cand = statement.getNode().getChildren(TS_DO_THEN_OF);
         return cand.length > 0 ? cand[0] : null;
@@ -316,5 +397,66 @@ class CompletionUtil {
             return PsiUtil.getFieldName(el) + ": " + (type != null ? type : TYPE_UNTYPED);
         }
         return PsiUtil.getFieldName(el);
+    }
+
+    static boolean buildFromElement(@NotNull PasField field) {
+        return (field.getElementPtr() != null) && (field.fieldType != PasField.FieldType.PSEUDO_VARIABLE);
+    }
+
+    static void addEntitiesToResult(CompletionResultSet result, Map<String, LookupElement> entities) {
+        result.caseInsensitive().addAllElements(entities.values());
+    }
+
+    static Collection<String> fillBoost(Context ctx, int offset) {
+        List<String> result = new SmartList<>();
+        if (ctx.getPrimary()== CodePlace.EXPR) {
+            if (ctx.contains(CodePlace.EXPR_ARGUMENT) && ctx.getPosition() instanceof PasArgumentList) {
+                int parNum = getParameterIndex((PasArgumentList) ctx.getPosition(), offset);
+                PsiElement parent = ctx.getPosition().getParent();
+                if (parent instanceof PasCallExpr) {
+                    for (PascalRoutineEntity routineEntity : PasReferenceUtil.resolveRoutines((PasCallExpr) parent)) {
+                        List<String> names = routineEntity.getFormalParameterNames();
+                        if (names.size() > parNum) {
+                            result.add(names.get(parNum));
+                        }
+                    }
+                    if (result.isEmpty()) {
+                        addName(result, parent);
+                    }
+                }
+            } else if (ctx.contains(CodePlace.ASSIGN_LEFT) && ctx.getPosition() instanceof PasStatement) {
+                PasAssignPart assignPart = PsiTreeUtil.findChildOfType(ctx.getPosition(), PasAssignPart.class);
+                if (assignPart != null) {
+                    addName(result, assignPart.getExpression());
+                }
+            } else if (ctx.contains(CodePlace.ASSIGN_RIGHT) && ctx.getPosition() instanceof PasAssignPart) {
+                PsiElement parent = ctx.getPosition().getParent();
+                if (parent instanceof PasStatement) {
+                    addName(result, ((PasStatement) parent).getExpression());
+                }
+            }
+        }
+        return result;
+    }
+
+    private static void addName(Collection<String> result, PsiElement expression) {
+        PasReferenceExpr ref = PsiTreeUtil.findChildOfType(expression, PasReferenceExpr.class);
+        if (ref != null) {
+            String name = ref.getFullyQualifiedIdent().getNamePart();
+            if (StringUtil.isNotEmpty(name)) {
+                name = StrUtil.removePrefixes(name, ROUTINE_NAME_PREFIXES);
+                result.addAll(Arrays.asList(StrUtil.extractWords(name, StrUtil.ElementType.VAR)));
+            }
+        }
+    }
+
+    private static int getParameterIndex(PasArgumentList argList, int offset) {
+        List<PasExpr> exprList = argList.getExprList();
+        for (int i = 0; i < exprList.size(); i++) {
+            if (exprList.get(i).getTextRange().contains(offset)) {
+                return i;
+            }
+        }
+        return 0;
     }
 }

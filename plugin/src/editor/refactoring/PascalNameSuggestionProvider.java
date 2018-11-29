@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.editor.refactoring;
 
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.codeStyle.NameUtil;
 import com.intellij.psi.codeStyle.SuggestedNameInfo;
 import com.intellij.refactoring.rename.NameSuggestionProvider;
 import com.intellij.util.SmartList;
@@ -24,6 +23,7 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
+import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,8 +34,6 @@ import java.util.Set;
 public class PascalNameSuggestionProvider implements NameSuggestionProvider {
 
     private enum TypeMod {POINTER, ARRAY, SET, METACLASS}
-
-    public enum ElementType {VAR, CONST, TYPE, FIELD, PROPERTY, ACTUAL_PARAMETER}
 
     @Nullable
     @Override
@@ -60,19 +58,19 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
         if (position instanceof PasTypeDeclaration) {
             List<TypeMod> mods = new SmartList<>();
             String name = retrieveTypeModsAndName(((PasTypeDeclaration) position).getTypeDecl(), mods);
-            suggestNames(name, mods, ElementType.TYPE, result);
+            suggestNames(name, mods, StrUtil.ElementType.TYPE, result);
         } else if (position instanceof PascalVariableDeclaration) {
             List<TypeMod> mods = new SmartList<>();
             String name = retrieveTypeModsAndName(((PascalVariableDeclaration) position).getTypeDecl(), mods);
-            suggestNames(name, mods, position instanceof PasClassField ? ElementType.FIELD : ElementType.VAR, result);
+            suggestNames(name, mods, position instanceof PasClassField ? StrUtil.ElementType.FIELD : StrUtil.ElementType.VAR, result);
         } else if (position instanceof PasClassProperty) {
             PasTypeID typeId = ((PasClassProperty) position).getTypeID();
             String name = typeId != null ? typeId.getFullyQualifiedIdent().getNamePart() : null;
-            suggestNames(name, Collections.emptyList(), ElementType.PROPERTY, result);
+            suggestNames(name, Collections.emptyList(), StrUtil.ElementType.PROPERTY, result);
         } else if (position instanceof PasConstDeclaration) {
             List<TypeMod> mods = new SmartList<>();
             String name = retrieveTypeModsAndName(((PasConstDeclaration) position).getTypeDecl(), mods);
-            suggestNames(name, mods, ElementType.CONST, result);
+            suggestNames(name, mods, StrUtil.ElementType.CONST, result);
         } else if (position instanceof PasClassPropertySpecifier) {
             PsiElement prop = position.getParent();
             if (prop instanceof PasClassProperty) {
@@ -106,42 +104,27 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
         if (name.startsWith("T")) {
             name = name.substring(1);
         }
-        for (String word : extractWords(name, ElementType.TYPE)) {
+        for (String word : StrUtil.extractWords(name, StrUtil.ElementType.TYPE)) {
             result.add(prefix + word);
         }
     }
 
     private static final String[] POINTER_SUFFIXES = {"Ptr", "Pointer"};
 
-    static void suggestNames(String typeName, List<TypeMod> mods, ElementType type, Set<String> result) {
+    static void suggestNames(String typeName, List<TypeMod> mods, StrUtil.ElementType type, Set<String> result) {
         if (typeName != null) {
-            for (String sName : extractWords(typeNameToVarName(typeName), type)) {
+            for (String sName : StrUtil.extractWords(typeNameToVarName(typeName), type)) {
                 for (String pointerSuffix : POINTER_SUFFIXES) {
-                    String sn1 = calcSuggestedName(mods, type == ElementType.TYPE, pointerSuffix).replace("#", sName);
-                    if (type == ElementType.FIELD) {
+                    String sn1 = calcSuggestedName(mods, type == StrUtil.ElementType.TYPE, pointerSuffix).replace("#", sName);
+                    if (type == StrUtil.ElementType.FIELD) {
                         result.add("F" + sn1);
-                    } else if ((type == ElementType.TYPE) && (sName.charAt(0) == '#')) {
+                    } else if ((type == StrUtil.ElementType.TYPE) && (sName.charAt(0) == '#')) {
                         result.add("T" + sn1);
                     }
                     result.add(sn1);
                 }
             }
         }
-    }
-
-    private static String[] extractWords(String s, ElementType type) {
-        String[] splitNameIntoWords = NameUtil.splitNameIntoWords(s);
-        String[] result = new String[splitNameIntoWords.length];
-        String lastWord = "";
-        for (int i = splitNameIntoWords.length - 1; i >= 0; i--) {
-            String curWord = splitNameIntoWords[i];
-            if (ElementType.CONST == type) {
-                curWord = curWord.toUpperCase() + (lastWord.length() == 0 ? "" : "_");
-            }
-            lastWord = curWord + lastWord;
-            result[i] = lastWord;
-        }
-        return result;
     }
 
     private static String retrieveTypeModsAndName(PasTypeDecl decl, @NotNull List<TypeMod> mods) {

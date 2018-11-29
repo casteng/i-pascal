@@ -117,7 +117,7 @@ public class Context {
             }
             if (tempPos instanceof PasCaseStatement) {
                 context.add(CodePlace.ASSIGN_RIGHT);
-            } else if ((originalExprParent instanceof PasStatement) && (PsiUtil.findImmChildOfAnyType(originalExprParent, PasAssignPart.class) != null)) {
+            } else if ((originalExprParent instanceof PasStatement) && (PsiUtil.findImmChildOfAnyType(tempPos, PasAssignPart.class) != null)) {
                 context.add(CodePlace.ASSIGN_LEFT);
             }
         } else if (tempPos instanceof PasCaseItem) {

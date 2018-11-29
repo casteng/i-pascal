@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.editor.refactoring;
 
+import com.siberika.idea.pascal.util.StrUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,7 +18,7 @@ public class NameSuggestTest {
     @Test
     public void suggestVar() {
         Set<String> suggested = new LinkedHashSet<>();
-        PascalNameSuggestionProvider.suggestNames("MyBigName", Collections.emptyList(), PascalNameSuggestionProvider.ElementType.VAR, suggested);
+        PascalNameSuggestionProvider.suggestNames("MyBigName", Collections.emptyList(), StrUtil.ElementType.VAR, suggested);
         printNames(suggested);
         Assert.assertEquals(new LinkedHashSet<>(Arrays.asList("MyBigName", "BigName", "Name")), suggested);
     }
@@ -25,7 +26,7 @@ public class NameSuggestTest {
     @Test
     public void suggestConst() {
         Set<String> suggested = new LinkedHashSet<>();
-        PascalNameSuggestionProvider.suggestNames("MyBigName", Collections.emptyList(), PascalNameSuggestionProvider.ElementType.CONST, suggested);
+        PascalNameSuggestionProvider.suggestNames("MyBigName", Collections.emptyList(), StrUtil.ElementType.CONST, suggested);
         printNames(suggested);
         Assert.assertEquals(new LinkedHashSet<>(Arrays.asList("MY_BIG_NAME", "BIG_NAME", "NAME")), suggested);
     }
@@ -33,7 +34,7 @@ public class NameSuggestTest {
     @Test
     public void suggestType() {
         Set<String> suggested = new LinkedHashSet<>();
-        PascalNameSuggestionProvider.suggestNames("TMyBigName", Collections.emptyList(), PascalNameSuggestionProvider.ElementType.TYPE, suggested);
+        PascalNameSuggestionProvider.suggestNames("TMyBigName", Collections.emptyList(), StrUtil.ElementType.TYPE, suggested);
         printNames(suggested);
         Assert.assertEquals(new LinkedHashSet<>(Arrays.asList("TMyBigName", "TBigName", "TName")), suggested);
     }
