@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.editor.completion;
 
+import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
@@ -29,9 +30,12 @@ import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.ide.actions.UsesActions;
 import com.siberika.idea.pascal.lang.context.CodePlace;
 import com.siberika.idea.pascal.lang.context.Context;
+import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.lexer.PascalLexer;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
@@ -53,10 +57,12 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
+import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.stub.PascalSymbolIndex;
 import com.siberika.idea.pascal.util.DocUtil;
+import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
@@ -64,6 +70,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -172,7 +179,6 @@ class CompletionUtil {
             context.commitDocument();
         }
     };
-    private static final String[] ROUTINE_NAME_PREFIXES = {"GET", "SET", "IS", "AS", "RETRIEVE", "CALC"};
 
     private static Map<IElementType, TokenSet> TOKEN_TO_PAS = initTokenToPasToken();
 
@@ -331,8 +337,8 @@ class CompletionUtil {
             }
         }*/
 //        if ((TOKEN_TO_PSI.get(op) == null) || (PsiTreeUtil.findChildOfType(position, TOKEN_TO_PSI.get(op), true) == null)) {
-            LookupElementBuilder el = LookupElementBuilder.create(op.toString()).withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO)).withInsertHandler(INSERT_HANDLER);
-            result.caseInsensitive().addElement(el);
+        LookupElementBuilder el = LookupElementBuilder.create(op.toString()).withIcon(PascalIcons.GENERAL).withStrikeoutness(op.equals(PasTypes.GOTO)).withInsertHandler(INSERT_HANDLER);
+        result.caseInsensitive().addElement(el);
 //        }
     }
 
@@ -407,47 +413,59 @@ class CompletionUtil {
         result.caseInsensitive().addAllElements(entities.values());
     }
 
-    static Collection<String> fillBoost(Context ctx, int offset) {
-        List<String> result = new SmartList<>();
-        if (ctx.getPrimary()== CodePlace.EXPR) {
+    static void fillBoost(EntityCompletionContext completionContext) {
+        Context ctx = completionContext.context;
+        Collection<String> result = completionContext.boostNames;
+        if (ctx.getPrimary() == CodePlace.EXPR) {
             if (ctx.contains(CodePlace.EXPR_ARGUMENT) && ctx.getPosition() instanceof PasArgumentList) {
-                int parNum = getParameterIndex((PasArgumentList) ctx.getPosition(), offset);
+                int parNum = getParameterIndex((PasArgumentList) ctx.getPosition(), completionContext.completionParameters.getOffset());
                 PsiElement parent = ctx.getPosition().getParent();
                 if (parent instanceof PasCallExpr) {
+                    ParamModifier mod = ParamModifier.NONE;
                     for (PascalRoutineEntity routineEntity : PasReferenceUtil.resolveRoutines((PasCallExpr) parent)) {
                         List<String> names = routineEntity.getFormalParameterNames();
                         if (names.size() > parNum) {
                             result.add(names.get(parNum));
+                            mod = routineEntity.getFormalParameterAccess().get(parNum);
                         }
                     }
                     if (result.isEmpty()) {
-                        addName(result, parent);
+                        completionContext.deniedName = retrieveNames(result, parent);
+                    }
+                    if ((mod != ParamModifier.VAR) && (mod != ParamModifier.OUT)) {
+                        completionContext.likelyTypes = EnumSet.of(PasField.FieldType.VARIABLE, PasField.FieldType.CONSTANT, PasField.FieldType.PROPERTY, PasField.FieldType.ROUTINE);
+                    } else {
+                        completionContext.likelyTypes = EnumSet.of(PasField.FieldType.VARIABLE);
+                        completionContext.deniedTypes = EnumSet.of(PasField.FieldType.CONSTANT, PasField.FieldType.PROPERTY, PasField.FieldType.ROUTINE, PasField.FieldType.TYPE, PasField.FieldType.UNIT);
                     }
                 }
             } else if (ctx.contains(CodePlace.ASSIGN_LEFT) && ctx.getPosition() instanceof PasStatement) {
                 PasAssignPart assignPart = PsiTreeUtil.findChildOfType(ctx.getPosition(), PasAssignPart.class);
                 if (assignPart != null) {
-                    addName(result, assignPart.getExpression());
+                    completionContext.deniedName = retrieveNames(result, assignPart.getExpression());
+                    completionContext.likelyTypes = EnumSet.of(PasField.FieldType.VARIABLE, PasField.FieldType.PROPERTY);
+                    completionContext.deniedTypes = EnumSet.of(PasField.FieldType.CONSTANT, PasField.FieldType.TYPE, PasField.FieldType.ROUTINE, PasField.FieldType.UNIT);
                 }
             } else if (ctx.contains(CodePlace.ASSIGN_RIGHT) && ctx.getPosition() instanceof PasAssignPart) {
                 PsiElement parent = ctx.getPosition().getParent();
                 if (parent instanceof PasStatement) {
-                    addName(result, ((PasStatement) parent).getExpression());
+                    completionContext.deniedName = retrieveNames(result, ((PasStatement) parent).getExpression());
+                    completionContext.likelyTypes = EnumSet.of(PasField.FieldType.VARIABLE, PasField.FieldType.PROPERTY, PasField.FieldType.CONSTANT, PasField.FieldType.ROUTINE);
                 }
             }
         }
-        return result;
     }
 
-    private static void addName(Collection<String> result, PsiElement expression) {
+    private static String retrieveNames(Collection<String> result, PsiElement expression) {
         PasReferenceExpr ref = PsiTreeUtil.findChildOfType(expression, PasReferenceExpr.class);
         if (ref != null) {
             String name = ref.getFullyQualifiedIdent().getNamePart();
             if (StringUtil.isNotEmpty(name)) {
-                name = StrUtil.removePrefixes(name, ROUTINE_NAME_PREFIXES);
                 result.addAll(Arrays.asList(StrUtil.extractWords(name, StrUtil.ElementType.VAR)));
             }
+            return name;
         }
+        return null;
     }
 
     private static int getParameterIndex(PasArgumentList argList, int offset) {
