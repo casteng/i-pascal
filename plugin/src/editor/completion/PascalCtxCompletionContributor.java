@@ -58,6 +58,7 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
@@ -470,10 +471,41 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         String pattern = namespace.getCurrentName();
         namespace.clearTarget();
         Collection<PasField> fields = PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0);
-        fieldsToEntities(entities, fields, boostNames, parameters);
+
+        addFromUnrelatedUnits(completionContext, fieldTypes, pattern);
+
+        fieldsToEntities(fields, completionContext);
     }
 
-    private static void fieldsToEntities(Map<String, LookupElement> entities, Collection<PasField> fields, Collection<String> boostNames, CompletionParameters parameters) {
+    private static void addFromUnrelatedUnits(EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes, String pattern) {
+        if (StringUtil.isNotEmpty(pattern) && completionContext.isUnrelatedUnitsEnabled()) {
+            PascalChooseByNameContributor.processByName(PascalUnitSymbolIndex.KEY, pattern, completionContext.completionParameters.getOriginalFile().getProject(), true, new Processor<PascalNamedElement>() {
+                @Override
+                public boolean process(PascalNamedElement namedElement) {
+                    if (!fieldTypes.contains(namedElement.getType()) || !(namedElement instanceof HasUniqueName) || namedElement.isLocal()) {
+                        return true;
+                    }
+                    String name = StrUtil.getNamespace(((HasUniqueName) namedElement).getUniqueName());
+                    String unitName = ResolveUtil.calcContainingUnitName(namedElement);
+                    if (!Objects.equals(name, unitName)) {
+                        return true;
+                    }
+                    LookupElement lookupElement;
+                    LookupElementBuilder el = CompletionUtil.createLookupElement(completionContext.completionParameters, namedElement, unitName);
+                    if (el != null) {
+                        lookupElement = el.appendTailText(" : " + namedElement.getType().toString().toLowerCase(), true).
+                                withCaseSensitivity(true).withTypeText("from " + name, false);
+                        int priority = completionContext.calcPriority(lookupElement.getLookupString(), namedElement.getName(), namedElement.getType(), true);
+                        lookupElement = priority != 0 ? PrioritizedLookupElement.withPriority(lookupElement, priority) : lookupElement;
+                        completionContext.entities.put(el.getLookupString(), lookupElement);
+                    }
+                    return true;
+                }
+            });
+        }
+    }
+
+    private static void fieldsToEntities(Collection<PasField> fields, EntityCompletionContext completionContext) {
         for (PasField pasField : fields) {
             fieldToEntity(pasField, completionContext);
         }

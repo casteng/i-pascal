@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.ide.actions;
 
-import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -28,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex;
+import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -98,12 +98,8 @@ public class UsesActions {
         public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
             if (unitName != null) {
                 PascalImportOptimizer.addUnitToSection(PsiUtil.getElementPasModule(file), Collections.singletonList(unitName), toInterface);
-                ApplicationManager.getApplication().invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        HintManager.getInstance().showInformationHint(editor, PascalBundle.message("action.unit.search.added", unitName));
-                    }
-                });
+                EditorUtil.showInformationHint(editor, PascalBundle.message("action.unit.search.added", unitName,
+                        PascalBundle.message(toInterface ? "unit.section.interface": "unit.section.implementation")));
             }
         }
 

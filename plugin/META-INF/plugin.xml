@@ -12,6 +12,11 @@
         <p>2.0</p>
         <ul>
             <li>Parameter info for variables of procedural types</li>
+            <li>Completion options from not used units</li>
+            <li>Completion options intellectual selection and prioritization</li>
+            <li>Delphi 10.3 inline declarations syntax support</li>
+            <li>Completion improvement</li>
+            <li>No SDK warning</li>
         </ul>
         <p>1.980</p>
         <ul>

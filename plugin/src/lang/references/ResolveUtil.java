@@ -26,6 +26,7 @@ import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasProcedureType;
@@ -491,6 +492,16 @@ public class ResolveUtil {
             }
         }
         return result;
+    }
+
+    @Nullable
+    public static String calcContainingUnitName(PsiElement element) {
+        if (element instanceof PascalStubElement) {
+            return ((PascalStubElement) element).getContainingUnitName();
+        } else {
+            PasModule module = PsiUtil.getElementPasModule(element);
+            return module != null ? module.getName() : null;
+        }
     }
 
     interface VisibilityChecker {

@@ -386,14 +386,41 @@ class CompletionUtil {
             res = res.withInsertHandler(new InsertHandler<LookupElement>() {
                 @Override
                 public void handleInsert(InsertionContext context, LookupElement item) {
-                    DocUtil.adjustDocument(context.getEditor(), context.getEditor().getCaretModel().getOffset(), content);
-                    AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
-                    DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
-                    act.actionPerformed(new AnActionEvent(null, dataContext, "", act.getTemplatePresentation(), ActionManager.getInstance(), 0));
+                    handleRoutineNameInsertion(editor, content);
                 }
             });
         }
         return res;
+    }
+
+    static LookupElementBuilder createLookupElement(final CompletionParameters parameters, @NotNull PascalNamedElement namedElement, String unitName) {
+        if (!PsiUtil.isElementUsable(namedElement)) {
+            return null;
+        }
+        LookupElementBuilder res = LookupElementBuilder.create(namedElement).withPresentableText(namedElement.getNamePart());
+        final String content = namedElement.getType() == PasField.FieldType.ROUTINE ? (namedElement instanceof PascalRoutine && ((PascalRoutine) namedElement).hasParameters()) ? "(" + DocUtil.PLACEHOLDER_CARET + ")" : "()" + DocUtil.PLACEHOLDER_CARET : null;
+        res = res.withInsertHandler(new InsertHandler<LookupElement>() {
+            @Override
+            public void handleInsert(InsertionContext context, LookupElement item) {
+                boolean toInterface = ContextUtil.belongsToInterface(parameters.getPosition());
+                UsesActions.AddUnitAction actAddUnit = new UsesActions.AddUnitAction(PascalBundle.message("action.add.uses", unitName),
+                        unitName, toInterface);
+                actAddUnit.invoke(parameters.getOriginalFile().getProject(), parameters.getEditor(), parameters.getOriginalFile());
+                EditorUtil.showInformationHint(parameters.getEditor(), PascalBundle.message("action.unit.search.added", unitName,
+                        PascalBundle.message(toInterface ? "unit.section.interface": "unit.section.implementation")));
+                handleRoutineNameInsertion(context.getEditor(), content);
+            }
+        });
+        return res;
+    }
+
+    private static void handleRoutineNameInsertion(Editor editor, String content) {
+        if (content != null) {
+            DocUtil.adjustDocument(editor, editor.getCaretModel().getOffset(), content);
+            AnAction act = ActionManager.getInstance().getAction("ParameterInfo");
+            DataContext dataContext = DataManager.getInstance().getDataContext(editor.getContentComponent());
+            act.actionPerformed(new AnActionEvent(null, dataContext, "", act.getTemplatePresentation(), ActionManager.getInstance(), 0));
+        }
     }
 
     private static String getFieldText(PasField field) {

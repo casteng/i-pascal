@@ -8,6 +8,7 @@ import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.ide.util.PsiElementModuleRenderer;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.IdeActions;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
@@ -56,6 +57,15 @@ public class EditorUtil {
         label.setBackground(HintUtil.getErrorColor());
         label.setOpaque(true);
         HintManager.getInstance().showHint(label, relativePoint, 0, NO_ITEMS_HINT_TIMEOUT_MS);
+    }
+
+    public static void showInformationHint(Editor editor, String message) {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                HintManager.getInstance().showInformationHint(editor, message);
+            }
+        });
     }
 
     public static RelativePoint getHintPos(Editor editor) {

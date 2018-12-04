@@ -159,6 +159,9 @@ public class StrUtil {
     }
 
     public static String removePrefixes(@NotNull String name, String[] prefixes) {
+        if ((name.length() < 2) || !Character.isUpperCase(name.charAt(1))) {
+            return name;
+        }
         String nameUpper = name.toUpperCase();
         for (String prefix : prefixes) {
             if (nameUpper.startsWith(prefix)) {
@@ -181,6 +184,16 @@ public class StrUtil {
             result[i] = lastWord;
         }
         return result;
+    }
+
+    public static String getNamePart(String fqn) {
+        int pos = fqn.lastIndexOf(".");
+        return pos >= 0 ? fqn.substring(pos + 1) : fqn;
+    }
+
+    public static String getNamespace(String fqn) {
+        int pos = fqn.lastIndexOf(".");
+        return pos >= 0 ? fqn.substring(0, pos) : "";
     }
 
 }
