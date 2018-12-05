@@ -11,10 +11,10 @@
     <change-notes><![CDATA[
         <p>2.0</p>
         <ul>
-            <li>Parameter info for variables of procedural types</li>
-            <li>Completion options from not used units</li>
+            <li>Completion suggestions from not used units (double ctrl+space)</li>
             <li>Completion options intellectual selection and prioritization</li>
             <li>Delphi 10.3 inline declarations syntax support</li>
+            <li>Parameter info for variables of procedural types</li>
             <li>Completion improvement</li>
             <li>No SDK warning</li>
         </ul>
@@ -459,11 +459,13 @@
                                  implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
         <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PasStringFactor"
                                  implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalStringManipulator"/>
+        <nameSuggestionProvider implementation="com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider"/>
+        <refactoring.moveHandler implementation="com.siberika.idea.pascal.editor.refactoring.PascalMoveHandler"/>
+
         <editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalLineMarkerProvider"/>
         <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalHeavyLineMarkerProvider"/>
         <codeInsight.parameterInfo language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterInfoHandler"/>
-        <nameSuggestionProvider implementation="com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider"/>
 
         <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCtxCompletionContributor"/>
         <completion.confidence language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionConfidence"/>

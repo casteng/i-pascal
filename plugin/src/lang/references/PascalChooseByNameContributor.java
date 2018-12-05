@@ -59,7 +59,7 @@ public class PascalChooseByNameContributor implements ChooseByNameContributor {
             @Override
             public boolean process(final String key) {
                 if (matcher.matches(key)) {
-                    StubIndex.getInstance().processElements(PascalSymbolIndex.KEY, key, project, scope, PascalNamedElement.class, processor);
+                    StubIndex.getInstance().processElements(indexKey, key, project, scope, PascalNamedElement.class, processor);
                 }
                 return true;
             }

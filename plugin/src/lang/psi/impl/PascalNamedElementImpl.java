@@ -29,6 +29,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.StrUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -110,16 +111,12 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Override
     public String getNamespace() {
-        String name = getName();
-        int pos = name.lastIndexOf(".");
-        return pos >= 0 ? name.substring(0, pos) : "";
+        return StrUtil.getNamespace(getName());
     }
 
     @Override
     public String getNamePart() {
-        String name = getName();
-        int pos = name.lastIndexOf(".");
-        return pos >= 0 ? name.substring(pos + 1) : name;
+        return StrUtil.getNamePart(getName());
     }
 
     @NotNull
@@ -131,6 +128,11 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
             }
         });
         return myCachedType;
+    }
+
+    @Override
+    public boolean isExported() {
+        return false;
     }
 
     @Override

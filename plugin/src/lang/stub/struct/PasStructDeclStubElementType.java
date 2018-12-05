@@ -18,7 +18,6 @@ import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PascalStructIndex;
 import com.siberika.idea.pascal.lang.stub.PascalSymbolIndex;
-import com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex;
 import com.siberika.idea.pascal.lang.stub.StubUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -63,7 +62,7 @@ public abstract class PasStructDeclStubElementType<StubT extends PasStructStub, 
     public void indexStub(@NotNull StubT stub, @NotNull IndexSink sink) {
         sink.occurrence(PascalStructIndex.KEY, stub.getUniqueName());
         sink.occurrence(PascalSymbolIndex.KEY, stub.getName());
-        sink.occurrence(PascalUnitSymbolIndex.KEY, stub.getName().toUpperCase());
+//        sink.occurrence(PascalUnitSymbolIndex.KEY, stub.getName().toUpperCase());
     }
 
     static String calcStubName(PascalStructType psi, List<String> aliases) {

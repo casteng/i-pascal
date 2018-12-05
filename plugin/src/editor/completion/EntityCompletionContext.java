@@ -41,19 +41,15 @@ class EntityCompletionContext {
         virtualFile = completionParameters.getOriginalFile().getVirtualFile();
     }
 
-    public boolean isNameAllowed(String name) {
-        return (null == deniedName) || !deniedName.equalsIgnoreCase(name);
+    boolean isUnrelatedUnitsEnabled() {
+        return completionParameters.getInvocationCount() > 1;
     }
 
-    public boolean isUnrelatedUnitsEnabled() {
-        return true;
-    }
-
-    public boolean isFromOtherFile(PasField field) {
+    boolean isFromOtherFile(PasField field) {
         return (field.getElementPtr() != null) && (virtualFile != null) && !virtualFile.equals(field.getElementPtr().getVirtualFile());
     }
 
-    public int calcPriority(String lookupString, String fieldName, PasField.FieldType fieldType, boolean fromOtherFile) {
+    int calcPriority(String lookupString, String fieldName, PasField.FieldType fieldType, boolean fromOtherFile) {
         int priority = 0;
         if (likelyTypes.contains(fieldType)) {
             priority += PRIORITY_TYPE_MATCH;
@@ -77,5 +73,9 @@ class EntityCompletionContext {
             priority = PRIORITY_NAME_DENIED;
         }
         return priority;
+    }
+
+    private boolean isNameAllowed(String name) {
+        return (null == deniedName) || !deniedName.equalsIgnoreCase(name);
     }
 }

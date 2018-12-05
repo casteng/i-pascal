@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
@@ -50,6 +51,11 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @Override
     public PasField.FieldType getType() {
         return PasField.FieldType.ROUTINE;
+    }
+
+    @Override
+    protected boolean calcIsExported() {
+        return getParent() instanceof PasUnitInterface;
     }
 
     @Override

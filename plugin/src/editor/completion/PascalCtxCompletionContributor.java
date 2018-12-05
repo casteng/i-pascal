@@ -61,7 +61,6 @@ import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
-import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -69,7 +68,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import static com.siberika.idea.pascal.lang.context.CodePlace.ASSIGN_LEFT;
@@ -485,9 +483,9 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                     if (!fieldTypes.contains(namedElement.getType()) || !(namedElement instanceof HasUniqueName) || namedElement.isLocal()) {
                         return true;
                     }
-                    String name = StrUtil.getNamespace(((HasUniqueName) namedElement).getUniqueName());
+                    String name = ((HasUniqueName) namedElement).getUniqueName();
                     String unitName = ResolveUtil.calcContainingUnitName(namedElement);
-                    if (!Objects.equals(name, unitName)) {
+                    if ((null == name) || (null == unitName) || !name.startsWith(unitName)) {
                         return true;
                     }
                     LookupElement lookupElement;

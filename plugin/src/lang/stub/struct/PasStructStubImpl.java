@@ -27,6 +27,11 @@ public class PasStructStubImpl<T extends PascalStructType> extends PasNamedStubB
         return PasField.FieldType.TYPE;
     }
 
+    @Override
+    public boolean isExported() {
+        return false;
+    }
+
     @NotNull
     @Override
     public List<String> getParentNames() {

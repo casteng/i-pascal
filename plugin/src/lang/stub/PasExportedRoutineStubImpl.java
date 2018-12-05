@@ -14,6 +14,7 @@ import java.util.List;
  */
 public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedRoutine> implements PasExportedRoutineStub {
     private PasField.Visibility visibility;
+    private final boolean exported;
     private boolean constructor;
     private boolean function;
     private String functionTypeStr;
@@ -21,11 +22,12 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     private List<String> parameterTypes;
     private List<ParamModifier> parameterAccess;
 
-    public PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility,
+    public PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility, boolean exported,
                                       String containingUnitName, boolean constructor, boolean function, String functionTypeStr,
                                       List<String> parameterNames, List<String> parameterTypes, List<ParamModifier> parameterAccess) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE, name, containingUnitName);
         this.visibility = visibility;
+        this.exported = exported;
         this.constructor = constructor;
         this.function = function;
         this.functionTypeStr = functionTypeStr;
@@ -38,6 +40,11 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     @Override
     public PasField.FieldType getType() {
         return PasField.FieldType.ROUTINE;
+    }
+
+    @Override
+    public boolean isExported() {
+        return exported;
     }
 
     @Override

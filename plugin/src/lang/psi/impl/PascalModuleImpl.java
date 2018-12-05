@@ -79,6 +79,11 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     @Override
+    protected boolean calcIsExported() {
+        return true;
+    }
+
+    @Override
     protected String calcUniqueName() {
         String result = getName();
         return StringUtils.isNotEmpty(result) ? result : getContainingFile().getName();

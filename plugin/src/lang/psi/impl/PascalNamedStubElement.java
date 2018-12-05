@@ -123,6 +123,17 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     }
 
     @Override
+    public boolean isExported() {
+        B stub = retrieveStub();
+        if (stub != null) {
+            return stub.isExported();
+        }
+        return calcIsExported();
+    }
+
+    protected abstract boolean calcIsExported();
+
+    @Override
     public boolean isLocal() {
         if (SyncUtil.lockOrCancel(localityLock)) {
             try {
@@ -130,7 +141,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
                 if ((null == local) || (modificationStamp != modStamp)) {
                     modificationStamp = modStamp;
                     if (this instanceof PasExportedRoutine) {
-                        if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this)) {
+                        if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this) || isExported()) {
                             local = false;
                         } else {
                             PasEntityScope scope = ((PasEntityScope) this).getContainingScope();
@@ -162,7 +173,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
                         if (parent instanceof PasGenericTypeIdent) {
                             parent = parent.getParent();
                         }
-                        if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration) {
+                        if (isExported() && ((parent instanceof PasVarDeclaration) || (parent instanceof PasConstDeclaration) || (parent instanceof PasTypeDeclaration))) {
                             local = PsiUtil.isImplementationScope(parent.getParent().getParent());
                         } else {
                             local = false;
