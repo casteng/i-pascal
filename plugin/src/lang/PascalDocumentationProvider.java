@@ -12,6 +12,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
+import com.siberika.idea.pascal.lang.compiled.CompiledFileImpl;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
@@ -140,6 +141,9 @@ public class PascalDocumentationProvider implements DocumentationProvider {
     /* Search for comments above element, empty line breaks the search
        If not found search for comment at the end of line where the element starts */
     private static String findElementComment(PsiFile file, PsiElement element) {
+        if (file instanceof CompiledFileImpl) {
+            return null;
+        }
         TextRange range = findElementCommentRange(file, element);
         return range != null ? formatComment(file.getText().substring(range.getStartOffset(), range.getEndOffset())) : null;
     }
