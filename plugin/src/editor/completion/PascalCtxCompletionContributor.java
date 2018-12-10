@@ -124,8 +124,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                 EntityCompletionContext completionContext = new EntityCompletionContext(ctx, parameters);
                 CompletionUtil.fillBoost(completionContext);
 
-                if (handleInherited(completionContext)) {
-                    CompletionUtil.addEntitiesToResult(result, completionContext.entities);
+                if (handleInherited(result, completionContext)) {
                     result.stopHere();
                     return;
                 }
@@ -163,8 +162,6 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
 
                 handleDeclarations(result, completionContext);
 
-                CompletionUtil.addEntitiesToResult(result, completionContext.entities);
-
                 result.restartCompletionWhenNothingMatches();
             }
         });
@@ -197,7 +194,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     }
 
     //TODO: move the logic to resolving code
-    private boolean handleInherited(EntityCompletionContext completionContext) {
+    private boolean handleInherited(CompletionResultSet result, EntityCompletionContext completionContext) {
         PasEntityScope scope = getInheritedScope(completionContext.completionParameters.getOriginalPosition());
         if (null == scope) {
             return false;
@@ -210,7 +207,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                 if (field.fieldType == PasField.FieldType.ROUTINE) {
                     //filter out strict private methods as well as private ones from other units
                     if (field.visibility != PasField.Visibility.STRICT_PRIVATE && (field.visibility != PasField.Visibility.PRIVATE || isFromSameUnit(field, completionContext.completionParameters.getOriginalFile()))) {
-                        fieldToEntity(field, completionContext);
+                        fieldToEntity(result, field, completionContext);
                     }
                 }
             }
@@ -232,7 +229,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         Context ctx = completionContext.context;
         if (ctx.getPrimary() == TYPE_ID) {
             completionContext.likelyTypes = EnumSet.of(PasField.FieldType.TYPE);
-            addEntities(completionContext, PasField.TYPES_TYPE_UNIT);
+            addEntities(result, completionContext, PasField.TYPES_TYPE_UNIT);
             if (ctx.contains(DECL_TYPE)) {
                 CompletionUtil.appendTokenSet(result, CompletionUtil.TYPE_DECLARATIONS);
                 result.caseInsensitive().addElement(CompletionUtil.getElement("interface "));
@@ -306,7 +303,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         Context ctx = completionContext.context;
         if (ctx.getPrimary() == PROPERTY_SPECIFIER) {
             completionContext.likelyTypes = EnumSet.of(PasField.FieldType.VARIABLE);
-            addEntities(completionContext, PasField.TYPES_PROPERTY_SPECIFIER);
+            addEntities(result, completionContext, PasField.TYPES_PROPERTY_SPECIFIER);
         } else if (ctx.getPrimary() == DECL_PROPERTY) {
             if (ctx.getPosition() instanceof PasClassProperty) {
                 CompletionUtil.appendTokenSetUnique(result, CompletionUtil.PROPERTY_SPECIFIERS, ctx.getPosition());
@@ -346,8 +343,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             namespace.clearTarget();
             ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) file.getVirtualFile()).getContextElement()),
                     PasField.TYPES_ALL, false, null, null);
-            fieldsToEntities(PasReferenceUtil.resolve(namespace, resolveContext, 0), completionContext);
-            CompletionUtil.addEntitiesToResult(result, completionContext.entities);
+            fieldsToEntities(result, PasReferenceUtil.resolve(namespace, resolveContext, 0), completionContext);
             result.stopHere();
             return true;
         } else {
@@ -378,11 +374,11 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             if (ctx.contains(CONST_EXPRESSION)) {
                 completionContext.likelyTypes = EnumSet.of(PasField.FieldType.CONSTANT);
                 completionContext.deniedTypes = EnumSet.of(PasField.FieldType.TYPE);
-                addEntities(completionContext, PasField.TYPES_STATIC);
+                addEntities(result, completionContext, PasField.TYPES_STATIC);
             } else if (ctx.contains(ASSIGN_LEFT)) {
-                addEntities(completionContext, PasField.TYPES_LEFT_SIDE);
+                addEntities(result, completionContext, PasField.TYPES_LEFT_SIDE);
             } else {
-                addEntities(completionContext, PasField.TYPES_ALL);
+                addEntities(result, completionContext, PasField.TYPES_ALL);
                 if (ctx.contains(FIRST_IN_NAME)) {
                     CompletionUtil.appendTokenSet(result, CompletionUtil.VALUES);
                 }
@@ -395,7 +391,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             CompletionUtil.appendTokenSetUnique(result, PasTypes.ELSE, ctx.getPosition().getParent());
             completionContext.likelyTypes = EnumSet.of(PasField.FieldType.CONSTANT);
             completionContext.deniedTypes = EnumSet.of(PasField.FieldType.TYPE);
-            addEntities(completionContext, PasField.TYPES_STATIC);
+            addEntities(result, completionContext, PasField.TYPES_STATIC);
         }
     }
 
@@ -457,7 +453,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         }
     }
 
-    private static void addEntities(EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes) {
+    private static void addEntities(CompletionResultSet result, EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes) {
         NamespaceRec namespace = NamespaceRec.fromFQN(completionContext.context.getDummyIdent(), PasField.DUMMY_IDENTIFIER);
         if (completionContext.context.getNamedElement() != null) {
             if (completionContext.context.getNamedElement().getParent() instanceof PascalNamedElement) {
@@ -470,12 +466,12 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         namespace.clearTarget();
         Collection<PasField> fields = PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0);
 
-        addFromUnrelatedUnits(completionContext, fieldTypes, pattern);
+        addFromUnrelatedUnits(result, completionContext, fieldTypes, pattern);
 
-        fieldsToEntities(fields, completionContext);
+        fieldsToEntities(result, fields, completionContext);
     }
 
-    private static void addFromUnrelatedUnits(EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes, String pattern) {
+    private static void addFromUnrelatedUnits(CompletionResultSet result, EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes, String pattern) {
         if (StringUtil.isNotEmpty(pattern) && completionContext.isUnrelatedUnitsEnabled()) {
             PascalChooseByNameContributor.processByName(PascalUnitSymbolIndex.KEY, pattern, completionContext.completionParameters.getOriginalFile().getProject(), true, new Processor<PascalNamedElement>() {
                 @Override
@@ -492,10 +488,10 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                     LookupElementBuilder el = CompletionUtil.createLookupElement(completionContext.completionParameters, namedElement, unitName);
                     if (el != null) {
                         lookupElement = el.appendTailText(" : " + namedElement.getType().toString().toLowerCase(), true).
-                                withCaseSensitivity(true).withTypeText("from " + name, false);
+                                withCaseSensitivity(true).withTypeText("+ " + unitName, false);
                         int priority = completionContext.calcPriority(lookupElement.getLookupString(), namedElement.getName(), namedElement.getType(), true);
                         lookupElement = priority != 0 ? PrioritizedLookupElement.withPriority(lookupElement, priority) : lookupElement;
-                        completionContext.entities.put(el.getLookupString(), lookupElement);
+                        result.caseInsensitive().addElement(lookupElement);
                     }
                     return true;
                 }
@@ -503,13 +499,13 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
         }
     }
 
-    private static void fieldsToEntities(Collection<PasField> fields, EntityCompletionContext completionContext) {
+    private static void fieldsToEntities(CompletionResultSet result, Collection<PasField> fields, EntityCompletionContext completionContext) {
         for (PasField pasField : fields) {
-            fieldToEntity(pasField, completionContext);
+            fieldToEntity(result, pasField, completionContext);
         }
     }
 
-    private static void fieldToEntity(PasField field, EntityCompletionContext completionContext) {
+    private static void fieldToEntity(CompletionResultSet result, PasField field, EntityCompletionContext completionContext) {
         if ((field.name != null) && !field.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
             LookupElement lookupElement;
             LookupElementBuilder el = CompletionUtil.buildFromElement(field) ? CompletionUtil.createLookupElement(completionContext.completionParameters.getEditor(), field) : LookupElementBuilder.create(field.name);
@@ -520,7 +516,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                     withCaseSensitivity(true).withTypeText(field.owner != null ? field.owner.getName() : "-", false);
             int priority = completionContext.calcPriority(lookupElement.getLookupString(), field.name, field.fieldType, completionContext.isFromOtherFile(field));
             lookupElement = priority != 0 ? PrioritizedLookupElement.withPriority(lookupElement, priority) : lookupElement;
-            completionContext.entities.put(el.getLookupString(), lookupElement);
+            result.caseInsensitive().addElement(lookupElement);
         }
     }
 

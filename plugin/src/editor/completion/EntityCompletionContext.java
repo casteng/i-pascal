@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal.editor.completion;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
-import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.codeStyle.MinusculeMatcher;
 import com.intellij.psi.codeStyle.NameUtil;
@@ -12,8 +11,6 @@ import com.siberika.idea.pascal.util.StrUtil;
 
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 
 class EntityCompletionContext {
     private static final int PRIORITY_NAME_MATCH = 60;
@@ -23,7 +20,6 @@ class EntityCompletionContext {
     private static final int PRIORITY_TYPE_NOT_MATCH = -80;
     private static final int PRIORITY_NAME_DENIED = -100;
 
-    final Map<String, LookupElement> entities = new HashMap<>();
     final Collection<String> boostNames = new SmartList<>();
     final Context context;
     final CompletionParameters completionParameters;
