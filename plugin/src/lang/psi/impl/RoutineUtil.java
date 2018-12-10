@@ -59,6 +59,18 @@ public class RoutineUtil {
         }
     }
 
+    public static boolean isDestructor(PascalRoutine routine) {
+        PsiElement first = routine.getFirstChild();
+        if (first.getNode().getElementType() == PasTypes.DESTRUCTOR) {
+            return true;
+        } else if (first.getNode().getElementType() == PasTypes.CLASS) {
+            PsiElement second = PsiUtil.getNextSibling(first);
+            return (second != null) && (second.getNode().getElementType() == PasTypes.DESTRUCTOR);
+        } else {
+            return false;
+        }
+    }
+
     static void calcFormalParameterNames(PasFormalParameterSection formalParameterSection, List<String> formalParameterNames, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess) {
         if (formalParameterSection != null) {
             for (PasFormalParameter parameter : formalParameterSection.getFormalParameterList()) {
@@ -165,5 +177,4 @@ public class RoutineUtil {
     public static boolean isExternal(PasExportedRoutine routine) {
         return routine.getExternalDirective() != null;
     }
-    
 }

@@ -336,6 +336,7 @@
   implements(".*QualifiedIdent|NamespaceIdent|inOperatorName")="com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent"
   implements(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
   implements("ConstSection|TypeSection|VarSection|ExportedRoutine|ClassMethodResolution|LabelDeclSection|ExportsSection|CustomAttributeDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.PasDeclSection"
+  implements("RoutineImplDecl|ClosureRoutine|ExportedRoutine")="com.siberika.idea.pascal.lang.psi.PascalRoutine"
   extends(".+Statement")="com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl"
   extends(".*ModuleHead|.*Ident|ClassProperty|ConstDeclaration")="com.siberika.idea.pascal.lang.psi.impl.PascalNamedElementImpl"
   extends("RoutineImplDecl|ClosureRoutine")="com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl"

@@ -17,6 +17,7 @@ import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.PsiElementProcessor;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.FileContentUtil;
 import com.intellij.util.SmartList;
@@ -59,6 +60,23 @@ public class PsiUtil {
     private static final long MIN_REPARSE_INTERVAL = 2000;
     public static final String TYPE_UNTYPED_NAME = "<untyped>";
     private static long lastReparseRequestTime = System.currentTimeMillis() - MIN_REPARSE_INTERVAL;
+
+    public static PsiElement findChildByElementType(PsiElement element, IElementType elementType) {
+        if (element == null) {
+            return null;
+        }
+        PsiElementProcessor.FindElement<PsiElement> processor = new PsiElementProcessor.FindElement<PsiElement>() {
+            @Override
+            public boolean execute(@NotNull PsiElement each) {
+                if (each.getNode().getElementType() == elementType) {
+                    setFound(each);
+                }
+                return true;
+            }
+        };
+        PsiTreeUtil.processElements(element, processor);
+        return processor.getFoundElement();
+    }
 
     @NotNull
     public static <T extends PsiElement> Collection<T> findChildrenOfAnyType(@Nullable final PsiElement element,
@@ -866,4 +884,5 @@ public class PsiUtil {
     public static boolean isComma(PsiElement element) {
         return (element instanceof LeafPsiElement) && ",".equals(element.getText());
     }
+
 }

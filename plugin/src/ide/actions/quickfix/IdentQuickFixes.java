@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasElementFactory;
+import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.Nls;
@@ -119,6 +120,31 @@ public class IdentQuickFixes {
                 return true;
             } else {
                 return false;
+            }
+        }
+    }
+
+    public static class addInheritedAction implements LocalQuickFix {
+        @Nls
+        @NotNull
+        @Override
+        public String getFamilyName() {
+            return "Pascal";
+        }
+
+        @Nls
+        @NotNull
+        public String getName() {
+            return message("action.inherited.add");
+        }
+
+        @Override
+        public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+            PsiElement end = descriptor.getPsiElement();
+            PsiElement code = end != null ? end.getParent() : null;
+            if (code != null) {
+                code.addBefore(PasElementFactory.createElementFromText(end.getProject(), "inherited;\n"), end);
+                DocUtil.reformat(code, true);
             }
         }
     }

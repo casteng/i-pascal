@@ -12,11 +12,10 @@
         <p>2.0</p>
         <ul>
             <li>Completion suggestions from not used units (double ctrl+space)</li>
-            <li>Completion options intellectual selection and prioritization</li>
+            <li>Context-aware code completion intellectual selection and prioritization</li>
             <li>Delphi 10.3 inline declarations syntax support</li>
             <li>Parameter info for variables of procedural types</li>
-            <li>Completion improvement</li>
-            <li>No SDK warning</li>
+            <li>"No SDK" warning</li>
         </ul>
         <p>1.980</p>
         <ul>
