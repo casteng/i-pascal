@@ -173,7 +173,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
                         if (parent instanceof PasGenericTypeIdent) {
                             parent = parent.getParent();
                         }
-                        if (isExported() && ((parent instanceof PasVarDeclaration) || (parent instanceof PasConstDeclaration) || (parent instanceof PasTypeDeclaration))) {
+                        if (!isExported() && ((parent instanceof PasVarDeclaration) || (parent instanceof PasConstDeclaration) || (parent instanceof PasTypeDeclaration))) {
                             local = PsiUtil.isImplementationScope(parent.getParent().getParent());
                         } else {
                             local = false;

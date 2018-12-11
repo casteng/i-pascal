@@ -11,7 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import org.jetbrains.annotations.NotNull;
 
-public class PascalLocalInspectionBase extends LocalInspectionTool {
+public abstract class PascalLocalInspectionBase extends LocalInspectionTool {
     public void checkUses(PasUsesClause usesClause, ProblemsHolder holder, boolean isOnTheFly) {
     }
 

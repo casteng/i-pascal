@@ -1,36 +1,29 @@
 package com.siberika.idea.pascal.lang.inspection;
 
 import com.intellij.codeInspection.InspectionManager;
-import com.intellij.codeInspection.LocalInspectionTool;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.psi.PsiFile;
-import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.ide.actions.UsesQuickFixes;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
-import com.siberika.idea.pascal.util.PsiUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 import static com.siberika.idea.pascal.PascalBundle.message;
 
-public class UnusedUnitsInspection extends LocalInspectionTool {
-    @Nullable
+public class UnusedUnitsInspection extends PascalLocalInspectionBase {
+
     @Override
-    public ProblemDescriptor[] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly) {
-        List<ProblemDescriptor> result = new SmartList<>();
-        List<PascalQualifiedIdent> usedUnits = PsiUtil.getUsedUnits(file);
-        for (PascalQualifiedIdent usedUnit : usedUnits) {
-            ProblemDescriptor res = annotateUnit(manager, usedUnit, isOnTheFly);
+    public void checkUses(PasUsesClause usesClause, ProblemsHolder holder, boolean isOnTheFly) {
+        for (PasNamespaceIdent usedUnit : usesClause.getNamespaceIdentList()) {
+            ProblemDescriptor res = annotateUnit(holder.getManager(), usedUnit, isOnTheFly);
             if (res != null) {
-                result.add(res);
+                holder.registerProblem(res);
             }
         }
-        return result.toArray(new ProblemDescriptor[0]);
+
     }
 
     private ProblemDescriptor annotateUnit(InspectionManager holder, PascalQualifiedIdent usedUnitName, boolean isOnTheFly) {

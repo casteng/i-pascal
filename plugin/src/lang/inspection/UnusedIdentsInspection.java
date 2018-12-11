@@ -1,57 +1,44 @@
 package com.siberika.idea.pascal.lang.inspection;
 
 import com.intellij.codeInspection.InspectionManager;
-import com.intellij.codeInspection.LocalInspectionTool;
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.Query;
-import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.ide.actions.quickfix.IdentQuickFixes;
-import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
-import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Collection;
-import java.util.List;
 
 import static com.siberika.idea.pascal.PascalBundle.message;
 
-public class UnusedIdentsInspection extends LocalInspectionTool {
-    @Nullable
+public class UnusedIdentsInspection extends PascalLocalInspectionBase {
+
+    private LocalSearchScope fileScope;
+
     @Override
-    public ProblemDescriptor[] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly) {
-        List<ProblemDescriptor> result = new SmartList<>();
-        PsiElement impl;
-        if (file instanceof PascalFile) {
-            impl = ((PascalFile) file).getImplementationSection();
-        } else {
-            impl = PsiUtil.getModuleImplementationSection(file);
+    public void inspectionStarted(@NotNull LocalInspectionToolSession session, boolean isOnTheFly) {
+        super.inspectionStarted(session, isOnTheFly);
+        fileScope = new LocalSearchScope(session.getFile());
+    }
+
+    @Override
+    public void checkNamedIdent(PascalNamedElement namedIdent, ProblemsHolder holder, boolean isOnTheFly) {
+        ProblemDescriptor res = annotateIdent(holder.getManager(), namedIdent, isOnTheFly, fileScope);
+        if (res != null) {
+            holder.registerProblem(res);
         }
-        LocalSearchScope fileScope = new LocalSearchScope(file);
-        Collection<PascalNamedElement> idents = PsiTreeUtil.findChildrenOfAnyType(impl, PasNamedIdentDecl.class, PasNamedIdent.class);
-        for (PascalNamedElement ident : idents) {
-            ProblemDescriptor res = annotateIdent(manager, ident, isOnTheFly, fileScope);
-            if (res != null) {
-                result.add(res);
-            }
-        }
-        return result.toArray(new ProblemDescriptor[0]);
     }
 
     private ProblemDescriptor annotateIdent(InspectionManager holder, PascalNamedElement element, boolean isOnTheFly, LocalSearchScope fileScope) {
