@@ -817,9 +817,9 @@ public class PsiUtil {
         return routine.getClass() == PasRoutineImplDeclImpl.class;
     }
 
-    public static boolean isFormalParameterOfExportedRoutine(@NotNull PascalNamedElement element) {
+    public static boolean isFormalParameterOfExportedRoutineOrProcType(@NotNull PascalNamedElement element) {
         return ((element.getParent() instanceof PasFormalParameter) && (element.getParent().getParent() instanceof PasFormalParameterSection)
-                && (element.getParent().getParent().getParent() instanceof PasExportedRoutine));
+                && PsiUtil.isInstanceOfAny(element.getParent().getParent().getParent(), PasExportedRoutine.class, PasProcedureType.class));
     }
 
     public static PasField.FieldType getFieldType(PascalNamedElement namedElement) {

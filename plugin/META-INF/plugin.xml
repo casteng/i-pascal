@@ -14,6 +14,7 @@
             <li>Completion suggestions from not used units (double ctrl+space)</li>
             <li>Context-aware code completion intellectual selection and prioritization</li>
             <li>Delphi 10.3 inline declarations syntax support</li>
+            <li>Inherited destructor call inspection</li>
             <li>Parameter info for variables of procedural types</li>
             <li>"No SDK" warning</li>
         </ul>
@@ -430,6 +431,8 @@
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection"/>
         <localInspection language="Pascal" displayName="Unused local identifiers detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedIdentsInspection"/>
+        <localInspection language="Pascal" displayName="No inherited destructor call detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.DestructorInheritedInspection"/>
         <lang.inspectionSuppressor language="Pascal" implementationClass="com.siberika.idea.pascal.lang.inspection.PascalInspectionSuppressor"/>
 
         <editorNotificationProvider implementation="com.siberika.idea.pascal.sdk.SDKNotificationProvider"/>
