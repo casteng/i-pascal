@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
 import com.siberika.idea.pascal.ui.TreeViewStruct;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
@@ -88,17 +89,11 @@ public class ActionImplement extends PascalAction {
         }
         return false;
     }
-
     // if methodImpl = null assuming interface part
+
     private void doOverride(final Editor editor, final PasEntityScope scope, final PsiElement el, PascalRoutine methodImpl, final List<PasField> selected) {
         PsiElement prevMethod = getPrevMethod(el, methodImpl);
-        final AtomicInteger offs = new AtomicInteger();
-        if (prevMethod != null) {
-            offs.set(prevMethod.getTextRange().getEndOffset());
-        } else {
-            PsiElement pos = PsiUtil.findEndSibling(scope.getFirstChild());
-            offs.set(pos != null ? pos.getTextRange().getStartOffset() : -1);
-        }
+        final AtomicInteger offs = new AtomicInteger(RoutineUtil.calcMethodPos(scope, prevMethod));
         if (offs.get() < 0) {
             EditorUtil.showErrorHint(PascalBundle.message("action.error.find.position"), EditorUtil.getHintPos(editor));
             return;
@@ -113,7 +108,7 @@ public class ActionImplement extends PascalAction {
                     CommandProcessor.getInstance().setCurrentCommandName(PascalBundle.message("action.override"));
                     PascalNamedElement element = field.getElement();
                     if (PsiUtil.isElementUsable(element)) {
-                        CharSequence text = prepareText(element.getText());
+                        CharSequence text = RoutineUtil.prepareRoutineHeaderText(element.getText(), "override", "");
                         document.insertString(offs.get(), text);
                         offs.addAndGet(text.length());
                     }
@@ -133,10 +128,6 @@ public class ActionImplement extends PascalAction {
                 }
             }
         }
-    }
-
-    private CharSequence prepareText(String text) {
-        return text.replace("virtual", "override").replaceAll("abstract\\s*;", "");
     }
 
     private PsiElement getPrevMethod(PsiElement el, PascalRoutine methodImpl) {

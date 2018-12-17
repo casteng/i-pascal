@@ -1,12 +1,12 @@
 package com.siberika.idea.pascal.ide.actions;
 
-import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
+import com.siberika.idea.pascal.ide.actions.quickfix.PascalBaseFix;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
@@ -22,7 +22,7 @@ import static com.siberika.idea.pascal.PascalBundle.message;
 
 public class UsesQuickFixes {
 
-    public static class ExcludeUnitAction extends BaseUsesFix {
+    public static class ExcludeUnitAction extends PascalBaseFix {
         @Nls
         @NotNull
         @Override
@@ -44,7 +44,7 @@ public class UsesQuickFixes {
         }
     }
 
-    public static class OptimizeUsesAction extends BaseUsesFix {
+    public static class OptimizeUsesAction extends PascalBaseFix {
         @Nls
         @NotNull
         @Override
@@ -61,7 +61,7 @@ public class UsesQuickFixes {
         }
     }
 
-    public static class MoveUnitAction extends BaseUsesFix {
+    public static class MoveUnitAction extends PascalBaseFix {
         @Nls
         @NotNull
         @Override
@@ -85,7 +85,7 @@ public class UsesQuickFixes {
         }
     }
 
-    public static class RemoveUnitAction extends BaseUsesFix {
+    public static class RemoveUnitAction extends PascalBaseFix {
         @Nls
         @NotNull
         @Override
@@ -107,27 +107,18 @@ public class UsesQuickFixes {
         }
     }
 
-    private static abstract class BaseUsesFix implements LocalQuickFix {
-        @Nls
-        @NotNull
-        @Override
-        public String getFamilyName() {
-            return "Pascal";
-        }
-
-        static TextRange getRangeToRemove(PsiElement usedUnitName) {
-            if ((usedUnitName instanceof PascalQualifiedIdent) && (usedUnitName.getParent() instanceof PasUsesClause)) {
-                PasUsesClause usesClause = (PasUsesClause) usedUnitName.getParent();
-                List<TextRange> ranges = PascalImportOptimizer.getUnitRanges(usesClause);
-                TextRange res = PascalImportOptimizer.removeUnitFromSection((PascalQualifiedIdent) usedUnitName, usesClause, ranges, usesClause.getNamespaceIdentList().size());
-                if ((res != null) && (usesClause.getNamespaceIdentList().size() == 1)) {                                                              // Remove whole uses clause if last unit removed
-                    final Document doc = PsiDocumentManager.getInstance(usedUnitName.getProject()).getDocument(usedUnitName.getContainingFile());
-                    res = TextRange.create(usesClause.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesClause.getTextRange().getEndOffset(), DocUtil.RE_LF));
-                }
-                return res;
-            } else {
-                return null;
+    static TextRange getRangeToRemove(PsiElement usedUnitName) {
+        if ((usedUnitName instanceof PascalQualifiedIdent) && (usedUnitName.getParent() instanceof PasUsesClause)) {
+            PasUsesClause usesClause = (PasUsesClause) usedUnitName.getParent();
+            List<TextRange> ranges = PascalImportOptimizer.getUnitRanges(usesClause);
+            TextRange res = PascalImportOptimizer.removeUnitFromSection((PascalQualifiedIdent) usedUnitName, usesClause, ranges, usesClause.getNamespaceIdentList().size());
+            if ((res != null) && (usesClause.getNamespaceIdentList().size() == 1)) {                // Remove whole uses clause if last unit removed
+                final Document doc = PsiDocumentManager.getInstance(usedUnitName.getProject()).getDocument(usedUnitName.getContainingFile());
+                res = doc != null ? TextRange.create(usesClause.getTextRange().getStartOffset(), DocUtil.expandRangeEnd(doc, usesClause.getTextRange().getEndOffset(), DocUtil.RE_LF)) : null;
             }
+            return res;
+        } else {
+            return null;
         }
     }
 

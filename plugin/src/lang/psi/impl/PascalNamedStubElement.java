@@ -30,6 +30,7 @@ import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -206,7 +207,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     static String calcScopeUniqueName(@Nullable PasEntityScope scope) {
         String scopeName = scope != null ? scope.getUniqueName() : "";
         if ((null == scopeName) || scopeName.endsWith(".")) {      // anonymous scope
-            scopeName = scopeName != null ? scopeName : "" + "#";
+            scopeName = scopeName != null ? scopeName : "" + ResolveUtil.STRUCT_SUFFIX;
             PsiElement parent = scope.getParent();
             if (parent instanceof PasTypeDecl) {
                 parent = parent.getParent();
@@ -243,7 +244,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     @NotNull
     @Override
     public SearchScope getUseScope() {
-        if (isLocal()) {
+        if (!isExported()) {
             return new LocalSearchScope(this.getContainingFile());
         }
         return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));

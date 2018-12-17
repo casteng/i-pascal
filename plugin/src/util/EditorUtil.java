@@ -13,6 +13,8 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import com.intellij.openapi.editor.actionSystem.EditorActionManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
@@ -134,4 +136,9 @@ public class EditorUtil {
         }
         return "-";
     }
+
+    public static Editor getEditor(Project project) {
+        return FileEditorManager.getInstance(project).getSelectedTextEditor();
+    }
+
 }

@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.ide.actions.quickfix;
 
-import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -28,13 +27,7 @@ import static com.siberika.idea.pascal.PascalBundle.message;
 
 public class IdentQuickFixes {
 
-    public static class ExcludeIdentAction implements LocalQuickFix {
-        @Nls
-        @NotNull
-        @Override
-        public String getFamilyName() {
-            return "Pascal";
-        }
+    public static class ExcludeIdentAction extends PascalBaseFix {
 
         @Nls
         @NotNull
@@ -53,13 +46,7 @@ public class IdentQuickFixes {
         }
     }
 
-    public static class RemoveIdentAction implements LocalQuickFix {
-        @Nls
-        @NotNull
-        @Override
-        public String getFamilyName() {
-            return "Pascal";
-        }
+    public static class RemoveIdentAction extends PascalBaseFix {
 
         @Nls
         @NotNull
@@ -124,13 +111,7 @@ public class IdentQuickFixes {
         }
     }
 
-    public static class addInheritedAction implements LocalQuickFix {
-        @Nls
-        @NotNull
-        @Override
-        public String getFamilyName() {
-            return "Pascal";
-        }
+    public static class addInheritedAction extends PascalBaseFix {
 
         @Nls
         @NotNull
