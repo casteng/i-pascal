@@ -69,8 +69,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
     @Nullable
     @Override
     public B retrieveStub() {
-        B stub = super.getStub();
-        return stub;// != null ? stub : getGreenStub();
+        return getGreenStub();
     }
 
     @Override

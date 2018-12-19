@@ -5,10 +5,12 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.DefinitionsScopedSearch;
 import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
+import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
@@ -27,10 +29,12 @@ import com.siberika.idea.pascal.lang.stub.PascalStructIndex;
 import com.siberika.idea.pascal.lang.stub.StubUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -88,43 +92,40 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
         }
     }
 
-    public static void findDescendingStructs(Collection<PasEntityScope> targets, PascalStructType struct, Integer limit, int rCnt) {
-        if ((limit != null) && (limit <= 0)) {
-            return;
+    public static boolean processDescendingStructs(@Nullable Set<String> processed, PascalStructType parent, boolean recursive, @NotNull Processor<PascalStructType> processor) {
+        if (null == parent) {
+            return true;
         }
-        if (rCnt > MAX_RECURSION) {
-            LOG.info("ERROR: Max recursion reached");
-            return;
-        }
-        if (null == struct) {
-            return;
-        }
-
-        final String name = ResolveUtil.cleanupName(struct.getName()).toUpperCase();
-        final Project project = struct.getProject();
-
+        final String name = ResolveUtil.cleanupName(parent.getName()).toUpperCase();
+        final Project project = parent.getProject();
+        final Set<String> processedParents = processed != null ? processed : new SmartHashSet<>();
         StubIndex index = StubIndex.getInstance();
+        final boolean includeNonProjectItems = PsiUtil.isFromLibrary(parent);
 
-        final boolean includeNonProjectItems = PsiUtil.isFromLibrary(struct);
-
-        index.processAllKeys(PascalStructIndex.KEY, new Processor<String>() {
+        final GlobalSearchScope scope = PascalClassByNameContributor.getScope(project, includeNonProjectItems);
+        return index.processAllKeys(PascalStructIndex.KEY, new Processor<String>() {            // ===*** TODO: try to remove this step
                     @Override
                     public boolean process(String key) {
-                        index.processElements(PascalStructIndex.KEY, key, project, PascalClassByNameContributor.getScope(project, includeNonProjectItems),
+                        return index.processElements(PascalStructIndex.KEY, key, project, scope,
                                 PascalStructType.class, new Processor<PascalStructType>() {
                                     @Override
                                     public boolean process(PascalStructType type) {
+                                        String uname = type.getUniqueName();
                                         List<String> parents = type.getParentNames();
-                                        for (String parent : parents) {
-                                            if (parent.toUpperCase().endsWith(name)) {
-                                                PasEntityScope resolved = resolveParent(struct, type, parent);
-                                                if (elementsEqual(struct, resolved)) {
-                                                    targets.add(type);
-                                                    findDescendingStructs(targets, type, GotoSuper.calcRemainingLimit(targets, limit), rCnt + 1);
+                                        for (String parentToCheck : parents) {
+                                            if (parentToCheck.toUpperCase().endsWith(name)) {
+                                                PasEntityScope resolved = resolveParent(parent, type, parentToCheck);
+                                                if (elementsEqual(parent, resolved)) {
+                                                    boolean result = processor.process(type);
+                                                    if (recursive && !processedParents.contains(uname)) {
+                                                        processedParents.add(uname);
+                                                        result = processDescendingStructs(processedParents, type, true, processor);
+                                                    }
+                                                    return result;
                                                 }
                                             }
                                         }
-                                        return ((null == limit) || (limit > targets.size()));
+                                        return true;
                                     }
 
                                     private boolean elementsEqual(PascalStructType struct, PasEntityScope resolved) {
@@ -133,10 +134,27 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PsiElement, Defin
                                                         || struct.getUniqueName().equalsIgnoreCase(ResolveUtil.cleanupName(resolved.getUniqueName())));
                                     }
                                 });
-                        return ((null == limit) || (limit > targets.size()));
                     }
                 },
-                PascalClassByNameContributor.getScope(project, includeNonProjectItems), null);
+                scope, null);
+    }
+
+    public static void findDescendingStructs(Collection<PasEntityScope> targets, PascalStructType struct, Integer limit, int rCnt) {
+        if ((limit != null) && (limit <= 0)) {
+            return;
+        }
+        if (rCnt > MAX_RECURSION) {
+            LOG.info("ERROR: Max recursion reached");
+            return;
+        }
+
+        processDescendingStructs(null, struct, true, new Processor<PascalStructType>() {
+            @Override
+            public boolean process(PascalStructType pascalStructType) {
+                targets.add(pascalStructType);
+                return true;
+            }
+        });
     }
 
     private static PasEntityScope resolveParent(PascalStructType parent, PascalStructType descendant, String name) {

@@ -8,7 +8,9 @@ import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -78,6 +80,7 @@ public class PasField {
     public static final ValueType VARIANT = new ValueType(null, Kind.VARIANT, null, null);
 
     private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null, null);
+    private static final ValueType CONSTRUCTOR = new ValueType(null, null, null, null);
 
     public static boolean isAllowed(Visibility check, Visibility minAllowed) {
         return check.compareTo(minAllowed) >= 0;
@@ -128,7 +131,19 @@ public class PasField {
 
     public PasField(PasNamedStub stub, @Nullable String alias) {
         this(getScope(stub), stub.getPsi() instanceof PascalNamedElement ? (PascalNamedElement) stub.getPsi() : null,
-                alias != null ? alias : stub.getName(), stub.getType(), Visibility.PUBLIC, stub.getPsi(), NOT_INITIALIZED);
+                calcName(alias, stub), stub.getType(), Visibility.PUBLIC, stub.getPsi(), NOT_INITIALIZED);
+    }
+
+    private static String calcName(String alias, PasNamedStub stub) {
+        if (alias != null) {
+            return alias;
+        }
+        if (stub instanceof PasExportedRoutineStub) {
+            PasExportedRoutineStub exportedRoutineStub = (PasExportedRoutineStub) stub;
+            return RoutineUtil.calcCanonicalName(exportedRoutineStub.getName(), exportedRoutineStub.getFormalParameterTypes(), exportedRoutineStub.getFormalParameterAccess(), exportedRoutineStub.getFunctionTypeStr());
+        } else {
+            return stub.getName();
+        }
     }
 
     private static PasEntityScope getScope(PasNamedStub stub) {

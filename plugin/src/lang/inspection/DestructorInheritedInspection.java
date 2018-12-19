@@ -32,7 +32,7 @@ public class DestructorInheritedInspection extends PascalLocalInspectionBase {
                     if (null == inherited) {
                         PsiElement end = code.getLastChild();
                         holder.registerProblem(holder.getManager().createProblemDescriptor(end, message("inspection.warn.destructor.no.inherited"), true,
-                                ProblemHighlightType.LIKE_UNUSED_SYMBOL, isOnTheFly,
+                                ProblemHighlightType.GENERIC_ERROR_OR_WARNING, isOnTheFly,
                                 new IdentQuickFixes.addInheritedAction()));
                     }
                 }
