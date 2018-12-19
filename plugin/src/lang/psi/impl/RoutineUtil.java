@@ -177,4 +177,20 @@ public class RoutineUtil {
     public static boolean isExternal(PasExportedRoutine routine) {
         return routine.getExternalDirective() != null;
     }
+
+    public static int calcMethodPos(PasEntityScope scope, PsiElement prevMethod) {
+        if (prevMethod != null) {
+            return prevMethod.getTextRange().getEndOffset();
+        } else {
+            PsiElement pos = PsiUtil.findEndSibling(scope.getFirstChild());
+            return pos != null ? pos.getTextRange().getStartOffset() : -1;
+        }
+    }
+
+    public static CharSequence prepareRoutineHeaderText(String text, String virtualReplacement, String abstractReplacement) {
+        String res = StringUtil.replace(text, "virtual", virtualReplacement, true);
+        res = StringUtil.replace(res, "abstract", abstractReplacement, true);
+        res = res.replaceAll(";\\s*;", ";");
+        return res;
+    }
 }

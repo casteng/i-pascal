@@ -431,6 +431,8 @@
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection"/>
         <localInspection language="Pascal" displayName="Unused local identifiers detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedIdentsInspection"/>
+        <localInspection language="Pascal" displayName="Not implemented methods detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.NotImplementedInspection"/>
         <localInspection language="Pascal" displayName="No inherited destructor call detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.DestructorInheritedInspection"/>
         <lang.inspectionSuppressor language="Pascal" implementationClass="com.siberika.idea.pascal.lang.inspection.PascalInspectionSuppressor"/>

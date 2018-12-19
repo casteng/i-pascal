@@ -31,4 +31,7 @@ public interface PascalStructType<StubT extends PasStructStub> extends PasEntity
     @NotNull
     List<String> getParentNames();
 
+    @NotNull
+    List<PasExportedRoutine> getMethods();
+
 }

@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasGenericDefinition;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
@@ -38,6 +39,7 @@ import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -337,10 +339,31 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         return Collections.emptyList();
     }
 
+    @NotNull
+    @Override
+    public List<PasExportedRoutine> getMethods() {
+        B stub = retrieveStub();
+        if (stub != null) {
+            List<PasExportedRoutine> res = new SmartList<>();
+            for (StubElement childrenStub : stub.getChildrenStubs()) {
+                if (childrenStub instanceof PasExportedRoutineStub) {
+                    res.add((PasExportedRoutine) childrenStub.getPsi());
+                }
+            }
+            return res;
+        } else {
+            return getExportedRoutineList();
+        }
+    }
+
     private void calcParentScopes() {
         calcParentScopesStub();
         if (null == parentScopes) {
             SmartList<SmartPsiElementPointer<PasEntityScope>> res = new SmartList<>();
+            PasEntityScope containing = getContainingScope();
+            if ((containing instanceof PascalClassDecl) || (containing instanceof PascalInterfaceDecl)) {         // Nested type
+                addScope(res, containing);
+            }
             PasClassParent parent = getClassParent();
             if (parent != null) {
                 for (PasTypeID typeID : parent.getTypeIDList()) {
@@ -351,7 +374,10 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                     }
                 }
             }
-            addDefaultScopes(res);
+            PasEntityScope defaultParent = getDefaultParentScope();
+            if (res.isEmpty() && defaultParent != this) {
+                addScope(res, defaultParent);
+            }
             parentScopes = res;
         }
     }
@@ -365,12 +391,11 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             StubElement parentStub = stub.getParentStub();
             PsiElement parEl = parentStub != null ? parentStub.getPsi() : null;
             if ((parEl instanceof PascalClassDecl) || (parEl instanceof PascalInterfaceDecl)) {         // Nested type
-                res = new SmartList<>(((PascalStructType) parEl).getParentScope());
+                res = new SmartList<>();
                 res.add(SmartPointerManager.getInstance(getProject()).createSmartPsiElementPointer((PasEntityScope) parEl));
             } else {
                 res = new ArrayList<>(parentNames.size() + 1);
             }
-            addDefaultScopes(res);
             Project project = getProject();
             final ResolveContext context = new ResolveContext(this.getContainingScope(), PasField.TYPES_TYPE, true,
                     null, ModuleUtil.retrieveUnitNamespaces(this));
@@ -384,22 +409,24 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                     }
                 }
             }
+            PasEntityScope defaultParent = getDefaultParentScope();
+            if (res.isEmpty() && defaultParent != this) {
+                addScope(res, defaultParent);
+            }
             parentScopes = Collections.unmodifiableList(res);
         }
     }
 
-    private void addDefaultScopes(List<SmartPsiElementPointer<PasEntityScope>> scopes) {
+    private PasEntityScope getDefaultParentScope() {
         PasEntityScope defEntity = null;
         PasEntityScope scope = this.getContainingScope();
         scope = scope != null ? scope : this;
         if (this instanceof PasClassTypeDecl) {
-            defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.TObject"), scope, true);
+            return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.TObject"), scope, true);
         } else if (this instanceof PasInterfaceTypeDecl) {
-            defEntity = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.IInterface"), scope, true);
+            return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.IInterface"), scope, true);
         }
-        if (defEntity != this) {
-            addScope(scopes, defEntity);
-        }
+        return null;
     }
 
     private static void addScope(List<SmartPsiElementPointer<PasEntityScope>> scopes, PasEntityScope scope) {
