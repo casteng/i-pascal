@@ -52,6 +52,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     private List<String> typeParameters;
     private ReentrantLock typeParametersLock = new ReentrantLock();
 
+    private PascalRoutineHelper helper = new PascalRoutineHelper(this);
+
     private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
     volatile private Collection<PasWithStatement> withStatements;
 
@@ -139,6 +141,11 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     @Override
+    public String getReducedName() {
+        return helper.getReducedName();
+    }
+
+    @Override
     public PasField.Visibility getVisibility() {
         return PasField.Visibility.PUBLIC;         // TODO: implement
     }
@@ -147,6 +154,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @Override
     public PasField getField(String name) {
         return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
+    }
+
+    @Nullable
+    @Override
+    public PascalRoutine getRoutine(String reducedName) {
+        return null;    // TODO: implement
     }
 
     @NotNull

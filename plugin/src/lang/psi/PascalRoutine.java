@@ -9,6 +9,8 @@ public interface PascalRoutine extends PascalRoutineEntity, PasEntityScope {
 
     String getCanonicalName();
 
+    String getReducedName();
+
     @Nullable
     PasTypeID getFunctionTypeIdent();                              // TODO: remove
 

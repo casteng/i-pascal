@@ -34,6 +34,7 @@ import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
 import com.siberika.idea.pascal.lang.psi.PascalInterfaceDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -202,6 +203,26 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         } else {
             return getMembers(cache, MEMBER_BUILDER).all.get(name.toUpperCase());
         }
+    }
+
+    @Nullable
+    @Override
+    public PascalRoutine getRoutine(String reducedName) {
+        if (null == reducedName) {
+            return null;
+        }
+        for (PasField field : getAllFields()) {
+            if (field.fieldType == PasField.FieldType.ROUTINE) {
+                PascalNamedElement el = field.getElement();
+                if (el instanceof PascalRoutine) {
+                    PascalRoutine routine = (PascalRoutine) el;
+                    if (reducedName.equals(routine.getReducedName())) {
+                        return routine;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @NotNull

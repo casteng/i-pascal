@@ -124,6 +124,33 @@ public class ResolveUtil {
         return retrieveType(typeDecl, typeId);
     }
 
+    // Resolve most deep type name which is the same (alias to) the specified type name
+    @NotNull
+    public static PascalNamedElement resolveTypeAliasChain(String typeName, PascalNamedElement context, int recursionCount) {
+        ResolveContext ctx = new ResolveContext(PasField.TYPES_TYPE, true);
+        Collection<PasField> types = PasReferenceUtil.resolve(NamespaceRec.fromFQN(context, typeName), ctx, recursionCount);
+        Iterator<PasField> iterator = types.iterator();
+        if (iterator.hasNext()) {
+            PasField pasField = iterator.next();
+            PsiElement el = pasField.getElement();
+            el = el instanceof PasGenericTypeIdent ? el.getFirstChild() : el;
+            if (el instanceof PascalIdentDecl) {
+                PascalIdentDecl element = (PascalIdentDecl) el;
+                String type = element.getTypeString();
+                if ((type != null) && (PasField.Kind.TYPEREF == element.getTypeKind())) {                         // Alias
+                    if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
+                        return element;
+                    } else {
+                        return resolveTypeAliasChain(type, element, ++recursionCount);
+                    }
+                } else {                                                                                          // Anonymous type or distinct alias
+                    return element;
+                }
+            }
+        }
+        return context;
+    }
+
     private static Pair<String, PasField.Kind> retrieveType(PasTypeDecl typeDecl, PasTypeID typeId) {
         if ((null == typeId) && (typeDecl != null)) {
             typeId = typeDecl.getTypeID();
@@ -224,12 +251,7 @@ public class ResolveUtil {
     }
 
     private static PasField.ValueType resolveIdentDeclType(@NotNull PascalIdentDecl element, ResolveContext context, int recursionCount) {
-        PasIdentStub stub = element.retrieveStub();
-        PsiElement scope = stub != null ? stub.getParentStub().getPsi() : null;
-        if (!(scope instanceof PasEntityScope)) {
-            return null;
-        }
-        ResolveContext typeResolveContext = new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, context.includeLibrary, null, context.unitNamespaces);
+        ResolveContext typeResolveContext = getTypeResolveContext(element, context.includeLibrary, context.unitNamespaces);
         String type = element.getTypeString();
         if ((type != null) && KINDS_FOLLOW_TYPE.contains(element.getTypeKind())) {
             if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
@@ -240,6 +262,15 @@ public class ResolveUtil {
             return retrieveStruct(element.getName(), element, typeResolveContext, ++recursionCount);
         }
         return null;
+    }
+
+    private static ResolveContext getTypeResolveContext(PascalIdentDecl element, boolean includeLibrary, List<String> unitNamespaces) {
+        PasIdentStub stub = element.retrieveStub();
+        PsiElement scope = stub != null ? stub.getParentStub().getPsi() : null;
+        if (!(scope instanceof PasEntityScope)) {
+            return null;
+        }
+        return new ResolveContext((PasEntityScope) scope, PasField.TYPES_TYPE, includeLibrary, null, unitNamespaces);
     }
 
     private static PasField.ValueType resolveTypeForStub(String type, PsiElement element, ResolveContext context, int recursionCount) {

@@ -109,7 +109,7 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
     }
 
     private boolean isMethodImplemented(PasClassTypeDecl classTypeDecl, PasExportedRoutine method) {
-        return classTypeDecl.getField(method.getReducedName()) != null;
+        return classTypeDecl.getRoutine(method.getReducedName()) != null;
     }
 
     private boolean hasNoDescendants(PasClassTypeDecl classTypeDecl) {

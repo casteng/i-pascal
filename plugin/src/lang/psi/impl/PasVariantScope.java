@@ -4,6 +4,7 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +25,12 @@ public class PasVariantScope extends PasScopeImpl {
     @Override
     public PasField getField(String name) {
         return new PasField(null, element, name, PasField.FieldType.VARIABLE, PasField.Visibility.PUBLIC, PasField.VARIANT);
+    }
+
+    @Nullable
+    @Override
+    public PascalRoutine getRoutine(String reducedName) {
+        return null;
     }
 
     @NotNull

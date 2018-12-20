@@ -155,7 +155,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
                                     local = true;
                                     for (PasEntityScope struct : structs) {
                                         if (struct instanceof PasInterfaceTypeDecl) {
-                                            if (struct.getField(((PasExportedRoutine) this).getCanonicalName()) != null) {
+                                            if (struct.getRoutine(((PasExportedRoutine) this).getReducedName()) != null) {
                                                 local = false;
                                                 break;
                                             }

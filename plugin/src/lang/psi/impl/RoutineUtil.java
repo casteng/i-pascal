@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
@@ -140,6 +141,30 @@ public class RoutineUtil {
             res.append(":").append(typeStr);
         }
         return res.toString();
+    }
+
+    public static String calcReducedName(String name, SmartPsiElementPointer<PascalNamedElement>[] reducedParameterTypes) {
+        StringBuilder res = new StringBuilder(name);
+        res.append("(");
+        for (int i = 0; i < reducedParameterTypes.length; i++) {
+            res.append(i > 0 ? "," : "");
+            SmartPsiElementPointer<PascalNamedElement> tIDPtr = reducedParameterTypes[i];
+            String typeName = tIDPtr != null ? getTypeName(tIDPtr) : PsiUtil.TYPE_UNTYPED_NAME;
+            if (null == typeName) {
+                return null;                         // Type element become invalid, need to resolve again
+            }
+            res.append(typeName);
+        }
+        res.append(")");
+        return res.toString();
+    }
+
+    private static String getTypeName(SmartPsiElementPointer<PascalNamedElement> tIDPtr) {
+        PascalNamedElement tid = tIDPtr.getElement();
+        if (!PsiUtil.isElementUsable(tid)) {
+            return null;
+        }
+        return tid.getName();
     }
 
     static List<String> parseTypeParametersStr(String typeParamText) {

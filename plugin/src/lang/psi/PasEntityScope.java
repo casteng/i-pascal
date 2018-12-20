@@ -20,8 +20,13 @@ public interface PasEntityScope extends PascalNamedElement, NavigatablePsiElemen
 
     @NotNull
     String getName();
+
     @Nullable
     PasField getField(final String name);
+
+    @Nullable
+    PascalRoutine getRoutine(final String reducedName);
+
     @NotNull
     Collection<PasField> getAllFields();
 

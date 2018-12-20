@@ -24,6 +24,7 @@ import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
@@ -144,6 +145,12 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             }
             return result;
         }
+    }
+
+    @Nullable
+    @Override
+    public PascalRoutine getRoutine(String reducedName) {
+        return null; //TODO: implement
     }
 
     @NotNull
