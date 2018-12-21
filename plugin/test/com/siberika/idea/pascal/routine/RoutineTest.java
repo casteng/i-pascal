@@ -62,6 +62,8 @@ public class RoutineTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testReduceRoutineName() {
         Map<String, String> names = new LinkedHashMap<>();
+        names.put("test1", "test1(Type1Type)");
+        names.put("test2", "test2(Type1Type)");
         names.put("test3", "test3(" + PsiUtil.TYPE_UNTYPED_NAME + ")");
         names.put("test4", "test4(Type1,Type1)");
         names.put("test5", "test5(Type1,Type1,Type2)");
@@ -69,7 +71,7 @@ public class RoutineTest extends LightPlatformCodeInsightFixtureTestCase {
         names.put("test7", "test7()");
         names.put("test8", "test8(Type1)");
         names.put("test9", "test9(Type1)");
-        names.put("testA", "testA(Type1<T>,Type2)");
+        names.put("testA", "testA(Type1,Type2)");
         names.put("testB", "testB(Type2)");
         myFixture.configureByFiles("reduceRoutineName.pas");
         Collection<PascalRoutine> symbols = TestUtil.findSymbols(myFixture.getProject(), "test", PascalRoutine.class);

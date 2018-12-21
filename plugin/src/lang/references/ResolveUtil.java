@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasProcedureType;
@@ -67,14 +68,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ResolveUtil {
 
     private static final Logger LOG = Logger.getInstance(ResolveUtil.class);
 
     public static final String STRUCT_SUFFIX = "#";
+    public static final Pattern PATTERN_TYPE_PARAM = Pattern.compile("(\\w+)(<.*?>)");
 
-    private static final Set<PasField.Kind> KINDS_FOLLOW_TYPE = EnumSet.of(PasField.Kind.TYPEREF, PasField.Kind.ARRAY, PasField.Kind.POINTER, PasField.Kind.CLASSREF, PasField.Kind.PROCEDURE);
+    private static final Set<PasField.Kind> KINDS_FOLLOW_TYPE = EnumSet.of(PasField.Kind.TYPEALIAS, PasField.Kind.ARRAY, PasField.Kind.POINTER, PasField.Kind.CLASSREF, PasField.Kind.PROCEDURE);
+    private static final Set<PasField.Kind> KINDS_TYPE_REF = EnumSet.of(PasField.Kind.TYPEALIAS, PasField.Kind.TYPEREF, PasField.Kind.CLASSREF);
 
     // Find Pascal modules by key using stub index. If key is not specified return all modules.
     @NotNull
@@ -126,9 +131,13 @@ public class ResolveUtil {
 
     // Resolve most deep type name which is the same (alias to) the specified type name
     @NotNull
-    public static PascalNamedElement resolveTypeAliasChain(String typeName, PascalNamedElement context, int recursionCount) {
+    public static PascalNamedElement resolveTypeAliasChain(String typeName, PascalNamedElement contextElement, int recursionCount) {
+        Matcher m = PATTERN_TYPE_PARAM.matcher(typeName);
+        if (m.matches()) {
+            typeName = m.group(1);
+        }
         ResolveContext ctx = new ResolveContext(PasField.TYPES_TYPE, true);
-        Collection<PasField> types = PasReferenceUtil.resolve(NamespaceRec.fromFQN(context, typeName), ctx, recursionCount);
+        Collection<PasField> types = PasReferenceUtil.resolve(NamespaceRec.fromFQN(contextElement, typeName), ctx, recursionCount);
         Iterator<PasField> iterator = types.iterator();
         if (iterator.hasNext()) {
             PasField pasField = iterator.next();
@@ -137,7 +146,7 @@ public class ResolveUtil {
             if (el instanceof PascalIdentDecl) {
                 PascalIdentDecl element = (PascalIdentDecl) el;
                 String type = element.getTypeString();
-                if ((type != null) && (PasField.Kind.TYPEREF == element.getTypeKind())) {                         // Alias
+                if ((type != null) && (PasField.Kind.TYPEALIAS == element.getTypeKind())) {                         // Alias
                     if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
                         return element;
                     } else {
@@ -146,9 +155,11 @@ public class ResolveUtil {
                 } else {                                                                                          // Anonymous type or distinct alias
                     return element;
                 }
+            } else if (el instanceof PasNamedIdent) {
+                return (PascalNamedElement) el;
             }
         }
-        return context;
+        return contextElement;
     }
 
     private static Pair<String, PasField.Kind> retrieveType(PasTypeDecl typeDecl, PasTypeID typeId) {
@@ -156,7 +167,7 @@ public class ResolveUtil {
             typeId = typeDecl.getTypeID();
         }
         if (typeId != null) {
-            return Pair.create(typeId.getFullyQualifiedIdent().getName(), PasField.Kind.TYPEREF);
+            return Pair.create(typeId.getFullyQualifiedIdent().getName(), PsiUtil.isTypeAlias(typeDecl) ? PasField.Kind.TYPEALIAS : PasField.Kind.TYPEREF);
         } else if (typeDecl != null) {
             return retrieveAnonymousType(typeDecl);
         } else {
@@ -474,7 +485,7 @@ public class ResolveUtil {
 
     public static boolean isTypeDeclPointingToSelf(StubBasedPsiElement typeIdent) {
         if (typeIdent instanceof PasNamedIdentDecl) {
-            if (((PasNamedIdentDecl) typeIdent).getTypeKind() == PasField.Kind.TYPEREF) {
+            if (ResolveUtil.KINDS_TYPE_REF.contains(((PasNamedIdentDecl) typeIdent).getTypeKind())) {
                 return ((PasNamedIdentDecl) typeIdent).getName().equalsIgnoreCase(((PasNamedIdentDecl) typeIdent).getTypeString());
             }
         }

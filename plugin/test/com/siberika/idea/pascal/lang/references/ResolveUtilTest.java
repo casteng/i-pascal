@@ -16,7 +16,7 @@ import static com.siberika.idea.pascal.lang.psi.impl.PasField.Kind.ARRAY;
 import static com.siberika.idea.pascal.lang.psi.impl.PasField.Kind.CLASSREF;
 import static com.siberika.idea.pascal.lang.psi.impl.PasField.Kind.POINTER;
 import static com.siberika.idea.pascal.lang.psi.impl.PasField.Kind.STRUCT;
-import static com.siberika.idea.pascal.lang.psi.impl.PasField.Kind.TYPEREF;
+import static com.siberika.idea.pascal.lang.psi.impl.PasField.Kind.TYPEALIAS;
 
 public class ResolveUtilTest extends LightPlatformCodeInsightFixtureTestCase {
 
@@ -27,22 +27,22 @@ public class ResolveUtilTest extends LightPlatformCodeInsightFixtureTestCase {
 
     public void testGetDeclarationTypeString() {
         Map<String, Pair<String, PasField.Kind>> exp = ImmutableMap.<String, Pair<String, PasField.Kind>>builder()
-                .put("TB", Pair.create("TB", TYPEREF))
-                .put("TA", Pair.create("TB", TYPEREF))
+                .put("TB", Pair.create("TB", TYPEALIAS))
+                .put("TA", Pair.create("TB", TYPEALIAS))
                 .put("TC", Pair.create("TA", CLASSREF))
                 .put("TR", Pair.create(null, STRUCT))
-                .put("x", Pair.create("Integer", TYPEREF))
-                .put("CA", Pair.create("TA", TYPEREF))
-                .put("A", Pair.create("TA", TYPEREF))
-                .put("B", Pair.create("TB", TYPEREF))
+                .put("x", Pair.create("Integer", TYPEALIAS))
+                .put("CA", Pair.create("TA", TYPEALIAS))
+                .put("A", Pair.create("TA", TYPEALIAS))
+                .put("B", Pair.create("TB", TYPEALIAS))
                 .put("PB", Pair.create("^TB", POINTER))
                 .put("AB", Pair.create("TB", ARRAY))
                 .put("R", Pair.create(null, STRUCT))
-                .put("y", Pair.create("integer", TYPEREF))
+                .put("y", Pair.create("integer", TYPEALIAS))
                 .put("AAA", Pair.create("TA", ARRAY))
                 .put("AOR", Pair.create(null, STRUCT))
-                .put("PropA", Pair.create("TA", TYPEREF))
-                .put("func", Pair.create("TR", TYPEREF))
+                .put("PropA", Pair.create("TA", TYPEALIAS))
+                .put("func", Pair.create("TR", TYPEALIAS))
                 .build();
         myFixture.configureByFiles("declarationTypes.pas");
         Collection<PascalNamedElement> decls = PsiTreeUtil.findChildrenOfType(myFixture.getFile(), PasNamedIdent.class);

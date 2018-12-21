@@ -262,7 +262,7 @@ public class PsiUtil {
     }
 
     public static boolean isTypeName(@NotNull PsiElement element) {
-        if (checkClass(element, PasGenericTypeIdentImpl.class)) {
+        if (checkClass(element, PasGenericTypeIdentImpl.class) || (element.getParent() instanceof PasGenericDefinition)) {
             return true;
         }
         PsiElement el = PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PsiWhiteSpace.class, PsiErrorElement.class);
@@ -885,4 +885,7 @@ public class PsiUtil {
         return (element instanceof LeafPsiElement) && ",".equals(element.getText());
     }
 
+    public static boolean isTypeAlias(PasTypeDecl typeDecl) {
+        return (typeDecl == null) || (typeDecl.getFirstChild().getNode().getElementType() != PasTypes.TYPE);
+    }
 }
