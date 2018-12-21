@@ -47,4 +47,11 @@ public interface PascalModule extends PasEntityScope, PascalStubElement<PasModul
 
     @NotNull
     Set<String> getUsedUnitsPrivate();
+
+    @Nullable
+    PascalRoutine getPublicRoutine(final String reducedName);
+
+    @Nullable
+    PascalRoutine getPrivateRoutine(final String reducedName);
+
 }

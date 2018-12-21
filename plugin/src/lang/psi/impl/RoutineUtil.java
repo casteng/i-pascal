@@ -22,6 +22,7 @@ import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.util.PsiUtil;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -217,5 +218,23 @@ public class RoutineUtil {
         res = StringUtil.replace(res, "abstract", abstractReplacement, true);
         res = res.replaceAll(";\\s*;", ";");
         return res;
+    }
+
+    public static PascalRoutine findRoutine(Collection<PasField> allFields, String reducedName) {
+        if (null == reducedName) {
+            return null;
+        }
+        for (PasField field : allFields) {
+            if (field.fieldType == PasField.FieldType.ROUTINE) {
+                PascalNamedElement el = field.getElement();
+                if (el instanceof PascalRoutine) {
+                    PascalRoutine routine = (PascalRoutine) el;
+                    if (reducedName.equals(routine.getReducedName())) {
+                        return routine;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

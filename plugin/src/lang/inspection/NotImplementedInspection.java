@@ -64,7 +64,7 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
     }
 
     private void processClass(List<PasExportedRoutine> result, SmartHashSet<PascalStructType> processed, @NotNull PasClassTypeDecl classTypeDecl) {
-//        System.out.println(String.format("===*** Processing class %s", classTypeDecl.getName()));
+        System.out.println(String.format("===*** Processing class %s", classTypeDecl.getName()));
         processed.add(classTypeDecl);
         List<SmartPsiElementPointer<PasEntityScope>> parentScope = classTypeDecl.getParentScope();
         for (SmartPsiElementPointer<PasEntityScope> parentPtr : parentScope) {
@@ -84,7 +84,7 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
         for (Iterator<PasExportedRoutine> iterator = result.iterator(); iterator.hasNext(); ) {
             PasExportedRoutine method = iterator.next();
             if (isMethodImplemented(classTypeDecl, method)) {
-//                System.out.println(String.format("===*** Method %s implemented in %s", method.getCanonicalName(), classTypeDecl.getName()));
+                System.out.println(String.format("===*** Method %s implemented in %s", method.getReducedName(), classTypeDecl.getName()));
                 iterator.remove();
             }
         }
@@ -93,10 +93,10 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
     private void processInterface(List<PasExportedRoutine> result, SmartHashSet<PascalStructType> processed, @NotNull PasClassTypeDecl classDecl, PascalInterfaceDecl interfaceDecl) {
         for (PasExportedRoutine method : interfaceDecl.getMethods()) {
             if (isMethodImplemented(classDecl, method)) {
-//                System.out.println(String.format("===*** Method %s.%s implemented in %s", interfaceDecl.getName(), method.getCanonicalName(), classDecl.getName()));
+                System.out.println(String.format("===*** Method %s.%s implemented in %s", interfaceDecl.getName(), method.getReducedName(), classDecl.getName()));
             } else {
                 result.add(method);
-//                System.out.println(String.format("===*** Method %s.%s not implemented in %s", interfaceDecl.getName(), method.getCanonicalName(), classDecl.getName()));
+                System.out.println(String.format("===*** Method %s.%s not implemented in %s", interfaceDecl.getName(), method.getReducedName(), classDecl.getName()));
             }
         }
         processed.add(interfaceDecl);

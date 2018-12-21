@@ -150,7 +150,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Nullable
     @Override
     public PascalRoutine getRoutine(String reducedName) {
-        return null; //TODO: implement
+        return RoutineUtil.findRoutine(getAllFields(), reducedName);
     }
 
     @NotNull
@@ -360,6 +360,18 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             }
         }
         return usedUnitsPrivate;
+    }
+
+    @Nullable
+    @Override
+    public PascalRoutine getPublicRoutine(String reducedName) {
+        return RoutineUtil.findRoutine(getPubicFields(), reducedName);
+    }
+
+    @Nullable
+    @Override
+    public PascalRoutine getPrivateRoutine(String reducedName) {
+        return RoutineUtil.findRoutine(getPrivateFields(), reducedName);
     }
 
     @Override

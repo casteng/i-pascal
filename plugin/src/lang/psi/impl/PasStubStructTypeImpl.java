@@ -208,21 +208,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @Nullable
     @Override
     public PascalRoutine getRoutine(String reducedName) {
-        if (null == reducedName) {
-            return null;
-        }
-        for (PasField field : getAllFields()) {
-            if (field.fieldType == PasField.FieldType.ROUTINE) {
-                PascalNamedElement el = field.getElement();
-                if (el instanceof PascalRoutine) {
-                    PascalRoutine routine = (PascalRoutine) el;
-                    if (reducedName.equals(routine.getReducedName())) {
-                        return routine;
-                    }
-                }
-            }
-        }
-        return null;
+        return RoutineUtil.findRoutine(getAllFields(), reducedName);
     }
 
     @NotNull

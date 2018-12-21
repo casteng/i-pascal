@@ -41,7 +41,7 @@ import java.util.TreeSet;
  */
 public class SectionToggle {
 
-    public static void getStructTarget(Collection<PsiElement> targets, PsiElement element) {
+    static void getStructTarget(Collection<PsiElement> targets, PsiElement element) {
         PascalStructType struct = PsiUtil.getStructByElement(element);
         if (struct != null) {
             Container cont = calcPrefix(new Container(struct), false);
@@ -53,7 +53,7 @@ public class SectionToggle {
         if (usesClause != null) {
             PsiElement impl = PsiUtil.getModuleImplementationSection(usesClause.getContainingFile());
             PsiElement intf = PsiUtil.getModuleInterfaceSection(usesClause.getContainingFile());
-            if ((impl != null) && (intf != null)) {
+            if (intf != null) {
                 if (PsiUtil.isParentOf(usesClause, impl)) {
                     return PsiTreeUtil.findChildOfType(intf, PasUsesClause.class);
                 } else if (PsiUtil.isParentOf(usesClause, intf)) {
@@ -101,22 +101,24 @@ public class SectionToggle {
         if (null == container) {
             return null;
         }
-        PasField field = null;
-        if (container.scope instanceof PasModuleImpl) {
-            field = ((PasModuleImpl) container.scope).getPrivateField(container.prefix + PsiUtil.getFieldName(container.element));
-            field = checkRoutineField(field);
-            if (null == field && (!strict || !RoutineUtil.isOverloaded((PasExportedRoutine) container.element))) {                          // Try to find implementation w/o parameters
-                field = checkRoutineField(((PasModuleImpl) container.scope).getPrivateField(container.prefix + container.element.getName()));
+        if (container.scope instanceof PascalModule) {
+            PascalRoutine routine = ((PascalModule) container.scope).getPrivateRoutine(container.prefix + container.element.getReducedName());
+            if (routine != null) {
+                return routine;
+            } else if (!strict || !RoutineUtil.isOverloaded((PasExportedRoutine) container.element)) {                          // Try to find implementation w/o parameters
+                PasField field = checkRoutineField(((PascalModule) container.scope).getPrivateField(container.prefix + container.element.getName()));
                 if (strict && (field != null) && hasParametersOrReturnType((PascalRoutine) field.getElement())) {           // Only empty parameters list and return type allowed in strict mode
-                    field = null;
+                    return null;
+                } else {
+                    return field != null ? field.getElement() : null;
                 }
             }
         }
-        return field != null ? field.getElement() : null;
+        return null;
     }
 
     public static boolean hasParametersOrReturnType(@Nullable PascalRoutine routine) {
-        return (routine != null) && (routine.hasParameters() || (!routine.isConstructor() && routine.getFunctionTypeStr().length() > 0));
+        return (routine != null) && (routine.hasParameters() || (!routine.isConstructor() && (routine.getFunctionTypeStr().length() > 0)));
     }
 
     private static PasField checkRoutineField(PasField field) {
@@ -128,7 +130,7 @@ public class SectionToggle {
             return;
         }
         if (container.scope instanceof PasModuleImpl) {
-            String prefix = (container.prefix + container.element.getName()).toUpperCase();
+            String prefix = (container.prefix + container.scope.getName()).toUpperCase();
             Set<PasField> res = new TreeSet<PasField>(new Comparator<PasField>() {
                 @Override
                 public int compare(PasField o1, PasField o2) {
@@ -163,22 +165,26 @@ public class SectionToggle {
         if (null == container) {
             return null;
         }
-        PasField field = null;
         PasEntityScope scope = container.element.getContainingScope();
         if (scope != null) {
             String ns = container.element.getNamespace();
-            String name = PsiUtil.getFieldName(container.element).substring(StringUtils.isEmpty(ns) ? 0 : ns.length() + 1);
-            field = retrieveField(scope, name);
-            if (null == field) {                // Try to find any routine with that name, ignoring parameters
-                field = retrieveField(scope, name.substring(0, name.indexOf('(')));
+            String name = container.element.getReducedName().substring(StringUtils.isEmpty(ns) ? 0 : ns.length() + 1);
+            PascalRoutine routine = retrieveRoutine(scope, name);
+            if (routine != null) {
+                return routine;
+            } else {                                                    // Try to find any routine with that name, ignoring parameters
+                PasField field = retrieveField(scope, name.substring(0, name.indexOf('(')));
                 field = checkRoutineField(field);
-                if ((field != null) && strict &&
-                        (RoutineUtil.isOverloaded((PasExportedRoutine) field.getElement()) || hasParametersOrReturnType((PascalRoutine) container.element))) {
-                    field = null;               // Overloaded routines must repeat parameters
+                if (field != null) {
+                    PasExportedRoutine el = (PasExportedRoutine) field.getElement();
+                    if ((el != null) &&
+                            (!strict || !(RoutineUtil.isOverloaded(el) || hasParametersOrReturnType(container.element)))) {
+                        return el;
+                    }
                 }
             }
         }
-        return field != null ? field.getElement() : null;
+        return null;
     }
 
     private static PasField retrieveField(PasEntityScope scope, String name) {
@@ -189,10 +195,19 @@ public class SectionToggle {
         }
     }
 
-    public static String getPrefix(PasEntityScope scope) {
+    private static PascalRoutine retrieveRoutine(PasEntityScope scope, String name) {
+        if (scope instanceof PasModuleImpl) {
+            return ((PasModuleImpl) scope).getPublicRoutine(name);
+        } else {
+            return scope.getRoutine(name);
+        }
+    }
+
+    public static String getPrefix(PascalRoutine scope) {
         return calcPrefix(new Container(scope), true).prefix;
     }
 
+    @SuppressWarnings("StringConcatenationInLoop")
     private static Container calcPrefix(Container current, boolean genericAware) {
         while ((current.scope != null) && !(current.scope instanceof PascalModuleImpl)) {
             current.scope = findOwner(current.scope);
@@ -204,7 +219,7 @@ public class SectionToggle {
                     current.prefix = RoutineUtil.calcCanonicalTypeName(current.scope.getName()) + "." + current.prefix;
                 }
             } else if (current.scope instanceof PascalRoutine) {
-                current.element = current.scope;
+                current.element = (PascalRoutine) current.scope;
             }
         }
         return current;
@@ -240,12 +255,17 @@ public class SectionToggle {
 
     private static class Container {
         String prefix = "";
-        PasEntityScope element;
+        PascalRoutine element;
         PasEntityScope scope;
 
-        public Container(PasEntityScope element) {
+        Container(PascalRoutine element) {
             this.element = element;
             this.scope = element;
+        }
+
+        Container(PascalStructType struct) {
+            this.element = null;
+            this.scope = struct;
         }
     }
 
@@ -280,8 +300,8 @@ public class SectionToggle {
 
     @SuppressWarnings("unchecked")
     public static <T extends PsiElement> List<T> collectFields(@NotNull Collection<PasField> fields, PasField.FieldType type, Filter<PasField> filter) {
-        List<T> result = new SmartList<T>();
-        Set<T> resultSet = new SmartHashSet<T>();
+        List<T> result = new SmartList<>();
+        Set<T> resultSet = new SmartHashSet<>();
         for (PasField field : fields) {
             PascalNamedElement el = field.getElement();
             //noinspection SuspiciousMethodCalls

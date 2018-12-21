@@ -14,13 +14,13 @@ type
         procedure test5_invalid(a55: string);
         procedure test6(a6: Integer; b6: string); overload;
         procedure test7;
-        function test8_invalid(a4: Integer; b4: string): string;
+        function test8_invalid(a4: Integer; b4: Integer): string;
     end;
 
     function testRoutine1(a: string): Integer;
     function testRoutine2_invalid(a: string): Integer; overload;
     function testRoutine3_invalid(): Integer;
-    function testRoutine4_invalid(): Integer;
+    function testRoutine4(): Integer;
     function testRoutine5(a5: Integer): string;
 
 implementation
@@ -87,7 +87,7 @@ procedure testRoutine3_invalid(a3: Integer);
 begin
 end;
 
-function testRoutine4_invalid(): string;
+function testRoutine4(): string;
 begin
 end;
 
