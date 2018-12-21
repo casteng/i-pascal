@@ -52,31 +52,32 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         super(stub, nodeType);
     }
 
-    private String myCachedUniqueName;
+    volatile private String myCachedUniqueName;
     private String myCachedName;
     private ReentrantLock nameLock = new ReentrantLock();
     private String containingUnitName;
     private Boolean local;
-    private long modificationStamp;
-    private ReentrantLock localityLock = new ReentrantLock();
+    volatile private long modified;
 
     @Override
     public ItemPresentation getPresentation() {
         return PascalParserUtil.getPresentation(this);
     }
 
-    @Override
-    public void subtreeChanged() {
-        super.subtreeChanged();
+    private void invalidateCaches() {
         if (SyncUtil.lockOrCancel(nameLock)) {
             myCachedName = null;
             myCachedUniqueName = null;
             containingUnitName = null;
             nameLock.unlock();
         }
-        if (SyncUtil.lockOrCancel(localityLock)) {
-            local = null;
-            localityLock.unlock();
+        local = null;
+        modified = getContainingFile().getModificationStamp();
+    }
+
+    private void ensureCacheActual() {
+        if (modified != getContainingFile().getModificationStamp()) {
+            invalidateCaches();
         }
     }
 
@@ -87,6 +88,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getName();
         }
+        ensureCacheActual();
         if (SyncUtil.lockOrCancel(nameLock)) {
             try {
                 if ((myCachedName == null) || (myCachedName.length() == 0)) {
@@ -136,54 +138,49 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
 
     @Override
     public boolean isLocal() {
-        if (SyncUtil.lockOrCancel(localityLock)) {
-            try {
-                long modStamp = PsiUtil.getModificationStamp(this);
-                if ((null == local) || (modificationStamp != modStamp)) {
-                    modificationStamp = modStamp;
-                    if (this instanceof PasExportedRoutine) {
-                        if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this) || isExported()) {
-                            local = false;
+        ensureCacheActual();
+        if (null == local) {
+            boolean tempLocal;
+            if (this instanceof PasExportedRoutine) {
+                if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this) || isExported()) {
+                    tempLocal = false;
+                } else {
+                    PasEntityScope scope = ((PasEntityScope) this).getContainingScope();
+                    if (scope != null) {
+                        if (!scope.isLocal()) {
+                            tempLocal = false;
                         } else {
-                            PasEntityScope scope = ((PasEntityScope) this).getContainingScope();
-                            if (scope != null) {
-                                if (!scope.isLocal()) {
-                                    local = false;
-                                } else {
-                                    Collection<PasEntityScope> structs = new SmartHashSet<>();
-                                    GotoSuper.retrieveParentInterfaces(structs, scope, 0);
-                                    local = true;
-                                    for (PasEntityScope struct : structs) {
-                                        if (struct instanceof PasInterfaceTypeDecl) {
-                                            if (struct.getRoutine(((PasExportedRoutine) this).getReducedName()) != null) {
-                                                local = false;
-                                                break;
-                                            }
-                                        }
+                            Collection<PasEntityScope> structs = new SmartHashSet<>();
+                            GotoSuper.retrieveParentInterfaces(structs, scope, 0);
+                            tempLocal = true;
+                            for (PasEntityScope struct : structs) {
+                                if (struct instanceof PasInterfaceTypeDecl) {
+                                    if (struct.getRoutine(((PasExportedRoutine) this).getReducedName()) != null) {
+                                        tempLocal = false;
+                                        break;
                                     }
                                 }
-                            } else {
-                                local = true;
                             }
                         }
-                    } else if (this instanceof PascalStructType) {
-                        PsiElement parent = getParent().getParent();
-                        local = (parent instanceof PasTypeDeclaration) && PsiUtil.isImplementationScope(parent.getParent().getParent());
                     } else {
-                        PsiElement parent = getParent();
-                        if (parent instanceof PasGenericTypeIdent) {
-                            parent = parent.getParent();
-                        }
-                        if (!isExported() && ((parent instanceof PasVarDeclaration) || (parent instanceof PasConstDeclaration) || (parent instanceof PasTypeDeclaration))) {
-                            local = PsiUtil.isImplementationScope(parent.getParent().getParent());
-                        } else {
-                            local = false;
-                        }
+                        tempLocal = true;
                     }
                 }
-            } finally {
-                localityLock.unlock();
+            } else if (this instanceof PascalStructType) {
+                PsiElement parent = getParent().getParent();
+                tempLocal = (parent instanceof PasTypeDeclaration) && PsiUtil.isImplementationScope(parent.getParent().getParent());
+            } else {
+                PsiElement parent = getParent();
+                if (parent instanceof PasGenericTypeIdent) {
+                    parent = parent.getParent();
+                }
+                if (!isExported() && ((parent instanceof PasVarDeclaration) || (parent instanceof PasConstDeclaration) || (parent instanceof PasTypeDeclaration))) {
+                    tempLocal = PsiUtil.isImplementationScope(parent.getParent().getParent());
+                } else {
+                    tempLocal = false;
+                }
             }
+            local = tempLocal;
         }
         return local;
     }
@@ -194,11 +191,10 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getUniqueName();
         }
-        SyncUtil.doWithLock(nameLock, () -> {
-            if (StringUtils.isEmpty(myCachedUniqueName)) {
-                myCachedUniqueName = calcUniqueName();
-            }
-        });
+        ensureCacheActual();
+        if (StringUtils.isEmpty(myCachedUniqueName)) {
+            myCachedUniqueName = calcUniqueName();
+        }
         return myCachedUniqueName;
     }
 
@@ -227,6 +223,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getContainingUnitName();
         }
+        ensureCacheActual();
         SyncUtil.doWithLock(nameLock, () -> {
                     if (StringUtils.isEmpty(containingUnitName)) {
                         containingUnitName = calcContainingUnitName();

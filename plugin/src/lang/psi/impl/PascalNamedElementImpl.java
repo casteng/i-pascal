@@ -43,22 +43,19 @@ import java.util.concurrent.locks.ReentrantLock;
  * Date: 1/4/13
  */
 public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
-    private volatile String myCachedName;
+    volatile private String myCachedName;
     private ReentrantLock nameLock = new ReentrantLock();
-    private volatile PasField.FieldType myCachedType;
+    volatile private PasField.FieldType myCachedType;
     private ReentrantLock typeLock = new ReentrantLock();
-    private volatile PsiElement myCachedNameEl;
+    volatile private PsiElement myCachedNameEl;
     private Boolean local;
-    private long modificationStamp;
-    private ReentrantLock localityLock = new ReentrantLock();
+    volatile private long modified;
 
     public PascalNamedElementImpl(ASTNode node) {
         super(node);
     }
 
-    @Override
-    public void subtreeChanged() {
-        super.subtreeChanged();
+    private void invalidateCaches() {
         if (SyncUtil.lockOrCancel(nameLock)) {
             myCachedName = null;
             myCachedNameEl = null;
@@ -68,9 +65,13 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
             myCachedType = null;
             typeLock.unlock();
         }
-        if (SyncUtil.lockOrCancel(localityLock)) {
-            local = null;
-            localityLock.unlock();
+        local = null;
+        modified = getContainingFile().getModificationStamp();
+    }
+
+    private void ensureCacheActual() {
+        if (modified != getContainingFile().getModificationStamp()) {
+            invalidateCaches();
         }
     }
 
@@ -80,6 +81,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         if (this instanceof PasOperatorSubIdent) {
             myCachedName = getText();
         } else {
+            ensureCacheActual();
             SyncUtil.doWithLock(nameLock, () -> {
                 if (StringUtil.isEmpty(myCachedName)) {
                     myCachedName = calcName(getNameElement());
@@ -122,6 +124,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public PasField.FieldType getType() {
+        ensureCacheActual();
         SyncUtil.doWithLock(typeLock, () -> {
             if (null == myCachedType) {
                 myCachedType = PsiUtil.getFieldType(this);
@@ -137,35 +140,29 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Override
     public boolean isLocal() {
-        if (SyncUtil.lockOrCancel(localityLock)) {
-            try {
-                long modStamp = PsiUtil.getModificationStamp(this);
-                if ((null == local) || (modificationStamp != modStamp)) {
-                    modificationStamp = modStamp;
-                    local = false;
-                    if (this instanceof PascalRoutineImpl) {
-                        if (this instanceof PasRoutineImplDecl) {
-                            PsiElement decl = SectionToggle.retrieveDeclaration((PascalRoutine) this, true);
-                            if (decl instanceof PascalRoutine) {
-                                local = ((PascalRoutine) decl).isLocal();
-                            } else {
-                                local = true;
-                            }
-                        } else {
-                            local = true;
-                        }
+        ensureCacheActual();
+        if (null == local) {
+            boolean tempLocal = false;
+            if (this instanceof PascalRoutineImpl) {
+                if (this instanceof PasRoutineImplDecl) {
+                    PsiElement decl = SectionToggle.retrieveDeclaration((PascalRoutine) this, true);
+                    if (decl instanceof PascalRoutine) {
+                        tempLocal = ((PascalRoutine) decl).isLocal();
                     } else {
-                        PsiElement parent = getParent();
-                        if ((parent instanceof PasFormalParameter) || (parent instanceof PascalInlineDeclaration)) {
-                            local = true;
-                        } else if (parent instanceof PascalNamedElement) {
-                            local = ((PascalNamedElement) parent).isLocal();
-                        }
+                        tempLocal = true;
                     }
+                } else {
+                    tempLocal = true;
                 }
-            } finally {
-                localityLock.unlock();
+            } else {
+                PsiElement parent = getParent();
+                if ((parent instanceof PasFormalParameter) || (parent instanceof PascalInlineDeclaration)) {
+                    tempLocal = true;
+                } else if (parent instanceof PascalNamedElement) {
+                    tempLocal = ((PascalNamedElement) parent).isLocal();
+                }
             }
+            local = tempLocal;
         }
         return local;
     }
@@ -175,6 +172,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         if (this instanceof PasOperatorSubIdent) {
             myCachedNameEl = this;
         } else {
+            ensureCacheActual();
             SyncUtil.doWithLock(nameLock, () -> {
                 if (!PsiUtil.isElementUsable(myCachedNameEl)) {
                     calcNameElement();

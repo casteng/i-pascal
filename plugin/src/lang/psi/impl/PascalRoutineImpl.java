@@ -5,10 +5,8 @@ import com.google.common.cache.CacheBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.HasTypeParameters;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
@@ -42,13 +40,6 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
 
-    private ReentrantLock parentLock = new ReentrantLock();
-    private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
-    private List<String> formalParameterNames;
-    private List<String> formalParameterTypes;
-    private List<ParamModifier> formalParameterAccess;
-    private String canonicalName;
-    private ReentrantLock parametersLock = new ReentrantLock();
     private List<String> typeParameters;
     private ReentrantLock typeParametersLock = new ReentrantLock();
 
@@ -62,6 +53,14 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     PascalRoutineImpl(ASTNode node) {
         super(node);
+    }
+
+    @Override
+    public void invalidateCaches() {
+        helper.invalidateCaches();
+        if (cachedKey != null) {
+            invalidate(cachedKey);
+        }
     }
 
     @NotNull
@@ -132,12 +131,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     @Override
     public String getCanonicalName() {
-        SyncUtil.doWithLock(parametersLock, () -> {
-            if (null == canonicalName) {
-                canonicalName = RoutineUtil.calcCanonicalName(getName(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
-            }
-        });
-        return canonicalName;
+        return helper.getCanonicalName();
     }
 
     @Override
@@ -159,7 +153,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @Nullable
     @Override
     public PascalRoutine getRoutine(String reducedName) {
-        return null;    // TODO: implement
+        return RoutineUtil.findRoutine(getAllFields(), reducedName);
     }
 
     @NotNull
@@ -172,24 +166,6 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     public void subtreeChanged() {
         super.subtreeChanged();
         invalidateCaches();
-    }
-
-    @Override
-    public void invalidateCaches() {
-        if (SyncUtil.lockOrCancel(parentLock)) {
-            parentScopes = null;
-            parentLock.unlock();
-        }
-        if (SyncUtil.lockOrCancel(parametersLock)) {
-            formalParameterNames = null;
-            formalParameterTypes = null;
-            formalParameterAccess = null;
-            canonicalName = null;
-            parametersLock.unlock();
-        }
-        if (cachedKey != null) {
-            invalidate(cachedKey);
-        }
     }
 
     static void invalidate(String key) {
@@ -248,33 +224,22 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @NotNull
     @Override
     public List<String> getFormalParameterNames() {
-        calcFormalParameters();
-        return formalParameterNames;
+        helper.calcFormalParameters();
+        return helper.formalParameterNames;
     }
 
     @NotNull
     @Override
     public List<String> getFormalParameterTypes() {
-        calcFormalParameters();
-        return formalParameterTypes;
+        helper.calcFormalParameters();
+        return helper.formalParameterTypes;
     }
 
     @NotNull
     @Override
     public List<ParamModifier> getFormalParameterAccess() {
-        calcFormalParameters();
-        return formalParameterAccess;
-    }
-
-    private void calcFormalParameters() {
-        SyncUtil.doWithLock(parametersLock, () -> {
-            if (null == formalParameterNames) {
-                formalParameterNames = new SmartList<>();
-                formalParameterAccess = new SmartList<>();
-                formalParameterTypes = new SmartList<>();
-                RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParameterNames, formalParameterTypes, formalParameterAccess);
-            }
-        });
+        helper.calcFormalParameters();
+        return helper.formalParameterAccess;
     }
 
     public boolean isConstructor() {
@@ -341,18 +306,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-            if (SyncUtil.tryLockQuiet(parentLock, SyncUtil.LOCK_TIMEOUT_MS)) {
-                try {
-                    if (null == parentScopes) {
-                        calcParentScopes();
-                    }
-                } finally {
-                    parentLock.unlock();
-                }
-            } else {
-                LOG.info("ERROR: can't lock for calculate parent scope for: " + getName());
-            }
-        return parentScopes;
+        return Collections.singletonList(PsiUtil.createSmartPointer(getContainingScope()));
     }
 
     @NotNull
@@ -362,14 +316,6 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             withStatements = PsiTreeUtil.findChildrenOfType(this, PasWithStatement.class);
         }
         return withStatements;
-    }
-
-    private void calcParentScopes() {
-        parentScopes = Collections.emptyList();                             // To prevent infinite recursion
-        PasEntityScope scope = getContainingScope();
-        if (scope != null) {
-            parentScopes = Collections.singletonList(SmartPointerManager.getInstance(getProject()).createSmartPsiElementPointer(scope));
-        }
     }
 
 }

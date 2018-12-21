@@ -15,64 +15,69 @@ import java.util.concurrent.locks.ReentrantLock;
 
 class PascalRoutineHelper {
     private final PascalRoutine self;
-    private String canonicalName;
+    volatile private String canonicalName;
     volatile private String reducedName;
     volatile private SmartPsiElementPointer<PascalNamedElement>[] reducedParameterTypes;
-    List<String> formalParameterNames;
-    List<String> formalParameterTypes;
-    List<ParamModifier> formalParameterAccess;
-
-    private ReentrantLock parametersLock = new ReentrantLock();
+    volatile List<String> formalParameterNames;
+    volatile List<String> formalParameterTypes;
+    volatile List<ParamModifier> formalParameterAccess;
+    volatile private long modified;
+    private ReentrantLock calcParamLock = new ReentrantLock();
 
     PascalRoutineHelper(PascalRoutine routine) {
         this.self = routine;
     }
 
     void invalidateCaches() {
-        if (SyncUtil.lockOrCancel(parametersLock)) {
+        SyncUtil.doWithLock(calcParamLock, () -> {
             formalParameterNames = null;
             formalParameterTypes = null;
             formalParameterAccess = null;
             canonicalName = null;
             reducedName = null;
-            parametersLock.unlock();
-        }
+            modified = self.getContainingFile().getModificationStamp();
+        });
     }
 
     String getCanonicalName() {
-        SyncUtil.doWithLock(parametersLock, () -> {
-            if (null == canonicalName) {
-                canonicalName = RoutineUtil.calcCanonicalName(self.getName(), self.getFormalParameterTypes(), self.getFormalParameterAccess(), self.getFunctionTypeStr());
-            }
-        });
+        ensureCacheActual();
+        if (null == canonicalName) {
+            canonicalName = RoutineUtil.calcCanonicalName(self.getName(), self.getFormalParameterTypes(), self.getFormalParameterAccess(), self.getFunctionTypeStr());
+        }
         return canonicalName;
     }
 
     String getReducedName() {
-        boolean reducedNameDirty = isReducedNameDirty();
-        while (reducedNameDirty) {
-            SyncUtil.doWithLock(parametersLock, () -> {
+        ensureCacheActual();
+        if (isReducedNameDirty()) {
+            String name = null;
+            while (name == null) {
                 resolveParameterTypes(self.getFormalParameterTypes());
-                reducedName = RoutineUtil.calcReducedName(self.getName(), reducedParameterTypes);
-            });
-            reducedNameDirty = (reducedName == null);
+                name = RoutineUtil.calcReducedName(self.getName(), reducedParameterTypes);
+            }
+            reducedName = name;
         }
         return reducedName;
     }
 
     void calcFormalParameters() {
-        SyncUtil.doWithLock(parametersLock, () -> {
+        ensureCacheActual();
+        SyncUtil.doWithLock(calcParamLock, () -> {
             if (null == formalParameterNames) {
-                formalParameterNames = new SmartList<>();
-                formalParameterTypes = new SmartList<>();
-                formalParameterAccess = new SmartList<>();
-                RoutineUtil.calcFormalParameterNames(self.getFormalParameterSection(), formalParameterNames, formalParameterTypes, formalParameterAccess);
+                List<String> parameterNames = new SmartList<>();
+                List<String> parameterTypes = new SmartList<>();
+                List<ParamModifier> parameterAccess = new SmartList<>();
+                RoutineUtil.calcFormalParameterNames(self.getFormalParameterSection(), parameterNames, parameterTypes, parameterAccess);
+                formalParameterNames = parameterNames;
+                formalParameterTypes = parameterTypes;
+                formalParameterAccess = parameterAccess;
             }
         });
     }
 
     private void resolveParameterTypes(List<String> formalParameterTypes) {
-        SmartPsiElementPointer[] parameterTypes = new SmartPsiElementPointer[formalParameterTypes.size()];
+        ensureCacheActual();
+        SmartPsiElementPointer<PascalNamedElement>[] parameterTypes = new SmartPsiElementPointer[formalParameterTypes.size()];
         for (int i = 0, formalParameterTypesSize = formalParameterTypes.size(); i < formalParameterTypesSize; i++) {
             String typeName = formalParameterTypes.get(i);
             parameterTypes[i] = StringUtil.isNotEmpty(typeName) ? PsiUtil.createSmartPointer(ResolveUtil.resolveTypeAliasChain(typeName, self, 0)) : null;
@@ -82,5 +87,11 @@ class PascalRoutineHelper {
 
     private boolean isReducedNameDirty() {
         return null == reducedName;
+    }
+
+    private void ensureCacheActual() {
+        if (modified != self.getContainingFile().getModificationStamp()) {
+            invalidateCaches();
+        }
     }
 }

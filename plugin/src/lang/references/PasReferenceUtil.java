@@ -658,6 +658,7 @@ public class PasReferenceUtil {
         }
     }
 
+    //TODO: move to resolve
     @NotNull
     public static Collection<PascalRoutineEntity> resolveRoutines(PasCallExpr callExpr) {
         PasFullyQualifiedIdent ident = callExpr != null ? PsiTreeUtil.findChildOfType(callExpr.getExpr(), PasFullyQualifiedIdent.class) : null;

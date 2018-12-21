@@ -33,10 +33,10 @@ public abstract class CompiledFileImpl extends PsiFileBase implements PsiFileEx,
 
     private static final String DECOMPILED_FILENAME_PREFIX = "$";
 
-    private volatile Reference<TreeElement> myMirrorFileElement;
+    volatile private Reference<TreeElement> myMirrorFileElement;
     private final Object myMirrorLock = new Object();
 
-    private volatile SoftReference<StubTree> myStub;
+    volatile private SoftReference<StubTree> myStub;
     private final Object myStubLock = new Object();
 
     private final PsiManager myManager;

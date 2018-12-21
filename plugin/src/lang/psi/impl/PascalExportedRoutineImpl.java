@@ -44,6 +44,16 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         super(stub, nodeType);
     }
 
+    @Override
+    public void invalidateCaches() {
+        super.invalidateCaches();
+        helper.invalidateCaches();
+        if (SyncUtil.lockOrCancel(typeIdLock)) {
+            typeId = null;
+            typeIdLock.unlock();
+        }
+    }
+
     @NotNull
     @Override
     public PasField.FieldType getType() {
@@ -208,15 +218,5 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @Override
     public Collection<PasWithStatement> getWithStatements() {
         return Collections.emptyList();
-    }
-
-    @Override
-    public void invalidateCaches() {
-        super.invalidateCaches();
-        helper.invalidateCaches();
-        if (SyncUtil.lockOrCancel(typeIdLock)) {
-            typeId = null;
-            typeIdLock.unlock();
-        }
     }
 }
