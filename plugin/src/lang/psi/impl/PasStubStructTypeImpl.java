@@ -69,7 +69,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
 
     static {
-        STR_TO_VIS = new HashMap<String, PasField.Visibility>(PasField.Visibility.values().length);
+        STR_TO_VIS = new HashMap<>(PasField.Visibility.values().length);
         STR_TO_VIS.put("INTERNAL", PasField.Visibility.INTERNAL);
         STR_TO_VIS.put("STRICTPRIVATE", PasField.Visibility.STRICT_PRIVATE);
         STR_TO_VIS.put("PRIVATE", PasField.Visibility.PRIVATE);
@@ -81,9 +81,8 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         assert STR_TO_VIS.size() == PasField.Visibility.values().length;
     }
 
-    private List<String> parentNames = null;
+    volatile private List<String> parentNames = null;
     private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
-    private ReentrantLock parentNamesLock = new ReentrantLock();
     private ReentrantLock parentScopesLock = new ReentrantLock();
 
     public PasStubStructTypeImpl(ASTNode node) {
@@ -92,6 +91,20 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     public PasStubStructTypeImpl(final B stub, IStubElementType nodeType) {
         super(stub, nodeType);
+    }
+
+    @Override
+    public void invalidateCaches() {
+        super.invalidateCaches();
+        parentNames = null;
+        if (SyncUtil.lockOrCancel(parentScopesLock)) {
+            parentScopes = null;
+            parentScopesLock.unlock();
+        }
+    }
+
+    static void invalidate(String key) {
+        cache.invalidate(key);
     }
 
     @NotNull
@@ -112,7 +125,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         if (stub != null) {
             return stub.getTypeParameters();
         }
-        PsiElement nameElement = getNameElement();
+        PsiElement nameElement = getNameIdentifier();
         if (nameElement instanceof PasGenericTypeIdent) {
             PasGenericDefinition genericDefinition = ((PasGenericTypeIdent) nameElement).getGenericDefinition();
             return genericDefinition != null ? RoutineUtil.parseTypeParametersStr(genericDefinition.getText()) : Collections.emptyList();
@@ -128,22 +141,8 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         if (stub != null) {
             return stub.getParentNames();
         }
-        if (SyncUtil.lockOrCancel(parentNamesLock)) {
-            try {
-                if (null == parentNames) {
-                    PasClassParent classParent = getClassParent();
-                    if (classParent != null) {
-                        parentNames = new SmartList<>();
-                        for (PasTypeID typeID : classParent.getTypeIDList()) {
-                            parentNames.add(typeID.getFullyQualifiedIdent().getName());
-                        }
-                    } else {
-                        parentNames = Collections.emptyList();
-                    }
-                }
-            } finally {
-                parentNamesLock.unlock();
-            }
+        if (null == parentNames) {
+            parentNames = calcParentNames();
         }
         return parentNames;
     }
@@ -156,10 +155,9 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                 PasClassHelperDeclImpl.class, PasClassTypeDeclImpl.class, PasInterfaceTypeDeclImpl.class, PasObjectDeclImpl.class, PasRecordHelperDeclImpl.class, PasRecordDeclImpl.class);
     }
 
-    @Override
     @Nullable
-    @SuppressWarnings("unchecked")
-    protected PsiElement getNameElement() {
+    @Override
+    public PsiElement getNameIdentifier() {
         return PsiTreeUtil.getPrevSiblingOfType(getParent(), PasGenericTypeIdent.class);
     }
 
@@ -177,22 +175,6 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             return (PasEntityScope) sibling.getFirstChild();
         }
         return null;
-    }
-
-    @NotNull
-    private Members getMembers(Cache<String, Members> cache, Callable<? extends Members> builder) {
-        ensureChache(cache);
-        try {
-            return cache.get(getKey(), builder);
-        } catch (Exception e) {
-            if (e.getCause() instanceof ProcessCanceledException) {
-                throw (ProcessCanceledException) e.getCause();
-            } else {
-                LOG.warn("Error occured during building members for: " + this, e.getCause());
-                invalidateCaches();
-                return EMPTY_MEMBERS;
-            }
-        }
     }
 
     @Nullable
@@ -221,6 +203,73 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         }
     }
 
+    @NotNull
+    @Override
+    public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
+        if (SyncUtil.lockOrCancel(parentScopesLock)) {
+            try {
+                if (null == parentScopes) {
+                    calcParentScopes();
+                }
+            } finally {
+                parentScopesLock.unlock();
+            }
+        }
+        return parentScopes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<PasWithStatement> getWithStatements() {
+        return Collections.emptyList();
+    }
+
+    @NotNull
+    @Override
+    public List<PasExportedRoutine> getMethods() {
+        B stub = retrieveStub();
+        if (stub != null) {
+            List<PasExportedRoutine> res = new SmartList<>();
+            for (StubElement childrenStub : stub.getChildrenStubs()) {
+                if (childrenStub instanceof PasExportedRoutineStub) {
+                    res.add((PasExportedRoutine) childrenStub.getPsi());
+                }
+            }
+            return res;
+        } else {
+            return getExportedRoutineList();
+        }
+    }
+
+    @NotNull
+    private Members getMembers(Cache<String, Members> cache, Callable<? extends Members> builder) {
+        ensureChache(cache);
+        try {
+            return cache.get(getKey(), builder);
+        } catch (Exception e) {
+            if (e.getCause() instanceof ProcessCanceledException) {
+                throw (ProcessCanceledException) e.getCause();
+            } else {
+                LOG.warn("Error occured during building members for: " + this, e.getCause());
+                invalidateCaches();
+                return EMPTY_MEMBERS;
+            }
+        }
+    }
+
+    private List<String> calcParentNames() {
+        PasClassParent classParent = getClassParent();
+        if (classParent != null) {
+            List<String> result = new SmartList<>();
+            for (PasTypeID typeID : classParent.getTypeIDList()) {
+                result.add(typeID.getFullyQualifiedIdent().getName());
+            }
+            return result;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
     private PasField.Visibility getVisibility(PsiElement element) {
         StringBuilder sb = new StringBuilder();
         PsiElement psiChild = element.getFirstChild();
@@ -231,23 +280,6 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             psiChild = psiChild.getNextSibling();
         }
         return STR_TO_VIS.get(sb.toString());
-    }
-
-    @Override
-    public void invalidateCaches() {
-        super.invalidateCaches();
-        if (SyncUtil.lockOrCancel(parentNamesLock)) {
-            parentNames = null;
-            parentNamesLock.unlock();
-        }
-        if (SyncUtil.lockOrCancel(parentScopesLock)) {
-            parentScopes = null;
-            parentScopesLock.unlock();
-        }
-    }
-
-    public static void invalidate(String key) {
-        cache.invalidate(key);
     }
 
     private class MemberBuilder implements Callable<Members> {
@@ -323,44 +355,6 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         PasField field = new PasField(this, element, name, fieldType, visibility);
         res.all.put(name.toUpperCase(), field);
         return field;
-    }
-
-    @NotNull
-    @Override
-    public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        if (SyncUtil.lockOrCancel(parentScopesLock)) {
-            try {
-                if (null == parentScopes) {
-                    calcParentScopes();
-                }
-            } finally {
-                parentScopesLock.unlock();
-            }
-        }
-        return parentScopes;
-    }
-
-    @NotNull
-    @Override
-    public Collection<PasWithStatement> getWithStatements() {
-        return Collections.emptyList();
-    }
-
-    @NotNull
-    @Override
-    public List<PasExportedRoutine> getMethods() {
-        B stub = retrieveStub();
-        if (stub != null) {
-            List<PasExportedRoutine> res = new SmartList<>();
-            for (StubElement childrenStub : stub.getChildrenStubs()) {
-                if (childrenStub instanceof PasExportedRoutineStub) {
-                    res.add((PasExportedRoutine) childrenStub.getPsi());
-                }
-            }
-            return res;
-        } else {
-            return getExportedRoutineList();
-        }
     }
 
     private void calcParentScopes() {

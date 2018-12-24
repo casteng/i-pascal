@@ -43,8 +43,6 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     private List<String> typeParameters;
     private ReentrantLock typeParametersLock = new ReentrantLock();
 
-    private PascalRoutineHelper helper = new PascalRoutineHelper(this);
-
     private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
     volatile private Collection<PasWithStatement> withStatements;
 
@@ -56,8 +54,17 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     @Override
+    protected PascalHelperNamed createHelper() {
+        return new PascalHelperRoutine(this);
+    }
+
+    private PascalHelperRoutine getHelper() {
+        return (PascalHelperRoutine) helper;
+    }
+
+    @Override
     public void invalidateCaches() {
-        helper.invalidateCaches();
+        getHelper().invalidateCaches();
         if (cachedKey != null) {
             invalidate(cachedKey);
         }
@@ -131,12 +138,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     @Override
     public String getCanonicalName() {
-        return helper.getCanonicalName();
+        return getHelper().getCanonicalName();
     }
 
     @Override
     public String getReducedName() {
-        return helper.getReducedName();
+        return getHelper().getReducedName();
     }
 
     @Override
@@ -224,22 +231,22 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @NotNull
     @Override
     public List<String> getFormalParameterNames() {
-        helper.calcFormalParameters();
-        return helper.formalParameterNames;
+        getHelper().calcFormalParameters();
+        return getHelper().formalParameterNames;
     }
 
     @NotNull
     @Override
     public List<String> getFormalParameterTypes() {
-        helper.calcFormalParameters();
-        return helper.formalParameterTypes;
+        getHelper().calcFormalParameters();
+        return getHelper().formalParameterTypes;
     }
 
     @NotNull
     @Override
     public List<ParamModifier> getFormalParameterAccess() {
-        helper.calcFormalParameters();
-        return helper.formalParameterAccess;
+        getHelper().calcFormalParameters();
+        return getHelper().formalParameterAccess;
     }
 
     public boolean isConstructor() {
@@ -257,30 +264,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     @NotNull
     public String getFunctionTypeStr() {
-        if (isConstructor()) {                                 // Return namespace part of constructor implementation name as type name
-            String ns = getNamespace();
-            ns = ns.substring(ns.lastIndexOf('.') + 1);
-            List<String> typeParams = getTypeParameters();
-            if (!typeParams.isEmpty()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("<");
-                for (String typeParam : typeParams) {
-                    if (sb.length() > 1) {
-                        sb.append(", ");
-                    }
-                    sb.append(typeParam);
-                }
-                sb.append(">");
-                ns = ns + sb.toString();
-            } 
-            return ns;
-        }
-        PasTypeDecl type = findChildByClass(PasTypeDecl.class);
-        PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);
-        if (typeId != null) {
-            return typeId.getFullyQualifiedIdent().getName();
-        }
-        return type != null ? type.getText() : "";
+        return getHelper().calcFunctionTypeStr();
     }
 
     @Nullable

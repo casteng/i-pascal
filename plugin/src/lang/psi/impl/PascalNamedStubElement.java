@@ -9,7 +9,6 @@ import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.ProjectScopeImpl;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.stubs.IStubElementType;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.ide.actions.GotoSuper;
@@ -20,29 +19,26 @@ import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasModule;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
-import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.util.PsiUtil;
-import com.siberika.idea.pascal.util.SyncUtil;
-import org.apache.commons.lang.StringUtils;
+import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalStubElement<B>, PascalNamedElement {
+
+    protected PascalHelperNamed helper = createHelper();
 
     PascalNamedStubElement(ASTNode node) {
         super(node);
@@ -52,33 +48,17 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         super(stub, nodeType);
     }
 
-    volatile private String myCachedUniqueName;
-    private String myCachedName;
-    private ReentrantLock nameLock = new ReentrantLock();
-    private String containingUnitName;
-    private Boolean local;
-    volatile private long modified;
+    protected PascalHelperNamed createHelper() {
+        return new PascalHelperNamed(this);
+    }
 
     @Override
     public ItemPresentation getPresentation() {
         return PascalParserUtil.getPresentation(this);
     }
 
-    private void invalidateCaches() {
-        if (SyncUtil.lockOrCancel(nameLock)) {
-            myCachedName = null;
-            myCachedUniqueName = null;
-            containingUnitName = null;
-            nameLock.unlock();
-        }
-        local = null;
-        modified = getContainingFile().getModificationStamp();
-    }
-
-    private void ensureCacheActual() {
-        if (modified != getContainingFile().getModificationStamp()) {
-            invalidateCaches();
-        }
+    void invalidateCaches() {
+        helper.invalidateCaches();
     }
 
     @NotNull
@@ -88,31 +68,17 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getName();
         }
-        ensureCacheActual();
-        if (SyncUtil.lockOrCancel(nameLock)) {
-            try {
-                if ((myCachedName == null) || (myCachedName.length() == 0)) {
-                    myCachedName = PascalNamedElementImpl.calcName(getNameElement());
-                }
-            } finally {
-                nameLock.unlock();
-            }
-        }
-        return myCachedName;
+        return helper.getName();
     }
 
     @Override
     public String getNamespace() {
-        String name = getName();
-        int pos = name.lastIndexOf(".");
-        return pos >= 0 ? name.substring(0, pos) : null;
+        return StrUtil.getNamespace(getName());
     }
 
     @Override
     public String getNamePart() {
-        String name = getName();
-        int pos = name.lastIndexOf(".");
-        return pos >= 0 ? name.substring(pos + 1) : name;
+        return StrUtil.getNamePart(getName());
     }
 
     @NotNull
@@ -122,7 +88,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getType();
         }
-        return PsiUtil.getFieldType(this);
+        return helper.calcType();
     }
 
     @Override
@@ -138,8 +104,8 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
 
     @Override
     public boolean isLocal() {
-        ensureCacheActual();
-        if (null == local) {
+        helper.ensureCacheActual();
+        if (null == helper.local) {
             boolean tempLocal;
             if (this instanceof PasExportedRoutine) {
                 if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this) || isExported()) {
@@ -180,9 +146,9 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
                     tempLocal = false;
                 }
             }
-            local = tempLocal;
+            helper.local = tempLocal;
         }
-        return local;
+        return helper.local;
     }
 
     // Name qualified with container names
@@ -191,11 +157,11 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getUniqueName();
         }
-        ensureCacheActual();
-        if (StringUtils.isEmpty(myCachedUniqueName)) {
-            myCachedUniqueName = calcUniqueName();
+        helper.ensureCacheActual();
+        if (null == helper.cachedUniqueName) {
+            helper.cachedUniqueName = calcUniqueName();
         }
-        return myCachedUniqueName;
+        return helper.cachedUniqueName;
     }
 
     protected abstract String calcUniqueName();
@@ -223,14 +189,11 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (stub != null) {
             return stub.getContainingUnitName();
         }
-        ensureCacheActual();
-        SyncUtil.doWithLock(nameLock, () -> {
-                    if (StringUtils.isEmpty(containingUnitName)) {
-                        containingUnitName = calcContainingUnitName();
-                    }
-                }
-        );
-        return containingUnitName;
+        helper.ensureCacheActual();
+        if (null == helper.containingUnitName) {
+            helper.containingUnitName = calcContainingUnitName();
+        }
+        return helper.containingUnitName;
     }
 
     private String calcContainingUnitName() {
@@ -250,12 +213,12 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     @Nullable
     @Override
     public PsiElement getNameIdentifier() {
-        return getNameElement();
+        return helper.calcNameElement();
     }
 
     @Override
     public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
-        PsiElement element = getNameElement();
+        PsiElement element = getNameIdentifier();
         if (element != null) {
             PsiElement el = PasElementFactory.createReplacementElement(element, name);
             if (el != null) {
@@ -263,22 +226,6 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
             }
         }
         return this;
-    }
-
-    @Nullable
-    protected PsiElement getNameElement() {
-        if ((this instanceof PasNamespaceIdent) || (this instanceof PascalQualifiedIdent)) {
-            return this;
-        }
-        PsiElement result = findChildByType(PasTypes.NAMESPACE_IDENT);
-        if (null == result) {
-            PascalNamedElement namedChild = PsiTreeUtil.getChildOfType(this, PascalNamedElement.class);
-            result = namedChild != null ? namedChild.getNameIdentifier() : null;
-        }
-        if (null == result) {
-            result = findChildByType(NAME_TYPE_SET);
-        }
-        return result;
     }
 
 }

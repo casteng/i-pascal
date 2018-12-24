@@ -34,24 +34,31 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     private PasTypeID typeId;
     private ReentrantLock typeIdLock = new ReentrantLock();
 
-    private PascalRoutineHelper helper = new PascalRoutineHelper(this);
-
-    public PascalExportedRoutineImpl(ASTNode node) {
+    PascalExportedRoutineImpl(ASTNode node) {
         super(node);
     }
 
-    public PascalExportedRoutineImpl(PasExportedRoutineStub stub, IStubElementType nodeType) {
+    PascalExportedRoutineImpl(PasExportedRoutineStub stub, IStubElementType nodeType) {
         super(stub, nodeType);
     }
 
     @Override
     public void invalidateCaches() {
         super.invalidateCaches();
-        helper.invalidateCaches();
+        getHelper().invalidateCaches();
         if (SyncUtil.lockOrCancel(typeIdLock)) {
             typeId = null;
             typeIdLock.unlock();
         }
+    }
+
+    @Override
+    public PascalHelperNamed createHelper() {
+        return new PascalHelperRoutine(this);
+    }
+
+    private PascalHelperRoutine getHelper() {
+        return (PascalHelperRoutine) helper;
     }
 
     @NotNull
@@ -96,12 +103,12 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @Override
     public String getCanonicalName() {
-        return helper.getCanonicalName();
+        return getHelper().getCanonicalName();
     }
 
     @Override
     public String getReducedName() {
-        return helper.getReducedName();
+        return getHelper().getReducedName();
     }
 
     @Override
@@ -136,7 +143,7 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         if (stub != null) {
             return stub.getFunctionTypeStr();
         }
-        return resolveFunctionTypeStr();
+        return getHelper().calcFunctionTypeStr();
     }
 
     @Override
@@ -151,19 +158,6 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
             }
         }
         return typeId;
-    }
-
-    private String resolveFunctionTypeStr() {
-        if (isConstructor()) {                                      // Return struct type name
-            PasEntityScope scope = getContainingScope();
-            return scope != null ? RoutineUtil.calcCanonicalTypeName(scope.getName()) : "";
-        }
-        PasTypeDecl type = findChildByClass(PasTypeDecl.class);
-        PasTypeID typeId = PsiTreeUtil.findChildOfType(type, PasTypeID.class);
-        if (typeId != null) {
-            return typeId.getFullyQualifiedIdent().getName();
-        }
-        return type != null ? RoutineUtil.calcCanonicalTypeName(type.getText()) : "";
     }
 
     @NotNull
@@ -189,8 +183,8 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         if (stub != null) {
             return stub.getFormalParameterNames();
         }
-        helper.calcFormalParameters();
-        return helper.formalParameterNames;
+        getHelper().calcFormalParameters();
+        return getHelper().formalParameterNames;
     }
 
     @NotNull
@@ -200,8 +194,8 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         if (stub != null) {
             return stub.getFormalParameterTypes();
         }
-        helper.calcFormalParameters();
-        return helper.formalParameterTypes;
+        getHelper().calcFormalParameters();
+        return getHelper().formalParameterTypes;
     }
 
     @NotNull
@@ -211,10 +205,11 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         if (stub != null) {
             return stub.getFormalParameterAccess();
         }
-        helper.calcFormalParameters();
-        return helper.formalParameterAccess;
+        getHelper().calcFormalParameters();
+        return getHelper().formalParameterAccess;
     }
 
+    @NotNull
     @Override
     public Collection<PasWithStatement> getWithStatements() {
         return Collections.emptyList();

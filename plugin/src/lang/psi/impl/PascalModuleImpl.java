@@ -197,36 +197,31 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPrivateUnits() {
-        if (SyncUtil.lockOrCancel(privateUnitsLock)) {
-            try {
-                if (null == privateUnits) {
-                    Set<String> units = getUsedUnitsPrivate();
-                    privateUnits = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
-                    addUnits(privateUnits, units);
-                    addUnits(privateUnits, PascalParserUtil.EXPLICIT_UNITS);
-                }
-            } finally {
-                privateUnitsLock.unlock();
-            }
+        if (null == privateUnits) {
+            privateUnits = doCollectUnits(getUsedUnitsPrivate(), privateUnitsLock);
         }
         return privateUnits;
     }
 
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits() {
-        if (SyncUtil.lockOrCancel(publicUnitsLock)) {
-            try {
-                if (null == publicUnits) {
-                    Set<String> units = getUsedUnitsPublic();
-                    publicUnits = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
-                    addUnits(publicUnits, units);
-                    addUnits(publicUnits, PascalParserUtil.EXPLICIT_UNITS);
-                }
-            } finally {
-                publicUnitsLock.unlock();
-            }
+        if (null == publicUnits) {
+            publicUnits = doCollectUnits(getUsedUnitsPublic(), publicUnitsLock);
         }
         return publicUnits;
+    }
+
+    private List<SmartPsiElementPointer<PasEntityScope>> doCollectUnits(Set<String> units, ReentrantLock lock) {
+        List<SmartPsiElementPointer<PasEntityScope>> result = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
+        if (SyncUtil.lockOrCancel(lock)) {
+            try {
+                addUnits(result, units);
+                addUnits(result, PascalParserUtil.EXPLICIT_UNITS);
+            } finally {
+                lock.unlock();
+            }
+        }
+        return result;
     }
 
     private void addUnits(List<SmartPsiElementPointer<PasEntityScope>> result, Collection<String> units) {
