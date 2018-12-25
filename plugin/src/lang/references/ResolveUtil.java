@@ -79,7 +79,7 @@ public class ResolveUtil {
     public static final Pattern PATTERN_TYPE_PARAM = Pattern.compile("(\\w+)(<.*?>)");
 
     private static final Set<PasField.Kind> KINDS_FOLLOW_TYPE = EnumSet.of(PasField.Kind.TYPEALIAS, PasField.Kind.ARRAY, PasField.Kind.POINTER, PasField.Kind.CLASSREF, PasField.Kind.PROCEDURE);
-    private static final Set<PasField.Kind> KINDS_TYPE_REF = EnumSet.of(PasField.Kind.TYPEALIAS, PasField.Kind.TYPEREF, PasField.Kind.CLASSREF);
+    private static final Set<PasField.Kind> KINDS_TYPE_REF = EnumSet.of(PasField.Kind.TYPEALIAS, PasField.Kind.TYPEREF);
 
     // Find Pascal modules by key using stub index. If key is not specified return all modules.
     @NotNull
@@ -266,7 +266,7 @@ public class ResolveUtil {
         String type = element.getTypeString();
         if ((type != null) && KINDS_FOLLOW_TYPE.contains(element.getTypeKind())) {
             if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
-                return new PasField.ValueType(null, PasField.Kind.TYPEREF, null, element);
+                return new PasField.ValueType(null, PasField.Kind.TYPEALIAS, null, element);
             }
             return resolveTypeForStub(type, element, typeResolveContext, recursionCount);
         } else if (element.getTypeKind() == PasField.Kind.STRUCT) {

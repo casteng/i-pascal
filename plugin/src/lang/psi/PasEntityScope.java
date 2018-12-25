@@ -35,12 +35,12 @@ public interface PasEntityScope extends PascalNamedElement, NavigatablePsiElemen
     List<SmartPsiElementPointer<PasEntityScope>> getParentScope();
 
     /**
-     * For methods and method implementations returns containing class
-     * For routines returns containing module
-     * For nested routines returns containing routine
-     * For structured types returns containing module
-     * For nested structured types returns containing type
-     * For modules returns null
+     * 1. For methods and method implementations returns containing class
+     * 2. For routines returns containing module
+     * 3. For nested routines returns containing routine
+     * 4. For structured types returns containing module
+     * 5. For nested structured types returns containing type
+     * 6. For modules returns null
      */
     @Nullable
     PasEntityScope getContainingScope();

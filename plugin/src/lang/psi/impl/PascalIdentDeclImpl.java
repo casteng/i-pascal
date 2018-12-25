@@ -59,11 +59,23 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         return new PasNamedIdentDeclImpl(stub, elementType);
     }
 
+    @Override
+    public void invalidateCaches() {
+        super.invalidateCaches();
+        if (SyncUtil.lockOrCancel(subMembersLock)) {
+            subMembers = null;
+            subMembersLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(typeLock)) {
+            myCachedType = null;
+            typeLock.unlock();
+        }
+    }
+
     @Nullable
     @Override
     public PasIdentStub retrieveStub() {
-        PasIdentStub stub = super.getStub();
-        return stub;// != null ? stub : getGreenStub();
+        return getGreenStub();
     }
 
     @Nullable
@@ -151,19 +163,6 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
             }
         }
         return subMembers;
-    }
-
-    @Override
-    public void subtreeChanged() {
-        super.subtreeChanged();
-        if (SyncUtil.lockOrCancel(subMembersLock)) {
-            subMembers = null;
-            subMembersLock.unlock();
-        }
-        if (SyncUtil.lockOrCancel(typeLock)) {
-            myCachedType = null;
-            typeLock.unlock();
-        }
     }
 
     @Override

@@ -62,11 +62,11 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
 
     public static final Logger LOG = Logger.getInstance(PasStubStructTypeImpl.class.getName());
 
-    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
+    private static final Cache<String, PascalHelperScope.Members> cache = CacheBuilder.newBuilder().softValues().build();
 
     private static final Map<String, PasField.Visibility> STR_TO_VIS;
 
-    private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
+    private final Callable<? extends PascalHelperScope.Members> MEMBER_BUILDER = this.new MemberBuilder();
 
     static {
         STR_TO_VIS = new HashMap<>(PasField.Visibility.values().length);
@@ -242,7 +242,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     }
 
     @NotNull
-    private Members getMembers(Cache<String, Members> cache, Callable<? extends Members> builder) {
+    private PascalHelperScope.Members getMembers(Cache<String, PascalHelperScope.Members> cache, Callable<? extends PascalHelperScope.Members> builder) {
         ensureChache(cache);
         try {
             return cache.get(getKey(), builder);
@@ -252,7 +252,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             } else {
                 LOG.warn("Error occured during building members for: " + this, e.getCause());
                 invalidateCaches();
-                return EMPTY_MEMBERS;
+                return PascalHelperScope.EMPTY_MEMBERS;
             }
         }
     }
@@ -282,10 +282,10 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         return STR_TO_VIS.get(sb.toString());
     }
 
-    private class MemberBuilder implements Callable<Members> {
+    private class MemberBuilder implements Callable<PascalHelperScope.Members> {
         @Override
-        public Members call() throws Exception {
-            Members res = new Members();
+        public PascalHelperScope.Members call() throws Exception {
+            PascalHelperScope.Members res = new PascalHelperScope.Members();
 
             PasField.Visibility visibility = PasField.Visibility.PUBLISHED;
             PsiElement child = getFirstChild();
@@ -317,7 +317,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         }
     }
 
-    private void addFields(Members res, PsiElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+    private void addFields(PascalHelperScope.Members res, PsiElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         PsiElement child = element.getFirstChild();
         while (child != null) {
             if (child instanceof PasNamedIdent) {
@@ -344,14 +344,14 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         }
     }
 
-    private void addField(Members res, @NotNull PascalNamedElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+    private void addField(PascalHelperScope.Members res, @NotNull PascalNamedElement element, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         addField(res, element, element.getName(), fieldType, visibility);
         if (fieldType == PasField.FieldType.ROUTINE) {
             addField(res, element, PsiUtil.getFieldName(element), fieldType, visibility);                        // add with signature included in name
         }
     }
 
-    private PasField addField(Members res, PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
+    private PasField addField(PascalHelperScope.Members res, PascalNamedElement element, String name, PasField.FieldType fieldType, @NotNull PasField.Visibility visibility) {
         PasField field = new PasField(this, element, name, fieldType, visibility);
         res.all.put(name.toUpperCase(), field);
         return field;

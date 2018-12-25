@@ -38,36 +38,24 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRoutine, PasDeclSection, HasTypeParameters {
 
-    private static final Cache<String, Members> cache = CacheBuilder.newBuilder().softValues().build();
+    private static final Cache<String, PascalHelperScope.Members> cache = CacheBuilder.newBuilder().softValues().build();
 
     private List<String> typeParameters;
     private ReentrantLock typeParametersLock = new ReentrantLock();
 
-    private final Callable<? extends Members> MEMBER_BUILDER = this.new MemberBuilder();
+    private final Callable<? extends PascalHelperScope.Members> MEMBER_BUILDER = this.new MemberBuilder();
     volatile private Collection<PasWithStatement> withStatements;
-
-    @Nullable
-    public abstract PasFormalParameterSection getFormalParameterSection();
 
     PascalRoutineImpl(ASTNode node) {
         super(node);
     }
 
+    @Nullable
+    public abstract PasFormalParameterSection getFormalParameterSection();
+
     @Override
     protected PascalHelperNamed createHelper() {
         return new PascalHelperRoutine(this);
-    }
-
-    private PascalHelperRoutine getHelper() {
-        return (PascalHelperRoutine) helper;
-    }
-
-    @Override
-    public void invalidateCaches() {
-        getHelper().invalidateCaches();
-        if (cachedKey != null) {
-            invalidate(cachedKey);
-        }
     }
 
     @NotNull
@@ -111,11 +99,11 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     @NotNull
-    private Members getMembers(Cache<String, Members> cache, Callable<? extends Members> builder) {
+    private PascalHelperScope.Members getMembers(Cache<String, PascalHelperScope.Members> cache, Callable<? extends PascalHelperScope.Members> builder) {
         ensureChache(cache);
         try {
-            Members res = cache.get(getKey(), builder);
-            if (!res.isChachable()) {
+            PascalHelperScope.Members res = cache.get(getKey(), builder);
+            if (!res.isCachable()) {
                 cache.invalidate(getKey());
             }
             return res;
@@ -125,7 +113,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             } else {
                 LOG.warn("Error occured during building members for: " + this, e.getCause());
                 invalidateCaches(getKey());
-                return EMPTY_MEMBERS;
+                return PascalHelperScope.EMPTY_MEMBERS;
             }
         }
     }
@@ -169,35 +157,30 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         return getMembers(cache, MEMBER_BUILDER).all.values();
     }
 
-    @Override
-    public void subtreeChanged() {
-        super.subtreeChanged();
-        invalidateCaches();
-    }
-
     static void invalidate(String key) {
         cache.invalidate(key);
     }
 
-    private class MemberBuilder implements Callable<Members> {
+    private class MemberBuilder implements Callable<PascalHelperScope.Members> {
+
         @Override
-        public Members call() {
+        public PascalHelperScope.Members call() {
             if (null == getContainingFile()) {
                 PascalPsiImplUtil.logNullContainingFile(PascalRoutineImpl.this);
                 return null;
             }
             if (building) {
                 LOG.info("WARNING: Reentered in routine.buildXXX");
-                return Members.createNotCacheable();
+                return PascalHelperScope.Members.createNotCacheable();
 //                throw new ProcessCanceledException();
             }
             building = true;
             try {
-                Members res = new Members();
+                PascalHelperScope.Members res = new PascalHelperScope.Members();
                 res.stamp = getStamp(getContainingFile());
 
                 collectFormalParameters(res);
-                collectFields(PascalRoutineImpl.this, PasField.Visibility.STRICT_PRIVATE, res.all, res.redeclared);
+                PascalHelperScope.collectFields(PascalRoutineImpl.this, PascalRoutineImpl.this, PasField.Visibility.STRICT_PRIVATE, res.all, res.redeclared);
 
                 addSelf(res);
 
@@ -209,8 +192,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             }
         }
     }
-
-    private void collectFormalParameters(Members res) {
+    private void collectFormalParameters(PascalHelperScope.Members res) {
         PascalRoutine routine = this;
         List<PascalNamedElement> params = PsiUtil.getFormalParameters(getFormalParameterSection());
         if (params.isEmpty() && (this instanceof PasRoutineImplDecl)) {         // If this is implementation with formal parameters omitted take formal parameters from routine declaration
@@ -272,7 +254,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         return PsiTreeUtil.findChildOfType(findChildByClass(PasTypeDecl.class), PasTypeID.class);
     }
 
-    private void addSelf(Members res) {
+    private void addSelf(PascalHelperScope.Members res) {
         PasEntityScope scope = getContainingScope();
         if ((scope != null) && (scope.getParent() instanceof PasTypeDecl)) {
             PasField field = new PasField(this, scope, BUILTIN_SELF, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE);
@@ -282,7 +264,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         }
     }
 
-    private void addField(Members res, PascalNamedElement element, PasField.FieldType fieldType) {
+    private void addField(PascalHelperScope.Members res, PascalNamedElement element, PasField.FieldType fieldType) {
         PasField field = new PasField(this, element, element.getName(), fieldType, PasField.Visibility.STRICT_PRIVATE);
         res.all.put(field.name.toUpperCase(), field);
     }
@@ -300,6 +282,10 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             withStatements = PsiTreeUtil.findChildrenOfType(this, PasWithStatement.class);
         }
         return withStatements;
+    }
+
+    private PascalHelperRoutine getHelper() {
+        return (PascalHelperRoutine) helper;
     }
 
 }

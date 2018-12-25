@@ -52,14 +52,14 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> implements PascalModule {
 
-    private static final UnitMembers EMPTY_MEMBERS = new UnitMembers();
+    private static final PascalHelperScope.UnitMembers EMPTY_MEMBERS = new PascalHelperScope.UnitMembers();
     private static final Idents EMPTY_IDENTS = new Idents();
-    private static final Cache<String, Members> privateCache = CacheBuilder.newBuilder().softValues().build();
-    private static final Cache<String, Members> publicCache = CacheBuilder.newBuilder().softValues().build();
+    private static final Cache<String, PascalHelperScope.Members> privateCache = CacheBuilder.newBuilder().softValues().build();
+    private static final Cache<String, PascalHelperScope.Members> publicCache = CacheBuilder.newBuilder().softValues().build();
     private static final Cache<String, Idents> identCache = CacheBuilder.newBuilder().softValues().build();
 
-    private final Callable<? extends Members> PRIVATE_BUILDER = this.new PrivateBuilder();
-    private final Callable<? extends Members> PUBLIC_BUILDER = this.new PublicBuilder();
+    private final Callable<? extends PascalHelperScope.Members> PRIVATE_BUILDER = this.new PrivateBuilder();
+    private final Callable<? extends PascalHelperScope.Members> PUBLIC_BUILDER = this.new PublicBuilder();
     private final Callable<Idents> IDENTS_BUILDER = this.new IdentsBuilder();
 
     private Set<String> usedUnitsPublic = null;
@@ -118,10 +118,10 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     @NotNull
-    private UnitMembers getMembers(Cache<String, Members> cache, Callable<? extends Members> builder) {
+    private PascalHelperScope.UnitMembers getMembers(Cache<String, PascalHelperScope.Members> cache, Callable<? extends PascalHelperScope.Members> builder) {
         ensureChache(cache);
         try {
-            return (UnitMembers) cache.get(getKey(), builder);
+            return (PascalHelperScope.UnitMembers) cache.get(getKey(), builder);
         } catch (Exception e) {
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
@@ -273,7 +273,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         return res;
     }
 
-    private PasField getPasField(String name, Cache<String, Members> cache, Callable<? extends Members> builder) {
+    private PasField getPasField(String name, Cache<String, PascalHelperScope.Members> cache, Callable<? extends PascalHelperScope.Members> builder) {
         PasField res = getMembers(cache, builder).all.get(name.toUpperCase());
         if ((res != null) && !PsiUtil.isElementUsable(res.getElement())) {
             LOG.info(String.format("WARN: element for name %s in %s is invalid. Clearing caches.", name, getUniqueName()));
@@ -394,7 +394,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         identCache.invalidate(key);
     }
 
-    private static class Idents extends Cached {
+    private static class Idents extends PascalHelperScope.Cached {
         Map<PascalNamedElement, PasField> identsIntf = new HashMap<PascalNamedElement, PasField>();
         Map<PascalNamedElement, PasField> identsImpl = new HashMap<PascalNamedElement, PasField>();
     }
@@ -421,11 +421,11 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         }
     }
 
-    private class PrivateBuilder implements Callable<UnitMembers> {
+    private class PrivateBuilder implements Callable<PascalHelperScope.UnitMembers> {
         @Override
-        public UnitMembers call() throws Exception {
+        public PascalHelperScope.UnitMembers call() throws Exception {
             PsiElement section = PsiUtil.getModuleImplementationSection(PascalModuleImpl.this);
-            UnitMembers res = new UnitMembers();
+            PascalHelperScope.UnitMembers res = new PascalHelperScope.UnitMembers();
             if (!PsiUtil.checkeElement(section)) {
                 //throw new PasInvalidElementException(section);
                 return res;
@@ -446,10 +446,10 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         }
     }
 
-    private class PublicBuilder implements Callable<UnitMembers> {
+    private class PublicBuilder implements Callable<PascalHelperScope.UnitMembers> {
         @Override
-        public UnitMembers call() throws Exception {
-            UnitMembers res = new UnitMembers();
+        public PascalHelperScope.UnitMembers call() throws Exception {
+            PascalHelperScope.UnitMembers res = new PascalHelperScope.UnitMembers();
             res.all.put(getName().toUpperCase(), new PasField(PascalModuleImpl.this, PascalModuleImpl.this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
             res.stamp = getStamp(getContainingFile());
 

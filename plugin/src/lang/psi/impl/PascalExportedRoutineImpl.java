@@ -16,7 +16,6 @@ import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
-import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -164,16 +163,6 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
         return Collections.singletonList(SmartPointerManager.getInstance(this.getProject()).createSmartPsiElementPointer(Objects.requireNonNull(getContainingScope())));
-    }
-
-    @Override
-    void calcContainingScope() {
-        PasEntityScope scope = PsiTreeUtil.getParentOfType(this, PasEntityScope.class);
-        if (scope != null) {
-            containingScope = PsiUtil.createSmartPointer(scope);
-        } else {
-            LOG.info("ERROR: containing scope not found for: " + getName());
-        }
     }
 
     @NotNull

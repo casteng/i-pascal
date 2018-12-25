@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
  * Date: 1/4/13
  */
 public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implements PascalNamedElement {
+
     protected PascalHelperNamed helper = createHelper();
 
     public PascalNamedElementImpl(ASTNode node) {
@@ -39,6 +40,21 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     protected PascalHelperNamed createHelper() {
         return new PascalHelperNamed(this);
+    }
+
+    public void invalidateCaches() {
+        helper.invalidateCaches();
+    }
+
+    @Override
+    public void subtreeChanged() {
+        super.subtreeChanged();
+        invalidateCaches();
+    }
+
+    @Override
+    public ItemPresentation getPresentation() {
+        return PascalParserUtil.getPresentation(this);
     }
 
     @NotNull
@@ -98,18 +114,6 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     }
 
     @Override
-    public PsiElement setName(@NonNls @NotNull String s) throws IncorrectOperationException {
-        PsiElement element = getNameIdentifier();
-        if (element != null) {
-            PsiElement el = PasElementFactory.createReplacementElement(element, s);
-            if (el != null) {
-                element.replace(el);
-            }
-        }
-        return this;
-    }
-
-    @Override
     public int getTextOffset() {
         PsiElement element = getNameIdentifier();
         return (element != null) && (element != this) ? element.getTextOffset() : getNode().getStartOffset();
@@ -128,11 +132,6 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     public PsiElement getNameIdentifier() {
         return helper.calcNameElement();
-    }
-
-    @Override
-    public ItemPresentation getPresentation() {
-        return PascalParserUtil.getPresentation(this);
     }
 
     @Override
@@ -157,6 +156,18 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
             };
         }
         return PsiReference.EMPTY_ARRAY;
+    }
+
+    @Override
+    public PsiElement setName(@NonNls @NotNull String s) throws IncorrectOperationException {
+        PsiElement element = getNameIdentifier();
+        if (element != null) {
+            PsiElement el = PasElementFactory.createReplacementElement(element, s);
+            if (el != null) {
+                element.replace(el);
+            }
+        }
+        return this;
     }
 
 }
