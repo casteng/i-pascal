@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.stub;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.lang.LighterAST;
 import com.intellij.lang.LighterASTNode;
 import com.intellij.psi.stubs.ILightStubElementType;
@@ -9,9 +10,12 @@ import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalIdentDeclImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalRoutineImpl;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -88,5 +92,17 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         if (stub.isExported()) {
             sink.occurrence(PascalUnitSymbolIndex.KEY, stub.getName().toUpperCase());
         }
+    }
+
+    @Override
+    public boolean shouldCreateStub(ASTNode node) {
+        PasEntityScope scope = PsiUtil.getNearestAffectingScope(node.getPsi());
+        while (scope != null) {
+            if (scope instanceof PascalRoutineImpl) {                           // Identifiers declared inside a routine implementation should not be in stub
+                return false;
+            }
+            scope = PsiUtil.getNearestAffectingScope(scope);
+        }
+        return true;
     }
 }

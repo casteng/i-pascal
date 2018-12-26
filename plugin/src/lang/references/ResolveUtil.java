@@ -87,6 +87,9 @@ public class ResolveUtil {
     @NotNull
     public static Collection<PascalModule> findUnitsWithStub(@NotNull Project project, @Nullable final Module module, @Nullable String key) {
         final Collection<PascalModule> modules = new SmartHashSet<>();
+        if (DumbService.isDumb(project)) {
+            return modules;
+        }
         final GlobalSearchScope scope = module != null ? GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false) : ProjectScope.getAllScope(project);
         if (key != null) {
             modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key.toUpperCase(), project, scope, PascalModule.class));
@@ -318,6 +321,9 @@ public class ResolveUtil {
     public static Collection<PasField> resolveWithStubs(final NamespaceRec fqn, ResolveContext context, final int recursionCount) {
         assert(context.scope instanceof PascalStubElement);
         assert(context.unitNamespaces != null);
+        if (DumbService.isDumb(context.scope.getProject())) {
+            return Collections.emptySet();
+        }
         StubElement stub = ((PascalStubElement) context.scope).retrieveStub();
         assert(stub != null);
         PasEntityScope scope = context.scope;
