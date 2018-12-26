@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.references;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
@@ -63,6 +64,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -131,7 +133,7 @@ public class ResolveUtil {
 
     // Resolve most deep type name which is the same (alias to) the specified type name
     @NotNull
-    public static PascalNamedElement resolveTypeAliasChain(String typeName, PascalNamedElement contextElement, int recursionCount) {
+    public static String resolveTypeAliasChain(String typeName, PascalNamedElement contextElement, int recursionCount) {
         Matcher m = PATTERN_TYPE_PARAM.matcher(typeName);
         if (m.matches()) {
             typeName = m.group(1);
@@ -146,20 +148,20 @@ public class ResolveUtil {
             if (el instanceof PascalIdentDecl) {
                 PascalIdentDecl element = (PascalIdentDecl) el;
                 String type = element.getTypeString();
-                if ((type != null) && (PasField.Kind.TYPEALIAS == element.getTypeKind())) {                         // Alias
+                if ((type != null) && (PasField.Kind.TYPEALIAS == element.getTypeKind())) {                       // Alias
                     if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
-                        return element;
+                        return type;
                     } else {
                         return resolveTypeAliasChain(type, element, ++recursionCount);
                     }
                 } else {                                                                                          // Anonymous type or distinct alias
-                    return element;
+                    return typeName;
                 }
             } else if (el instanceof PasNamedIdent) {
-                return (PascalNamedElement) el;
+                return ((PascalNamedElement) el).getName();
             }
         }
-        return contextElement;
+        return typeName;
     }
 
     private static Pair<String, PasField.Kind> retrieveType(PasTypeDecl typeDecl, PasTypeID typeId) {

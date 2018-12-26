@@ -43,10 +43,14 @@ public class PascalHelperNamed {
         cachedNameEl = null;
     }
 
-    protected void ensureCacheActual() {
+    void ensureCacheActual() {
         if (modified != self.getContainingFile().getModificationStamp()) {
             invalidateCaches();
         }
+    }
+
+    boolean isCacheActual() {
+        return (modified == self.getContainingFile().getModificationStamp());
     }
 
     public String getName() {

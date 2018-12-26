@@ -144,17 +144,12 @@ public class RoutineUtil {
         return res.toString();
     }
 
-    public static String calcReducedName(String name, SmartPsiElementPointer<PascalNamedElement>[] reducedParameterTypes) {
+    public static String calcReducedName(String name, String[] reducedParameterTypes) {
         StringBuilder res = new StringBuilder(name);
         res.append("(");
         for (int i = 0; i < reducedParameterTypes.length; i++) {
             res.append(i > 0 ? "," : "");
-            SmartPsiElementPointer<PascalNamedElement> tIDPtr = reducedParameterTypes[i];
-            String typeName = tIDPtr != null ? getTypeName(tIDPtr) : PsiUtil.TYPE_UNTYPED_NAME;
-            if (null == typeName) {
-                return null;                         // Type element become invalid, need to resolve again
-            }
-            res.append(typeName);
+            res.append(reducedParameterTypes[i]);
         }
         res.append(")");
         return res.toString();
@@ -229,7 +224,7 @@ public class RoutineUtil {
                 PascalNamedElement el = field.getElement();
                 if (el instanceof PascalRoutine) {
                     PascalRoutine routine = (PascalRoutine) el;
-                    if (reducedName.equals(routine.getReducedName())) {
+                    if (reducedName.equalsIgnoreCase(routine.getReducedName())) {
                         return routine;
                     }
                 }

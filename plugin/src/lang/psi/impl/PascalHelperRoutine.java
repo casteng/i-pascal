@@ -2,13 +2,11 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
@@ -22,14 +20,14 @@ import java.util.concurrent.locks.ReentrantLock;
 class PascalHelperRoutine extends PascalHelperScope {
     volatile private String canonicalName;
     volatile private String reducedName;
-    volatile private SmartPsiElementPointer<PascalNamedElement>[] reducedParameterTypes;
+    volatile private String[] reducedParameterTypes;
     volatile List<String> formalParameterNames;
     volatile List<String> formalParameterTypes;
     volatile List<ParamModifier> formalParameterAccess;
     volatile private String functionTypeStr;
     private ReentrantLock calcParamLock = new ReentrantLock();
 
-    public PascalHelperRoutine(PascalRoutine self) {
+    PascalHelperRoutine(PascalRoutine self) {
         super(self);
     }
 
@@ -41,6 +39,7 @@ class PascalHelperRoutine extends PascalHelperScope {
             canonicalName = null;
             reducedName = null;
             functionTypeStr = null;
+            reducedParameterTypes = null;
         });
         super.invalidateCaches();
     }
@@ -83,10 +82,10 @@ class PascalHelperRoutine extends PascalHelperScope {
 
     private void resolveParameterTypes(List<String> formalParameterTypes) {
         ensureCacheActual();
-        SmartPsiElementPointer<PascalNamedElement>[] parameterTypes = new SmartPsiElementPointer[formalParameterTypes.size()];
+        String[] parameterTypes = new String[formalParameterTypes.size()];
         for (int i = 0, formalParameterTypesSize = formalParameterTypes.size(); i < formalParameterTypesSize; i++) {
             String typeName = formalParameterTypes.get(i);
-            parameterTypes[i] = StringUtil.isNotEmpty(typeName) ? PsiUtil.createSmartPointer(ResolveUtil.resolveTypeAliasChain(typeName, self, 0)) : null;
+            parameterTypes[i] = StringUtil.isNotEmpty(typeName) ? ResolveUtil.resolveTypeAliasChain(typeName, self, 0) : PsiUtil.TYPE_UNTYPED_NAME;
         }
         reducedParameterTypes = parameterTypes;
     }
@@ -95,7 +94,7 @@ class PascalHelperRoutine extends PascalHelperScope {
         return null == reducedName;
     }
 
-    public String calcFunctionTypeStr() {
+    String calcFunctionTypeStr() {
         ensureCacheActual();
         if (null == functionTypeStr) {
             if (getSelf().isConstructor()) {

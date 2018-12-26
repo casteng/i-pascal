@@ -40,16 +40,15 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
 
     protected static final Logger LOG = Logger.getInstance(PascalIdentDeclImpl.class.getName());
 
-    private Pair<String, PasField.Kind> myCachedType;
+    volatile private Pair<String, PasField.Kind> myCachedType;
     private List<String> subMembers;                            // members which can be qualified by this ident as well as accessed directly (enums)
-    private ReentrantLock typeLock = new ReentrantLock();
     private ReentrantLock subMembersLock = new ReentrantLock();
 
-    public PascalIdentDeclImpl(ASTNode node) {
+    PascalIdentDeclImpl(ASTNode node) {
         super(node);
     }
 
-    public PascalIdentDeclImpl(PasIdentStub stub, IStubElementType nodeType) {
+    PascalIdentDeclImpl(PasIdentStub stub, IStubElementType nodeType) {
         super(stub, nodeType);
         myCachedType = Pair.create(stub.getTypeString(), stub.getTypeKind());
         subMembers = stub.getSubMembers();
@@ -66,9 +65,12 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
             subMembers = null;
             subMembersLock.unlock();
         }
-        if (SyncUtil.lockOrCancel(typeLock)) {
-            myCachedType = null;
-            typeLock.unlock();
+        myCachedType = null;
+    }
+
+    private void ensureCacheActual() {
+        if (!helper.isCacheActual()) {
+            invalidateCaches();
         }
     }
 
@@ -85,8 +87,8 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         if (stub != null) {
             return stub.getTypeString();
         }
-        Pair<String, PasField.Kind> cachedType = ensureTypeResolved();
-        return cachedType != null ? cachedType.first : null;
+        ensureTypeResolved();
+        return myCachedType != null ? myCachedType.first : null;
     }
 
     @Nullable
@@ -96,8 +98,8 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         if (stub != null) {
             return stub.getTypeKind();
         }
-        Pair<String, PasField.Kind> type = ensureTypeResolved();
-        return type != null ? type.second : null;
+        ensureTypeResolved();
+        return myCachedType != null ? myCachedType.second : null;
     }
 
     @NotNull
@@ -193,18 +195,11 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         return calcScopeUniqueName(scope) + "." + PsiUtil.getFieldName(this);
     }
 
-    private Pair<String, PasField.Kind> ensureTypeResolved() {
-        if (SyncUtil.lockOrCancel(typeLock)) {
-            try {
-                if (myCachedType == null) {
-                    myCachedType = ResolveUtil.retrieveDeclarationType(this);
-                    return myCachedType;
-                }
-            } finally {
-                typeLock.unlock();
-            }
+    private void ensureTypeResolved() {
+        ensureCacheActual();
+        if (myCachedType == null) {
+            myCachedType = ResolveUtil.retrieveDeclarationType(this);
         }
-        return myCachedType;
     }
 
     private PasField.Access getPropertyAccess() {
