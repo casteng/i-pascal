@@ -42,18 +42,17 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     }
 
     @Override
-    public void invalidateCaches() {
-        super.invalidateCaches();
-        getHelper().invalidateCaches();
+    public PascalHelperNamed createHelper() {
+        return new PascalHelperRoutine(this);
+    }
+
+    @Override
+    public void invalidateCache(boolean subtreeChanged) {
+        super.invalidateCache(subtreeChanged);
         if (SyncUtil.lockOrCancel(typeIdLock)) {
             typeId = null;
             typeIdLock.unlock();
         }
-    }
-
-    @Override
-    public PascalHelperNamed createHelper() {
-        return new PascalHelperRoutine(this);
     }
 
     private PascalHelperRoutine getHelper() {

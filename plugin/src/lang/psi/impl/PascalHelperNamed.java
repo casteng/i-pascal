@@ -33,7 +33,7 @@ public class PascalHelperNamed {
         this.self = self;
     }
 
-    void invalidateCaches() {
+    void invalidateCache(boolean subtreeChanged) {
         local = null;
         cachedUniqueName = null;
         containingUnitName = null;
@@ -41,16 +41,13 @@ public class PascalHelperNamed {
         // TODO: don't invalidate on each file modification
         cachedName = null;
         cachedNameEl = null;
+        self.invalidateCache(subtreeChanged);
     }
 
     void ensureCacheActual() {
         if (modified != self.getContainingFile().getModificationStamp()) {
-            invalidateCaches();
+            invalidateCache(false);
         }
-    }
-
-    boolean isCacheActual() {
-        return (modified == self.getContainingFile().getModificationStamp());
     }
 
     public String getName() {
@@ -120,4 +117,5 @@ public class PascalHelperNamed {
         }
         return cachedType;
     }
+
 }

@@ -22,7 +22,6 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.util.PsiUtil;
-import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +29,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: George Bakhtadze
@@ -40,11 +38,10 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     private static final Cache<String, PascalHelperScope.Members> cache = CacheBuilder.newBuilder().softValues().build();
 
-    private List<String> typeParameters;
-    private ReentrantLock typeParametersLock = new ReentrantLock();
+    volatile private List<String> typeParameters;
+    volatile private Collection<PasWithStatement> withStatements;
 
     private final Callable<? extends PascalHelperScope.Members> MEMBER_BUILDER = this.new MemberBuilder();
-    volatile private Collection<PasWithStatement> withStatements;
 
     PascalRoutineImpl(ASTNode node) {
         super(node);
@@ -58,6 +55,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         return new PascalHelperRoutine(this);
     }
 
+    @Override
+    public void invalidateCache(boolean subtreeChanged) {
+        typeParameters = null;
+        withStatements = null;
+    }
+
     @NotNull
     @Override
     public PasField.FieldType getType() {
@@ -67,16 +70,10 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @NotNull
     @Override
     public List<String> getTypeParameters() {
-        if (SyncUtil.lockOrCancel(typeParametersLock)) {
-            try {
-                if (null == typeParameters) {
-                    PsiElement nameIdent = getNameIdentifier();
-                    List<PasGenericPostfix> postfixes = nameIdent instanceof PasClassQualifiedIdent ? ((PasClassQualifiedIdent) nameIdent).getGenericPostfixList() : Collections.emptyList();
-                    typeParameters = postfixes.isEmpty() ? Collections.emptyList() : RoutineUtil.parseTypeParametersStr(postfixes.get(0).getText());
-                }
-            } finally {
-                typeParametersLock.unlock();
-            }
+        if (null == typeParameters) {
+            PsiElement nameIdent = getNameIdentifier();
+            List<PasGenericPostfix> postfixes = nameIdent instanceof PasClassQualifiedIdent ? ((PasClassQualifiedIdent) nameIdent).getGenericPostfixList() : Collections.emptyList();
+            typeParameters = postfixes.isEmpty() ? Collections.emptyList() : RoutineUtil.parseTypeParametersStr(postfixes.get(0).getText());
         }
         return typeParameters;
     }
@@ -192,6 +189,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             }
         }
     }
+
     private void collectFormalParameters(PascalHelperScope.Members res) {
         PascalRoutine routine = this;
         List<PascalNamedElement> params = PsiUtil.getFormalParameters(getFormalParameterSection());
@@ -272,7 +270,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        return Collections.singletonList(PsiUtil.createSmartPointer(getContainingScope()));
+        PasEntityScope scope = getContainingScope();
+        return scope != null ? Collections.singletonList(PsiUtil.createSmartPointer(scope)) : Collections.emptyList();
     }
 
     @NotNull

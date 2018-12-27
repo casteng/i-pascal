@@ -34,8 +34,8 @@ class PascalHelperScope extends PascalHelperNamed {
     }
 
     @Override
-    void invalidateCaches() {
-        super.invalidateCaches();
+    void invalidateCache(boolean subtreeChanged) {
+        super.invalidateCache(subtreeChanged);
         containingScope = null;
     }
 

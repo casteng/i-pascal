@@ -31,7 +31,8 @@ class PascalHelperRoutine extends PascalHelperScope {
         super(self);
     }
 
-    void invalidateCaches() {
+    @Override
+    void invalidateCache(boolean subtreeChanged) {
         SyncUtil.doWithLock(calcParamLock, () -> {
             formalParameterNames = null;
             formalParameterTypes = null;
@@ -41,7 +42,7 @@ class PascalHelperRoutine extends PascalHelperScope {
             functionTypeStr = null;
             reducedParameterTypes = null;
         });
-        super.invalidateCaches();
+        super.invalidateCache(subtreeChanged);
     }
 
     String getCanonicalName() {

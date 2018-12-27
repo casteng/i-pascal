@@ -59,19 +59,13 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     }
 
     @Override
-    public void invalidateCaches() {
-        super.invalidateCaches();
+    public void invalidateCache(boolean subtreeChanged) {
+        super.invalidateCache(subtreeChanged);
         if (SyncUtil.lockOrCancel(subMembersLock)) {
             subMembers = null;
             subMembersLock.unlock();
         }
         myCachedType = null;
-    }
-
-    private void ensureCacheActual() {
-        if (!helper.isCacheActual()) {
-            invalidateCaches();
-        }
     }
 
     @Nullable
@@ -196,7 +190,7 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
     }
 
     private void ensureTypeResolved() {
-        ensureCacheActual();
+        helper.ensureCacheActual();
         if (myCachedType == null) {
             myCachedType = ResolveUtil.retrieveDeclarationType(this);
         }

@@ -36,8 +36,8 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
     }
 
     @Override
-    public void invalidateCaches() {
-        super.invalidateCaches();
+    public void invalidateCache(boolean subtreeChanged) {
+        super.invalidateCache(subtreeChanged);
         cachedKey = null;
     }
 

@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.tree.TokenSet;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
@@ -153,14 +152,6 @@ public class RoutineUtil {
         }
         res.append(")");
         return res.toString();
-    }
-
-    private static String getTypeName(SmartPsiElementPointer<PascalNamedElement> tIDPtr) {
-        PascalNamedElement tid = tIDPtr.getElement();
-        if (!PsiUtil.isElementUsable(tid)) {
-            return null;
-        }
-        return tid.getName();
     }
 
     static List<String> parseTypeParametersStr(String typeParamText) {

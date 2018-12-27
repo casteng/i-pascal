@@ -42,14 +42,10 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
         return new PascalHelperNamed(this);
     }
 
-    public void invalidateCaches() {
-        helper.invalidateCaches();
-    }
-
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
-        invalidateCaches();
+        helper.invalidateCache(true);
     }
 
     @Override

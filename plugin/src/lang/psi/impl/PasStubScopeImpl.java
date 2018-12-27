@@ -49,6 +49,19 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
         return new PascalHelperScope(this);
     }
 
+    @Override
+    public void invalidateCache(boolean subtreeChanged) {
+        super.invalidateCache(subtreeChanged);
+        if (cachedKey != null) {
+            String key = cachedKey;
+            PascalModuleImpl.invalidate(key);
+            PascalRoutineImpl.invalidate(key);
+            PasStubStructTypeImpl.invalidate(key);
+            cachedKey = null;
+        }
+        fieldsMap.clear();                                     // TODO: probably not safe
+    }
+
     @Nullable
     @Override
     public B retrieveStub() {
@@ -132,25 +145,13 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
             return false;
         }*/
         if (!PsiUtil.isElementValid(this)) {
-            invalidateCaches();
+            invalidateCache(false);
             throw new ProcessCanceledException();
         }
         PascalHelperScope.Cached members = cache.getIfPresent(getKey());
         if ((members != null) && (getStamp(getContainingFile()) != members.stamp)) {
-            invalidateCaches();
+            invalidateCache(false);
         }
-    }
-
-    @Override
-    public void invalidateCaches() {
-        if (cachedKey != null) {
-            String key = cachedKey;
-            PascalModuleImpl.invalidate(key);
-            PascalRoutineImpl.invalidate(key);
-            PasStubStructTypeImpl.invalidate(key);
-            cachedKey = null;
-        }
-        fieldsMap.clear();                                     // TODO: probably not safe
     }
 
     static long getStamp(PsiFile file) {

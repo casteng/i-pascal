@@ -80,6 +80,31 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     @Override
+    public void invalidateCache(boolean subtreeChanged) {
+        super.invalidateCache(subtreeChanged);
+        if (SyncUtil.lockOrCancel(unitsLock)) {
+            usedUnitsPrivate = null;
+            usedUnitsPublic = null;
+            unitsLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(privateUnitsLock)) {
+            privateUnits = null;
+            privateUnitsLock.unlock();
+        }
+        if (SyncUtil.lockOrCancel(publicUnitsLock)) {
+            publicUnits = null;
+            publicUnitsLock.unlock();
+        }
+        withStatements = null;
+    }
+
+    public static void invalidate(String key) {
+        privateCache.invalidate(key);
+        publicCache.invalidate(key);
+        identCache.invalidate(key);
+    }
+
+    @Override
     protected boolean calcIsExported() {
         return true;
     }
@@ -128,7 +153,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             } else {
                 LOG.warn("Error occured during building members for: " + this, e.getCause());
             }
-            invalidateCaches();
+            invalidateCache(false);
             return EMPTY_MEMBERS;
         }
     }
@@ -160,7 +185,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             return getAllFieldsStub();
         } else {
             if (!PsiUtil.checkeElement(this)) {
-                invalidateCaches();
+                invalidateCache(false);
             }
             Collection<PasField> result = new LinkedHashSet<PasField>();
             result.addAll(getPubicFields());
@@ -256,7 +281,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             } else {
                 LOG.warn("Error occured during building idents for: " + this, e.getCause());
             }
-            invalidateCaches();
+            invalidateCache(false);
             return EMPTY_IDENTS;
         }
     }
@@ -277,7 +302,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         PasField res = getMembers(cache, builder).all.get(name.toUpperCase());
         if ((res != null) && !PsiUtil.isElementUsable(res.getElement())) {
             LOG.info(String.format("WARN: element for name %s in %s is invalid. Clearing caches.", name, getUniqueName()));
-            invalidateCaches();
+            invalidateCache(false);
             return getMembers(cache, builder).all.get(name.toUpperCase());
         } else {
             return res;
@@ -367,31 +392,6 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     public PascalRoutine getPrivateRoutine(String reducedName) {
         return RoutineUtil.findRoutine(getPrivateFields(), reducedName);
-    }
-
-    @Override
-    public void invalidateCaches() {
-        super.invalidateCaches();
-        if (SyncUtil.lockOrCancel(unitsLock)) {
-            usedUnitsPrivate = null;
-            usedUnitsPublic = null;
-            unitsLock.unlock();
-        }
-        if (SyncUtil.lockOrCancel(privateUnitsLock)) {
-            privateUnits = null;
-            privateUnitsLock.unlock();
-        }
-        if (SyncUtil.lockOrCancel(publicUnitsLock)) {
-            publicUnits = null;
-            publicUnitsLock.unlock();
-        }
-        withStatements = null;
-    }
-
-    public static void invalidate(String key) {
-        privateCache.invalidate(key);
-        publicCache.invalidate(key);
-        identCache.invalidate(key);
     }
 
     private static class Idents extends PascalHelperScope.Cached {

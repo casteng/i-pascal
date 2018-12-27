@@ -21,4 +21,6 @@ public interface PascalNamedElement extends PascalPsiElement, PsiNameIdentifierO
     boolean isExported();
     // not exported and not an implementation/override of another entity
     boolean isLocal();
+    // invalidate cached values depending on any modification of a file or the element's subtree modification. Super must be called.
+    default void invalidateCache(boolean subtreeChanged) {};
 }

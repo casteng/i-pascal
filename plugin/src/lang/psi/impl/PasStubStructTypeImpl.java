@@ -42,6 +42,7 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
+import com.siberika.idea.pascal.module.ModuleService;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -60,7 +61,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extends PasStructStub<T>>
         extends PasStubScopeImpl<B> implements PascalStructType<B> {
 
-    public static final Logger LOG = Logger.getInstance(PasStubStructTypeImpl.class.getName());
+    private static final Logger LOG = Logger.getInstance(PasStubStructTypeImpl.class);
 
     private static final Cache<String, PascalHelperScope.Members> cache = CacheBuilder.newBuilder().softValues().build();
 
@@ -94,8 +95,8 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     }
 
     @Override
-    public void invalidateCaches() {
-        super.invalidateCaches();
+    public void invalidateCache(boolean subtreeChanged) {
+        super.invalidateCache(subtreeChanged);
         parentNames = null;
         if (SyncUtil.lockOrCancel(parentScopesLock)) {
             parentScopes = null;
@@ -251,7 +252,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                 throw (ProcessCanceledException) e.getCause();
             } else {
                 LOG.warn("Error occured during building members for: " + this, e.getCause());
-                invalidateCaches();
+                invalidateCache(false);
                 return PascalHelperScope.EMPTY_MEMBERS;
             }
         }
@@ -419,15 +420,21 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     }
 
     private PasEntityScope getDefaultParentScope() {
-        PasEntityScope defEntity = null;
-        PasEntityScope scope = this.getContainingScope();
-        scope = scope != null ? scope : this;
         if (this instanceof PasClassTypeDecl) {
-            return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.TObject"), scope, true);
+            return resolveWithCache("system.TObject");
         } else if (this instanceof PasInterfaceTypeDecl) {
-            return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, "system.IInterface"), scope, true);
+            return resolveWithCache("system.IInterface");
         }
         return null;
+    }
+
+    private PasEntityScope resolveWithCache(String key) {
+        return ModuleService.getInstance(com.intellij.openapi.module.ModuleUtil.findModuleForPsiElement(this))
+                .calcWithCache(key, () -> {
+                    PasEntityScope scope = PasStubStructTypeImpl.this.getContainingScope();
+                    scope = scope != null ? scope : PasStubStructTypeImpl.this;
+                    return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(scope, key), scope, true);
+                });
     }
 
     private static void addScope(List<SmartPsiElementPointer<PasEntityScope>> scopes, PasEntityScope scope) {

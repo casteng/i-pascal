@@ -47,7 +47,6 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
     protected void checkClass(PasClassTypeDecl classTypeDecl, ProblemsHolder holder, boolean isOnTheFly) {
         PasClassParent classParent = classTypeDecl.getClassParent();
         if ((null != classParent) && hasNoDescendants(classTypeDecl)) {
-            System.out.println("===*** Class has no descendants: " + classTypeDecl.getName());
             SmartList<PasExportedRoutine> notImplemented = new SmartList<>();
             processClass(notImplemented, new SmartHashSet<>(), classTypeDecl);
             Set<String> processed = new SmartHashSet<>();
@@ -64,7 +63,6 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
     }
 
     private void processClass(List<PasExportedRoutine> result, SmartHashSet<PascalStructType> processed, @NotNull PasClassTypeDecl classTypeDecl) {
-        System.out.println(String.format("===*** Processing class %s", classTypeDecl.getName()));
         processed.add(classTypeDecl);
         List<SmartPsiElementPointer<PasEntityScope>> parentScope = classTypeDecl.getParentScope();
         for (SmartPsiElementPointer<PasEntityScope> parentPtr : parentScope) {
@@ -84,7 +82,7 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
         for (Iterator<PasExportedRoutine> iterator = result.iterator(); iterator.hasNext(); ) {
             PasExportedRoutine method = iterator.next();
             if (isMethodImplemented(classTypeDecl, method)) {
-                System.out.println(String.format("===*** Method %s implemented in %s", method.getReducedName(), classTypeDecl.getName()));
+//                System.out.println(String.format("===*** Method %s implemented in %s", method.getReducedName(), classTypeDecl.getName()));
                 iterator.remove();
             }
         }
@@ -93,10 +91,10 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
     private void processInterface(List<PasExportedRoutine> result, SmartHashSet<PascalStructType> processed, @NotNull PasClassTypeDecl classDecl, PascalInterfaceDecl interfaceDecl) {
         for (PasExportedRoutine method : interfaceDecl.getMethods()) {
             if (isMethodImplemented(classDecl, method)) {
-                System.out.println(String.format("===*** Method %s.%s implemented in %s", interfaceDecl.getName(), method.getReducedName(), classDecl.getName()));
+//                System.out.println(String.format("===*** Method %s.%s implemented in %s", interfaceDecl.getName(), method.getReducedName(), classDecl.getName()));
             } else {
                 result.add(method);
-                System.out.println(String.format("===*** Method %s.%s not implemented in %s", interfaceDecl.getName(), method.getReducedName(), classDecl.getName()));
+//                System.out.println(String.format("===*** Method %s.%s not implemented in %s", interfaceDecl.getName(), method.getReducedName(), classDecl.getName()));
             }
         }
         processed.add(interfaceDecl);

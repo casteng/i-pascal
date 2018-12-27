@@ -52,14 +52,10 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         return new PascalHelperNamed(this);
     }
 
-    public void invalidateCaches() {
-        helper.invalidateCaches();
-    }
-
     @Override
     public void subtreeChanged() {
         super.subtreeChanged();
-        invalidateCaches();
+        helper.invalidateCache(true);
     }
 
     @Override

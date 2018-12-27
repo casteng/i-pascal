@@ -367,6 +367,11 @@
             <implementation-class>com.siberika.idea.pascal.PascalAppService</implementation-class>
         </component>
     </application-components>
+    <module-components>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.module.ModuleService</implementation-class>
+        </component>
+    </module-components>
 
     <actions>
         <action id="Pascal.NewHPascalModule" class="com.siberika.idea.pascal.ide.actions.CreateModuleAction"
