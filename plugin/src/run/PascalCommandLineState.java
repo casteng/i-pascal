@@ -66,7 +66,7 @@ public class PascalCommandLineState extends CommandLineState {
             if (executable != null) {
                 if (fixIOBuffering && SystemInfo.isLinux) {
                     commandLine.setExePath("script");
-                    commandLine.addParameters("-q", "-c", executable, "/dev/null");
+                    commandLine.addParameters("-q", "-c", "'" + executable + "'", "/dev/null");
                 } else if (fixIOBuffering && (SystemInfo.isUnix || SystemInfo.isMac)) {
                     commandLine.setExePath("script");
                     commandLine.addParameters("-q", "/dev/null", executable);

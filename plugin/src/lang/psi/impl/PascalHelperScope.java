@@ -54,7 +54,7 @@ class PascalHelperScope extends PascalHelperNamed {
                     scope = updateContainingScope(scope, scope.getField(PsiUtil.cleanGenericDef(names[i])));
                 }
             }
-            containingScope = PsiUtil.createSmartPointer(scope);
+            containingScope = scope != null ? PsiUtil.createSmartPointer(scope) : null;
         }
         return containingScope != null ? containingScope.getElement() : null;
     }
