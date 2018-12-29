@@ -476,7 +476,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             PascalChooseByNameContributor.processByName(PascalUnitSymbolIndex.KEY, pattern, completionContext.completionParameters.getOriginalFile().getProject(), true, new Processor<PascalNamedElement>() {
                 @Override
                 public boolean process(PascalNamedElement namedElement) {
-                    if (!fieldTypes.contains(namedElement.getType()) || !(namedElement instanceof HasUniqueName) || namedElement.isLocal()) {
+                    if (!fieldTypes.contains(namedElement.getType()) || !(namedElement instanceof HasUniqueName) || !namedElement.isExported()) {
                         return true;
                     }
                     String name = ((HasUniqueName) namedElement).getUniqueName();

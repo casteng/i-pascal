@@ -373,6 +373,13 @@ public class PasReferenceUtil {
         boolean implAffects = fqn.isFirst()
                 && !ResolveUtil.isStubPowered(context.scope)
                 && file instanceof PascalFile && PsiUtil.isBefore(((PascalFile) file).getImplementationSection(), fqn.getParentIdent());
+        if (null == context.scope) {
+            if (fqn.getParentIdent() instanceof PascalStubElement) {
+                StubElement stub = ((PascalStubElement) fqn.getParentIdent()).retrieveStub();
+                stub = stub != null ? stub.getParentStub() : null;
+                context.scope = stub != null ? (PasEntityScope) stub.getPsi() : null;
+            }
+        }
         if (context.scope != null) {
             if (context.scope instanceof PascalStubElement) {
                 StubElement stub = ((PascalStubElement) context.scope).retrieveStub();
