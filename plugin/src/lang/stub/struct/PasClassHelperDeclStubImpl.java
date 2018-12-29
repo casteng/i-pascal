@@ -6,8 +6,16 @@ import com.siberika.idea.pascal.lang.psi.PascalClassHelperDecl;
 import java.util.List;
 
 public class PasClassHelperDeclStubImpl extends PasStructStubImpl<PascalClassHelperDecl> implements PasClassHelperDeclStub {
-    public PasClassHelperDeclStubImpl(StubElement parent, String name, String containingUnitName,
+    private String target;
+
+    public PasClassHelperDeclStubImpl(StubElement parent, String name, String containingUnitName, String target,
                                       List<String> parentNames, List<String> aliases, PasClassHelperDeclStubElementType stubElementType, List<String> typeParameters) {
         super(parent, name, containingUnitName, parentNames, aliases, stubElementType, typeParameters);
+        this.target = target;
+    }
+
+    @Override
+    public String getTarget() {
+        return target;
     }
 }

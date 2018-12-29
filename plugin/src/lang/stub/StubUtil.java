@@ -7,6 +7,7 @@ import com.intellij.util.io.StringRef;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStub;
+import com.siberika.idea.pascal.lang.stub.struct.PascalHelperDeclStub;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -89,4 +90,12 @@ public class StubUtil {
         }
     }
 
+    public static void serializeHelper(PascalHelperDeclStub stub, StubOutputStream dataStream) throws IOException {
+        StubUtil.printStub("serializeHelper", stub);
+        dataStream.writeName(stub.getName());
+        dataStream.writeName(stub.getContainingUnitName());
+        StubUtil.writeStringCollection(dataStream, stub.getParentNames());
+        dataStream.writeName(stub.getTarget());
+        StubUtil.writeStringCollection(dataStream, stub.getTypeParameters());
+    }
 }

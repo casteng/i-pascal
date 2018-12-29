@@ -34,6 +34,12 @@ public abstract class PasStructDeclStubElementType<StubT extends PasStructStub, 
 
     protected abstract StubT createStub(StubElement parentStub, String name, String containingUnitName, List<String> parentNames, List<String> aliases, List<String> typeParameters);
 
+    protected StubT createHelperStub(StubElement parentStub, String name, String containingUnitName, List<String> parentNames, String target, List<String> typeParameters) {
+        // should be implemented in helpers
+        return null;
+    }
+
+    /**unchecked*/
     @Override
     public void serialize(@NotNull StubT stub, @NotNull StubOutputStream dataStream) throws IOException {
         StubUtil.printStub("PasStructDeclStub.serialize", stub);
@@ -58,11 +64,21 @@ public abstract class PasStructDeclStubElementType<StubT extends PasStructStub, 
         return createStub(parentStub, name, containingUnitName, parentNames, aliases, typeParameters);
     }
 
+    StubT deserializeHelper(StubInputStream dataStream, StubElement parentStub) throws IOException {
+        String name = StubUtil.readName(dataStream);
+        String containingUnitName = StubUtil.readName(dataStream);
+        List<String> parentNames = new SmartList<>();
+        StubUtil.readStringCollection(dataStream, parentNames);
+        String target = StubUtil.readName(dataStream);
+        List<String> typeParameters = new SmartList<>();
+        StubUtil.readStringCollection(dataStream, typeParameters);
+        return createHelperStub(parentStub, name, containingUnitName, parentNames, target, typeParameters);
+    }
+
     @Override
     public void indexStub(@NotNull StubT stub, @NotNull IndexSink sink) {
         sink.occurrence(PascalStructIndex.KEY, stub.getUniqueName());
         sink.occurrence(PascalSymbolIndex.KEY, stub.getName());
-//        sink.occurrence(PascalUnitSymbolIndex.KEY, stub.getName().toUpperCase());
     }
 
     static String calcStubName(PascalStructType psi, List<String> aliases) {
