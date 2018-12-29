@@ -59,6 +59,7 @@ import com.siberika.idea.pascal.lang.stub.PascalModuleIndex;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.StrUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -152,16 +153,17 @@ public class ResolveUtil {
                 PascalIdentDecl element = (PascalIdentDecl) el;
                 String type = element.getTypeString();
                 if ((type != null) && (PasField.Kind.TYPEALIAS == element.getTypeKind())) {                       // Alias
-                    if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
+                    type = StrUtil.getNamePart(type);
+                    if (type.equalsIgnoreCase(StrUtil.getNamePart(typeName))) {                                   // Pointing to self
                         return type;
                     } else {
                         return resolveTypeAliasChain(type, element, ++recursionCount);
                     }
                 } else {                                                                                          // Anonymous type or distinct alias
-                    return typeName;
+                    return StrUtil.getNamePart(typeName);
                 }
             } else if (el instanceof PasNamedIdent) {
-                return ((PascalNamedElement) el).getName();
+                return StrUtil.getNamePart(((PascalNamedElement) el).getName());
             }
         }
         return typeName;
