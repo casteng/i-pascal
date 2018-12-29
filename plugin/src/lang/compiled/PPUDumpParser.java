@@ -14,10 +14,12 @@ import javax.xml.parsers.SAXParserFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -36,8 +38,8 @@ import java.util.TreeMap;
 public class PPUDumpParser {
 
     private static final Logger LOG = Logger.getInstance(PPUDumpParser.class);
-    static final String UNRESOLVED_INTERNAL = "__INTERNAL__";
-    static final String INDENT = "  ";
+    private static final String UNRESOLVED_INTERNAL = "__INTERNAL__";
+    private static final String INDENT = "  ";
     private static final String LF = "\n@";
 
     public static Section parse(InputStream inputStream, PPUDecompilerCache cache) throws ParseException, ParserConfigurationException, SAXException, IOException {
@@ -49,23 +51,24 @@ public class PPUDumpParser {
     }
 
     public static Section parse(@NotNull String xml, PPUDecompilerCache cache) throws ParseException, ParserConfigurationException, SAXException, IOException {
-        return parse(new ByteArrayInputStream(xml.getBytes("utf-8")), cache);
+        return parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)), cache);
     }
 
     private static class XMLHandler extends DefaultHandler {
-        public static final Set<String> TYPES = new HashSet<String>(Arrays.asList("/ord", "/ptr", "/string", "/float", "/type", "/file", "/variant", "/set"));
-        public static final Set<String> DIRECTIVES = new HashSet<String>(Arrays.asList(
+        static final Set<String> TYPES = new HashSet<String>(Arrays.asList("/ord", "/ptr", "/string", "/float", "/type", "/file", "/variant", "/set"));
+        static final Set<String> DIRECTIVES = new HashSet<String>(Arrays.asList(
                 "overload", "virtual", "dynamic", "static", "override",
                 "abstract", "final",
                 "inline", "assembler,",
                 "cdecl", "pascal", "register", "safecall", "stdcall", "export"));
-        public static final Set<String> DATA = new HashSet<String>(Arrays.asList("ptr/ptr", "eltype", "rangetype", "vartype", "rettype"));
-        public static final Set<String> COMMENTS = new HashSet<String>(Arrays.asList("version", "targetcpu", "targetos", "crc", "interfacecrc"));
-        public static final Set<String> IGNORED = new HashSet<String>(Arrays.asList("1"));
+        static final Set<String> DATA = new HashSet<String>(Arrays.asList("ptr/ptr", "eltype", "rangetype", "vartype", "rettype"));
+        private static final String DATA_TARGETCPU = "targetcpu";
+        static final Set<String> COMMENTS = new HashSet<String>(Arrays.asList("version", DATA_TARGETCPU, "targetos", "crc", "interfacecrc"));
+        static final Set<String> IGNORED = new HashSet<String>(Collections.singletonList("1"));
 
-        public static final Map<String, String> NAME_SUB = new HashMap<String, String>();
+        static final Map<String, String> NAME_SUB = new HashMap<String, String>();
 
-        public static final Map<String, Section> SECTIONS = new LinkedHashMap<String, Section>();
+        static final Map<String, Section> SECTIONS = new LinkedHashMap<String, Section>();
 
         static {
             addSection("/unit/uses/unit", LF, "", "", ",", 0);
@@ -138,25 +141,26 @@ public class PPUDumpParser {
         }
 
         private final PPUDecompilerCache cache;
-
         private XMLHandler(PPUDecompilerCache cache) {
             this.cache = cache;
         }
+
+        final Map<String, String> idNameMap = new HashMap<String, String>();
+
+        final Map<String, String> symidNameMap = new HashMap<String, String>();
+        final List<String> units = new ArrayList<String>();
+        private Deque<Section> stack = new ArrayDeque<Section>();
+
+        private StringBuilder chars = new StringBuilder();
+        private Section result = null;
+        private String path = "";
+        private String targetCpu;
 
         private static Section addSection(String id, String textBegin, String afterName, String beforeSubsec, String textEnd, int removeChars) {
             Section res = new Section(id, textBegin, afterName, beforeSubsec, textEnd, removeChars);
             SECTIONS.put(id, res);
             return res;
         }
-
-        final Map<String, String> idNameMap = new HashMap<String, String>();
-        final Map<String, String> symidNameMap = new HashMap<String, String>();
-        final List<String> units = new ArrayList<String>();
-
-        private Deque<Section> stack = new ArrayDeque<Section>();
-        private StringBuilder chars = new StringBuilder();
-        private Section result = null;
-        private String path = "";
 
         @Override
         public void characters(char[] ch, int start, int length) throws SAXException {
@@ -460,10 +464,19 @@ public class PPUDumpParser {
                         pos = sec.insertText(pos, prefix + def + postfix);
                     }
                 } else if (!("$formal".equalsIgnoreCase(ref) || "$void".equalsIgnoreCase(ref))) {
+                    ref = adjustReferenceName(sec, ref);
                     pos = sec.insertText(pos, prefix + ref + postfix);
                 }
             }
             return pos;
+        }
+
+        private String adjustReferenceName(Section sec, String ref) {
+            if ("integer".equalsIgnoreCase(sec.name) && "smallint".equalsIgnoreCase(ref) && (targetCpu != null) && targetCpu.contains("x86_64")) {
+                LOG.info("Type Integer incorrectly points to SmallInt in ppu for an x86_64 target. Fixing to LongInt.");
+                return "LongInt";
+            }
+            return ref;
         }
 
         @SuppressWarnings("UnusedAssignment")
@@ -560,6 +573,9 @@ public class PPUDumpParser {
             if ((txt.length() > 0) && (!isIgnored(path)) && !stack.isEmpty()) {
                 Section sec = stack.getFirst();
                 if (COMMENTS.contains(qName)) {
+                    if (DATA_TARGETCPU.equals(qName)) {
+                        targetCpu = txt;
+                    }
                     sec.sb.append(" {").append(qName).append(":").append(txt).append("}");
                 } else if ("name".equalsIgnoreCase(qName)) {
                     if (NAME_SUB.get(txt) != null) {
