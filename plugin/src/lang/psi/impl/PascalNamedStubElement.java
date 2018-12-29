@@ -39,6 +39,8 @@ import java.util.List;
 public abstract class PascalNamedStubElement<B extends PasNamedStub> extends StubBasedPsiElementBase<B> implements PascalStubElement<B>, PascalNamedElement {
 
     protected PascalHelperNamed helper = createHelper();
+    volatile private String cachedUniqueName;
+    volatile private String cachedContainingUnitName;
 
     PascalNamedStubElement(ASTNode node) {
         super(node);
@@ -56,6 +58,12 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     public void subtreeChanged() {
         super.subtreeChanged();
         helper.invalidateCache(true);
+    }
+
+    @Override
+    public void invalidateCache(boolean subtreeChanged) {
+        cachedUniqueName = null;
+        cachedContainingUnitName = null;
     }
 
     @Override
@@ -160,10 +168,12 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
             return stub.getUniqueName();
         }
         helper.ensureCacheActual();
-        if (null == helper.cachedUniqueName) {
-            helper.cachedUniqueName = calcUniqueName();
+        String uniqueName = cachedUniqueName;
+        if ((uniqueName == null) || (uniqueName.length() == 0)) {
+            uniqueName = calcUniqueName();
         }
-        return helper.cachedUniqueName;
+        cachedUniqueName = uniqueName;
+        return uniqueName;
     }
 
     protected abstract String calcUniqueName();
@@ -192,10 +202,10 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
             return stub.getContainingUnitName();
         }
         helper.ensureCacheActual();
-        if (null == helper.containingUnitName) {
-            helper.containingUnitName = calcContainingUnitName();
+        if (null == cachedContainingUnitName) {
+            cachedContainingUnitName = calcContainingUnitName();
         }
-        return helper.containingUnitName;
+        return cachedContainingUnitName;
     }
 
     private String calcContainingUnitName() {

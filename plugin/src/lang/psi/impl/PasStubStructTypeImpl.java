@@ -45,7 +45,6 @@ import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.module.ModuleService;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
-import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,7 +55,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extends PasStructStub<T>>
         extends PasStubScopeImpl<B> implements PascalStructType<B> {
@@ -83,8 +81,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     }
 
     volatile private List<String> parentNames = null;
-    private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
-    private ReentrantLock parentScopesLock = new ReentrantLock();
+    volatile private List<SmartPsiElementPointer<PasEntityScope>> parentScopes;
 
     public PasStubStructTypeImpl(ASTNode node) {
         super(node);
@@ -98,10 +95,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     public void invalidateCache(boolean subtreeChanged) {
         super.invalidateCache(subtreeChanged);
         parentNames = null;
-        if (SyncUtil.lockOrCancel(parentScopesLock)) {
-            parentScopes = null;
-            parentScopesLock.unlock();
-        }
+        parentScopes = null;
     }
 
     static void invalidate(String key) {
@@ -207,14 +201,8 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     @NotNull
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getParentScope() {
-        if (SyncUtil.lockOrCancel(parentScopesLock)) {
-            try {
-                if (null == parentScopes) {
-                    calcParentScopes();
-                }
-            } finally {
-                parentScopesLock.unlock();
-            }
+        if (null == parentScopes) {
+            parentScopes = calcParentScopes();
         }
         return parentScopes;
     }
@@ -358,30 +346,28 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         return field;
     }
 
-    private void calcParentScopes() {
+    private List<SmartPsiElementPointer<PasEntityScope>> calcParentScopes() {
         calcParentScopesStub();
-        if (null == parentScopes) {
-            SmartList<SmartPsiElementPointer<PasEntityScope>> res = new SmartList<>();
-            PasEntityScope containing = getContainingScope();
-            if ((containing instanceof PascalClassDecl) || (containing instanceof PascalInterfaceDecl)) {         // Nested type
-                addScope(res, containing);
-            }
-            PasClassParent parent = getClassParent();
-            if (parent != null) {
-                for (PasTypeID typeID : parent.getTypeIDList()) {
-                    NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
-                    PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, null, true);
-                    if (scope != PasStubStructTypeImpl.this) {
-                        addScope(res, scope);
-                    }
+        SmartList<SmartPsiElementPointer<PasEntityScope>> res = new SmartList<>();
+        PasEntityScope containing = getContainingScope();
+        if ((containing instanceof PascalClassDecl) || (containing instanceof PascalInterfaceDecl)) {         // Nested type
+            addScope(res, containing);
+        }
+        PasClassParent parent = getClassParent();
+        if (parent != null) {
+            for (PasTypeID typeID : parent.getTypeIDList()) {
+                NamespaceRec fqn = NamespaceRec.fromElement(typeID.getFullyQualifiedIdent());
+                PasEntityScope scope = PasReferenceUtil.resolveTypeScope(fqn, null, true);
+                if (scope != PasStubStructTypeImpl.this) {
+                    addScope(res, scope);
                 }
             }
-            PasEntityScope defaultParent = getDefaultParentScope();
-            if (res.isEmpty() && defaultParent != this) {
-                addScope(res, defaultParent);
-            }
-            parentScopes = res;
         }
+        PasEntityScope defaultParent = getDefaultParentScope();
+        if (res.isEmpty() && defaultParent != this) {
+            addScope(res, defaultParent);
+        }
+        return res;
     }
 
     private void calcParentScopesStub() {

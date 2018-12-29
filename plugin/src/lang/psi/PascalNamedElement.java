@@ -17,9 +17,9 @@ public interface PascalNamedElement extends PascalPsiElement, PsiNameIdentifierO
     String getNamePart();
     @NotNull
     PasField.FieldType getType();
-    // directly visible from other units
+    // directly visible from other units. The value is stored in stub index.
     boolean isExported();
-    // not exported and not an implementation/override of another entity
+    // not exported and not an implementation/override of another entity. The value can't be stored in stub index.
     boolean isLocal();
     // invalidate cached values depending on any modification of a file or the element's subtree modification. Super must be called.
     default void invalidateCache(boolean subtreeChanged) {};

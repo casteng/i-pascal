@@ -25,18 +25,12 @@ public class PascalHelperNamed {
     volatile private PasField.FieldType cachedType;
     volatile Boolean local;
 
-    //TODO: remove
-    volatile String cachedUniqueName;
-    volatile String containingUnitName;
-
     public PascalHelperNamed(PascalNamedElement self) {
         this.self = self;
     }
 
     void invalidateCache(boolean subtreeChanged) {
         local = null;
-        cachedUniqueName = null;
-        containingUnitName = null;
         modified = self.getContainingFile().getModificationStamp();
         // TODO: don't invalidate on each file modification
         cachedName = null;

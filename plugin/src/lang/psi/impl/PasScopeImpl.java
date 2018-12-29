@@ -7,10 +7,7 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiFile;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.util.PsiUtil;
-import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: George Bakhtadze
@@ -20,9 +17,7 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     protected static final Logger LOG = Logger.getInstance(PasScopeImpl.class.getName());
 
-    private String myCachedUniqueName;
-    private ReentrantLock nameLock = new ReentrantLock();
-
+    volatile private String cachedUniqueName;
     volatile boolean building = false;
     volatile private String cachedKey;
 
@@ -43,16 +38,12 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
 
     @Override
     public String getUniqueName() {
-        if (SyncUtil.lockOrCancel(nameLock)) {
-            try {
-                if ((myCachedUniqueName == null) || (myCachedUniqueName.length() == 0)) {
-                    myCachedUniqueName = calcUniqueName();
-                }
-            } finally {
-                nameLock.unlock();
-            }
+        String uniqueName = cachedUniqueName;
+        if ((uniqueName == null) || (uniqueName.length() == 0)) {
+            uniqueName = calcUniqueName();
         }
-        return myCachedUniqueName;
+        cachedUniqueName = uniqueName;
+        return uniqueName;
     }
 
     protected String calcUniqueName() {
@@ -96,15 +87,11 @@ public abstract class PasScopeImpl extends PascalNamedElementImpl implements Pas
         PascalModuleImpl.invalidate(key);
         PascalRoutineImpl.invalidate(key);
         PasStubStructTypeImpl.invalidate(key);
-        if (SyncUtil.lockOrCancel(nameLock)) {
-            myCachedUniqueName = null;
-            nameLock.unlock();
-        }
+        cachedUniqueName = null;
         cachedKey = null;
     }
 
     static long getStamp(PsiFile file) {
-        //return System.currentTimeMillis();
         return file.getModificationStamp();
     }
 
