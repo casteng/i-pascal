@@ -793,7 +793,7 @@ private constExpr           ::= RecordConstExpr | ArrayConstExpr | Expression
 ArrayConstExpr              ::= "(" constExpr ("," constExpr)+ ")"
 ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression" extends=ConstExpression}
 RecordConstExpr             ::= "(" recordConstInner ")"
-private recordConstInner    ::= recordValue recordValueRest* {recoverWhile=rec_record_colon}
+private recordConstInner    ::= recordValue recordValueRest* [";"] {recoverWhile=rec_record_colon}
 private recordValueRest     ::= ";" recordValue
 private recordValue         ::= identifier ":" constExpr
 
