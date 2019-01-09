@@ -9,7 +9,7 @@ type
 var
     <warning descr="W0003: Identifier declared but never used">var1</warning>: Integer;
     <warning descr="W0003: Identifier declared but never used">Rec</warning>: record
-        yyy: Integer;
+        <warning descr="W0003: Identifier declared but never used">yyy</warning>: Integer;
     end;
 
 const <warning descr="W0003: Identifier declared but never used">CCC</warning>=1;

@@ -12,13 +12,11 @@ import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
-import com.siberika.idea.pascal.lang.psi.PasExportsSection;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
-import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasVarValueSpec;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
@@ -159,18 +157,6 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
             }
         }
         return subMembers;
-    }
-
-    @Override
-    protected boolean calcIsExported() {
-        PsiElement parent = getParent();
-        if (parent instanceof PasGenericTypeIdent) {
-            parent = parent.getParent();
-        }
-        if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration || parent instanceof PasExportsSection) {
-            return parent.getParent().getParent() instanceof PasUnitInterface;
-        }
-        return false;
     }
 
     protected String calcUniqueName() {

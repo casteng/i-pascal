@@ -77,7 +77,12 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Override
     public boolean isExported() {
-        return false;
+        PsiElement parent = getParent();
+        if (parent instanceof PascalNamedElement) {
+            return ((PascalNamedElement) parent).isLocal();
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -118,7 +123,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public SearchScope getUseScope() {
-        if (isLocal()) {
+        if (isExported()) {
             return new LocalSearchScope(this.getContainingFile());
         } else {
             return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));

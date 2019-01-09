@@ -108,11 +108,6 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         return PasField.FieldType.TYPE;
     }
 
-    @Override
-    protected boolean calcIsExported() {
-        return false;
-    }
-
     @NotNull
     @Override
     public List<String> getTypeParameters() {
