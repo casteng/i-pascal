@@ -5,7 +5,7 @@ import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * Author: George Bakhtadze
@@ -14,11 +14,11 @@ import java.util.Set;
 public class PasModuleStubImpl extends PasNamedStubBase<PascalModule> implements PasModuleStub {
 
     private PascalModule.ModuleType moduleType;
-    private Set<String> usedUnitsPublic;
-    private Set<String> usedUnitsPrivate;
+    private List<String> usedUnitsPublic;
+    private List<String> usedUnitsPrivate;
 
     public PasModuleStubImpl(StubElement parent, String name, PascalModule.ModuleType moduleType,
-                             Set<String> usedUnitsPublic, Set<String> usedUnitsPrivate) {
+                             List<String> usedUnitsPublic, List<String> usedUnitsPrivate) {
         super(parent, PasModuleStubElementType.INSTANCE, name, name);
         this.moduleType = moduleType;
         this.usedUnitsPublic = usedUnitsPublic;
@@ -43,13 +43,13 @@ public class PasModuleStubImpl extends PasNamedStubBase<PascalModule> implements
 
     @NotNull
     @Override
-    public Set<String> getUsedUnitsPublic() {
+    public List<String> getUsedUnitsPublic() {
         return usedUnitsPublic;
     }
 
     @NotNull
     @Override
-    public Set<String> getUsedUnitsPrivate() {
+    public List<String> getUsedUnitsPrivate() {
         return usedUnitsPrivate;
     }
 }

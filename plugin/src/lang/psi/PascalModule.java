@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -43,10 +42,10 @@ public interface PascalModule extends PasEntityScope, PascalStubElement<PasModul
     Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@Nullable String module, boolean includeInterface, List<String> unitPrefixes);
 
     @NotNull
-    Set<String> getUsedUnitsPublic();
+    List<String> getUsedUnitsPublic();
 
     @NotNull
-    Set<String> getUsedUnitsPrivate();
+    List<String> getUsedUnitsPrivate();
 
     @Nullable
     PascalRoutine getPublicRoutine(final String reducedName);

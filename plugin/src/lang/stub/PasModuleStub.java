@@ -3,7 +3,7 @@ package com.siberika.idea.pascal.lang.stub;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * Author: George Bakhtadze
@@ -14,8 +14,8 @@ public interface PasModuleStub extends PasNamedStub<PascalModule> {
     PascalModule.ModuleType getModuleType();
 
     @NotNull
-    Set<String> getUsedUnitsPublic();
+    List<String> getUsedUnitsPublic();
 
     @NotNull
-    Set<String> getUsedUnitsPrivate();
+    List<String> getUsedUnitsPrivate();
 }

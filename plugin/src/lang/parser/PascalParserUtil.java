@@ -108,7 +108,11 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
      */
     @SuppressWarnings("ConstantConditions")
     private static void addUsedUnitDeclarations(Collection<PascalNamedElement> result, PsiElement current, String name) {
-        for (PascalQualifiedIdent usedUnitName : PsiUtil.getUsedUnits(current.getContainingFile())) {
+        PsiFile file = current.getContainingFile();
+        for (PascalQualifiedIdent usedUnitName : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceUsesClause(file))) {
+            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName(), name);
+        }
+        for (PascalQualifiedIdent usedUnitName : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationUsesClause(file))) {
             addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName(), name);
         }
         for (String unitName : EXPLICIT_UNITS) {

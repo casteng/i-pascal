@@ -42,7 +42,6 @@ import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -122,7 +121,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
         return res;
     }
 
-    private void collectUnits(Collection<PascalModule> res, String name, PascalModule module, Set<String> usedUnitsList) {
+    private void collectUnits(Collection<PascalModule> res, String name, PascalModule module, List<String> usedUnitsList) {
         for (String unitName : usedUnitsList) {
             if (unitName.equalsIgnoreCase(name)) {
                 res.add(module);

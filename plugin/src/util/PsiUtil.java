@@ -28,7 +28,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasClassParentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasGenericTypeIdentImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PasNamespaceIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRefNamedIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasStubStructTypeImpl;
@@ -45,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Author: George Bakhtadze
@@ -327,7 +327,7 @@ public class PsiUtil {
      * @return interface section of module
      */
     @Nullable
-    public static PsiElement getModuleInterfaceSection(@NotNull PsiElement section) {
+    public static PasUnitInterface getModuleInterfaceSection(@NotNull PsiElement section) {
         assert (section instanceof PascalModule) || (section instanceof PsiFile);
         return PsiTreeUtil.findChildOfType(section, PasUnitInterface.class);
     }
@@ -335,30 +335,30 @@ public class PsiUtil {
     /**
      * Returns implementation section of module specified by section
      *
-     * @param section - can be PasModule or PsiFile
+     * @param moduleOrFile - can be PasModule or PsiFile
      * @return unit implementation section or module itself if the module is not a unit
      */
     @NotNull
-    public static PsiElement getModuleImplementationSection(@NotNull PsiElement section) {
-        assert (section instanceof PascalModule) || (section instanceof PsiFile);
-        PsiElement result = PsiTreeUtil.findChildOfType(section, PasUnitImplementation.class);
+    public static PsiElement getModuleImplementationSection(@NotNull PsiElement moduleOrFile) {
+        assert (moduleOrFile instanceof PascalModule) || (moduleOrFile instanceof PsiFile);
+        PsiElement result = PsiTreeUtil.findChildOfType(moduleOrFile, PasUnitImplementation.class);
         if (result == null) {
-            result = section;
+            result = moduleOrFile;
         }
         return result;
     }
 
     @NotNull
     @SuppressWarnings("unchecked")
-    public static List<PascalQualifiedIdent> getUsedUnits(PsiElement parent) {
-        List<PascalQualifiedIdent> result = new SmartList<PascalQualifiedIdent>();
-        Collection<PasUsesClause> usesClauses = findChildrenOfAnyType(parent, PasUsesClause.class);
-        for (PasUsesClause usesClause : usesClauses) {
-            for (PsiElement usedUnitName : usesClause.getChildren()) {
-                if (usedUnitName.getClass() == PasNamespaceIdentImpl.class) {
-                    result.add((PasNamespaceIdent) usedUnitName);
-                }
-            }
+    public static List<PascalQualifiedIdent> getUsedUnits(PasUsesClause usesClause) {
+        if (null == usesClause) {
+            return Collections.emptyList();
+        }
+        List<PasNamespaceIdent> identList = usesClause.getNamespaceIdentList();
+        List<PascalQualifiedIdent> result = new ArrayList<>(identList.size());
+        ListIterator<PasNamespaceIdent> iter = identList.listIterator(identList.size());
+        while (iter.hasPrevious()) {
+            result.add(iter.previous());
         }
         return result;
     }
@@ -887,5 +887,18 @@ public class PsiUtil {
 
     public static boolean isTypeAlias(PasTypeDecl typeDecl) {
         return (typeDecl == null) || (typeDecl.getFirstChild().getNode().getElementType() != PasTypes.TYPE);
+    }
+
+    public static PasUsesClause getModuleInterfaceUsesClause(PsiElement pascalModule) {
+        PasUnitInterface intf = getModuleInterfaceSection(pascalModule);
+        return intf != null ? intf.getUsesClause() : null;
+    }
+
+    public static PasUsesClause getModuleImplementationUsesClause(PsiElement moduleOrFile) {
+        PsiElement impl = getModuleImplementationSection(moduleOrFile);
+        if (impl instanceof PasUnitImplementation) {
+            return ((PasUnitImplementation) impl).getUsesClause();
+        }
+        return PsiTreeUtil.findChildOfType(moduleOrFile, PasUsesClause.class);
     }
 }

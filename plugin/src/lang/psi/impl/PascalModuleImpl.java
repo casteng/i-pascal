@@ -13,7 +13,6 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
-import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
@@ -42,7 +41,6 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -62,8 +60,8 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     private final Callable<? extends PascalHelperScope.Members> PUBLIC_BUILDER = this.new PublicBuilder();
     private final Callable<Idents> IDENTS_BUILDER = this.new IdentsBuilder();
 
-    private Set<String> usedUnitsPublic = null;
-    private Set<String> usedUnitsPrivate = null;
+    private List<String> usedUnitsPublic = null;
+    private List<String> usedUnitsPrivate = null;
     private List<SmartPsiElementPointer<PasEntityScope>> privateUnits = null;
     private List<SmartPsiElementPointer<PasEntityScope>> publicUnits = null;
     private ReentrantLock unitsLock = new ReentrantLock();
@@ -223,7 +221,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPrivateUnits() {
         if (null == privateUnits) {
-            privateUnits = doCollectUnits(getUsedUnitsPrivate(), privateUnitsLock);
+            privateUnits = doCollectUnits(getUsedUnitsPrivate(), privateUnitsLock, getModuleType() != ModuleType.UNIT);
         }
         return privateUnits;
     }
@@ -231,17 +229,19 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits() {
         if (null == publicUnits) {
-            publicUnits = doCollectUnits(getUsedUnitsPublic(), publicUnitsLock);
+            publicUnits = doCollectUnits(getUsedUnitsPublic(), publicUnitsLock, true);
         }
         return publicUnits;
     }
 
-    private List<SmartPsiElementPointer<PasEntityScope>> doCollectUnits(Set<String> units, ReentrantLock lock) {
+    private List<SmartPsiElementPointer<PasEntityScope>> doCollectUnits(Collection<String> units, ReentrantLock lock, boolean addExplicit) {
         List<SmartPsiElementPointer<PasEntityScope>> result = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
         if (SyncUtil.lockOrCancel(lock)) {
             try {
                 addUnits(result, units);
-                addUnits(result, PascalParserUtil.EXPLICIT_UNITS);
+                if (addExplicit) {
+                    addUnits(result, PascalParserUtil.EXPLICIT_UNITS);
+                }
             } finally {
                 lock.unlock();
             }
@@ -340,7 +340,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     @NotNull
     @Override
-    public Set<String> getUsedUnitsPublic() {
+    public List<String> getUsedUnitsPublic() {
         PasModuleStub stub = retrieveStub();
         if (stub != null) {
             return stub.getUsedUnitsPublic();
@@ -348,8 +348,8 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         if (SyncUtil.lockOrCancel(unitsLock)) {
             try {
                 if (null == usedUnitsPublic) {
-                    usedUnitsPublic = new SmartHashSet<>();
-                    for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceSection(this))) {
+                    usedUnitsPublic = new SmartList<>();
+                    for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceUsesClause(this))) {
                         usedUnitsPublic.add(ident.getName());
                     }
                 }
@@ -362,7 +362,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     @NotNull
     @Override
-    public Set<String> getUsedUnitsPrivate() {
+    public List<String> getUsedUnitsPrivate() {
         PasModuleStub stub = retrieveStub();
         if (stub != null) {
             return stub.getUsedUnitsPrivate();
@@ -370,8 +370,8 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         if (SyncUtil.lockOrCancel(unitsLock)) {
             try {
                 if (null == usedUnitsPrivate) {
-                    usedUnitsPrivate = new SmartHashSet<>();
-                    for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationSection(this))) {
+                    usedUnitsPrivate = new SmartList<>();
+                    for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationUsesClause(this))) {
                         usedUnitsPrivate.add(ident.getName());
                     }
                 }
