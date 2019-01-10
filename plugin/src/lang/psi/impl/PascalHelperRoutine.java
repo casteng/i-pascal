@@ -48,7 +48,7 @@ class PascalHelperRoutine extends PascalHelperScope {
     String getCanonicalName() {
         ensureCacheActual();
         if (null == canonicalName) {
-            canonicalName = RoutineUtil.calcCanonicalName(self.getName(), getSelf().getFormalParameterTypes(), getSelf().getFormalParameterAccess(), getSelf().getFunctionTypeStr());
+            canonicalName = RoutineUtil.calcCanonicalName(self.getName(), getSelf().getFormalParameterNames(), getSelf().getFormalParameterTypes(), getSelf().getFormalParameterAccess(), getSelf().getFunctionTypeStr());
         }
         return canonicalName;
     }

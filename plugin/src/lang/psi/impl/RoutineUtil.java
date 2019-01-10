@@ -126,7 +126,7 @@ public class RoutineUtil {
         return false;
     }
 
-    public static String calcCanonicalName(String name, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess, String typeStr) {
+    public static String calcCanonicalName(String name, List<String> formalParameterNames, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess, String typeStr) {
         StringBuilder res = new StringBuilder(name);
         res.append("(");
         for (int i = 0; i < formalParameterTypes.size(); i++) {
@@ -137,6 +137,7 @@ public class RoutineUtil {
             if (modifier != ParamModifier.NONE) {
                 res.append(modifier.name().toLowerCase()).append(" ");
             }
+            res.append(formalParameterNames.get(i)).append(":");
             res.append(typeName);
         }
         res.append(")");
@@ -160,7 +161,7 @@ public class RoutineUtil {
     static List<String> parseTypeParametersStr(String typeParamText) {
         List<String> result;
         if (typeParamText != null && typeParamText.length() > 1) {
-            result = Arrays.asList(typeParamText.substring(1, typeParamText.length()-1).replaceAll("\\s*:\\s*\\w+", "").split("[,;]\\s*", 100));
+            result = Arrays.asList(typeParamText.substring(1, typeParamText.length() - 1).replaceAll("\\s*:\\s*\\w+", "").split("[,;]\\s*", 100));
         } else {
             result = Collections.emptyList();
         }

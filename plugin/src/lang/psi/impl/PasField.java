@@ -41,7 +41,7 @@ public class PasField {
     public static final Set<FieldType> TYPES_ROUTINE = Collections.unmodifiableSet(EnumSet.of(FieldType.ROUTINE));
     public static final Set<FieldType> TYPES_PROPERTY_SPECIFIER = Collections.unmodifiableSet(EnumSet.of(FieldType.ROUTINE, FieldType.VARIABLE));
     public static final Set<FieldType> TYPES_STRUCTURE = Collections.unmodifiableSet(EnumSet.of(FieldType.TYPE, FieldType.VARIABLE, FieldType.CONSTANT, FieldType.PROPERTY, FieldType.ROUTINE));
-    public static final Set<FieldType> TYPES_STATIC = Collections.unmodifiableSet(EnumSet.of(FieldType.UNIT, FieldType.TYPE, FieldType.CONSTANT, FieldType.ROUTINE));
+    public static final Set<FieldType> TYPES_STATIC = Collections.unmodifiableSet(EnumSet.of(FieldType.UNIT, FieldType.TYPE, FieldType.CONSTANT));
     public static final Set<FieldType> TYPES_LOCAL = Collections.unmodifiableSet(EnumSet.of(FieldType.VARIABLE, FieldType.PROPERTY, FieldType.ROUTINE, FieldType.PSEUDO_VARIABLE));
 
     public enum Visibility {
@@ -140,7 +140,8 @@ public class PasField {
         }
         if (stub instanceof PasExportedRoutineStub) {
             PasExportedRoutineStub exportedRoutineStub = (PasExportedRoutineStub) stub;
-            return RoutineUtil.calcCanonicalName(exportedRoutineStub.getName(), exportedRoutineStub.getFormalParameterTypes(), exportedRoutineStub.getFormalParameterAccess(), exportedRoutineStub.getFunctionTypeStr());
+            return RoutineUtil.calcCanonicalName(exportedRoutineStub.getName(), exportedRoutineStub.getFormalParameterNames(),
+                    exportedRoutineStub.getFormalParameterTypes(), exportedRoutineStub.getFormalParameterAccess(), exportedRoutineStub.getFunctionTypeStr());
         } else {
             return stub.getName();
         }

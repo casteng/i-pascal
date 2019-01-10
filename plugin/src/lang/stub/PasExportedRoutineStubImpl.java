@@ -34,7 +34,8 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
         this.parameterNames = parameterNames;
         this.parameterTypes = parameterTypes;
         this.parameterAccess = parameterAccess;
-        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "") + RoutineUtil.calcCanonicalName(name, parameterTypes, parameterAccess, functionTypeStr);
+        this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "")
+                + RoutineUtil.calcCanonicalName(name, parameterNames, parameterTypes, parameterAccess, functionTypeStr);
     }
 
     @Override

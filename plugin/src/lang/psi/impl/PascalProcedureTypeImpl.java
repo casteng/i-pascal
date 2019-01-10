@@ -26,7 +26,7 @@ public abstract class PascalProcedureTypeImpl extends PascalPsiElementImpl imple
     @Override
     public String getName() {
         if (null == canonicalName) {
-            canonicalName = RoutineUtil.calcCanonicalName("", getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
+            canonicalName = RoutineUtil.calcCanonicalName("", getFormalParameterNames(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
         }
         return canonicalName;
     }
