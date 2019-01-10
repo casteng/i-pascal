@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
+import com.intellij.lang.parameterInfo.ParameterInfoUtils;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
@@ -35,6 +36,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalOperation;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
@@ -149,11 +151,29 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return newScope != null ? newScope.getTypeScope() : null;
     }
 
-    public static String infereType(PasExpr expression) {
-        return doInfereType(expression, false);
+    public static String calcFormalParameterType(PsiElement param) {
+        PasCallExpr callExpr = RoutineUtil.retrieveCallExpr(param);
+        if (null == callExpr) {
+            return null;
+        }
+        Collection<PascalRoutineEntity> routines = PasReferenceUtil.resolveRoutines(callExpr);
+        int paramIndex = ParameterInfoUtils.getCurrentParameterIndex(callExpr.getArgumentList().getNode(), param.getTextRange().getStartOffset(), PasTypes.COMMA);
+        for (PascalRoutineEntity routine : routines) {
+            if (RoutineUtil.isSuitable(callExpr, routine)) {
+                List<String> paramTypeList = routine.getFormalParameterTypes();
+                if ((paramIndex >= 0) && (paramIndex < paramTypeList.size())) {
+                    return routine.getFormalParameterTypes().get(paramIndex);
+                }
+            }
+        }
+        return null;
     }
 
-    private static String doInfereType(PasExpr expression, boolean minus) {
+    public static String inferType(PasExpr expression) {
+        return doInferType(expression, false);
+    }
+
+    private static String doInferType(PasExpr expression, boolean minus) {
         if (expression instanceof PasLiteralExpr) {
             PsiElement literal = expression.getFirstChild();
             IElementType type = literal.getNode().getElementType();
@@ -171,7 +191,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                 return Primitive.STRING.name;
             }
         } else if (expression instanceof PasParenExpr) {
-            return !((PasParenExpr) expression).getExprList().isEmpty() ? infereType(((PasParenExpr) expression).getExprList().get(0)) : null;
+            return !((PasParenExpr) expression).getExprList().isEmpty() ? inferType(((PasParenExpr) expression).getExprList().get(0)) : null;
         } else if (expression instanceof PasUnaryExpr) {
             return infereUnaryExprType((PasUnaryExpr) expression);
         } else if (expression instanceof PasSumExpr) {
@@ -293,7 +313,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         if ("@".equals(op.getText())) {
             return Primitive.POINTER.name;
         } else {
-            return doInfereType(expression.getExpr(), "-".equals(op.getText()));
+            return doInferType(expression.getExpr(), "-".equals(op.getText()));
         }
     }
 
@@ -301,8 +321,8 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         PasExpr arg1 = exprList.size() > 0 ? exprList.get(0) : null;
         PasExpr arg2 = exprList.size() > 1 ? exprList.get(1) : null;
         if (arg2 != null) {
-            String type1 = infereType(arg1);
-            String type2 = infereType(arg2);
+            String type1 = inferType(arg1);
+            String type2 = inferType(arg2);
             if (null == type1) {
                 return type2;
             }
@@ -356,7 +376,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                 return unsignedPrim.size >= signedPrim.size ? unsignedPrim.name : signedPrim.name;
             }
         }
-        return arg1 != null ? infereType(arg1) : null;
+        return arg1 != null ? inferType(arg1) : null;
     }
 
     private static String divisionType(@NotNull Primitive prim1, @NotNull Primitive prim2, String type1, String type2) {
@@ -393,7 +413,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                 } else if (type.field.fieldType == PasField.FieldType.CONSTANT) {
                     if ((el != null) && (el.getParent() instanceof PasConstDeclaration)) {
                         PasConstExpression expr = ((PasConstDeclaration) el.getParent()).getConstExpression();
-                        return (expr != null) && (expr.getExpression() != null) ? infereType(expr.getExpression().getExpr()) : null;
+                        return (expr != null) && (expr.getExpression() != null) ? inferType(expr.getExpression().getExpr()) : null;
                     }
                 } else if (type.field.fieldType == PasField.FieldType.PROPERTY) {
                     PasTypeID typeId = PasReferenceUtil.resolvePropertyType(type.field, (PasClassProperty) type.field.getElement());
@@ -407,14 +427,14 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     @SuppressWarnings("unchecked")
     public static String calcAssignStatementType(PsiElement statement) {
         PasAssignPart rightPart = PsiUtil.findImmChildOfAnyType(statement, PasAssignPart.class);
-        return (rightPart != null) && (rightPart.getExpression() != null) ? infereType(rightPart.getExpression().getExpr()) : null;
+        return (rightPart != null) && (rightPart.getExpression() != null) ? inferType(rightPart.getExpression().getExpr()) : null;
     }
 
     @SuppressWarnings("unchecked")
     public static String calcAssignExpectedType(PsiElement statement) {
         PasExpression leftPart = PsiUtil.findImmChildOfAnyType(statement, PasAssignPart.class) != null ?
                 PsiUtil.findImmChildOfAnyType(statement, PasExpression.class) : null;
-        return leftPart != null ? infereType(leftPart.getExpr()) : null;
+        return leftPart != null ? inferType(leftPart.getExpr()) : null;
     }
 
     public enum Operation {

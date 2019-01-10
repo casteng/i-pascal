@@ -272,14 +272,14 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         return (scope instanceof PascalStructType) ? scope : file;
     }
 
-    public static final Map<String, String> TYPE_VAR_DEFAULTS = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, "T")));
-
     String calcType(FixActionData data) {
         String res = "T";
         if (ContextUtil.isAssignLeftPart(data.element)) {
             String type = PascalExpression.calcAssignStatementType(PsiUtil.skipToExpressionParent(data.element));
             res = type != null ? type : res;
         }
+        String type = PascalExpression.calcFormalParameterType(data.element);
+        res = type != null ? type : res;
         return res;
     }
 
@@ -623,7 +623,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                         params.append("; ");
                     }
                     params.append("const $").append(TPL_VAR_ARGS).append(count).append("$").append(": $").append(TPL_VAR_TYPES).append(count).append("$");
-                    String type = PascalExpression.infereType(expr);
+                    String type = PascalExpression.inferType(expr);
                     defaults.put(TPL_VAR_TYPES + count, type);
                     if (expr instanceof PasReferenceExpr) {
                         PasFullyQualifiedIdent ident = ((PasReferenceExpr) expr).getFullyQualifiedIdent();

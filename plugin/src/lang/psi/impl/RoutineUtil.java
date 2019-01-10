@@ -2,9 +2,13 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.tree.TokenSet;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
+import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
@@ -103,13 +107,12 @@ public class RoutineUtil {
         return ParamModifier.NONE;
     }
 
-    public static PasCallExpr retrieveCallExpr(PascalNamedElement element) {
-        PsiElement parent = element.getParent();
-        if (parent instanceof PasReferenceExpr) {
-            if (parent.getParent() instanceof PasArgumentList) {
-                parent = parent.getParent().getParent();
-                return parent instanceof PasCallExpr ? (PasCallExpr) parent : null;
-            }
+    public static PasCallExpr retrieveCallExpr(PsiElement element) {
+        PsiElement expr = PsiTreeUtil.skipParentsOfType(element, PascalNamedElement.class, PasReferenceExpr.class, PasDereferenceExpr.class,
+                PsiWhiteSpace.class, PsiErrorElement.class);
+        if (expr instanceof PasArgumentList) {
+            expr = expr.getParent();
+            return expr instanceof PasCallExpr ? (PasCallExpr) expr : null;
         }
         return null;
     }
