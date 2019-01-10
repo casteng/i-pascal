@@ -676,7 +676,7 @@ public class PsiUtil {
     public static PsiElement skipToExpressionParent(PsiElement element) {
         return PsiTreeUtil.skipParentsOfType(element,
                 PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasNamespaceIdent.class, PasGenericTypeIdent.class,
-                PasExpression.class, PascalExpression.class, PasExpressionOrd.class, PasConstExpression.class,
+                PasExpression.class, PascalExpression.class, PasConstExpression.class,
                 PsiWhiteSpace.class, PsiErrorElement.class,
                 PasUnitModuleHead.class);
     }

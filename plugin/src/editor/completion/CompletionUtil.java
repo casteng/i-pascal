@@ -4,6 +4,7 @@ import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
+import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.ide.DataManager;
@@ -42,6 +43,7 @@ import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
+import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -51,12 +53,15 @@ import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasRepeatStatement;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasTryStatement;
+import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
+import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -152,7 +157,7 @@ class CompletionUtil {
     static final TokenSet DECLARATIONS_LOCAL = TokenSet.create(PasTypes.VAR, PasTypes.CONST, PasTypes.TYPE, PasTypes.PROCEDURE, PasTypes.FUNCTION);
     static final TokenSet TYPE_DECLARATIONS = TokenSet.create(
             PasTypes.CLASS, PasTypes.OBJC_CLASS, PasTypes.DISPINTERFACE, PasTypes.RECORD, PasTypes.OBJECT,
-            PasTypes.PACKED, PasTypes.SET, PasTypes.FILE, PasTypes.ARRAY
+            PasTypes.SET, PasTypes.FILE, PasTypes.ARRAY
     );
     static final TokenSet PROPERTY_SPECIFIERS = TokenSet.create(PasTypes.READ, PasTypes.WRITE);
 
@@ -258,12 +263,14 @@ class CompletionUtil {
         res.put(PasTypes.TRY.toString(), String.format("\n  %s\nfinally\nend;", DocUtil.PLACEHOLDER_CARET));
 
         res.put(PasTypes.RECORD.toString(), String.format("  %s\nend;", DocUtil.PLACEHOLDER_CARET));
+        res.put("packed record", String.format("  %s\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.OBJECT.toString(), String.format("  %s\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.CLASS.toString(), String.format("(TObject)\nprivate\n%s\npublic\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.OBJC_CLASS.toString(), String.format("(NSObject)\n%s\npublic\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.INTERFACE.toString() + " ", String.format("(IUnknown)\n%s\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.ARRAY.toString(), String.format(" of %s;", DocUtil.PLACEHOLDER_CARET));
-        res.put(PasTypes.ARRAY.toString() + "[", String.format("[0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.ARRAY.toString() + "[", String.format("0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
+        res.put("packed array[", String.format("0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.SET.toString(), String.format(" of %s;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.CLASS.toString() + " of", String.format(" %s;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.CLASS.toString() + " helper", String.format(" for T%s\n\nend;", DocUtil.PLACEHOLDER_CARET));
@@ -293,9 +300,9 @@ class CompletionUtil {
         return res;
     }
 
-    static void appendTokenSet(CompletionResultSet result, TokenSet tokenSet) {
+    static void appendTokenSet(CompletionResultSet result, TokenSet tokenSet, int priority) {
         for (IElementType op : tokenSet.getTypes()) {
-            result.caseInsensitive().addElement(getElement(op.toString()));
+            result.caseInsensitive().addElement(priority != 0 ? PrioritizedLookupElement.withPriority(getElement(op.toString()), priority) : getElement(op.toString()));
         }
     }
 
@@ -478,6 +485,20 @@ class CompletionUtil {
                 if (parent instanceof PasStatement) {
                     completionContext.deniedName = retrieveNames(result, ((PasStatement) parent).getExpression());
                     completionContext.likelyTypes = EnumSet.of(PasField.FieldType.VARIABLE, PasField.FieldType.PROPERTY, PasField.FieldType.CONSTANT, PasField.FieldType.ROUTINE);
+                }
+            }
+        } else if (ctx.getPrimary() == CodePlace.TYPE_ID) {
+            PsiElement parent = ctx.getPosition() != null ? ctx.getPosition().getParent() : null;
+            if (parent instanceof PasTypeDecl) {
+                PsiElement decl = parent.getParent();
+                if (decl instanceof PascalVariableDeclaration) {
+                    for (PascalNamedElement element : ((PascalVariableDeclaration) decl).getNamedIdentDeclList()) {
+                        result.add(element.getNamePart());
+                    }
+                } else if (decl instanceof PasConstDeclaration) {
+                    result.add(((PasConstDeclaration) decl).getNamePart());
+                } else if (decl instanceof PasTypeDeclaration) {
+                    result.add(((PasTypeDeclaration) decl).getGenericTypeIdent().getNamePart());
                 }
             }
         }

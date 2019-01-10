@@ -779,7 +779,7 @@ private identListItem       ::= NamedIdent
 ConstExpression	            ::=	constExpr {recoverWhile=rec_expr_colon name="constant expression"}
 private constExpr           ::= RecordConstExpr | ArrayConstExpr | Expression
 ArrayConstExpr              ::= "(" constExpr ("," constExpr)+ ")"
-ConstExpressionOrd          ::=	ExpressionOrd {name="integer constant expression" extends=ConstExpression}
+ConstExpressionOrd          ::=	expressionOrd {name="integer constant expression" extends=ConstExpression}
 RecordConstExpr             ::= "(" recordConstInner ")"
 private recordConstInner    ::= recordValue recordValueRest* [";"] {recoverWhile=rec_record_colon}
 private recordValueRest     ::= ";" recordValue
@@ -824,7 +824,7 @@ addOp                       ::=	PLUS | MINUS | OR | XOR
 mulOp                       ::= "*" | "/" | IDIV | MOD | AND | SHL | SHR | (">"">") | AS
 unaryOp                     ::= "+" | "-" | "@" | NOT
 
-ExpressionOrd               ::= Expression
+private expressionOrd       ::= Expression
 Expression                  ::= Expr
 
 Expr                        ::= sumExpr | productExpr | relationalExpr | unaryExpr | referenceExpr | callGroup | primaryGroup {extends="com.siberika.idea.pascal.lang.psi.impl.PascalExpression"}

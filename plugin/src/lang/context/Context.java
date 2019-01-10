@@ -8,6 +8,7 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.*;
 import com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +20,7 @@ public class Context {
 
     private static final Class[] GLOBAL_DECL = {PasUnitInterface.class, PasUnitImplementation.class, PasImplDeclSection.class, PasBlockGlobal.class};
     private static final Class[] LOCAL_DECL = {PasRoutineImplDecl.class, PasBlockLocal.class, PasRoutineImplDeclNested1.class, PasRoutineImplDeclWoNested.class};
-    private static final Class[] EXPRESION_CLASSES = {PasExpr.class, PasArgumentList.class, PasIndexList.class, PasExpression.class};
+    private static final Class[] EXPRESION_CLASSES = {PasExpr.class, PasArgumentList.class, PasIndexList.class, PasExpression.class, PasConstExpression.class};
 
     private final Set<CodePlace> context;
     private final CodePlace primary;
@@ -105,6 +106,7 @@ public class Context {
         CodePlace res = CodePlace.UNKNOWN;
 
         if ((tempPos instanceof PasStatement) || (tempPos instanceof PasAssignPart) || (tempPos instanceof PasArgumentList)
+                || (tempPos instanceof PasConstDeclaration) || (tempPos instanceof PasCaseItem)
                 || (tempPos instanceof PasIndexList) || (originalExprParent instanceof PasRangeBound)) {
             PsiElement expr = skipToExpression(originalExprParent instanceof PasRangeBound ? originalPos : element);
             if ((expr instanceof PasExpr) || (expr instanceof PasExpression)) {
@@ -300,7 +302,7 @@ public class Context {
                     context.add(CodePlace.EXPR_INDEX);
                     contextModified = true;
                 }
-                if ((pos instanceof PasConstExpressionOrd) || (pos instanceof PasConstExpression)) {
+                if ((parent instanceof PasConstExpression)) {
                     context.add(CodePlace.CONST_EXPRESSION);
                 }
             }
@@ -317,7 +319,7 @@ public class Context {
             pos = originalPos;
         } else if ((originalPos != null) && (originalPos.getParent() instanceof PasStringFactor)) {
             pos = originalPos.getParent().getParent();
-        } else if ((originalPos != null) && originalPos.getParent() instanceof PascalNamedElement) {
+        } else if ((originalPos != null) && originalPos.getParent() instanceof PascalNamedElement && (!(originalPos.getParent() instanceof PascalModule))) {
             pos = originalPos.getParent();
         } else {
             pos = element.getParent();
@@ -332,7 +334,7 @@ public class Context {
         }
         while (PsiUtil.isInstanceOfAny(pos, PasSubIdent.class, PascalQualifiedIdent.class, PasReferenceExpr.class)) {
             PsiElement par = pos.getParent();
-            if (!(par.getChildren()[0] == pos)) {
+            if (((par instanceof PascalQualifiedIdent) || (par instanceof PascalExpression)) && !(par.getChildren()[0] == pos)) {
                 return;
             }
             pos = par;

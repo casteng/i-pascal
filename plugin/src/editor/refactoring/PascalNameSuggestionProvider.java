@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -51,7 +52,7 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
         return result;
     }
 
-    public static Set<String> suggestForElement(@Nullable Context context, PsiElement position, Set<String> result) {
+    public static Collection<String> suggestForElement(@Nullable Context context, PsiElement position, Collection<String> result) {
         while (position instanceof PasGenericTypeIdent) {
             position = position.getParent();
         }
@@ -100,7 +101,7 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
         return result;
     }
 
-    private static void suggestNames(String name, String prefix, Set<String> result) {
+    private static void suggestNames(String name, String prefix, Collection<String> result) {
         if (name.startsWith("T")) {
             name = name.substring(1);
         }
@@ -111,7 +112,7 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
 
     private static final String[] POINTER_SUFFIXES = {"Ptr", "Pointer"};
 
-    static void suggestNames(String typeName, List<TypeMod> mods, StrUtil.ElementType type, Set<String> result) {
+    static void suggestNames(String typeName, List<TypeMod> mods, StrUtil.ElementType type, Collection<String> result) {
         if (typeName != null) {
             for (String sName : StrUtil.extractWords(typeNameToVarName(typeName), type)) {
                 for (String pointerSuffix : POINTER_SUFFIXES) {

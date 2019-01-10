@@ -253,7 +253,7 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testTypeIdInVarDecl() {
         myFixture.configureByFiles("typeId.pas");
         checkCompletionContains(myFixture, "TTest", "TRec2", "typeId",
-                "record", "packed", "set", "file", "array");
+                "record", "packed record", "set", "file", "array", "packed array[");
         myFixture.type("re");
         checkCompletionContains(myFixture, "TRec2", "record");
     }
