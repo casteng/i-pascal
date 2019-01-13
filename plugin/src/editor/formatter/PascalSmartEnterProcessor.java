@@ -62,7 +62,7 @@ public class PascalSmartEnterProcessor extends SmartEnterProcessor {
     }
 
     private static void completeStatement(Editor editor, PsiElement statement) {
-        /** complete if, for, while, repeat, try, with
+        /* complete if, for, while, repeat, try, with
          *  complete ";" to EOL if needed
          *  complete ")" in calls where needed
          *  complete "end" if statement contains "begin" and existing "end" has less indent

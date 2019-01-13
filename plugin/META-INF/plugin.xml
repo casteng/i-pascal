@@ -484,6 +484,7 @@
 
         <lang.formatter language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalFormatter"/>
         <lang.smartEnterProcessor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalSmartEnterProcessor"/>
+        <lineIndentProvider implementation="com.siberika.idea.pascal.editor.formatter.PascalLineIndentProvider"/>
 
         <lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.structure.PasStructureViewFactory"/>
         <structureViewBuilder key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.structure.PascalStructureViewBuilder" />
@@ -527,6 +528,7 @@
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalStructIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalSymbolIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalHelperIndex"/>
 
 <!--        <intentionAction>
             <className>com.siberika.idea.pascal.ide.RemoveWithAction</className>
