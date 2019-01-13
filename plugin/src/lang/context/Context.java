@@ -51,7 +51,7 @@ public class Context {
             primary = CodePlace.UNKNOWN;
         }
         this.file = file;
-//        System.out.println(String.format("=== Context: %s, %s, %s", primary, context, position));
+        System.out.println(String.format("=== Context: %s, %s, %s", primary, context, position));
     }
 
     public boolean contains(CodePlace place) {
@@ -97,6 +97,17 @@ public class Context {
 
         printContext(tempPos, originalExprParent);
 
+        if (PsiUtil.isInstanceOfAny(tempPos, PasModule.class, PsiFile.class)) {
+            PsiElement prev = PsiTreeUtil.prevVisibleLeaf(element);
+            PsiElement parent = PsiUtil.skipToExpressionParent(prev);
+            if (PsiUtil.isInstanceOfAny(parent, PasTypeSection.class, PasVarSection.class, PasConstSection.class,
+                    PasTypeDeclaration.class, PasVarDeclaration.class, PasConstDeclaration.class)) {
+                position = parent;
+                tempPos = parent;
+                printContext(tempPos, originalExprParent);
+            }
+        }
+
         if (tempPos instanceof PasModule) {
             return CodePlace.MODULE_HEADER;
         }
@@ -122,8 +133,6 @@ public class Context {
             } else if ((originalExprParent instanceof PasStatement) && (PsiUtil.findImmChildOfAnyType(tempPos, PasAssignPart.class) != null)) {
                 context.add(CodePlace.ASSIGN_LEFT);
             }
-        } else if (tempPos instanceof PasCaseItem) {
-            res = CodePlace.STMT_CASE_ITEM;
         } else if (PsiUtil.isInstanceOfAny(tempPos, GLOBAL_DECL)) {
             if (originalExprParent instanceof PasRoutineImplDecl) {
                 res = CodePlace.LOCAL_DECLARATION;
@@ -361,7 +370,7 @@ public class Context {
         PsiElement prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
         PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
         int level = PsiUtil.getElementLevel(originalPos);
-//        System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
+        System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
     }
 
     public boolean withinBraces() {

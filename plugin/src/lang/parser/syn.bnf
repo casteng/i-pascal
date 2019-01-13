@@ -486,11 +486,9 @@ AssemblerStatement          ::= ASM asmBlock END {pin=1}
 private asmBlock            ::= assemblerItem* {recoverWhile=rec_struct_outer}
 private assemblerItem       ::= ',' | '[' | ']' | ':' | '+' | '-' | '*' | '/' | '@' | RefNamedIdent | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | '.NOFRAME'
 
-FunctionDirective           ::= overloadDirective | oldCallConventionDirectiveSemi
-                              | inlineDirectiveSemi | callConventionSemi | hintingDirective ";"
-                              | REINTRODUCE ';' | bindingDirective | abstractDirectiveSemi | dispIDDirective {name="routine directive"}
-private overloadDirective   ::= OVERLOAD ";"
-private oldCallConventionDirectiveSemi ::= oldCallConventionDirective ";"
+FunctionDirective           ::= functionDirective | dispIDDirective {pin=1 name="routine directive"}
+private functionDirective   ::= (OVERLOAD | oldCallConventionDirective | INLINE | ASSEMBLER | callConvention | hintingDirective | REINTRODUCE | bindingDirective | abstractDirective) ";" {pin=1}
+
 private oldCallConventionDirective ::= "far" | "local" | "near"
 ExternalDirective           ::= EXTERNAL ";" | EXTERNAL externalSpecifier [libLoadSpec] ";" | EXTERNAL ConstExpression [externalSpecifier] [libLoadSpec] ";"
 private varagrs             ::= "varargs"
@@ -501,13 +499,9 @@ ProcBodyBlock               ::= ProcForwardDecl | ExternalDirective | BlockLocal
 ProcForwardDecl             ::= FORWARD ";" FunctionDirective*
 
 private dispIDDirective     ::= DISPID Expression {pin=1}
-private callConventionSemi  ::= callConvention ";"
 private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT | varagrs
-private inlineDirectiveSemi ::= inlineDirective ";"
-private inlineDirective     ::= INLINE | ASSEMBLER
-private abstractDirectiveSemi ::= abstractDirective ";"
 private abstractDirective   ::= ABSTRACT | FINAL
-private bindingDirective    ::= ((MESSAGE Expression) | STATIC | DYNAMIC | OVERRIDE | VIRTUAL) ";"
+private bindingDirective    ::= (MESSAGE Expression) | STATIC | DYNAMIC | OVERRIDE | VIRTUAL
 
 LabelDeclSection	        ::=	LABEL label labelsRest* ";" {pin=1 name="label declaration"}
 private labelsRest          ::= "," label {}
