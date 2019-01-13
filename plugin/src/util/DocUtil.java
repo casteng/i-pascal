@@ -5,10 +5,8 @@ import com.intellij.codeInsight.template.impl.TemplateImpl;
 import com.intellij.codeInsight.template.impl.TextExpression;
 import com.intellij.codeInsight.template.impl.Variable;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.UndoConfirmationPolicy;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
@@ -127,7 +125,7 @@ public class DocUtil {
     }
 
     public static int expandRangeEnd(Document doc, int endOffset, Pattern pattern) {
-        while ((endOffset < doc.getTextLength()) && (pattern.matcher(doc.getText(TextRange.create(endOffset, endOffset+1)))).matches()) {
+        while ((endOffset < doc.getTextLength()) && (pattern.matcher(doc.getText(TextRange.create(endOffset, endOffset + 1)))).matches()) {
             endOffset++;
         }
         return endOffset;
@@ -135,7 +133,7 @@ public class DocUtil {
 
     // Expands range's start for symbols matching pattern
     public static int expandRangeStart(Document doc, int start, Pattern pattern) {
-        while ((start > 0) && (pattern.matcher(doc.getText(TextRange.create(start-1, start)))).matches()) {
+        while ((start > 0) && (pattern.matcher(doc.getText(TextRange.create(start - 1, start)))).matches()) {
             start--;
         }
         return start;
@@ -202,20 +200,16 @@ public class DocUtil {
                 new Runnable() {
                     @Override
                     public void run() {
-                        new WriteCommandAction(project) {
-                            @Override
-                            protected void run(@NotNull Result result) throws Throwable {
-                                //final FileDocumentManager documentManager = FileDocumentManager.getInstance();
-                                //((VirtualFileListener) documentManager).contentsChanged(new VirtualFileEvent(null, file, file.getName(), file.getParent()));
-                                FileContentUtil.reparseFiles(file);
-                            }
-                        }.execute();
+                        //final FileDocumentManager documentManager = FileDocumentManager.getInstance();
+                        //((VirtualFileListener) documentManager).contentsChanged(new VirtualFileEvent(null, file, file.getName(), file.getParent()));
+                        FileContentUtil.reparseFiles(file);
                     }
                 }
         );
     }
 
     private static final Pattern PATTERN_TEMPLATE_VARIABLE = Pattern.compile("\\$\\w+\\$");
+
     // Removes all template variables from the given range of the document
     public static void removeTemplateVariables(Document document, TextRange textRange) {
         String text = document.getText(textRange);
@@ -230,6 +224,7 @@ public class DocUtil {
     }
 
     private static final Pattern EMPTY_TEXT = Pattern.compile("(\\s*(\\{.*}|\\(\\*.*\\*\\)))*\\s*");
+
     public static boolean isFirstOnLine(Editor editor, PsiElement element) {
         Document d = editor.getDocument();
         int offs = element.getTextRange().getStartOffset();

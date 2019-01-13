@@ -105,7 +105,7 @@ public class PascalStatementMover extends LineMover {
         if (isMovable(el)) {
             TextRange range = el.getTextRange();
             TextRange commentRange = PascalDocumentationProvider.findElementCommentRange(file, el);
-            if (commentRange != null) {
+            if (commentRange != TextRange.EMPTY_RANGE) {
                 range = commentRange.union(range);
             }
             Document d = editor.getDocument();
