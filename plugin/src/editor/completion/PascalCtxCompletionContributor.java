@@ -66,7 +66,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -196,22 +195,24 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     //TODO: move the logic to resolving code
     private boolean handleInherited(CompletionResultSet result, EntityCompletionContext completionContext) {
         PasEntityScope scope = getInheritedScope(completionContext.completionParameters.getOriginalPosition());
-        if (null == scope) {
+        if (!(scope instanceof PascalStructType)) {
             return false;
         }
 
-        Collection<PasEntityScope> parents = new LinkedHashSet<>();
-        GotoSuper.retrieveParentStructs(parents, scope, 0);
-        for (PasEntityScope parent : parents) {
-            for (PasField field : parent.getAllFields()) {
-                if (field.fieldType == PasField.FieldType.ROUTINE) {
-                    //filter out strict private methods as well as private ones from other units
-                    if (field.visibility != PasField.Visibility.STRICT_PRIVATE && (field.visibility != PasField.Visibility.PRIVATE || isFromSameUnit(field, completionContext.completionParameters.getOriginalFile()))) {
-                        fieldToEntity(result, field, completionContext);
+        GotoSuper.searchForStruct((PascalStructType) scope).forEach(new Processor<PasEntityScope>() {
+            @Override
+            public boolean process(PasEntityScope parent) {
+                for (PasField field : parent.getAllFields()) {
+                    if (field.fieldType == PasField.FieldType.ROUTINE) {
+                        //filter out strict private methods as well as private ones from other units
+                        if (field.visibility != PasField.Visibility.STRICT_PRIVATE && (field.visibility != PasField.Visibility.PRIVATE || isFromSameUnit(field, completionContext.completionParameters.getOriginalFile()))) {
+                            fieldToEntity(result, field, completionContext);
+                        }
                     }
                 }
+                return true;
             }
-        }
+        });
         return true;
     }
 

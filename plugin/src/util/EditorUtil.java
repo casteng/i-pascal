@@ -82,7 +82,7 @@ public class EditorUtil {
         }
     }
 
-    private static class MyPsiElementCellRenderer extends DefaultPsiElementCellRenderer {
+    public static class MyPsiElementCellRenderer extends DefaultPsiElementCellRenderer {
 
         @Nullable
         @Override

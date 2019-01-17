@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.editor;
 
 import com.intellij.codeHighlighting.Pass;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzerSettings;
-import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.codeInsight.daemon.impl.LineMarkersPass;
@@ -10,37 +9,33 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
-import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.ConstantFunction;
-import com.intellij.util.SmartList;
-import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.editor.linemarker.PascalMarker;
 import com.siberika.idea.pascal.ide.actions.GotoSuper;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
-import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
-import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
+import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
-import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.references.ResolveUtil;
-import com.siberika.idea.pascal.util.EditorUtil;
-import com.siberika.idea.pascal.util.ModuleUtil;
+import com.siberika.idea.pascal.lang.search.UsedBy;
+import com.siberika.idea.pascal.lang.stub.PascalHelperIndex;
+import com.siberika.idea.pascal.lang.stub.StubUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.awt.event.MouseEvent;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -72,77 +67,31 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
             impl = PsiTreeUtil.getParentOfType(element, PasUnitInterface.class) != null;
         }
         if (PsiUtil.isElementUsable(target)) {
-            result.add(createLineMarkerInfo(element, impl ? AllIcons.Gutter.ImplementedMethod : AllIcons.Gutter.ImplementingMethod,
-                    msg("navigate.title.toggle.section"), getHandler(msg("navigate.title.toggle.section"), Collections.singletonList(target))));
+            result.add(createLineMarkerInfo(element, impl ? AllIcons.Gutter.ImplementedMethod : AllIcons.Gutter.ImplementingMethod, PascalMarker.SECTION_TOGGLE));
         }
         // Goto super
         if (element instanceof PascalNamedElement) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
-            Collection<PasEntityScope> supers = GotoSuper.retrieveGotoSuperTargets(namedElement.getNameIdentifier());
-            if (!supers.isEmpty()) {
-                result.add(createLineMarkerInfo(element, AllIcons.Gutter.OverridingMethod, msg("navigate.title.goto.super"),
-                        getHandler(msg("navigate.title.goto.super"), supers)));
+            if (GotoSuper.hasSuperTargets(namedElement.getNameIdentifier())) {
+                result.add(createLineMarkerInfo(element, AllIcons.Gutter.OverridingMethod, PascalMarker.GOTO_SUPER));
             }
             if (element instanceof PasUnitModuleHead) {
-                Collection<PascalModule> modules = retrieveUsingModules(((PasUnitModuleHead) element).getNamespaceIdent());
-                if (!modules.isEmpty()) {
-                    result.add(createLineMarkerInfo(element, AllIcons.Hierarchy.Caller, msg("navigate.title.used.by"),
-                            getHandler(msg("navigate.title.used.by"), modules)));
+                if (UsedBy.hasDependentModules((PasUnitModuleHead) element)) {
+                    result.add(createLineMarkerInfo(element, AllIcons.Hierarchy.Caller, PascalMarker.USED_BY_UNIT));
                 }
             }
         }
     }
 
-    private Collection<PascalModule> retrieveUsingModules(@Nullable PasNamespaceIdent namespaceIdent) {
-        if (null == namespaceIdent) {
-            return Collections.emptyList();
-        }
-        String name = namespaceIdent.getName();
-        String namespace = namespaceIdent.getNamespace();
-        String namespaceless = namespaceIdent.getNamePart();
-        boolean checkNamespaceless = false;
-        if (StringUtil.isNotEmpty(namespace)) {
-            for (String prefix : ModuleUtil.retrieveUnitNamespaces(namespaceIdent)) {
-                if (namespace.equalsIgnoreCase(prefix)) {
-                    checkNamespaceless = true;
-                    break;
-                }
-            }
-        }
-        Collection<PascalModule> res = new SmartList<>();
-        for (PascalModule module : ResolveUtil.findUnitsWithStub(namespaceIdent.getProject(), null, null)) {
-            collectUnits(res, name, module, module.getUsedUnitsPublic());
-            collectUnits(res, name, module, module.getUsedUnitsPrivate());
-            if (checkNamespaceless) {
-                collectUnits(res, namespaceless, module, module.getUsedUnitsPublic());
-                collectUnits(res, namespaceless, module, module.getUsedUnitsPrivate());
-            }
-        }
-        return res;
-    }
-
-    private void collectUnits(Collection<PascalModule> res, String name, PascalModule module, List<String> usedUnitsList) {
-        for (String unitName : usedUnitsList) {
-            if (unitName.equalsIgnoreCase(name)) {
-                res.add(module);
-            }
-        }
-    }
-
-    private String msg(String key) {
-        return PascalBundle.message(key);
-    }
-
-    static LineMarkerInfo<PsiElement> createLineMarkerInfo(@NotNull PsiElement element, Icon icon, final String tooltip,
-                                                           @NotNull GutterIconNavigationHandler<PsiElement> handler) {
+    static LineMarkerInfo<PsiElement> createLineMarkerInfo(@NotNull PsiElement element, Icon icon, @NotNull PascalMarker marker) {
         PsiElement el = getLeaf(element);
         return new LineMarkerInfo<PsiElement>(el, el.getTextRange(),
                 icon, Pass.LINE_MARKERS,
-                new ConstantFunction<PsiElement, String>(tooltip), handler,
+                marker.getTooltip(), marker.getHandler(),
                 GutterIconRenderer.Alignment.RIGHT);
     }
 
-    private static PsiElement getLeaf(PsiElement element) {
+    static PsiElement getLeaf(PsiElement element) {
         while (element.getFirstChild() != null) {
             element = element.getFirstChild();
         }
@@ -156,29 +105,29 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
             if (myDaemonSettings.SHOW_METHOD_SEPARATORS) {
                 return LineMarkersPass.createMethodSeparatorLineMarker(getLeaf(element), myColorsManager);
             }
+        } else if ((element instanceof PasClassTypeDecl) || (element instanceof PasRecordDecl)) {
+            String name = ((PascalStructType) element).getName().toUpperCase();
+            Project project = element.getProject();
+            if (StubUtil.keyExists(PascalHelperIndex.KEY, name, project, GlobalSearchScope.projectScope(project), PascalStructType.class)) {
+                return collectHelpers((PascalStructType) element);
+            }
         }
         return null;
     }
 
     @Override
     public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
-        try {
-            for (PsiElement element : elements) {
-                if ((element instanceof PascalRoutine) || (element instanceof PascalStructType) || (element instanceof PasUsesClause) || (element instanceof PasUnitModuleHead)) {
-                    collectNavigationMarkers(element, result);
-                }
+        for (PsiElement element : elements) {
+            if ((element instanceof PascalRoutine) || (element instanceof PascalStructType) || (element instanceof PasUsesClause) || (element instanceof PasUnitModuleHead)) {
+                collectNavigationMarkers(element, result);
             }
-        } catch (PasInvalidScopeException e) {
-            e.printStackTrace();
         }
     }
 
-    static GutterIconNavigationHandler<PsiElement> getHandler(final String title, @NotNull final Collection<? extends PsiElement> targets) {
-        return new GutterIconNavigationHandler<PsiElement>() {
-            @Override
-            public void navigate(MouseEvent e, PsiElement elt) {
-                EditorUtil.navigateTo(e, title, null, targets);
-            }
+    private LineMarkerInfo collectHelpers(PascalStructType structType) {
+        PsiElement leaf = PascalLineMarkerProvider.getLeaf(structType);
+        return new LineMarkerInfo<PsiElement>(leaf, leaf.getTextRange(),
+                PascalIcons.HELPER, Pass.LINE_MARKERS, PascalMarker.HELPERS.getTooltip(), PascalMarker.HELPERS.getHandler(), GutterIconRenderer.Alignment.LEFT) {
         };
     }
 

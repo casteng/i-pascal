@@ -1,6 +1,11 @@
 package com.siberika.idea.pascal.lang.stub;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.stubs.StubElement;
+import com.intellij.psi.stubs.StubIndex;
+import com.intellij.psi.stubs.StubIndexKey;
 import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.intellij.util.io.StringRef;
@@ -8,6 +13,7 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.stub.struct.PasClassDeclStub;
 import com.siberika.idea.pascal.lang.stub.struct.PascalHelperDeclStub;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -97,5 +103,9 @@ public class StubUtil {
         StubUtil.writeStringCollection(dataStream, stub.getParentNames());
         dataStream.writeName(stub.getTarget());
         StubUtil.writeStringCollection(dataStream, stub.getTypeParameters());
+    }
+
+    public static <Key, Psi extends PsiElement> boolean keyExists(@NotNull StubIndexKey<Key, Psi> indexKey, @NotNull Key key, Project project, GlobalSearchScope scope, Class<Psi> psiClass) {
+        return !StubIndex.getElements(indexKey, key, project, scope, psiClass).isEmpty();
     }
 }

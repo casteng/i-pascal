@@ -29,6 +29,7 @@ import com.siberika.idea.pascal.util.Filter;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -61,8 +62,7 @@ public class ActionImplement extends PascalAction {
             EditorUtil.showErrorHint(PascalBundle.message("action.error.notinstruct"), EditorUtil.getHintPos(editor));
             return;
         }
-        Collection<PasEntityScope> structs = new LinkedHashSet<>();
-        GotoSuper.retrieveParentStructs(structs, scope, 0);
+        Collection<PasEntityScope> structs = new LinkedHashSet<>(Arrays.asList(GotoSuper.searchForStruct((PascalStructType) scope).toArray(new PasEntityScope[0])));
         final Set<String> existing = new HashSet<String>();
         for (PasField field : scope.getAllFields()) {
             allowNonExistingRoutines(field, existing);
