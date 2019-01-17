@@ -78,7 +78,7 @@ public class PasRecordHelperDeclStubElementType extends PasStructDeclStubElement
     public void indexStub(@NotNull PasRecordHelperDeclStub stub, @NotNull IndexSink sink) {
         sink.occurrence(PascalSymbolIndex.KEY, stub.getName());
         if (StringUtil.isNotEmpty(stub.getTarget())) {
-            sink.occurrence(PascalHelperIndex.KEY, stub.getTarget());
+            sink.occurrence(PascalHelperIndex.KEY, stub.getTarget().toUpperCase());
         }
     }
 

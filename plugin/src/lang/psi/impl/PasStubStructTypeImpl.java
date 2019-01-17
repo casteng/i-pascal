@@ -342,8 +342,11 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     }
 
     private List<SmartPsiElementPointer<PasEntityScope>> calcParentScopes() {
-        calcParentScopesStub();
-        SmartList<SmartPsiElementPointer<PasEntityScope>> res = new SmartList<>();
+        List<SmartPsiElementPointer<PasEntityScope>> res = calcParentScopesStub();
+        if (res != null) {
+            return res;
+        }
+        res = new SmartList<>();
         PasEntityScope containing = getContainingScope();
         if ((containing instanceof PascalClassDecl) || (containing instanceof PascalInterfaceDecl)) {         // Nested type
             addScope(res, containing);
@@ -365,7 +368,7 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         return res;
     }
 
-    private void calcParentScopesStub() {
+    private List<SmartPsiElementPointer<PasEntityScope>> calcParentScopesStub() {
         // TODO: cache with validation
         B stub = retrieveStub();
         if (stub != null) {
@@ -396,8 +399,9 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             if (res.isEmpty() && defaultParent != this) {
                 addScope(res, defaultParent);
             }
-            parentScopes = Collections.unmodifiableList(res);
+            return Collections.unmodifiableList(res);
         }
+        return null;
     }
 
     private PasEntityScope getDefaultParentScope() {

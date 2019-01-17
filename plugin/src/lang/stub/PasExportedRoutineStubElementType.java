@@ -12,6 +12,7 @@ import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.util.PsiUtil;
 import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,7 +47,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @NotNull
     @Override
     public PasExportedRoutineStub createStub(@NotNull PascalExportedRoutine psi, StubElement parentStub) {
-        return new PasExportedRoutineStubImpl(parentStub, psi.getName(), psi.getVisibility(), psi.isExported(),
+        return new PasExportedRoutineStubImpl(parentStub, PsiUtil.getFieldName(psi), psi.getVisibility(), psi.isExported(),
                 psi.getContainingUnitName(), psi.isConstructor(), psi.isFunction(),
                 psi.getFunctionTypeStr(), psi.getFormalParameterNames(), psi.getFormalParameterTypes(), psi.getFormalParameterAccess());
     }
