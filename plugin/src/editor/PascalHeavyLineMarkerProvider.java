@@ -1,33 +1,29 @@
 package com.siberika.idea.pascal.editor;
 
-import com.intellij.codeInsight.daemon.GutterIconNavigationHandler;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
+import com.intellij.concurrency.JobLauncher;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.project.DumbService;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressIndicatorProvider;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.search.PsiElementProcessor;
-import com.intellij.util.SmartList;
-import com.siberika.idea.pascal.PascalBundle;
+import com.intellij.util.Processor;
+import com.siberika.idea.pascal.editor.linemarker.PascalMarker;
 import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
-import com.siberika.idea.pascal.util.EditorUtil;
-import com.siberika.idea.pascal.util.PsiUtil;
-import gnu.trove.THashSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
-import java.awt.event.MouseEvent;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -43,65 +39,39 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
 
     @Override
     public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
-        try {
-            for (PsiElement element : elements) {
-                if (element instanceof PascalStructType) {
-                    // Goto implementations
-                    Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations(((PascalNamedElement) element).getNameIdentifier(), 1, 0);
-                    if (!impls.isEmpty()) {
-                        result.add(PascalLineMarkerProvider.createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod,
-                                        PascalBundle.message("navigate.title.goto.subclassed"), getHandler(PascalBundle.message("navigate.title.goto.subclassed"))));
-                    }
-                } else if ((element instanceof PasExportedRoutine) || (element instanceof PasRoutineImplDecl)) {
-                    PasEntityScope scope = ((PasEntityScope) element).getContainingScope();
-                    if (scope instanceof PascalStructType) {
-                        Collection<PasEntityScope> inheritedScopes = new SmartList<PasEntityScope>();
-                        PascalDefinitionsSearch.findDescendingStructs(inheritedScopes, (PascalStructType) scope, 1, 0);
-                        if (!inheritedScopes.isEmpty()) {
-                            result.add(PascalLineMarkerProvider.createLineMarkerInfo((PasEntityScope) element, AllIcons.Gutter.OverridenMethod,
-                                    PascalBundle.message("navigate.title.goto.subclassed"), getHandler(PascalBundle.message("navigate.title.goto.subclassed"))));
+        ApplicationManager.getApplication().assertReadAccessAllowed();
+        List<Computable<List<LineMarkerInfo>>> tasks = new ArrayList<>();
+        Processor<? super PasEntityScope> consumer = (Processor<PasEntityScope>) descending -> false;
+        for (PsiElement element : elements) {
+            tasks.add(new Computable<List<LineMarkerInfo>>() {
+                @Override
+                public List<LineMarkerInfo> compute() {
+                    boolean noMarker = true;
+                    if (element instanceof PascalStructType) {
+                        noMarker = PascalDefinitionsSearch.findImplementations(((PascalNamedElement) element).getNameIdentifier(), consumer);
+                    } else if ((element instanceof PasExportedRoutine) || (element instanceof PasRoutineImplDecl)) {
+                        PasEntityScope scope = ((PasEntityScope) element).getContainingScope();
+                        if (scope instanceof PascalStructType) {
+                            noMarker = PascalDefinitionsSearch.findImplementingMethods((PascalRoutine) element, consumer);
                         }
                     }
-                }
-            }
-        } catch (PasInvalidScopeException e) {
-            e.printStackTrace();
-        }
-    }
-
-    static GutterIconNavigationHandler<PsiElement> getHandler(final String title) {
-        return new GutterIconNavigationHandler<PsiElement>() {
-            @Override
-            public void navigate(MouseEvent e, final PsiElement elt) {
-                if (DumbService.isDumb(elt.getProject())) {
-                    DumbService.getInstance(elt.getProject()).showDumbModeNotification(PascalBundle.message("navigate.subclassed.impossible.reindex"));
-                    return;
-                }
-
-                final PasEntityScope scope = PsiUtil.getNearestAffectingScope(elt);
-
-                final PsiElementProcessor.CollectElementsWithLimit<PasEntityScope> collectProcessor = new PsiElementProcessor.CollectElementsWithLimit<PasEntityScope>(100, new THashSet<PasEntityScope>());
-                if (!ProgressManager.getInstance().runProcessWithProgressSynchronously(new Runnable() {
-                    @Override
-                    public void run() {
-                        ApplicationManager.getApplication().runReadAction(new Runnable() {
-                            @Override
-                            public void run() {
-                                Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations((scope).getNameIdentifier(), 100, 0);
-                                for (PasEntityScope impl : impls) {
-                                    collectProcessor.execute(impl);
-                                }
-                            }
-                        });
+                    if (noMarker) {
+                        return Collections.emptyList();
+                    } else {
+                        return Collections.singletonList(PascalLineMarkerProvider.createLineMarkerInfo(element, AllIcons.Gutter.OverridenMethod, PascalMarker.DESCENDING_ENTITIES));
                     }
-                }, PascalBundle.message("navigate.title.goto.subclassed.search"), true, elt.getProject(), (JComponent)e.getComponent())) {
-                    return;
                 }
-
-                List<PasEntityScope> inheritors = Arrays.asList(collectProcessor.toArray(new PasEntityScope[0]));
-                EditorUtil.navigateTo(e, title, PascalBundle.message("navigate.info.subclassed.noitems"), inheritors);
+            });
+        }
+        Object lock = new Object();
+        ProgressIndicator indicator = ProgressIndicatorProvider.getGlobalProgressIndicator();
+        JobLauncher.getInstance().invokeConcurrentlyUnderProgress(tasks, indicator, computable -> {
+            List<LineMarkerInfo> infos = computable.compute();
+            synchronized (lock) {
+                result.addAll(infos);
             }
-        };
+            return true;
+        });
     }
 
 }

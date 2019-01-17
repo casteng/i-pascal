@@ -27,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.EditorUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -53,6 +54,9 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
             for (PasExportedRoutine routine : notImplemented) {
                 String name = routine.getCanonicalName();
                 if (!processed.contains(name)) {
+                    PasEntityScope scope = routine.getContainingScope();
+                    String scopeName = scope != null ? ResolveUtil.cleanupName(scope.getName()) + "." : "";
+                    name = scopeName + name;
                     processed.add(name);
                     holder.registerProblem(holder.getManager().createProblemDescriptor(classParent, message("inspection.warn.methods.not.implemented", name),
                             true, ProblemHighlightType.GENERIC_ERROR_OR_WARNING, isOnTheFly,
@@ -111,12 +115,12 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
     }
 
     private boolean hasNoDescendants(PasClassTypeDecl classTypeDecl) {
-        return PascalDefinitionsSearch.processDescendingStructs(null, classTypeDecl, false, new Processor<PascalStructType>() {
+        return PascalDefinitionsSearch.processDescendingStructs(null, classTypeDecl, false, new Processor<PasEntityScope>() {
             @Override
-            public boolean process(PascalStructType pascalStructType) {
+            public boolean process(PasEntityScope pascalStructType) {
                 return false;
             }
-        });
+        }, 0);
     }
 
     private class ImplementMethodFix extends PascalBaseFix {

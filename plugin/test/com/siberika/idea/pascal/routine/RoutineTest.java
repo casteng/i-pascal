@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.routine;
 
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.intellij.util.Processor;
 import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -30,8 +31,13 @@ public class RoutineTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.configureByFiles("findSubMethods.pas");
         PasEntityScope parent = TestUtil.findClass(Objects.requireNonNull(PsiUtil.getElementPasModule(myFixture.getFile())), "TParent");
         PasField r = parent.getField("test");
-        Collection<PasEntityScope> impls = PascalDefinitionsSearch.findImplementations((r.getElement()).getNameIdentifier(), 100, 0);
-        assertEquals(impls.iterator().next().getContainingScope(), TestUtil.findClass(Objects.requireNonNull(PsiUtil.getElementPasModule(myFixture.getFile())), "TChild"));
+        PascalDefinitionsSearch.findImplementations((r.getElement()).getNameIdentifier(), new Processor<PasEntityScope>() {
+            @Override
+            public boolean process(PasEntityScope element) {
+                assertEquals(element.getContainingScope(), TestUtil.findClass(Objects.requireNonNull(PsiUtil.getElementPasModule(myFixture.getFile())), "TChild"));
+                return false;
+            }
+        });
     }
 
     public void testNormalizeRoutineName() {
