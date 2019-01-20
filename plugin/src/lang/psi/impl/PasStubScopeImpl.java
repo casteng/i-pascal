@@ -11,6 +11,7 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.PasIdentStubImpl;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
@@ -113,6 +114,10 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
                         fieldsMap.put(alias.toUpperCase(), (PasNamedStub) stubElement);
                     }
                 }
+            } else if (stubElement instanceof PasExportedRoutineStub) {
+                PasExportedRoutineStub rStub = (PasExportedRoutineStub) stubElement;
+                fieldsMap.put(RoutineUtil.calcCanonicalName(rStub.getName(), rStub.getFormalParameterNames(), rStub.getFormalParameterTypes(),
+                        rStub.getFormalParameterAccess(), rStub.getFunctionTypeStr()), (PasNamedStub) stubElement);
             }
         }
         fieldsMap.put(PascalHelperScope.KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", false, "", PasField.FieldType.VARIABLE, "", null, PasField.Access.READONLY, null, null));

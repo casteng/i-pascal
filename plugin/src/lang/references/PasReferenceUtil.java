@@ -29,7 +29,6 @@ import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
-import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -86,6 +85,7 @@ public class PasReferenceUtil {
 
     /**
      * Finds and returns unit in path by name
+     *
      * @param moduleName - unit name
      * @return unit element
      */
@@ -109,6 +109,7 @@ public class PasReferenceUtil {
     /**
      * Finds and returns file of a module with the given name
      * If more than one file matches the one with longest name is returned
+     *
      * @return list of PsiFiles
      */
     @Nullable
@@ -119,7 +120,7 @@ public class PasReferenceUtil {
                 candidates.add(virtualFile);
             }
         }
-        Collections.sort(candidates, new Comparator<VirtualFile>() {
+        candidates.sort(new Comparator<VirtualFile>() {
             @Override
             public int compare(VirtualFile o1, VirtualFile o2) {
                 return o2.getNameWithoutExtension().length() - o1.getNameWithoutExtension().length();
@@ -130,12 +131,13 @@ public class PasReferenceUtil {
 
     /**
      * Finds and returns module files in search path
+     *
      * @param module - IDEA module to include its compiled dependencies
      * @return list of PsiFiles
      */
     @NotNull
     public static List<VirtualFile> findUnitFiles(@NotNull Project project, @Nullable final Module module) {
-        final List<VirtualFile> virtualFiles = new SmartList<VirtualFile>();
+        final List<VirtualFile> virtualFiles = new SmartList<>();
         if (module != null) {
             virtualFiles.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
                     GlobalSearchScope.allScope(project)));
@@ -356,10 +358,10 @@ public class PasReferenceUtil {
     }
 
     /**
-     *  for each entry in FQN before target:
-     *    find entity corresponding to NS in current scope
-     *    if the entity represents a namespace - retrieve and make current
-     *  for namespace of target entry add all its entities
+     * for each entry in FQN before target:
+     * find entity corresponding to NS in current scope
+     * if the entity represents a namespace - retrieve and make current
+     * for namespace of target entry add all its entities
      */
     public static Collection<PasField> resolve(final NamespaceRec fqn, ResolveContext context, final int recursionCount) {
         ProgressManager.checkCanceled();
@@ -397,103 +399,92 @@ public class PasReferenceUtil {
 
         Set<PasField.FieldType> fieldTypes = EnumSet.copyOf(context.fieldTypes);
 
-        try {
-            handleWith(namespaces, context.scope, fqn.getParentIdent());
-            // Retrieve all namespaces affecting first FQN level
-            while (context.scope != null) {
-                addFirstNamespaces(namespaces, context.scope, context.includeLibrary, implAffects);
-                context.scope = fqn.isFirst() ? PsiUtil.getNearestAffectingScope(context.scope) : null;
+        handleWith(namespaces, context.scope, fqn.getParentIdent());
+        // Retrieve all namespaces affecting first FQN level
+        while (context.scope != null) {
+            addFirstNamespaces(namespaces, context.scope, context.includeLibrary, implAffects);
+            context.scope = fqn.isFirst() ? PsiUtil.getNearestAffectingScope(context.scope) : null;
+        }
+
+        while (fqn.isBeforeTarget() && (namespaces != null)) {
+            PasField field = null;
+            // Scan namespaces and get one matching field
+            for (PasEntityScope namespace : namespaces) {
+                Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
+                if ((fields != null) && (!fields.isEmpty())) {
+                    result.addAll(fields);
+                    return result;
+                }
+                field = namespace.getField(fqn.getCurrentName());
+                if (field != null) {
+                    break;
+                }
             }
 
-            while (fqn.isBeforeTarget() && (namespaces != null)) {
-                PasField field = null;
-                // Scan namespaces and get one matching field
-                for (PasEntityScope namespace : namespaces) {
-                    Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
-                    if ((fields != null) && (!fields.isEmpty())) {
-                        result.addAll(fields);
-                        return result;
-                    }
-                    field = namespace.getField(fqn.getCurrentName());
-                    if (field != null) {
-                        break;
-                    }
-                }
+            PasEntityScope unitNamespace = null;
+            if (((null == field) && fqn.isFirst()) || ((field != null ? field.fieldType : null) == PasField.FieldType.UNIT)) {
+                unitNamespace = handleUnitScope(result, namespaces, fqn, fieldTypes, context.unitNamespaces);
+                field = unitNamespace != null ? null : field;
+            }
+            namespaces = unitNamespace != null ? namespaces : null;
 
-                PasEntityScope unitNamespace = null;
-                if (((null == field) && fqn.isFirst()) || ((field != null ? field.fieldType : null) == PasField.FieldType.UNIT)) {
-                    unitNamespace = handleUnitScope(result, namespaces, fqn, fieldTypes, context.unitNamespaces);
-                    field = unitNamespace != null ? null : field;
-                }
-                namespaces = unitNamespace != null ? namespaces : null;
-
-                if (field != null) {
-                    PasEntityScope newNS;
-                    if (field.fieldType == PasField.FieldType.UNIT) {
-                        newNS = fqn.isFirst() && implAffects && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE) ?
-                                retrieveFieldUnitScope(field, context.includeLibrary) : null;                    // First qualifier can be unit name
-                    } else {
-                        newNS = retrieveFieldTypeScope(field, context, recursionCount);
-                        boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
-                        if ((fqn.getRestLevels() == 1) && ((null == newNS) || isDefault)         // "default" type pseudo value
-                         && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member
-                            if (isDefault) {
-                                fqn.next();
-                                PasField defaultField = new PasField(field.owner, field.getElement(), "default", PasField.FieldType.CONSTANT, field.visibility);
-                                if (isFieldMatches(defaultField, fqn, fieldTypes)) {
-                                    result.add(defaultField);
-                                }
-                                saveScope(context.resultScope, newNS, true);
-                                return result;
+            if (field != null) {
+                PasEntityScope newNS;
+                if (field.fieldType == PasField.FieldType.UNIT) {
+                    newNS = fqn.isFirst() && implAffects && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE) ?
+                            retrieveFieldUnitScope(field, context.includeLibrary) : null;                    // First qualifier can be unit name
+                } else {
+                    newNS = retrieveFieldTypeScope(field, context, recursionCount);
+                    boolean isDefault = "DEFAULT".equals(fqn.getLastName().toUpperCase());
+                    if ((fqn.getRestLevels() == 1) && ((null == newNS) || isDefault)         // "default" type pseudo value
+                            && (field.fieldType == PasField.FieldType.TYPE)) {                      // Enumerated type member
+                        if (isDefault) {
+                            fqn.next();
+                            PasField defaultField = new PasField(field.owner, field.getElement(), "default", PasField.FieldType.CONSTANT, field.visibility);
+                            if (isFieldMatches(defaultField, fqn, fieldTypes)) {
+                                result.add(defaultField);
                             }
-                            if (ResolveUtil.resolveEnumMember(result, field, fqn, fieldTypes)) {
-                                return result;
-                            }
+                            saveScope(context.resultScope, newNS, true);
+                            return result;
+                        }
+                        if (ResolveUtil.resolveEnumMember(result, field, fqn, fieldTypes)) {
+                            return result;
                         }
                     }
-
-                    namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
-                    addParentNamespaces(namespaces, newNS, false);
                 }
-                if (null == unitNamespace) {
-                    fqn.next();
-                    removeFirstOnlyTypes(fieldTypes);
+
+                namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
+                addParentNamespaces(namespaces, newNS, false);
+            }
+            if (null == unitNamespace) {
+                fqn.next();
+                removeFirstOnlyTypes(fieldTypes);
+            }
+        }
+
+        if (!fqn.isComplete() && (namespaces != null)) {
+            for (PasEntityScope namespace : namespaces) {
+                if (null == namespace) {
+                    LOG.info(String.format("===*** null namespace! %s", fqn));
+                    continue;
+                }
+                Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
+                if ((fields != null) && (!fields.isEmpty())) {
+                    result.addAll(fields);
+                } else {
+                    ResolveUtil.findLastPart(result, fqn, namespace, fieldTypes, context, PasReferenceUtil::isVisibleWithinUnit);
+                }
+                if (!result.isEmpty() && !isCollectingAll(fqn)) {
+                    break;
                 }
             }
-
-            if (!fqn.isComplete() && (namespaces != null)) {
-                for (PasEntityScope namespace : namespaces) {
-                    if (null == namespace) {
-                        LOG.info(String.format("===*** null namespace! %s", fqn));
-                        continue;
-                    }
-                    Collection<PasField> fields = resolveFromStub(fqn, namespace, context, recursionCount);
-                    if ((fields != null) && (!fields.isEmpty())) {
-                        result.addAll(fields);
-                    } else {
-                        ResolveUtil.findLastPart(result, fqn, namespace, fieldTypes, context, PasReferenceUtil::isVisibleWithinUnit);
-                    }
-                    if (!result.isEmpty() && !isCollectingAll(fqn)) {
-                        break;
-                    }
-                }
-                if (result.isEmpty() && fqn.isFirst()) {
-                    handleUnitScope(result, namespaces, fqn, fieldTypes, context.unitNamespaces);
-                }
-                if (result.isEmpty() && (context.resultScope != null)) {
-                    context.resultScope.clear();
-                    context.resultScope.addAll(namespaces);
-                }
+            if (result.isEmpty() && fqn.isFirst()) {
+                handleUnitScope(result, namespaces, fqn, fieldTypes, context.unitNamespaces);
             }
-        } catch (PasInvalidScopeException e) {
-            /*if (namespaces != null) {
-                for (PasEntityScope namespace : namespaces) {
-                    namespace.invalidateCache();
-                }
-            }*/
-        /*} catch (Throwable e) {
-            //LOG.error(String.format("Error parsing scope %s, file %s", scope, scope != null ? scope.getContainingFile().getName() : ""), e);
-            throw e;*/
+            if (result.isEmpty() && (context.resultScope != null)) {
+                context.resultScope.clear();
+                context.resultScope.addAll(namespaces);
+            }
         }
         return result;
     }
