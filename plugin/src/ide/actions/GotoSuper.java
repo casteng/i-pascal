@@ -94,7 +94,7 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
     }
 
     private static PasEntityScope getScopeByElement(PsiElement element) {
-        PascalRoutine routine = PsiTreeUtil.getParentOfType(element, PascalRoutine.class);
+        PascalRoutine routine = PsiTreeUtil.getParentOfType(element, PascalRoutine.class, false);
         if (routine != null) {
             return routine;
         } else {

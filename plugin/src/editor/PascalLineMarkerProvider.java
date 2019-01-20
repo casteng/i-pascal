@@ -9,9 +9,7 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
-import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.editor.linemarker.PascalMarker;
@@ -27,9 +25,8 @@ import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
+import com.siberika.idea.pascal.lang.search.Helper;
 import com.siberika.idea.pascal.lang.search.UsedBy;
-import com.siberika.idea.pascal.lang.stub.PascalHelperIndex;
-import com.siberika.idea.pascal.lang.stub.StubUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -106,9 +103,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
                 return LineMarkersPass.createMethodSeparatorLineMarker(getLeaf(element), myColorsManager);
             }
         } else if ((element instanceof PasClassTypeDecl) || (element instanceof PasRecordDecl)) {
-            String name = ((PascalStructType) element).getName().toUpperCase();
-            Project project = element.getProject();
-            if (StubUtil.keyExists(PascalHelperIndex.KEY, name, project, GlobalSearchScope.projectScope(project), PascalStructType.class)) {
+            if (Helper.hasHelpers((PascalStructType) element)) {
                 return collectHelpers((PascalStructType) element);
             }
         }
@@ -125,9 +120,9 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     }
 
     private LineMarkerInfo collectHelpers(PascalStructType structType) {
-        PsiElement leaf = PascalLineMarkerProvider.getLeaf(structType);
+        PsiElement leaf = getLeaf(structType);
         return new LineMarkerInfo<PsiElement>(leaf, leaf.getTextRange(),
-                PascalIcons.HELPER, Pass.LINE_MARKERS, PascalMarker.HELPERS.getTooltip(), PascalMarker.HELPERS.getHandler(), GutterIconRenderer.Alignment.LEFT) {
+                PascalIcons.HELPER, Pass.LINE_MARKERS, PascalMarker.HELPERS.getTooltip(), PascalMarker.HELPERS.getHandler(), GutterIconRenderer.Alignment.RIGHT) {
         };
     }
 

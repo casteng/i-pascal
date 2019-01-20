@@ -10,12 +10,14 @@ import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.Processor;
 import com.intellij.util.Query;
+import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.util.EditorUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
+import java.util.Set;
 
 public abstract class CollectionNavigationHandler<T extends PsiElement> implements GutterIconNavigationHandler<PsiElement> {
 
@@ -64,9 +66,12 @@ public abstract class CollectionNavigationHandler<T extends PsiElement> implemen
         @NotNull
         private final PsiElement element;
 
+        private final Set<PsiElement> processed;
+
         public TargetsUpdater(@NotNull PsiElement element) {
             super(element.getProject(), searchTitleMsg, null);
             this.element = element;
+            this.processed = new SmartHashSet<>();
         }
 
         @Override
@@ -87,11 +92,14 @@ public abstract class CollectionNavigationHandler<T extends PsiElement> implemen
         @Override
         public void run(@NotNull ProgressIndicator indicator) {
             super.run(indicator);
-            createQuery(element).forEach(new Processor<T>() {
+            createQuery(element).forEach(new Processor<PsiElement>() {
                 @Override
-                public boolean process(T element) {
-                    if (!updateComponent(element)) {
-                        indicator.cancel();
+                public boolean process(PsiElement element) {
+                    if (!processed.contains(element)) {
+                        processed.add(element);
+                        if (!updateComponent(element)) {
+                            indicator.cancel();
+                        }
                     }
                     ProgressManager.checkCanceled();
                     return true;

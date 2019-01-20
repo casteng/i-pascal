@@ -11,17 +11,13 @@ import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.util.ArrayUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
-import com.siberika.idea.pascal.lang.psi.PascalStubElement;
-import com.siberika.idea.pascal.lang.psi.impl.HasUniqueName;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
-import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -119,42 +115,11 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
         final ResolveResult[] results = multiResolve(false);
         for (ResolveResult result : results) {
             PsiElement resolved = result.getElement();
-            if (checkUniqueName(resolved, element)) {
-                return true;
-            }
-            if (getElement().getManager().areElementsEquivalent(getNamedElement(resolved), getNamedElement(element))) {
+            if (PsiUtil.hasSameUniqueName(resolved, element) || (getElement().getManager().areElementsEquivalent(getNamedElement(resolved), getNamedElement(element)))) {
                 return true;
             }
         }
         return false;
-    }
-
-    private boolean checkUniqueName(PsiElement resolved, PsiElement element) {
-        String name1 = resolved instanceof HasUniqueName ? ((HasUniqueName) resolved).getUniqueName() : null;
-        String name2 = element instanceof HasUniqueName ? ((HasUniqueName) element).getUniqueName() : null;
-        if (null == name1) {
-            PascalStubElement se1 = getStubbedElement(resolved);
-            name1 = se1 != null ? se1.getUniqueName() : null;
-        }
-
-        if (null == name2) {
-            PascalStubElement se2 = getStubbedElement(element);
-            name2 = se2 != null ? se2.getUniqueName() : null;
-        }
-        return (name1 != null) && (name2 != null) && ResolveUtil.cleanupName(name1).equalsIgnoreCase(ResolveUtil.cleanupName(name2));
-    }
-
-    private PascalStubElement getStubbedElement(PsiElement element) {
-        if (element instanceof PascalStubElement) {
-            return (PascalStubElement) element;
-        }
-        PsiElement stubbedElement = null;
-        if (element instanceof PasGenericTypeIdent) {
-            stubbedElement = ((PasGenericTypeIdent) element).getNamedIdentDecl();
-        } else if (element.getParent() instanceof PasExportedRoutine) {
-            stubbedElement = element.getParent();
-        }
-        return (PascalStubElement) stubbedElement;
     }
 
     private PsiElement getNamedElement(PsiElement element) {

@@ -110,7 +110,7 @@ public class PascalMarker {
                 @Override
                 Query<PascalStructType> createQuery(PsiElement element) {
                     if (element.getParent() instanceof PascalStructType) {
-                        return Helper.getQuery((PascalStructType) element.getParent(), GlobalSearchScope.allScope(PsiUtilCore.getProjectInReadAction(element)));
+                        return Helper.getQuery((PascalStructType) element.getParent());
                     } else {
                         return HELPERS_EMPTY_QUERY;
                     }
