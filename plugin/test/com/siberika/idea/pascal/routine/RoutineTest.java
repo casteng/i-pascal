@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.routine;
 
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.Processor;
+import com.siberika.idea.pascal.ide.actions.GotoSuper;
 import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -34,10 +35,19 @@ public class RoutineTest extends LightPlatformCodeInsightFixtureTestCase {
         PascalDefinitionsSearch.findImplementations((r.getElement()).getNameIdentifier(), new Processor<PasEntityScope>() {
             @Override
             public boolean process(PasEntityScope element) {
-                assertEquals(element.getContainingScope(), TestUtil.findClass(Objects.requireNonNull(PsiUtil.getElementPasModule(myFixture.getFile())), "TChild"));
+                assertEquals(TestUtil.findClass(Objects.requireNonNull(PsiUtil.getElementPasModule(myFixture.getFile())), "TChild"), element.getContainingScope());
                 return false;
             }
         });
+    }
+
+    public void testFindSuperMethods() {
+        myFixture.configureByFiles("findSubMethods.pas");
+        PasEntityScope parent = TestUtil.findClass(Objects.requireNonNull(PsiUtil.getElementPasModule(myFixture.getFile())), "TChild");
+        PasField r = parent.getField("test");
+        assertTrue(GotoSuper.hasSuperTargets(r.getElement()));
+        PasEntityScope superMethod = GotoSuper.search(r.getElement()).findFirst();
+        assertEquals(TestUtil.findClass(Objects.requireNonNull(PsiUtil.getElementPasModule(myFixture.getFile())), "TParent"), superMethod.getContainingScope());
     }
 
     public void testNormalizeRoutineName() {
