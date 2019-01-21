@@ -2,12 +2,12 @@ package com.siberika.idea.pascal.routine;
 
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.Processor;
-import com.siberika.idea.pascal.ide.actions.GotoSuper;
-import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.search.GotoSuper;
+import com.siberika.idea.pascal.lang.search.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.TestUtil;
 

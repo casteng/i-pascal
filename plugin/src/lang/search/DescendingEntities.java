@@ -5,7 +5,6 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.DefinitionsScopedSearch;
 import com.intellij.util.ExecutorsQuery;
 import com.intellij.util.Query;
-import com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 
 import java.util.Collections;

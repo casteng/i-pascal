@@ -1,4 +1,4 @@
-package com.siberika.idea.pascal.ide.actions;
+package com.siberika.idea.pascal.lang.search;
 
 import com.intellij.lang.LanguageCodeInsightActionHandler;
 import com.intellij.openapi.application.QueryExecutorBase;

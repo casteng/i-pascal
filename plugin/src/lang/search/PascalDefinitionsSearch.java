@@ -1,4 +1,4 @@
-package com.siberika.idea.pascal.ide.actions;
+package com.siberika.idea.pascal.lang.search;
 
 import com.intellij.openapi.application.QueryExecutorBase;
 import com.intellij.openapi.diagnostic.Logger;
@@ -11,6 +11,8 @@ import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.containers.SmartHashSet;
+import com.siberika.idea.pascal.ide.actions.IntfImplNavAction;
+import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
