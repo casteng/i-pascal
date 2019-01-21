@@ -27,7 +27,6 @@ import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider;
-import com.siberika.idea.pascal.ide.actions.GotoSuper;
 import com.siberika.idea.pascal.lang.context.Context;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
@@ -45,6 +44,7 @@ import com.siberika.idea.pascal.lang.psi.PasProgramModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
+import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasUnitModuleHead;
@@ -58,6 +58,7 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.search.GotoSuper;
 import com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -462,7 +463,9 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
 
     private static void addEntities(CompletionResultSet result, EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes) {
         NamespaceRec namespace = NamespaceRec.fromFQN(completionContext.context.getDummyIdent(), PasField.DUMMY_IDENTIFIER);
-        if (completionContext.context.getNamedElement() != null) {
+        if (completionContext.context.getDummyIdent() != null && completionContext.context.getDummyIdent().getParent() instanceof PasSubIdent) {
+            namespace = NamespaceRec.fromElement(completionContext.context.getDummyIdent().getParent());
+        } else if (completionContext.context.getNamedElement() != null) {
             if (completionContext.context.getNamedElement().getParent() instanceof PascalNamedElement) {
                 namespace = NamespaceRec.fromElement(completionContext.context.getNamedElement());
             } else {

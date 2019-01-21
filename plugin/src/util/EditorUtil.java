@@ -101,6 +101,9 @@ public class EditorUtil {
 
         @Override
         public String getElementText(PsiElement element) {
+            if (!element.isValid()) {
+                return "<invalid>";
+            }
             if (element instanceof PascalNamedElement) {
                 StringBuilder sb = new StringBuilder();
                 if (element instanceof PasEntityScope) {
@@ -123,6 +126,9 @@ public class EditorUtil {
     }
 
     private static String getRightText(PsiElement element) {
+        if (!element.isValid()) {
+            return "<invalid>";
+        }
         PsiFile file = element.getContainingFile();
         if (file != null) {
             String line;
