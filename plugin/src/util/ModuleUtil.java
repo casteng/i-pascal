@@ -11,6 +11,7 @@ import com.intellij.openapi.projectRoots.SdkAdditionalData;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -20,7 +21,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.indexing.FileBasedIndex;
-import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.module.PascalModuleType;
@@ -114,6 +114,7 @@ public class ModuleUtil {
      *   1. if name specifies an absolute path return it
      *   2. search in the directory where the current source file is located
      *   3. search in all paths in search path
+     *   4. if not found, name is relative and referencing file is not specified, search index for name
      *   if name doesn't include file extension and file doesn't exists ".pas" and ".pp" are tried sequentially
      * @param project - used to retrieve list of search paths project
      * @param referencing - file which references to the include
@@ -121,6 +122,7 @@ public class ModuleUtil {
      * @return file name or null if not found
      */
     public static VirtualFile getIncludedFile(Project project, VirtualFile referencing, String name) {
+        name = name.replace('\\', '/');
         File file = new File(name);
         if (file.isAbsolute()) {
             return tryExtensions(file);
@@ -138,9 +140,9 @@ public class ModuleUtil {
             Module module = com.intellij.openapi.module.ModuleUtil.findModuleForFile(referencing, project);
 
 //            return module != null ? trySearchPath(name, GlobalSearchScope.moduleWithDependenciesScope(module)) : null;
-            return module != null ? trySearchPath(name, GlobalSearchScope.projectScope(project)) : null;
+            return module != null ? trySearchPath(project, name, GlobalSearchScope.projectScope(project)) : null;
         } else {                                                                               // often lexer can't determine which virtual file is referencing the include
-            return trySearchPath(name, GlobalSearchScope.projectScope(project));
+            return trySearchPath(project, name, GlobalSearchScope.projectScope(project));
         }
     }
 
@@ -160,18 +162,17 @@ public class ModuleUtil {
         return false;
     }
 
-    private static VirtualFile trySearchPath(String name, GlobalSearchScope filter) {
-        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                filter);
-        for (VirtualFile virtualFile : virtualFiles) {
-            String ext = FileUtil.getExtension(name);
-            if (ext != null) {
-                if (name.equalsIgnoreCase(virtualFile.getName())) {
-                    return virtualFile;
-                }
-            } else if (name.equalsIgnoreCase(virtualFile.getNameWithoutExtension())) {
-                if (INCLUDE_EXTENSIONS.contains(virtualFile.getExtension())) {
-                    return virtualFile;
+    private static VirtualFile trySearchPath(Project project, String name, GlobalSearchScope scope) {
+        name = FileUtil.getFilename(name);
+        Collection<VirtualFile> files = FilenameIndex.getVirtualFilesByName(project, name, scope);
+        if (!files.isEmpty()) {
+            return files.iterator().next();
+        } else {
+            String nameWoExt = FileUtilRt.getNameWithoutExtension(name);
+            for (String ext : INCLUDE_EXTENSIONS) {
+                files = FilenameIndex.getVirtualFilesByName(project, nameWoExt + "." + ext, scope);
+                if (!files.isEmpty()) {
+                    return files.iterator().next();
                 }
             }
         }
