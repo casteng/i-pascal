@@ -27,5 +27,7 @@ public interface PascalFlexLexer {
 
     IElementType handleInclude(int pos, CharSequence sequence);
 
+    IElementType handleOption(int pos, CharSequence sequence);
+
     IElementType getElement(IElementType elementType);
 }

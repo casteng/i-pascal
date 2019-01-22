@@ -400,6 +400,17 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         return INCLUDE;
     }
 
+    @Override
+    public IElementType handleOption(int pos, CharSequence sequence) {
+        if ("{$MODE DELPHIUNICODE}".contentEquals(sequence.toString())) {
+            String key = "UNICODE";
+            getActualDefines().add(key);
+            defines.add(Pair.create(pos, key));
+            allDefines.put(key, new Define(key, virtualFile, pos));
+        }
+        return COMP_OPTION;
+    }
+
     private void pushCondition(boolean result) {
         conditionStack = (conditionStack << 1) | (result ? 1 : 0);
     }

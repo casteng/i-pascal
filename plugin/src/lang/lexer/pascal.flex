@@ -48,6 +48,9 @@ STRING_ELEMENT  = "''"|[^'\n\r]
 STRING_LITERAL  = "'"{STRING_ELEMENT}*"'"
 STRING_LITERAL_UNC  = "'"{STRING_ELEMENT}*[\n\r]
 
+//BAD_STRING_LITERAL='([^'\\\r\n]|\\.)*
+//STRING_LITERAL={BAD_STRING_LITERAL}'
+
 CT_DEFINE          = "{$DEFINE " !([^]* "}" [^]*) ("}")?
 CT_UNDEFINE        = "{$UNDEF " !([^]* "}" [^]*) ("}")?
 
@@ -393,7 +396,7 @@ NUM_OCT         = \&[0-7]+
 
     {INCLUDE}       { return handleInclude(zzCurrentPos, yytext()); }
 
-    {COMP_OPTION}   { return getElement(COMP_OPTION); }
+    {COMP_OPTION}   { return handleOption(zzCurrentPos, yytext()); }
 
     {STRING_LITERAL} { return getElement(STRING_LITERAL); }
     {STRING_LITERAL_UNC} { return getElement(STRING_LITERAL_UNC); }
