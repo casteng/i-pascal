@@ -332,4 +332,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "ParentConstructor", "parentMethod", "Parent2Constructor", "parent2Method");
     }
 
+    public void testFirstInName() {
+        myFixture.configureByFiles("firstInName.pas");
+        checkCompletion(myFixture, "r1");
+    }
+
 }

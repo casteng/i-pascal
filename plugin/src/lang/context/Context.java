@@ -8,7 +8,6 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.*;
 import com.siberika.idea.pascal.lang.psi.impl.PasStatementImpl;
-import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -341,12 +340,12 @@ public class Context {
         } else {
             return;
         }
-        while (PsiUtil.isInstanceOfAny(pos, PasSubIdent.class, PascalQualifiedIdent.class, PasReferenceExpr.class)) {
-            PsiElement par = pos.getParent();
-            if (((par instanceof PascalQualifiedIdent) || (par instanceof PascalExpression)) && !(par.getChildren()[0] == pos)) {
-                return;
-            }
-            pos = par;
+        PsiElement parent = PsiTreeUtil.skipParentsOfType(pos,
+                PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
+                PasReferenceExpr.class, PasDereferenceExpr.class, PasCallExpr.class, PasIndexExpr.class, PasParenExpr.class,
+                PsiWhiteSpace.class, PsiErrorElement.class);
+        if ((parent != null) && (parent.getTextRange().getStartOffset() < (originalPos != null ? originalPos : element).getTextRange().getStartOffset())) {
+            return;
         }
         context.add(CodePlace.FIRST_IN_NAME);
         while (PsiUtil.isInstanceOfAny(pos, PasExpr.class, PasIndexList.class, PasArgumentList.class)) {
