@@ -9,18 +9,14 @@ import com.intellij.util.ExecutorsQuery;
 import com.intellij.util.Processor;
 import com.intellij.util.Query;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.psi.PasClassHelperDecl;
-import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
+import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
-import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
-import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.stub.PascalHelperIndex;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.Collections;
 
 public class Helper {
@@ -29,24 +25,20 @@ public class Helper {
     }
 
     public static boolean isHelperFor(PascalStructType helper, PascalStructType target) {
+        PascalNamedElement resolved = resolveTarget(helper);
+        return (resolved == target) || PsiUtil.hasSameUniqueName(resolved, target) || (target.getManager().areElementsEquivalent(resolved, target));
+    }
+
+    public static PascalNamedElement resolveTarget(PascalStructType helper) {
         String targetFqn = null;
-        if (helper instanceof PasClassHelperDecl) {
-            targetFqn = ((PasClassHelperDecl) helper).getTarget();
-        } else if (helper instanceof PasRecordHelperDecl) {
-            targetFqn = ((PasRecordHelperDecl) helper).getTarget();
+        if (helper instanceof PascalHelperDecl) {
+            targetFqn = ((PascalHelperDecl) helper).getTarget();
         }
         if (targetFqn != null) {
             NamespaceRec fqn = NamespaceRec.fromFQN(helper, targetFqn);
-            ResolveContext ctx = new ResolveContext(PasField.TYPES_TYPE, true);
-            Collection<PasField> targets = PasReferenceUtil.resolve(fqn, ctx, 0);
-            for (PasField field : targets) {
-                PascalNamedElement resolved = field.getElement();
-                if ((resolved == target) || PsiUtil.hasSameUniqueName(resolved, target) || (target.getManager().areElementsEquivalent(resolved, target))) {
-                    return true;
-                }
-            }
+            return PasReferenceUtil.resolveTypeScope(fqn, null, true);
         }
-        return false;
+        return null;
     }
 
     public static boolean hasHelpers(PascalStructType element) {

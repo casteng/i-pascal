@@ -7,7 +7,6 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
@@ -23,8 +22,6 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasArrayType;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
-import com.siberika.idea.pascal.lang.psi.PasExpr;
-import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInvalidScopeException;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -36,8 +33,8 @@ import com.siberika.idea.pascal.lang.psi.PasSetType;
 import com.siberika.idea.pascal.lang.psi.PasStringType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -51,7 +48,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasFileTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasSubRangeTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
-import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
+import com.siberika.idea.pascal.lang.search.Helper;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
@@ -389,9 +386,13 @@ public class ResolveUtil {
                             }
                         }
 
-                    namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
+                    namespaces = newNS != null ? new SmartList<>() : null;
                     if (newNS instanceof PascalStructType) {
+                        PasReferenceUtil.handleHelpers(namespaces, scope);
+                        namespaces.add(newNS);
                         addParentNamespaces(namespaces, (PascalStructType) newNS);
+                    } else if (newNS != null) {
+                        namespaces.add(newNS);
                     }
                 }
                 if (null == unitNamespace) {
@@ -455,11 +456,11 @@ public class ResolveUtil {
     }
 
     private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope scope, boolean includeLibrary) {
+        PasReferenceUtil.handleHelpers(namespaces, scope);
         namespaces.add(scope);
         if (scope instanceof PascalModule) {
             addUnitNamespaces(namespaces, (PascalModule) scope);
-        }
-        if (scope instanceof PascalStructType) {
+        } else if (scope instanceof PascalStructType) {
             addParentNamespaces(namespaces, (PascalStructType) scope);
         }
     }
@@ -481,6 +482,13 @@ public class ResolveUtil {
     private static void addParentNamespaces(@Nullable List<PasEntityScope> namespaces, @NotNull PascalStructType scope) {
         if ((null == namespaces) || (namespaces.size() > PasReferenceUtil.MAX_NAMESPACES)) {
             return;
+        }
+        if (scope instanceof PascalHelperDecl) {                                              // Helper's target to helper's code scope
+            PascalNamedElement target = Helper.resolveTarget(scope);
+            if (target instanceof PascalStructType) {
+                namespaces.add((PasEntityScope) target);
+                namespaces.addAll(PsiUtil.extractSmartPointers(((PascalStructType) target).getParentScope()));
+            }
         }
         namespaces.addAll(PsiUtil.extractSmartPointers(scope.getParentScope()));
     }
@@ -523,27 +531,6 @@ public class ResolveUtil {
                 result.add(pasField);
             }
         }
-    }
-
-    public static List<PasEntityScope> getScopes(List<PasEntityScope> result, PasWithStatement withElement) {
-        for (PasExpression expr : withElement.getExpressionList()) {
-            PasExpr expression = expr != null ? expr.getExpr() : null;
-            if (expression instanceof PascalExpression) {
-                List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) expr.getExpr());
-                if (!types.isEmpty()) {
-                    PasEntityScope ns = PascalExpression.retrieveScope(types);
-                    if (ns != null) {
-                        result.add(ns);
-                        if (ns instanceof PascalStructType) {
-                            for (SmartPsiElementPointer<PasEntityScope> scopePtr : ns.getParentScope()) {
-                                result.add(scopePtr.getElement());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return result;
     }
 
     @Nullable

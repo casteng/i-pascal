@@ -4,12 +4,12 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.stubs.IStubElementType;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PascalRecordHelperDecl;
-import com.siberika.idea.pascal.lang.stub.struct.PasRecordHelperDeclStub;
+import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
+import com.siberika.idea.pascal.lang.stub.struct.PasHelperDeclStub;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class PascalRecordHelperDeclImpl extends PasStubStructTypeImpl<PascalRecordHelperDecl, PasRecordHelperDeclStub> implements PascalRecordHelperDecl {
+public abstract class PascalRecordHelperDeclImpl extends PasStubStructTypeImpl<PascalHelperDecl, PasHelperDeclStub> implements PascalHelperDecl {
 
     volatile private String target;
 
@@ -17,7 +17,7 @@ public abstract class PascalRecordHelperDeclImpl extends PasStubStructTypeImpl<P
         super(node);
     }
 
-    PascalRecordHelperDeclImpl(PasRecordHelperDeclStub stub, IStubElementType nodeType) {
+    PascalRecordHelperDeclImpl(PasHelperDeclStub stub, IStubElementType nodeType) {
         super(stub, nodeType);
         target = stub.getTarget();
     }

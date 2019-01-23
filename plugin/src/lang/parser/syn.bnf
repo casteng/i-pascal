@@ -565,8 +565,8 @@ private objc_decl           ::= OBJC_CLASS | OBJC_CATEGORY [EXTERNAL [externalSp
 ClassHelperDecl             ::= CLASS HELPER classHelperBody END {pin=2
                                                                   name="class helper declaration"
                                                                   extends="com.siberika.idea.pascal.lang.psi.impl.PascalClassHelperDeclImpl"
-                                                                  implements="com.siberika.idea.pascal.lang.psi.PascalClassHelperDecl"
-                                                                  stubClass="com.siberika.idea.pascal.lang.stub.struct.PasClassHelperDeclStub"
+                                                                  implements="com.siberika.idea.pascal.lang.psi.PascalHelperDecl"
+                                                                  stubClass="com.siberika.idea.pascal.lang.stub.struct.PasHelperDeclStub"
                                                                   elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasClassHelperDeclStubElementType"}
 
 private classHelperBody     ::= [classParentWithRecovery] FOR TypeID structItem* {pin=2 recoverWhile=rec_struct_outer}
@@ -603,8 +603,8 @@ RecordVariant               ::= ConstExpressionOrd ("," ConstExpressionOrd)* ":"
 RecordHelperDecl            ::= RECORD HELPER classHelperBody END {pin=2
                                                                    name="record helper declaration"
                                                                    extends="com.siberika.idea.pascal.lang.psi.impl.PascalRecordHelperDeclImpl"
-                                                                   implements="com.siberika.idea.pascal.lang.psi.PascalRecordHelperDecl"
-                                                                   stubClass="com.siberika.idea.pascal.lang.stub.struct.PasRecordHelperDeclStub"
+                                                                   implements="com.siberika.idea.pascal.lang.psi.PascalHelperDecl"
+                                                                   stubClass="com.siberika.idea.pascal.lang.stub.struct.PasHelperDeclStub"
                                                                    elementTypeClass="com.siberika.idea.pascal.lang.stub.struct.PasRecordHelperDeclStubElementType"}
 
 ClassState                  ::= SEALED | ABSTRACT

@@ -1,11 +1,11 @@
 package com.siberika.idea.pascal.lang.stub.struct;
 
 import com.intellij.psi.stubs.StubElement;
-import com.siberika.idea.pascal.lang.psi.PascalRecordHelperDecl;
+import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
 
 import java.util.List;
 
-public class PasRecordHelperDeclStubImpl extends PasStructStubImpl<PascalRecordHelperDecl> implements PasRecordHelperDeclStub {
+public class PasRecordHelperDeclStubImpl extends PasStructStubImpl<PascalHelperDecl> implements PasHelperDeclStub {
     private String target;
 
     public PasRecordHelperDeclStubImpl(StubElement parent, String name, String containingUnitName, String target,

@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.0</version>
+    <version>2.10</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,16 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>2.10</p>
+        <ul>
+            <li>Class/record helpers support</li>
+            <li>Not implemented interface inspection</li>
+            <li>Reference resolution fixes</li>
+            <li>Actual parameters type inference</li>
+            <li>More correct and fast indenting of new lines</li>
+            <li>Code completion improvement</li>
+            <li>Statement completion improvement</li>
+        </ul>
         <p>2.0</p>
         <ul>
             <li>Completion suggestions from not used units (double ctrl+space)</li>
@@ -403,8 +413,8 @@
         <codeInsight.overrideMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalOverrideMethodsHandler"/>
         <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
 
-        <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.GotoSuper"/>
-        <definitionsScopedSearch implementation="com.siberika.idea.pascal.ide.actions.PascalDefinitionsSearch"/>
+        <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.lang.search.GotoSuper"/>
+        <definitionsScopedSearch implementation="com.siberika.idea.pascal.lang.search.PascalDefinitionsSearch"/>
         <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
 
         <lang.documentationProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalDocumentationProvider"/>

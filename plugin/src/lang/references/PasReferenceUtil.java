@@ -27,6 +27,8 @@ import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExpr;
+import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -35,8 +37,11 @@ import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
+import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
+import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRecordDecl;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
@@ -55,6 +60,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
+import com.siberika.idea.pascal.lang.search.Helper;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -453,8 +459,14 @@ public class PasReferenceUtil {
                     }
                 }
 
-                namespaces = newNS != null ? new SmartList<PasEntityScope>(newNS) : null;
-                addParentNamespaces(namespaces, newNS, false);
+                if (newNS != null) {
+                    namespaces = new SmartList<>();
+                    PasReferenceUtil.handleHelpers(namespaces, newNS);
+                    namespaces.add(newNS);
+                    addParentNamespaces(namespaces, newNS, false);
+                } else {
+                    namespaces = null;
+                }
             }
             if (null == unitNamespace) {
                 fqn.next();
@@ -588,7 +600,7 @@ public class PasReferenceUtil {
         Collection<PasWithStatement> statements = scope.getWithStatements();
         for (PasWithStatement ws : statements) {
             if (PsiUtil.isParentOf(ident, ws.getStatement()) && PsiUtil.isParentOf(ws, scope)) {
-                ResolveUtil.getScopes(namespaces, ws);
+                getWithStatementScopes(namespaces, ws);
             }
         }
     }
@@ -619,6 +631,7 @@ public class PasReferenceUtil {
       . RESULT - in routine context
 */
     private static void addFirstNamespaces(List<PasEntityScope> namespaces, PasEntityScope scope, boolean includeLibrary, boolean implAffects) {
+        handleHelpers(namespaces, scope);
         namespaces.add(scope);
         if (scope instanceof PascalModuleImpl) {
             if (implAffects) {
@@ -645,14 +658,31 @@ public class PasReferenceUtil {
         if (null == scope) {
             return;
         }
+        if (scope instanceof PascalHelperDecl) {                                              // Helper's target to helper's code scope
+            PascalNamedElement target = Helper.resolveTarget((PascalHelperDecl) scope);
+            if (target instanceof PascalStructType) {
+                namespaces.add((PasEntityScope) target);
+                addParentNamespaces(namespaces, (PasEntityScope) target, first);
+            }
+        }
         for (SmartPsiElementPointer<PasEntityScope> scopePtr : scope.getParentScope()) {
             PasEntityScope entityScope = scopePtr.getElement();
             if (first || (entityScope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
                 if (null != entityScope) {
+                    handleHelpers(namespaces, scope);
                     namespaces.add(entityScope);
                     addParentNamespaces(namespaces, entityScope, first);
                 }
             }
+        }
+    }
+
+    static void handleHelpers(List<PasEntityScope> namespaces, PasEntityScope scope) {
+        if (scope instanceof PascalRecordDecl || scope instanceof PascalClassDecl) {
+            Helper.getQuery((PascalStructType) scope).forEach(helper -> {
+                namespaces.add(helper);
+                return true;
+            });
         }
     }
 
@@ -677,6 +707,29 @@ public class PasReferenceUtil {
                     PsiElement procType = decl != null ? decl.getFirstChild() : null;
                     if (procType instanceof PasProcedureType) {
                         result.add((PascalRoutineEntity) procType);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private static List<PasEntityScope> getWithStatementScopes(List<PasEntityScope> result, PasWithStatement withElement) {
+        for (PasExpression expr : withElement.getExpressionList()) {
+            PasExpr expression = expr != null ? expr.getExpr() : null;
+            if (expression instanceof PascalExpression) {
+                List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) expr.getExpr());
+                if (!types.isEmpty()) {
+                    PasEntityScope ns = PascalExpression.retrieveScope(types);
+                    if (ns != null) {
+                        result.add(ns);
+                        if (ns instanceof PascalStructType) {
+                            for (SmartPsiElementPointer<PasEntityScope> scopePtr : ns.getParentScope()) {
+                                PasEntityScope scope = scopePtr.getElement();
+                                PasReferenceUtil.handleHelpers(result, scope);           // TODO: ===*** is it needed?
+                                result.add(scope);
+                            }
+                        }
                     }
                 }
             }
