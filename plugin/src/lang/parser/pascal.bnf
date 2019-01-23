@@ -388,8 +388,8 @@ private rec_semi_section    ::= !(";" | "=" | "," | ">") & rec_section
 private rec_semi            ::= !(";" | "deprecated" | "platform") & rec_section
 private rec_struct_field    ::= !(";" | ")" | END | CASE | identifier ) & rec_section
 private rec_struct_outer    ::= !(END)
-private rec__routine_key    ::= PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
-private rec_name            ::= !(identifier | END) & rec_section
+private rec__routine_key    ::= GENERIC PROCEDURE | GENERIC FUNCTION | PROCEDURE | FUNCTION | CONSTRUCTOR | DESTRUCTOR | OPERATOR
+private rec_name            ::= !(GENERIC | identifier | END) & rec_section
 private rec_case            ::= !(ELSE | END) & rec_section
 private rec_caseItem        ::= !(END | ELSE | caseLabel)
 private rec_classparent     ::= !(CASE | FOR) & rec_name
@@ -424,8 +424,8 @@ ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implemen
                              elementTypeClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStubElementType"}
 
 private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine_decl}
-private exportedFunc        ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=2}
-private exportedProc        ::= [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=2}
+private exportedFunc        ::= [GENERIC] [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=3}
+private exportedProc        ::= [GENERIC] [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=3}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
 private classOperatorDecl   ::= [CLASS] OPERATOR operatorName FormalParameterSection ":" TypeDecl {pin=2}
 
@@ -433,7 +433,7 @@ RoutineImplDecl             ::= routineImpl ProcBodyBlock {pin=1 name="procedure
 RoutineImplDeclNested1      ::= routineDeclaration (ProcForwardDecl | BlockLocalNested1) [";"] {extends=RoutineImplDecl}
 RoutineImplDeclWoNested     ::= routineDeclaration (ProcForwardDecl | BlockLocalWONested) [";"] {extends=RoutineImplDecl}
 private routineImpl         ::= customAttributes* (exportedProc | exportedFuncImpl | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine}
-private exportedFuncImpl    ::= [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] [":" customAttributes* TypeDecl] {pin=2}
+private exportedFuncImpl    ::= [GENERIC] [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] [":" customAttributes* TypeDecl] {pin=3}
 
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" RefNamedIdent ";"
 
@@ -519,7 +519,7 @@ private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= classForwardDecl ";"
 
-GenericTypeIdent    ::= "generic"? NamedIdentDecl [GenericDefinition] {recoverWhile=rec_typeId}
+GenericTypeIdent    ::= [GENERIC] NamedIdentDecl [GenericDefinition] {recoverWhile=rec_typeId}
 GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
 private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {}             //TODO use meta rule
 private identsRest          ::= "," NamedIdent {recoverWhile=rec_generic_def}

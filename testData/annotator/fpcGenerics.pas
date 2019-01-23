@@ -8,6 +8,11 @@ type
     TIntList = specialize TGList<TInt>;
 implementation
 
+generic function Add<T>(aLeft, aRight: T): T;
+begin
+    Result := aLeft + aRight;
+end;
+
 function TGList.GetCurrent: T;
 begin
     Result := T();
