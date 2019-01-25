@@ -123,7 +123,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @NotNull
     @Override
     public SearchScope getUseScope() {
-        if (isExported()) {
+        if (!isExported()) {
             return new LocalSearchScope(this.getContainingFile());
         } else {
             return new ProjectScopeImpl(getProject(), FileIndexFacade.getInstance(getProject()));

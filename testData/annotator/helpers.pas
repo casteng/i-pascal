@@ -25,6 +25,9 @@ type
 
 implementation
 
+var
+  A: TA;
+
 class function TAHelper.Func: TA;
 begin
 end;
@@ -41,4 +44,6 @@ constructor TVecHelper.Create();
 begin
 end;
 
+begin
+    A.Func();
 end.
