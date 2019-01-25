@@ -25,12 +25,14 @@ public abstract class CollectionNavigationHandler<T extends PsiElement> implemen
     private final String searchTitleMsg;
     private final String noItemsMsg;
     private final String impossibleReindexMsg;
+    private final boolean navigateIfSingleResult;
 
-    CollectionNavigationHandler(String titleMsg, String searchTitleMsg, String noItemsMsg, String impossibleReindexMsg) {
+    CollectionNavigationHandler(boolean navigateIfSingleResult, String titleMsg, String searchTitleMsg, String noItemsMsg, String impossibleReindexMsg) {
         this.titleMsg = titleMsg;
         this.searchTitleMsg = searchTitleMsg;
         this.noItemsMsg = noItemsMsg;
         this.impossibleReindexMsg = impossibleReindexMsg;
+        this.navigateIfSingleResult = navigateIfSingleResult;
     }
 
     abstract Query<T> createQuery(PsiElement element);
@@ -57,7 +59,7 @@ public abstract class CollectionNavigationHandler<T extends PsiElement> implemen
             return;
         }
 
-        BackgroundUpdaterTask updater = new TargetsUpdater(elt);
+        BackgroundUpdaterTask updater = new TargetsUpdater(elt, navigateIfSingleResult);
 
         PsiElementListNavigator.openTargets(e, targetsNav, searchTitleMsg,searchTitleMsg, new EditorUtil.MyPsiElementCellRenderer(), updater);
     }
@@ -65,12 +67,14 @@ public abstract class CollectionNavigationHandler<T extends PsiElement> implemen
     private class TargetsUpdater extends BackgroundUpdaterTask {
         @NotNull
         private final PsiElement element;
+        private final boolean navigateIfSingleResult;
 
         private final Set<PsiElement> processed;
 
-        public TargetsUpdater(@NotNull PsiElement element) {
+        public TargetsUpdater(@NotNull PsiElement element, boolean navigateIfSingleResult) {
             super(element.getProject(), searchTitleMsg, null);
             this.element = element;
+            this.navigateIfSingleResult = navigateIfSingleResult;
             this.processed = new SmartHashSet<>();
         }
 
@@ -82,6 +86,9 @@ public abstract class CollectionNavigationHandler<T extends PsiElement> implemen
         @Override
         public void onSuccess() {
             super.onSuccess();
+            if (!navigateIfSingleResult) {
+                return;
+            }
             PsiElement oneElement = getTheOnlyOneElement();
             if (oneElement instanceof NavigatablePsiElement) {
                 ((NavigatablePsiElement)oneElement).navigate(true);

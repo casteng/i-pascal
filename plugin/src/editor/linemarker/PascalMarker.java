@@ -51,7 +51,7 @@ public class PascalMarker {
     );
 
     public static PascalMarker GOTO_SUPER = new PascalMarker(
-            new CollectionNavigationHandler<PasEntityScope>(
+            new CollectionNavigationHandler<PasEntityScope>(true,
                     PascalBundle.message("navigate.title.goto.super"),
                     PascalBundle.message("navigate.title.goto.super.search"),
                     PascalBundle.message("navigate.info.goto.super.noitems"),
@@ -66,7 +66,7 @@ public class PascalMarker {
     );
 
     public static PascalMarker DESCENDING_ENTITIES = new PascalMarker(
-            new CollectionNavigationHandler<PasEntityScope>(
+            new CollectionNavigationHandler<PasEntityScope>(true,
                     PascalBundle.message("navigate.title.goto.subclassed"),
                     PascalBundle.message("navigate.title.goto.subclassed.search"),
                     PascalBundle.message("navigate.info.subclassed.noitems"),
@@ -83,7 +83,7 @@ public class PascalMarker {
     private static final EmptyQuery<PascalModule> USED_BY_EMPTY_QUERY = new EmptyQuery<>();
     
     public static PascalMarker USED_BY_UNIT = new PascalMarker(
-            new CollectionNavigationHandler<PascalModule>(
+            new CollectionNavigationHandler<PascalModule>(false,
                     PascalBundle.message("navigate.title.used.by"),
                     PascalBundle.message("navigate.title.used.by.search"),
                     PascalBundle.message("navigate.info.used.by.noitems"),
@@ -101,7 +101,7 @@ public class PascalMarker {
     private static final EmptyQuery<PascalStructType> HELPERS_EMPTY_QUERY = new EmptyQuery<>();
 
     public static PascalMarker HELPERS = new PascalMarker(
-            new CollectionNavigationHandler<PascalStructType>(
+            new CollectionNavigationHandler<PascalStructType>(false,
                     PascalBundle.message("navigate.title.goto.helper"),
                     PascalBundle.message("navigate.title.goto.helper.search"),
                     PascalBundle.message("navigate.info.helper.noitems"),
