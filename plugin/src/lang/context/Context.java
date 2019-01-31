@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 public class Context {
@@ -76,6 +77,10 @@ public class Context {
 
     public PsiFile getFile() {
         return file;
+    }
+
+    public boolean withinBraces() {
+        return contains(CodePlace.EXPR_ARGUMENT) || contains(CodePlace.EXPR_PAREN) || contains(CodePlace.EXPR_INDEX) || contains(CodePlace.EXPR_SET);
     }
 
     @NotNull
@@ -344,8 +349,15 @@ public class Context {
                 PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
                 PasReferenceExpr.class, PasDereferenceExpr.class, PasCallExpr.class, PasIndexExpr.class, PasParenExpr.class,
                 PsiWhiteSpace.class, PsiErrorElement.class);
-        if ((parent != null) && (parent.getTextRange().getStartOffset() < (originalPos != null ? originalPos : element).getTextRange().getStartOffset())) {
-            return;
+        if (parent instanceof PasArgumentList) {
+            List<PasExpr> expList = ((PasArgumentList) parent).getExprList();
+            parent = expList.isEmpty() ? parent : expList.iterator().next();
+        }
+        if (parent != null) {
+            parent = getBaseElement(parent);
+            if (parent.getTextRange().getStartOffset() < (originalPos != null ? originalPos : element).getTextRange().getStartOffset()) {
+                return;
+            }
         }
         context.add(CodePlace.FIRST_IN_NAME);
         while (PsiUtil.isInstanceOfAny(pos, PasExpr.class, PasIndexList.class, PasArgumentList.class)) {
@@ -356,6 +368,16 @@ public class Context {
             pos = par;
         }
         context.add(CodePlace.FIRST_IN_EXPR);
+    }
+
+    private PsiElement getBaseElement(PsiElement element) {
+        for (PsiElement child : element.getChildren()) {
+            if (PsiUtil.isInstanceOfAny(child, PasSubIdent.class, PasFullyQualifiedIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
+                    PasReferenceExpr.class, PasDereferenceExpr.class, PasCallExpr.class, PasIndexExpr.class, PasParenExpr.class)) {
+                return child;
+            }
+        }
+        return element;
     }
 
     private void addToContext(CodePlace place) {
@@ -370,9 +392,5 @@ public class Context {
         PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
         int level = PsiUtil.getElementLevel(originalPos);
         System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
-    }
-
-    public boolean withinBraces() {
-        return contains(CodePlace.EXPR_ARGUMENT) || contains(CodePlace.EXPR_PAREN) || contains(CodePlace.EXPR_INDEX) || contains(CodePlace.EXPR_SET);
     }
 }

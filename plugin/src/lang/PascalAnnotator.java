@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.psi.PsiElement;
@@ -36,6 +37,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.PsiContext;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
@@ -79,7 +81,9 @@ public class PascalAnnotator implements Annotator {
                 PsiContext context = PsiUtil.getContext(namedElement);
                 Set<AddFixType> fixes = EnumSet.of(AddFixType.VAR, AddFixType.TYPE, AddFixType.CONST, AddFixType.ROUTINE, AddFixType.UNIT_FIND); // [*] => var type const routine
                 if (context == PsiContext.FQN_FIRST) {
-                    fixes.add(AddFixType.UNIT);
+                    if (!ResolveUtil.findUnitsWithStub(namedElement.getProject(), ModuleUtil.findModuleForPsiElement(namedElement), namedElement.getName()).isEmpty()) {
+                        fixes.add(AddFixType.UNIT);
+                    }
                 }
                 PsiElement scope = scopes.isEmpty() ? null : scopes.get(0);
                 if (scope instanceof PasEnumType) {                                                          // TEnum.* => -* +enum

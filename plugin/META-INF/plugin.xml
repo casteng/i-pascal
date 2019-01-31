@@ -11,7 +11,8 @@
     <change-notes><![CDATA[
         <p>2.10</p>
         <ul>
-            <li>Class/record helpers support</li>
+            <li>Class/record helpers line markers</li>
+            <li>Class/record helpers support in resolving</li>
             <li>Not implemented interface inspection</li>
             <li>Reference resolution fixes</li>
             <li>Actual parameters type inference</li>
