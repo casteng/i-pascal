@@ -35,6 +35,7 @@ import com.siberika.idea.pascal.lang.psi.PasRecordHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
+import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
@@ -260,7 +261,14 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 } else if (element instanceof PasClassProperty) {
                     return PascalIcons.PROPERTY;
                 } else if (element instanceof PasModule) {
-                    return PascalIcons.UNIT;
+                    PascalModule.ModuleType moduleType = ((PasModule) element).getModuleType();
+                    if (moduleType == PascalModule.ModuleType.PROGRAM) {
+                        return PascalIcons.FILE_PROGRAM;
+                    } else if (moduleType == PascalModule.ModuleType.LIBRARY) {
+                        return PascalIcons.FILE_LIBRARY;
+                    } else {
+                        return PascalIcons.UNIT;
+                    }
                 }
                 return PascalIcons.GENERAL;
             }

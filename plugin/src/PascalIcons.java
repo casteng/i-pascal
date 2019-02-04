@@ -20,30 +20,28 @@ import com.intellij.openapi.util.IconLoader;
 
 import javax.swing.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: jon
- * Date: Apr 3, 2010
- * Time: 2:30:48 AM
- */
 public interface PascalIcons {
-    final String PATH = "/icons/";
+    String PATH = "/icons/";
 
-    final Icon GENERAL = IconLoader.findIcon(PATH + "pascal_16x16.png");
-    final Icon MODULE  = GENERAL;
-    final Icon UNIT    = IconLoader.findIcon(PATH + "nunit.png");
-    final Icon PROGRAM = IconLoader.findIcon(PATH + "nprogram.png");
-    final Icon INCLUDE = IconLoader.findIcon(PATH + "ninclude.png");
-    final Icon COMPILED = IconLoader.findIcon(PATH + "compiled.png");
+    Icon GENERAL = IconLoader.findIcon(PATH + "pascal_16x16.png");
+    Icon MODULE  = GENERAL;
+    Icon UNIT = IconLoader.findIcon(PATH + "unit.png");
+    Icon PROGRAM = IconLoader.findIcon(PATH + "nprogram.png");
+    Icon INCLUDE = IconLoader.findIcon(PATH + "ninclude.png");
+    Icon COMPILED = IconLoader.findIcon(PATH + "compiled.png");
 
-    final Icon TYPE = IconLoader.findIcon(PATH + "ntype.png");
-    final Icon VARIABLE = IconLoader.findIcon(PATH + "nvar.png");
-    final Icon CONSTANT = IconLoader.findIcon(PATH + "nconst.png");
-    final Icon PROPERTY = IconLoader.findIcon(PATH + "nproperty.png");
-    final Icon ROUTINE = IconLoader.findIcon(PATH + "nroutine.png");
-    final Icon INTERFACE = IconLoader.findIcon(PATH + "ninterface.png");
-    final Icon CLASS = IconLoader.findIcon(PATH + "nclass.png");
-    final Icon OBJECT = IconLoader.findIcon(PATH + "nobject.png");
-    final Icon RECORD = IconLoader.findIcon(PATH + "nrecord.png");
-    final Icon HELPER = IconLoader.findIcon(PATH + "nhelper.png");
+    Icon FILE_PROGRAM = IconLoader.findIcon(PATH + "program.png");
+    Icon FILE_LIBRARY = IconLoader.findIcon(PATH + "library.png");
+    Icon FILE_INCLUDE = IconLoader.findIcon(PATH + "include.png");
+
+    Icon TYPE = IconLoader.findIcon(PATH + "ntype.png");
+    Icon VARIABLE = IconLoader.findIcon(PATH + "nvar.png");
+    Icon CONSTANT = IconLoader.findIcon(PATH + "nconst.png");
+    Icon PROPERTY = IconLoader.findIcon(PATH + "nproperty.png");
+    Icon ROUTINE = IconLoader.findIcon(PATH + "nroutine.png");
+    Icon INTERFACE = IconLoader.findIcon(PATH + "ninterface.png");
+    Icon CLASS = IconLoader.findIcon(PATH + "nclass.png");
+    Icon OBJECT = IconLoader.findIcon(PATH + "nobject.png");
+    Icon RECORD = IconLoader.findIcon(PATH + "nrecord.png");
+    Icon HELPER = IconLoader.findIcon(PATH + "nhelper.png");
 }

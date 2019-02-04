@@ -32,9 +32,9 @@ public class PasModuleStructureTreeElement extends PsiTreeElementBase<PasModule>
             switch (getElement().getModuleType()) {
                 case PACKAGE:
                 case LIBRARY:
-                    return PascalIcons.MODULE;
+                    return PascalIcons.FILE_LIBRARY;
                 case PROGRAM:
-                    return PascalIcons.PROGRAM;
+                    return PascalIcons.FILE_PROGRAM;
                 case UNIT:
                     return PascalIcons.UNIT;
             }
