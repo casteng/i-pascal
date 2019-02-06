@@ -5,8 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 /**
  * User: George Bakhtadze
@@ -15,8 +14,8 @@ import java.util.Set;
 public class PascalFileType extends LanguageFileType {
     public static final PascalFileType INSTANCE = new PascalFileType();
 
-    public static final Set<String> UNIT_EXTENSIONS = new HashSet<String>(Arrays.asList("pas", "pp"));
-    public static final Set<String> PROGRAM_EXTENSIONS = new HashSet<String>(Arrays.asList("dpr", "lpr"));
+    public static final List<String> UNIT_EXTENSIONS = Arrays.asList("pas", "pp");
+    public static final List<String> PROGRAM_EXTENSIONS = Arrays.asList("dpr", "lpr");
 
     protected PascalFileType() {
         super(PascalLanguage.INSTANCE);

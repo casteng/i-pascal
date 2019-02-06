@@ -318,7 +318,23 @@ public class PsiUtil {
      */
     @Nullable
     public static PasModule getElementPasModule(@NotNull PsiElement element) {
-        return PsiTreeUtil.findChildOfType(element.getContainingFile(), PasModule.class);
+        return getFilePasModule(element.getContainingFile());
+    }
+
+    /**
+     * Returns module in the file
+     *
+     * @param file - file
+     * @return module containing the element
+     */
+    @Nullable
+    private static PasModule getFilePasModule(@Nullable PsiFile file) {
+        if (file != null) {
+            PsiElement firstChild = file.getFirstChild();
+            PsiElement element = firstChild instanceof PasModule ? firstChild : PsiTreeUtil.skipWhitespacesAndCommentsForward(firstChild);
+            return element instanceof PasModule ? (PasModule) element : null;
+        }
+        return null;
     }
 
     /**

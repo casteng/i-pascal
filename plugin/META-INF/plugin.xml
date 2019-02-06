@@ -11,14 +11,14 @@
     <change-notes><![CDATA[
         <p>2.10</p>
         <ul>
-            <li>Class/record helpers line markers</li>
-            <li>Class/record helpers support in resolving</li>
+            <li>Class/record helpers support and line markers</li>
             <li>Not implemented interface inspection</li>
             <li>Reference resolution fixes</li>
             <li>Actual parameters type inference</li>
             <li>More correct and fast indenting of new lines</li>
             <li>Code completion improvement</li>
             <li>Statement completion improvement</li>
+            <li>Changed file icons</li>
         </ul>
         <p>2.0</p>
         <ul>
@@ -430,6 +430,7 @@
         <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
         <highlightUsagesHandlerFactory implementation="com.siberika.idea.pascal.editor.highlighter.PascalHighlightHandlerFactory" />
         <lang.quoteHandler language="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalQuoteHandler" />
+        <fileIconProvider implementation="com.siberika.idea.pascal.PascalFileIconProvider" />
 
         <projectStructureDetector implementation="com.siberika.idea.pascal.module.PascalProjectStructureDetector" />
 
