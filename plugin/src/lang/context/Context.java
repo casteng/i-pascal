@@ -51,7 +51,7 @@ public class Context {
             primary = CodePlace.UNKNOWN;
         }
         this.file = file;
-        System.out.println(String.format("=== Context: %s, %s, %s", primary, context, position));
+//        System.out.println(String.format("===*** Context: %s, %s, %s", primary, context, position));
     }
 
     public boolean contains(CodePlace place) {
@@ -391,6 +391,6 @@ public class Context {
         PsiElement prev = PsiTreeUtil.skipSiblingsBackward(pos, PsiWhiteSpace.class, PsiComment.class);
         PsiElement oPrev = PsiTreeUtil.skipSiblingsBackward(originalPos, PsiWhiteSpace.class, PsiComment.class);
         int level = PsiUtil.getElementLevel(originalPos);
-        System.out.println(String.format("=== skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
+//        System.out.println(String.format("===*** skipped. oPos: %s, pos: %s, oPrev: %s, prev: %s, opar: %s, par: %s, lvl: %d", originalPos, pos, oPrev, prev, originalPos != null ? originalPos.getParent() : null, pos.getParent(), level));
     }
 }

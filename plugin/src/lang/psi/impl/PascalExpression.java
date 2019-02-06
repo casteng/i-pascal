@@ -111,7 +111,9 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         final Collection<PasField> references = PasReferenceUtil.resolve(NamespaceRec.fromElement(fullyQualifiedIdent), context, 0);
         if (!references.isEmpty()) {
             PasField field = references.iterator().next();
-            PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, context.unitNamespaces));
+            if (!field.isConstructor()) {        // TODO: move constructor handling to main resolve routine
+                PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, context.unitNamespaces));
+            }
             return field.getValueType();
         }
         return null;

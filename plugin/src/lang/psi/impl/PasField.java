@@ -167,6 +167,15 @@ public class PasField {
         return element;
     }
 
+    public boolean isConstructor() {
+        PascalNamedElement el = getElement();
+        if ((el instanceof PascalRoutine) && ((PascalRoutine) el).isConstructor()) {
+            valueType = CONSTRUCTOR;            // TODO: move constructor handling to main resolve routine
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         return visibility + " " + fieldType + ": " + (owner != null ? owner.getName() : "-") + "." + name + ", " + getElement();
