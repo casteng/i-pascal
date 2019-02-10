@@ -15,7 +15,6 @@ public class ResolveContext {
     public final boolean includeLibrary;
     final List<PsiElement> resultScope;
     public boolean disableParentNamespaces;
-    boolean stubsOnly = false;
     public List<String> unitNamespaces;
     public Set<ResolveOptions> options = EnumSet.noneOf(ResolveOptions.class);
 
@@ -29,6 +28,16 @@ public class ResolveContext {
 
     public ResolveContext(Set<PasField.FieldType> fieldTypes, boolean includeLibrary) {
         this(null, fieldTypes, includeLibrary, null, null);
+    }
+
+    public ResolveContext(ResolveContext context) {
+        this.scope = context.scope;
+        this.fieldTypes = context.fieldTypes;
+        this.includeLibrary = context.includeLibrary;
+        this.resultScope = context.resultScope;
+        this.disableParentNamespaces = context.disableParentNamespaces;
+        this.unitNamespaces = context.unitNamespaces;
+        this.options = context.options;
     }
 
     public boolean isFirstPart() {
