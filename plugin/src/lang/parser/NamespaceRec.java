@@ -170,7 +170,12 @@ public class NamespaceRec {
     }
 
     public String getCurrentName() {
-        return current < levels.length ? levels[current] : null;
+        if (current < levels.length) {
+            return levels[current];
+        } else {
+            System.out.println("===*** ERROR: " + toString());
+            return null;
+        }
     }
 
     public String getLastName() {
@@ -203,7 +208,7 @@ public class NamespaceRec {
             i++;
         }
         if ((i - current) >= lvls.length) {
-            current = i;
+            current = i - 1;
             return true;
         }
         return false;

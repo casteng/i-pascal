@@ -571,6 +571,7 @@ public class PasReferenceUtil {
             }
         }
         if (res != null) {
+            fqn.next();
             if (fqn.isComplete()) {
                 PasField field = res.getField(res.getName());
                 if (field != null) {
