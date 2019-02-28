@@ -300,7 +300,7 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
+    public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
         if (ResolveUtil.isStubPowered(field.owner)) {
             return ResolveUtil.retrieveFieldTypeScope(field, context, recursionCount);
         }

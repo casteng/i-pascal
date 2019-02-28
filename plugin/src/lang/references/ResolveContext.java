@@ -40,7 +40,4 @@ public class ResolveContext {
         this.options = context.options;
     }
 
-    public boolean isFirstPart() {
-        return options.contains(ResolveOptions.FIRST_PART);
-    }
 }

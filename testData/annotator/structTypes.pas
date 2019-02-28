@@ -137,7 +137,7 @@ var
 begin
     with a do begin
         v[0] := 1;
-        v[1].X := 0;
+        v[1].<error descr="Undeclared identifier">X</error> := 0;
     end;
     with TVarRec2(a) do begin
         aa := 111;
