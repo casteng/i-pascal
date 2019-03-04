@@ -27,7 +27,7 @@ public class Resolve {
                 PasFullyQualifiedIdent.class, PasSubIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
                 PsiWhiteSpace.class, PsiErrorElement.class);
         if (expr instanceof PasReferenceExpr) {
-            if (expr.getParent() instanceof PasCallExpr || expr.getParent() instanceof PasIndexExpr) {
+            if (fqn.isTargetingEnd() && expr.getParent() instanceof PasCallExpr || expr.getParent() instanceof PasIndexExpr) {
                 expr = expr.getParent();
             }
             ExpressionProcessor expressionProcessor = new ExpressionProcessor(fqn, context, processor);

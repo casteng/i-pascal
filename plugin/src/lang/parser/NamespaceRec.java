@@ -46,6 +46,9 @@ public class NamespaceRec {
                 element.getParent() != null ? element.getParent() : element, 0);
     }
 
+    /**
+     * adds the given prefix at the beginning of this FQN
+     */
     public void addPrefix(NamespaceRec original, String prefix) {
         String[] lvls = prefix.split("\\.", 100);
         String[] newLevels = new String[lvls.length + original.levels.length];
@@ -107,6 +110,10 @@ public class NamespaceRec {
         current--;
     }
 
+    public void reset() {
+        current = 0;
+    }
+
     public boolean isEmpty() {
         return levels.length == 0;
     }
@@ -129,6 +136,10 @@ public class NamespaceRec {
 
     public boolean isComplete() {
         return current > target;
+    }
+
+    public boolean isTargetingEnd() {
+        return target == levels.length-1;
     }
 
     @NotNull
@@ -200,6 +211,7 @@ public class NamespaceRec {
         this.ignoreVisibility = ignoreVisibility;
     }
 
+    // Returns True if the specified FQN string is found and advances this FQN
     public boolean advance(String fqn) {
         String[] lvls = fqn.split("\\.");
         int i = current;

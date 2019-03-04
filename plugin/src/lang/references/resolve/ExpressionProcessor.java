@@ -15,12 +15,14 @@ import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,6 +39,9 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
     ExpressionProcessor(final NamespaceRec fqn, final ResolveContext context, final ResolveProcessor processor) {
         this.fqn = fqn;
         this.context = context;
+        if (null == this.context.unitNamespaces) {
+            this.context.unitNamespaces = ModuleUtil.retrieveUnitNamespaces(fqn.getParentIdent());
+        }
         this.processor = processor;
         this.currentScope = null;
     }
@@ -83,6 +88,11 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             };
             return fqnResolver.resolve(refExpr.getExpr() == null);
         }
+    }
+
+    private boolean isInherited(PasReferenceExpr refExpr) {
+        final PsiElement firstChild = getFirstChild((PascalExpression) refExpr);
+        return (refExpr.getExpr() == null) && (firstChild != null) && (firstChild.getNode().getElementType() == PasTypes.INHERITED);
     }
 
     boolean resolveExprTypeScope(PascalExpression expression, boolean lastPart) {
@@ -155,24 +165,36 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             // Resolve FQN in current scope
             PasFullyQualifiedIdent fullyQualifiedIdent = ((PasReferenceExpr) expr).getFullyQualifiedIdent();
             final FQNResolver fqnResolver = new FQNResolver(currentScope, NamespaceRec.fromElement(fullyQualifiedIdent), context) {
+
+                private PasEntityScope lastPartScope;
+
                 @Override
                 boolean processScope(final PasEntityScope scope, final String fieldName) {
                     final PasArgumentList args = callExpr.getArgumentList();
                     final int argsCount = args.getExprList().size();
-                    for (PasField field : scope.getAllFields()) {
-                        if ((field.fieldType == PasField.FieldType.ROUTINE) && fullyQualifiedIdent.getNamePart().equalsIgnoreCase(field.name)) {
-                            PascalNamedElement el = field.getElement();
-                            if (el instanceof PascalRoutine) {
-                                PascalRoutine routine = (PascalRoutine) el;
-                                if (routine.getFormalParameterNames().size() == argsCount) {
-                                    if (lastPart) {                  // Return resolved field
-                                        return ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType);
-                                    } else {                         // Resolve next scope
-                                        currentScope = retrieveScope(scope, field);
-                                        return false;
+                    if (this.fqn.isTarget()) {
+                        for (PasField field : scope.getAllFields()) {
+                            if ((field.fieldType == PasField.FieldType.ROUTINE) && field.name.toUpperCase().startsWith(fullyQualifiedIdent.getNamePart().toUpperCase())) {
+                                PascalNamedElement el = field.getElement();
+                                if (el instanceof PascalRoutine) {
+                                    PascalRoutine routine = (PascalRoutine) el;
+                                    if (routine.getFormalParameterNames().size() == argsCount) {
+                                        if (lastPart) {                  // Return resolved field
+                                            return ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType);
+                                        } else {                         // Resolve next scope
+                                            currentScope = routine.isConstructor() ? (lastPartScope != null ? lastPartScope : scope) : retrieveScope(scope, field);
+                                            return false;
+                                        }
                                     }
                                 }
                             }
+                        }
+                    } else {                          // No need to resolve intermediate names of FQN as routines
+                        PasField field = scope.getField(fieldName);
+                        if (field != null) {
+                            this.fqn.next();
+                            lastPartScope = getScope(scope, field, field.fieldType);
+                            return (lastPartScope != null) && resolveNext(lastPartScope);
                         }
                     }
                     // Get call target field to use if exact call target will be not found

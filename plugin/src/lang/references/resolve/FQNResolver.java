@@ -39,7 +39,7 @@ abstract class FQNResolver {
     private static final Logger LOG = Logger.getInstance(FQNResolver.class);
 
     private final PasEntityScope scope;
-    private final NamespaceRec fqn;
+    final NamespaceRec fqn;
     private final ResolveContext context;
     private final List<PasEntityScope> sortedUnits;
     private boolean wasType;
@@ -72,7 +72,7 @@ abstract class FQNResolver {
         return wasType;
     }
 
-    private void resolveFirst() {
+    private boolean resolveFirst() {
         PsiFile file = fqn.getParentIdent().getContainingFile();
         boolean implAffects = !ResolveUtil.isStubPowered(context.scope) && file instanceof PascalFile
                 && PsiUtil.isBefore(((PascalFile) file).getImplementationSection(), fqn.getParentIdent());
@@ -82,7 +82,9 @@ abstract class FQNResolver {
             fqn.reset();
             // sort namespaces by name length in reverse order to check longer named namespaces first
             sortedUnits.sort(new UnitNameLengthComparator());
-            checkForDottedUnitName();
+            return checkForDottedUnitName();
+        } else {
+            return false;
         }
     }
 
@@ -148,14 +150,14 @@ abstract class FQNResolver {
       .add parent/helper scopes if any
     .search in scopes for name from FQN
     */
-    private boolean resolveNext(PasEntityScope scope) {
+    boolean resolveNext(PasEntityScope scope) {
         if (!processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }
         return processParentScopes(scope, false);
     }
 
-    private static PasEntityScope getScope(PasEntityScope scope, PasField field, PasField.FieldType type) {
+    static PasEntityScope getScope(PasEntityScope scope, PasField field, PasField.FieldType type) {
         if (type == PasField.FieldType.UNIT) {
             return (PasEntityScope) field.getElement();
         }
@@ -265,24 +267,22 @@ abstract class FQNResolver {
         }
     }
 
-    private void checkForDottedUnitName() {
-        if (null == context.unitNamespaces) {
-            context.unitNamespaces = ModuleUtil.retrieveUnitNamespaces(fqn.getParentIdent());
-        }
+    private boolean checkForDottedUnitName() {
         PasEntityScope res;
         res = tryUnit(fqn, sortedUnits);
         if (res != null) {
-            processScope(res, res.getName());
+            return processScope(res, res.getName());
         } else if (fqn.isTarget()) {            // don't check with prefixes if fqn has more than one level
             NamespaceRec oldFqn = new NamespaceRec(fqn);
             for (String prefix : context.unitNamespaces) {
                 fqn.addPrefix(oldFqn, prefix);
                 res = tryUnit(fqn, sortedUnits);
                 if (res != null) {
-                    processScope(res, res.getName());
+                    return processScope(res, res.getName());
                 }
             }
         }
+        return true;
     }
 
     private static PasEntityScope tryUnit(NamespaceRec fqn, List<PasEntityScope> sortedUnits) {
