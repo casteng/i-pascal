@@ -49,6 +49,7 @@ import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasArrayTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasClassTypeTypeDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasEnumTypeImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PasEnumTypeScope;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasFileTypeImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasPointerTypeImpl;
@@ -309,8 +310,12 @@ public class PasReferenceUtil {
                 if (!field.isTypeResolved()) {
                     field.setValueType(resolveFieldType(field, true, recursionCount));
                 }
-                if (field.getValueType() == PasField.VARIANT) {
-                    return new PasVariantScope(field.getElement());
+                if (field.getValueType() != null) {
+                    if (field.getValueType() == PasField.VARIANT) {
+                        return new PasVariantScope(field.getElement());
+                    } else if (field.getValueType().kind == PasField.Kind.ENUM) {
+                        return PasEnumTypeScope.fromNamedElement(field.owner, field.getElement());
+                    }
                 }
                 return field.getValueType() != null ? field.getValueType().getTypeScope() : null;
             } finally {

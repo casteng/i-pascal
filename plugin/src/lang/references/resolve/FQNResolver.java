@@ -42,18 +42,22 @@ abstract class FQNResolver {
     private final NamespaceRec fqn;
     private final ResolveContext context;
     private final List<PasEntityScope> sortedUnits;
+    private boolean wasType;
 
     FQNResolver(final PasEntityScope scope, final NamespaceRec fqn, final ResolveContext context) {
         this.scope = scope;
         this.fqn = fqn;
         this.context = new ResolveContext(context);
         this.sortedUnits = new ArrayList<>();
+        this.wasType = false;
     }
 
     // return True to continue processing or False to stop
-    abstract boolean process(PasEntityScope scope, String fieldName);
-    // return True to continue processing or False to stop
     abstract boolean processField(PasEntityScope scope, PasField field);
+
+    boolean processScope(final PasEntityScope scope, final String fieldName) {
+        return processDefault(scope, fieldName);
+    }
 
     boolean resolve(boolean firstPart) {
         if (firstPart) {
@@ -62,6 +66,10 @@ abstract class FQNResolver {
             return (scope != null) && resolveNext(scope);
         }
         return true;
+    }
+
+    public boolean isWasType() {
+        return wasType;
     }
 
     private void resolveFirst() {
@@ -82,6 +90,7 @@ abstract class FQNResolver {
         PasField field = scope.getField(fieldName);
         if (field != null) {
             fqn.next();
+            wasType = field.fieldType == PasField.FieldType.TYPE;
             if (!fqn.isComplete()) {
                 PasEntityScope fieldScope = getScope(scope, field, field.fieldType);
                 return (fieldScope != null) && resolveNext(fieldScope);
@@ -93,7 +102,7 @@ abstract class FQNResolver {
     }
 
     private boolean processScope(final PasEntityScope scope, boolean first) {
-        if (!process(scope, fqn.getCurrentName())) {       // found current name in the scope
+        if (!processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }
         if (first && (scope instanceof PasModule) && !StringUtils.isEmpty(scope.getName())) {
@@ -140,7 +149,7 @@ abstract class FQNResolver {
     .search in scopes for name from FQN
     */
     private boolean resolveNext(PasEntityScope scope) {
-        if (!process(scope, fqn.getCurrentName())) {       // found current name in the scope
+        if (!processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }
         return processParentScopes(scope, false);
@@ -263,14 +272,14 @@ abstract class FQNResolver {
         PasEntityScope res;
         res = tryUnit(fqn, sortedUnits);
         if (res != null) {
-            process(res, res.getName());
+            processScope(res, res.getName());
         } else if (fqn.isTarget()) {            // don't check with prefixes if fqn has more than one level
             NamespaceRec oldFqn = new NamespaceRec(fqn);
             for (String prefix : context.unitNamespaces) {
                 fqn.addPrefix(oldFqn, prefix);
                 res = tryUnit(fqn, sortedUnits);
                 if (res != null) {
-                    process(res, res.getName());
+                    processScope(res, res.getName());
                 }
             }
         }

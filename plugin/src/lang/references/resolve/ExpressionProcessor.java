@@ -6,6 +6,7 @@ import com.intellij.psi.search.PsiElementProcessor;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
+import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
@@ -13,14 +14,17 @@ import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.List;
 
 class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
@@ -34,7 +38,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
         this.fqn = fqn;
         this.context = context;
         this.processor = processor;
-        currentScope = null;
+        this.currentScope = null;
     }
 
     @Override
@@ -42,22 +46,34 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
         if (refExpr.getFullyQualifiedIdent() != fqn.getParentIdent()) {              // Not the FQN which originally requested
             final FQNResolver fqnResolver = new FQNResolver(currentScope, NamespaceRec.fromElement(refExpr.getFullyQualifiedIdent()), context) {
                 @Override
-                boolean process(final PasEntityScope scope, final String fieldName) {
-                    return processDefault(scope, fieldName);
-                }
-
-                @Override
                 boolean processField(final PasEntityScope scope, final PasField field) {
                     currentScope = retrieveScope(scope, field);
                     return false;
                 }
             };
-            fqnResolver.resolve(refExpr.getExpr() == null);
+            return fqnResolver.resolve(refExpr.getExpr() == null);
         } else {
             final FQNResolver fqnResolver = new FQNResolver(currentScope, fqn, context) {
                 @Override
-                boolean process(final PasEntityScope scope, final String fieldName) {
-                    return processDefault(scope, fieldName);
+                boolean processScope(final PasEntityScope scope, final String fieldName) {
+                    if (fieldName == null) {
+                        return true;
+                    }
+                    boolean isDefault = "DEFAULT".equals(fieldName.toUpperCase());
+                    if ((fqn.isTarget() || isDefault) && isWasType()) {         // "default" type pseudo value
+                        PasField field = scope.getField(fieldName);
+                        if (field != null) {
+                            return processField(scope, field);
+                        }
+                            fqn.next();
+                            if (isDefault) {
+                                PasField defaultField = new PasField(scope, scope, "default", PasField.FieldType.CONSTANT, PasField.Visibility.PUBLIC);
+                                return processField(scope, defaultField);
+                            }
+                    } else {
+                        return processDefault(scope, fieldName);
+                    }
+                    return true;
                 }
 
                 @Override
@@ -65,9 +81,8 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                     return processor.process(scope, scope, field, field.fieldType);
                 }
             };
-            fqnResolver.resolve(refExpr.getExpr() == null);
+            return fqnResolver.resolve(refExpr.getExpr() == null);
         }
-        return false;
     }
 
     boolean resolveExprTypeScope(PascalExpression expression, boolean lastPart) {
@@ -77,18 +92,11 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             if (scopeExpr != null) {
                 resolveExprTypeScope((PascalExpression) scopeExpr, false);
             }
-            execute((PasReferenceExpr) expression);
+            return execute((PasReferenceExpr) expression);
         } else if (expression instanceof PasDereferenceExpr) {
             return resolveExprTypeScope((PascalExpression) ((PasDereferenceExpr) expression).getExpr(), false);
         } else if (expression instanceof PasIndexExpr) {
-            return resolveExprTypeScope((PascalExpression) ((PasIndexExpr) expression).getExpr(), false);
-            // send to special method of processor
-            /*PasEntityScope typeScope = field != null ? retrieveScope(null, null, field) : null;
-            PascalNamedElement defProp = typeScope != null ? PsiUtil.getDefaultProperty(typeScope) : null;    // Replace scope if indexing default array property
-            if (defProp instanceof PasClassProperty) {
-                PasTypeID typeId = ((PasClassProperty) defProp).getTypeID();
-                return typeId != null ? resolveType(typeScope, typeId.getFullyQualifiedIdent()) : null;
-            }*/
+            return handleArray((PasIndexExpr) expression, lastPart);
         } else if (expression instanceof PasProductExpr) {                                      // AS operator case
             Operation op = Operation.forId(((PasProductExpr) expression).getMulOp().getText());
             if (op == Operation.AS) {
@@ -103,6 +111,34 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             return resolveExprTypeScope((PascalExpression) child, false);
         }
         return true;
+    }
+
+    private boolean handleArray(final PasIndexExpr indexExpr, final boolean lastPart) {
+        final boolean result = resolveExprTypeScope((PascalExpression) indexExpr.getExpr(), lastPart);
+        PascalNamedElement defProp = currentScope != null ? PsiUtil.getDefaultProperty(currentScope) : null;    // Replace scope if indexing default array property
+        if (defProp instanceof PasClassProperty) {
+            PasTypeID typeId = ((PasClassProperty) defProp).getTypeID();
+            final PasField field = typeId != null ? resolveType(currentScope, typeId.getFullyQualifiedIdent()) : null;
+            if (field != null) {
+                currentScope = retrieveScope(currentScope, field);
+            } else {
+                currentScope = null;
+            }
+        }
+        return result;
+    }
+
+    private static PasField resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
+        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null, null);
+        final Collection<PasField> references = PasReferenceUtil.resolve(NamespaceRec.fromElement(fullyQualifiedIdent), context, 0);
+        if (!references.isEmpty()) {
+            PasField field = references.iterator().next();
+            if (!field.isConstructor()) {        // TODO: move constructor handling to main resolve routine
+                PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, context.unitNamespaces));
+            }
+            return field;
+        }
+        return null;
     }
 
     private PasField callTarget;
@@ -120,19 +156,19 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             PasFullyQualifiedIdent fullyQualifiedIdent = ((PasReferenceExpr) expr).getFullyQualifiedIdent();
             final FQNResolver fqnResolver = new FQNResolver(currentScope, NamespaceRec.fromElement(fullyQualifiedIdent), context) {
                 @Override
-                boolean process(final PasEntityScope scope, final String fieldName) {
+                boolean processScope(final PasEntityScope scope, final String fieldName) {
                     final PasArgumentList args = callExpr.getArgumentList();
                     final int argsCount = args.getExprList().size();
-                    for (PasField field1 : scope.getAllFields()) {
-                        if ((field1.fieldType == PasField.FieldType.ROUTINE) && fullyQualifiedIdent.getNamePart().equalsIgnoreCase(field1.name)) {
-                            PascalNamedElement el = field1.getElement();
+                    for (PasField field : scope.getAllFields()) {
+                        if ((field.fieldType == PasField.FieldType.ROUTINE) && fullyQualifiedIdent.getNamePart().equalsIgnoreCase(field.name)) {
+                            PascalNamedElement el = field.getElement();
                             if (el instanceof PascalRoutine) {
                                 PascalRoutine routine = (PascalRoutine) el;
                                 if (routine.getFormalParameterNames().size() == argsCount) {
                                     if (lastPart) {                  // Return resolved field
-                                        return ExpressionProcessor.this.processor.process(scope, scope, field1, field1.fieldType);
+                                        return ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType);
                                     } else {                         // Resolve next scope
-                                        currentScope = retrieveScope(scope, field1);
+                                        currentScope = retrieveScope(scope, field);
                                         return false;
                                     }
                                 }

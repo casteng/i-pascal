@@ -2,7 +2,9 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
+import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import org.jetbrains.annotations.NotNull;
@@ -12,19 +14,39 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public final class PasVariantScope extends PasScopeImpl {
+public final class PasEnumTypeScope extends PasScopeImpl {
 
-    private final PascalNamedElement element;
+    private final PasEntityScope owner;
+    private final PascalIdentDecl element;
 
-    public PasVariantScope(@NotNull PascalNamedElement element) {
+    public PasEnumTypeScope(@NotNull PasEntityScope owner, @NotNull PascalIdentDecl element) {
         super(element.getNode());
+        this.owner = owner;
         this.element = element;
+    }
+
+    public static PasEnumTypeScope fromNamedElement(PasEntityScope owner, PascalNamedElement element) {
+        if (null == owner) {
+            return null;
+        }
+        PascalNamedElement el;
+        if (element instanceof PasGenericTypeIdent) {
+            el = ((PasGenericTypeIdent) element).getNamedIdentDecl();
+        } else {
+            el = element;
+        }
+        return el instanceof PascalIdentDecl ? new PasEnumTypeScope(owner, (PascalIdentDecl) el) : null;
     }
 
     @Nullable
     @Override
     public PasField getField(String name) {
-        return new PasField(null, element, name, PasField.FieldType.VARIABLE, PasField.Visibility.PUBLIC, PasField.VARIANT);
+        for (String subMember : element.getSubMembers()) {
+            if (name.equalsIgnoreCase(subMember)) {
+                return owner.getField(name);
+            }
+        }
+        return null;
     }
 
     @Nullable
@@ -36,7 +58,7 @@ public final class PasVariantScope extends PasScopeImpl {
     @NotNull
     @Override
     public Collection<PasField> getAllFields() {
-        return Collections.emptyList();
+        return Collections.emptyList();  // TODO: implement via processor
     }
 
     @NotNull
@@ -48,7 +70,7 @@ public final class PasVariantScope extends PasScopeImpl {
     @Nullable
     @Override
     public PasEntityScope getContainingScope() {
-        return null;
+        return owner;
     }
 
     @NotNull

@@ -9,6 +9,7 @@ import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
@@ -26,18 +27,13 @@ public class Resolve {
                 PasFullyQualifiedIdent.class, PasSubIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
                 PsiWhiteSpace.class, PsiErrorElement.class);
         if (expr instanceof PasReferenceExpr) {
-            if (expr.getParent() instanceof PasCallExpr) {
+            if (expr.getParent() instanceof PasCallExpr || expr.getParent() instanceof PasIndexExpr) {
                 expr = expr.getParent();
             }
             ExpressionProcessor expressionProcessor = new ExpressionProcessor(fqn, context, processor);
             expressionProcessor.resolveExprTypeScope((PascalExpression) expr, true);
         } else {
             final FQNResolver fqnResolver = new FQNResolver(null, fqn, context) {
-                @Override
-                boolean process(final PasEntityScope scope, final String fieldName) {
-                    return processDefault(scope, fieldName);
-                }
-
                 @Override
                 boolean processField(final PasEntityScope scope, final PasField field) {
                     return processor.process(scope, scope, field, field.fieldType);
