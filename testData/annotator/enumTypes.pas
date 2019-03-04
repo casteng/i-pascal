@@ -21,6 +21,5 @@ begin
   TEnum.eTwo;
   eOne;
   TEnum.default;
-  Integer.default;
   TRec.TNestedEnum.CONST1;
 end.
