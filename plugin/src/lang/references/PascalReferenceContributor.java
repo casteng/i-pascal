@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  */
 public class PascalReferenceContributor extends PsiReferenceContributor {
 
-    static final TokenSet COMMENT_REFERENCE_TOKENS = TokenSet.create(PasTypes.INCLUDE, PasTypes.CT_DEFINE);
+    static final TokenSet COMMENT_REFERENCE_TOKENS = TokenSet.create(PasTypes.INCLUDE, PasTypes.CT_DEFINE, PasTypes.INHERITED_CALL);
     private static final Pattern PATTERN_INCLUDE = Pattern.compile("(?i)\\{\\$I\\w*\\s+(\\w[\\w.]*)\\s*}");
 
     @Override
@@ -53,6 +53,10 @@ public class PascalReferenceContributor extends PsiReferenceContributor {
                                 Pair<Integer, String> directive = directives.get(i);
                                 res[i] = new PascalCommentReference((PsiComment) element, TextRange.from(directive.first, directive.second.length()));
                             }
+                            return res;
+                        } else if (element.getNode().getElementType() == PasTypes.INHERITED_CALL) {
+                            PsiReference[] res = new PsiReference[1];
+                            res[0] = new PascalInheritedReference(element);
                             return res;
                         }
                         return PsiReference.EMPTY_ARRAY;

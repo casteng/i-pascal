@@ -22,6 +22,8 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.search.routine.ParamCountRoutineMatcher;
+import com.siberika.idea.pascal.lang.search.routine.RoutineMatcher;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -70,11 +72,11 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                         if (field != null) {
                             return processField(scope, field);
                         }
-                            fqn.next();
-                            if (isDefault) {
-                                PasField defaultField = new PasField(scope, scope, "default", PasField.FieldType.CONSTANT, PasField.Visibility.PUBLIC);
-                                return processField(scope, defaultField);
-                            }
+                        fqn.next();
+                        if (isDefault) {
+                            PasField defaultField = new PasField(scope, scope, "default", PasField.FieldType.CONSTANT, PasField.Visibility.PUBLIC);
+                            return processField(scope, defaultField);
+                        }
                     } else {
                         return processDefault(scope, fieldName);
                     }
@@ -171,23 +173,20 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                 @Override
                 boolean processScope(final PasEntityScope scope, final String fieldName) {
                     final PasArgumentList args = callExpr.getArgumentList();
-                    final int argsCount = args.getExprList().size();
                     if (this.fqn.isTarget()) {
-                        for (PasField field : scope.getAllFields()) {
-                            if ((field.fieldType == PasField.FieldType.ROUTINE) && field.name.toUpperCase().startsWith(fullyQualifiedIdent.getNamePart().toUpperCase())) {
-                                PascalNamedElement el = field.getElement();
-                                if (el instanceof PascalRoutine) {
-                                    PascalRoutine routine = (PascalRoutine) el;
-                                    if (routine.getFormalParameterNames().size() == argsCount) {
-                                        if (lastPart) {                  // Return resolved field
-                                            return ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType);
-                                        } else {                         // Resolve next scope
-                                            currentScope = routine.isConstructor() ? (lastPartScope != null ? lastPartScope : scope) : retrieveScope(scope, field);
-                                            return false;
-                                        }
-                                    }
+                        RoutineMatcher matcher = new ParamCountRoutineMatcher(fullyQualifiedIdent.getNamePart(), args.getExprList().size()) {
+                            @Override
+                            protected boolean onMatch(final PasField field, final PascalRoutine routine) {
+                                if (lastPart) {                  // Return resolved field
+                                    return ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType);
+                                } else {                         // Resolve next scope
+                                    currentScope = routine.isConstructor() ? (lastPartScope != null ? lastPartScope : scope) : retrieveScope(scope, field);
+                                    return false;
                                 }
                             }
+                        };
+                        if (!matcher.process(scope.getAllFields())) {
+                            return false;
                         }
                     } else {                          // No need to resolve intermediate names of FQN as routines
                         PasField field = scope.getField(fieldName);

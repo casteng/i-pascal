@@ -48,6 +48,9 @@ abstract class FQNResolver {
         this.scope = scope;
         this.fqn = fqn;
         this.context = new ResolveContext(context);
+        if (null == this.context.unitNamespaces) {
+            this.context.unitNamespaces = ModuleUtil.retrieveUnitNamespaces(fqn.getParentIdent());
+        }
         this.sortedUnits = new ArrayList<>();
         this.wasType = false;
     }
@@ -61,11 +64,10 @@ abstract class FQNResolver {
 
     boolean resolve(boolean firstPart) {
         if (firstPart) {
-            resolveFirst();
+            return resolveFirst();
         } else {
             return (scope != null) && resolveNext(scope);
         }
-        return true;
     }
 
     public boolean isWasType() {
@@ -82,7 +84,7 @@ abstract class FQNResolver {
             fqn.reset();
             // sort namespaces by name length in reverse order to check longer named namespaces first
             sortedUnits.sort(new UnitNameLengthComparator());
-            return checkForDottedUnitName();
+            return checkForDottedUnitName(implAffects);
         } else {
             return false;
         }
@@ -151,17 +153,19 @@ abstract class FQNResolver {
     .search in scopes for name from FQN
     */
     boolean resolveNext(PasEntityScope scope) {
+        processHelperScopes(scope);
         if (!processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }
         return processParentScopes(scope, false);
     }
 
-    static PasEntityScope getScope(PasEntityScope scope, PasField field, PasField.FieldType type) {
+    PasEntityScope getScope(PasEntityScope scope, PasField field, PasField.FieldType type) {
         if (type == PasField.FieldType.UNIT) {
             return (PasEntityScope) field.getElement();
         }
-        ResolveContext ctx = new ResolveContext(scope, PasField.TYPES_ALL, true, null, null);
+        ResolveContext ctx = new ResolveContext(scope, PasField.TYPES_ALL, true, null, context.unitNamespaces);
+
         return PasReferenceUtil.retrieveFieldTypeScope(field, ctx);
     }
 
@@ -236,7 +240,7 @@ abstract class FQNResolver {
             PasEntityScope entityScope = scopePtr.getElement();
             if (first || (entityScope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
                 if (null != entityScope) {
-                    processHelperScopes(scope);
+                    processHelperScopes(entityScope);
                     if (!processScope(entityScope, first) || !processParentScopes(entityScope, first)) {
                         return false;
                     }
@@ -267,7 +271,7 @@ abstract class FQNResolver {
         }
     }
 
-    private boolean checkForDottedUnitName() {
+    private boolean checkForDottedUnitName(final boolean implAffects) {
         PasEntityScope res;
         res = tryUnit(fqn, sortedUnits);
         if (res != null) {

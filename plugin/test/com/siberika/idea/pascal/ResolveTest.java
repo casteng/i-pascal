@@ -17,4 +17,11 @@ public class ResolveTest extends LightPlatformCodeInsightFixtureTestCase {
         assertEquals(46, decl.getTextRange().getStartOffset());
     }
 
+    public void testResolveInherited() throws Exception {
+        myFixture.configureByFiles("resolveInherited.pas");
+        PsiReference ref = myFixture.getFile().findReferenceAt(310);
+        PsiElement decl = ref.resolve();
+        assertEquals(68, decl.getTextRange().getStartOffset());
+    }
+
 }

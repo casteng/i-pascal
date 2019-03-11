@@ -828,7 +828,7 @@ productExpr                 ::= Expr mulOp Expr
 unaryExpr                   ::= unaryOp Expr
 dereferenceExpr             ::= Expr '^'
 referenceExpr               ::= Expr '.' FullyQualifiedIdent [GenericPostfix]
-simpleRefExpr               ::= ((INHERITED | SPECIALIZE)? FullyQualifiedIdent [GenericPostfix]) | INHERITED {elementType=referenceExpr}  // let qualified and simple references have the same type
+simpleRefExpr               ::= ((InheritedCall | SPECIALIZE)? FullyQualifiedIdent [GenericPostfix]) | InheritedCall {elementType=referenceExpr}  // let qualified and simple references have the same type
 callExpr                    ::= Expr ArgumentList
 indexExpr                   ::= Expr indexList
 ArgumentList                ::= '(' [ !')' Expr [ColonConstruct]  (',' Expr [ColonConstruct]) * ] ')' {pin(".*")=1}
@@ -850,6 +850,8 @@ FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" 
 ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 
 AttributeParamList	        ::= Expression (COMMA Expression)*
+
+InheritedCall               ::= INHERITED {implements="com.intellij.psi.ContributedReferenceHost"}
 
 private customAttributes	::=	LBRACK CustomAttributeList RBRACK | assemblyAttribute {pin=1}
 private CustomAttributeList ::= CustomAttributeDecl (COMMA CustomAttributeDecl)* {recoverWhile=rec_attr2}
