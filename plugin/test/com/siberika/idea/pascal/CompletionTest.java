@@ -337,4 +337,9 @@ public class CompletionTest extends LightPlatformCodeInsightFixtureTestCase {
         checkCompletion(myFixture, "r1");
     }
 
+    public void testRecordConst() {
+        myFixture.configureByFiles("recordConst.pas");
+        checkCompletionContains(myFixture, "Complete record constant");
+    }
+
 }

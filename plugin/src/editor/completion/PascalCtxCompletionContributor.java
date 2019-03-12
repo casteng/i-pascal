@@ -102,6 +102,7 @@ import static com.siberika.idea.pascal.lang.context.CodePlace.USES;
 public class PascalCtxCompletionContributor extends CompletionContributor {
 
     private static final Map<IElementType, TokenSet> DO_THEN_OF_MAP = initDoThenOfMap();
+    private static final String COMPLETE_RECORD_CONSTANT = "Complete record constant";
 
     @Override
     public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
@@ -250,11 +251,10 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                 result.caseInsensitive().addElement(CompletionUtil.getElement("packed array["));
                 result.caseInsensitive().addElement(CompletionUtil.getElement("packed record"));
             }
+        } else if (ctx.getPrimary() == EXPR && ctx.contains(DECL_CONST)) {
+            handleConstant(result, completionContext);
         } else if ((ctx.getPrimary() == DECL_TYPE) || (ctx.getPrimary() == DECL_VAR) || (ctx.getPrimary() == DECL_CONST) || (ctx.getPrimary() == GLOBAL_DECLARATION) || (ctx.getPrimary() == LOCAL_DECLARATION)) {
             boolean firstOnLine = DocUtil.isFirstOnLine(completionContext.completionParameters.getEditor(), completionContext.completionParameters.getPosition());
-            if ((ctx.getPrimary() == DECL_CONST) && !firstOnLine) {
-                handleConstant(result, completionContext);
-            }
             if (ctx.getPrimary() == GLOBAL_DECLARATION || ctx.contains(GLOBAL)) {
                 if (firstOnLine) {
                     CompletionUtil.appendTokenSet(result, CompletionUtil.DECLARATIONS_INTF, 0);
@@ -299,7 +299,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             }
             PasEntityScope scope = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(fqi), null, true);
             if (scope instanceof PasRecordDecl) {
-                LookupElement el = LookupElementBuilder.create(scope, "").withPresentableText("Complete record constant").withIcon(PascalIcons.RECORD).withInsertHandler(CompletionUtil.RECORD_INSERT_HANDLER);
+                LookupElement el = LookupElementBuilder.create(scope, COMPLETE_RECORD_CONSTANT).withPresentableText(COMPLETE_RECORD_CONSTANT).withIcon(PascalIcons.RECORD).withInsertHandler(CompletionUtil.RECORD_INSERT_HANDLER);
                 result.caseInsensitive().addElement(el);
             }
         }
