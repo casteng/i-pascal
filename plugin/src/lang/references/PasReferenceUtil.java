@@ -32,6 +32,7 @@ import com.siberika.idea.pascal.lang.psi.PasExpression;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
@@ -199,8 +200,8 @@ public class PasReferenceUtil {
         }
         PasTypeID typeId = null;
         PasField.ValueType res = null;
-        if (element instanceof PasClassProperty) {
-            typeId = resolvePropertyType(field, (PasClassProperty) element);
+        if (element instanceof PasNamedIdentDecl && element.getType() == PasField.FieldType.PROPERTY) {
+            typeId = resolvePropertyType(field, (PasClassProperty) element.getParent());
         } else if (element instanceof PascalRoutine) {                                          // routine declaration case
             typeId = ((PascalRoutine) element).getFunctionTypeIdent();
         } else if ((element != null) && (element.getParent() instanceof PasHandler)) {          // exception handler case

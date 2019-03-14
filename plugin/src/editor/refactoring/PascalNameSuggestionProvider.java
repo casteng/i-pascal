@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasPointerType;
 import com.siberika.idea.pascal.lang.psi.PasSetType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
@@ -75,8 +76,11 @@ public class PascalNameSuggestionProvider implements NameSuggestionProvider {
         } else if (position instanceof PasClassPropertySpecifier) {
             PsiElement prop = position.getParent();
             if (prop instanceof PasClassProperty) {
-                result.add("Get" + ((PasClassProperty) prop).getName());
-                result.add("Set" + ((PasClassProperty) prop).getName());
+                final PasNamedIdentDecl nameIdent = ((PasClassProperty) prop).getNamedIdentDecl();
+                if (nameIdent != null) {
+                    result.add("Get" + nameIdent.getName());
+                    result.add("Set" + nameIdent.getName());
+                }
             }
         } else if ((position instanceof PascalRoutine) && ((context == null) || context.contains(CodePlace.ROUTINE_HEADER))) {
             PascalRoutine routine = (PascalRoutine) position;

@@ -531,20 +531,20 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     public static class ActionCreateRoutine extends PascalActionDeclare {
         private final PsiElement callScope;
         private final PascalNamedElement namedElement;
-        private final PasClassPropertySpecifier spec;
+        private final PasClassPropertySpecifier propertySpecifier;
 
-        public ActionCreateRoutine(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier spec) {
+        public ActionCreateRoutine(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier propertySpecifier) {
             super(name, element, scope);
             this.callScope = callScope;
             this.namedElement = element;
-            this.spec = spec;
+            this.propertySpecifier = propertySpecifier;
         }
 
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
             String type = null;
-            if (spec != null) {
-                PasClassProperty prop = (PasClassProperty) spec.getParent();
+            if (propertySpecifier != null) {
+                PasClassProperty prop = (PasClassProperty) propertySpecifier.getParent();
                 type = prop.getTypeID() != null ? prop.getTypeID().getText() : null;
             } else {
                 PsiElement parent = PsiUtil.skipToExpressionParent(namedElement);
@@ -590,8 +590,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         private void addToInterface(FixActionData data, String returnType) {
             fillMemberPlace(scope, data, PasField.Visibility.PUBLIC, PasField.FieldType.ROUTINE, null, null);
             Pair<String, Map<String, String>> arguments;
-            if (spec != null) {
-                if (ContextUtil.isPropertyGetter(spec)) {
+            if (propertySpecifier != null) {
+                if (ContextUtil.isPropertyGetter(propertySpecifier)) {
                     Map<String, String> defaults = new SmartHashMap<String, String>();
                     arguments = Pair.create("", defaults);
                 } else {
