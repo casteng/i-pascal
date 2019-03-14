@@ -33,7 +33,8 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
 
     @Override
     public PasIdentStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, "-", false, ".", PasField.FieldType.VARIABLE, null, null,
+        return new PasIdentStubImpl(parentStub, "-", 0, ".",
+                PasField.FieldType.VARIABLE, null, null,
                 PasField.Access.READWRITE, null, Collections.emptyList());
     }
 
@@ -45,7 +46,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @NotNull
     @Override
     public PasIdentStub createStub(@NotNull PascalIdentDecl psi, StubElement parentStub) {
-        return new PasIdentStubImpl(parentStub, psi.getName(), psi.isExported(), psi.getContainingUnitName(),
+        return new PasIdentStubImpl(parentStub, psi.getName(), psi.getFlags(), psi.getContainingUnitName(),
                 psi.getType(), psi.getTypeString(), psi.getTypeKind(), psi.getAccess(), psi.getValue(), psi.getSubMembers());
     }
 
@@ -58,9 +59,8 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @Override
     public void serialize(@NotNull PasIdentStub stub, @NotNull StubOutputStream dataStream) throws IOException {
         StubUtil.printStub("PasIdentStub.serialize", stub);
-
         dataStream.writeName(stub.getName());
-        dataStream.writeBoolean(stub.isExported());
+        dataStream.writeInt(stub.getFlags());
         dataStream.writeName(stub.getContainingUnitName());
         dataStream.writeName(stub.getType().name());
         dataStream.writeName(stub.getTypeString());
@@ -74,7 +74,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
     @Override
     public PasIdentStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
         String name = StubUtil.readName(dataStream);
-        boolean exported = dataStream.readBoolean();
+        int flags = dataStream.readInt();
         String containingUnitName = StubUtil.readName(dataStream);
         PasField.FieldType type = StubUtil.readEnum(dataStream, PasField.FieldType.class);
         String typeString = StubUtil.readName(dataStream);
@@ -83,7 +83,7 @@ public class PasIdentStubElementType extends ILightStubElementType<PasIdentStub,
         String value = StubUtil.readName(dataStream);
         List<String> subMembers = new SmartList<>();
         StubUtil.readStringCollection(dataStream, subMembers);
-        return new PasIdentStubImpl(parentStub, name, exported, containingUnitName, type, typeString, kind, access, value, subMembers);
+        return new PasIdentStubImpl(parentStub, name, flags, containingUnitName, type, typeString, kind, access, value, subMembers);
     }
 
     @Override

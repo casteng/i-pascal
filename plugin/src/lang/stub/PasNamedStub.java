@@ -14,4 +14,6 @@ public interface PasNamedStub<T extends PascalNamedElement> extends StubElement<
     String getContainingUnitName();
 
     boolean isExported();
+
+    public int getFlags();
 }

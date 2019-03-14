@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.stub;
 
 import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.field.Flag;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
@@ -14,22 +15,17 @@ import java.util.List;
  */
 public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedRoutine> implements PasExportedRoutineStub {
     private PasField.Visibility visibility;
-    private final boolean exported;
-    private boolean constructor;
-    private boolean function;
     private String functionTypeStr;
     private List<String> parameterNames;
     private List<String> parameterTypes;
     private List<ParamModifier> parameterAccess;
 
-    public PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility, boolean exported,
-                                      String containingUnitName, boolean constructor, boolean function, String functionTypeStr,
+    public PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility, int flags,
+                                      String containingUnitName, String functionTypeStr,
                                       List<String> parameterNames, List<String> parameterTypes, List<ParamModifier> parameterAccess) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE, name, containingUnitName);
         this.visibility = visibility;
-        this.exported = exported;
-        this.constructor = constructor;
-        this.function = function;
+        setFlags(flags);
         this.functionTypeStr = functionTypeStr;
         this.parameterNames = parameterNames;
         this.parameterTypes = parameterTypes;
@@ -45,7 +41,7 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
 
     @Override
     public boolean isExported() {
-        return exported;
+        return isFlagSet(Flag.EXPORTED);
     }
 
     @Override
@@ -55,12 +51,12 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
 
     @Override
     public boolean isConstructor() {
-        return constructor;
+        return isFlagSet(Flag.CONSTRUCTOR);
     }
 
     @Override
     public boolean isFunction() {
-        return function;
+        return isFlagSet(Flag.FUNCTION);
     }
 
     @Override

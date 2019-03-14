@@ -120,7 +120,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
                         rStub.getFormalParameterAccess(), rStub.getFunctionTypeStr()), (PasNamedStub) stubElement);
             }
         }
-        fieldsMap.put(PascalHelperScope.KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", false, "", PasField.FieldType.VARIABLE, "", null, PasField.Access.READONLY, null, null));
+        fieldsMap.put(PascalHelperScope.KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", 0, "", PasField.FieldType.VARIABLE, "", null, PasField.Access.READONLY, null, null));
         return result;
     }
 

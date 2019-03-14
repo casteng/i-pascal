@@ -12,6 +12,7 @@ import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.field.Flag;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,14 +24,14 @@ public class PascalHelperNamed {
     volatile private String cachedName;
     volatile private PsiElement cachedNameEl;
     volatile private PasField.FieldType cachedType;
-    volatile Boolean local;
+    volatile private long flags;
 
     public PascalHelperNamed(PascalNamedElement self) {
         this.self = self;
     }
 
     void invalidateCache(boolean subtreeChanged) {
-        local = null;
+        flags = 0;
         modified = self.getContainingFile().getModificationStamp();
         // TODO: don't invalidate on each file modification
         cachedName = null;
@@ -112,4 +113,34 @@ public class PascalHelperNamed {
         return cachedType;
     }
 
+    public long getFlags() {
+        return flags;
+    }
+
+    public boolean isFlagInit(Flag flag) {
+        return (flags & (0x100000000L << flag.ordinal())) != 0;
+    }
+
+    public boolean isFlagSet(Flag flag) {
+        return (flags & (1L << flag.ordinal())) != 0;
+    }
+
+    public void setFlag(Flag flag, boolean value) {
+        //TODO: make atomic
+        long f = flags | (0x100000001L << flag.ordinal());         // set flag and its initialization flag
+        flags = f & (~((value ? 1L : 0L) << flag.ordinal()));                     // clear flag if it should be false
+
+    }
+
+    public boolean isLocalInit() {
+        return isFlagInit(Flag.LOCAL);
+    }
+
+    public boolean isLocal() {
+        return isFlagSet(Flag.LOCAL);
+    }
+
+    public void setLocal(final boolean value) {
+        setFlag(Flag.LOCAL, value);
+    }
 }

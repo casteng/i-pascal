@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.lang.stub;
 
 import com.intellij.psi.stubs.StubElement;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
+import com.siberika.idea.pascal.lang.psi.field.Flag;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,7 +11,6 @@ import java.util.List;
 
 public class PasIdentStubImpl extends PasNamedStubBase<PascalIdentDecl> implements PasIdentStub {
 
-    private final boolean exported;
     private PasField.FieldType kind;
     private String typeString;
     private PasField.Access access;
@@ -18,11 +18,11 @@ public class PasIdentStubImpl extends PasNamedStubBase<PascalIdentDecl> implemen
     private PasField.Kind typeKind;
     private List<String> subMembers;                            // members which can be qualified by this ident as well as accessed directly (enums)
 
-    public PasIdentStubImpl(StubElement parent, String name, boolean exported, String containingUnitName, PasField.FieldType kind,
-                            String typeString, PasField.Kind typeKind,
+    public PasIdentStubImpl(StubElement parent, String name, int flags, String containingUnitName,
+                            PasField.FieldType kind, String typeString, PasField.Kind typeKind,
                             PasField.Access access, String value, List<String> subMembers) {
         super(parent, PasIdentStubElementType.INSTANCE, name, containingUnitName);
-        this.exported = exported;
+        setFlags(flags);
         this.kind = kind;
         this.typeString = typeString;
         this.typeKind = typeKind;
@@ -38,7 +38,11 @@ public class PasIdentStubImpl extends PasNamedStubBase<PascalIdentDecl> implemen
 
     @Override
     public boolean isExported() {
-        return exported;
+        return isFlagSet(Flag.EXPORTED);
+    }
+
+    public boolean isDefaultProperty() {
+        return isFlagSet(Flag.DEFAULT_PROPERTY);
     }
 
     @Nullable

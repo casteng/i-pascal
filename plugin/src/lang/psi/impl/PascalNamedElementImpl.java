@@ -16,9 +16,11 @@ import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
+import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalInlineDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
@@ -88,7 +90,7 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     public boolean isLocal() {
         helper.ensureCacheActual();
-        if (null == helper.local) {
+        if (!helper.isLocalInit()) {
             boolean tempLocal = false;
             if (this instanceof PascalRoutineImpl) {
                 if (this instanceof PasRoutineImplDecl) {
@@ -109,9 +111,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
                     tempLocal = ((PascalNamedElement) parent).isLocal();
                 }
             }
-            helper.local = tempLocal;
+            helper.setLocal(tempLocal);
         }
-        return helper.local;
+        return helper.isLocal();
     }
 
     @Override
@@ -144,6 +146,14 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
     @Override
     @NotNull
     public PsiReference[] getReferences() {
+        if (this instanceof PasSubIdent) {
+            PsiElement parent = getParent();
+            if (parent instanceof PasNamespaceIdent && parent.getParent() instanceof PasUsesClause) {
+                return new PsiReference[]{
+                        new PascalReference(parent, new TextRange(0, ((PasNamespaceIdent) parent).getName().length()))
+                };
+            }
+        }
         if ((this instanceof PasSubIdent) || (this instanceof PasRefNamedIdent)) {
             PsiElement nameEl = getNameIdentifier();
             if ((nameEl != null) && getTextRange().intersects(nameEl.getTextRange())) {

@@ -4,12 +4,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubBase;
 import com.intellij.psi.stubs.StubElement;
+import com.siberika.idea.pascal.lang.psi.field.Flag;
 
 public class PasNamedStubBase<T extends PsiElement> extends StubBase<T> {
 
     protected String name;
     protected String uniqueName;
     protected String containingUnitName;
+
+    volatile protected int flags;
 
     protected PasNamedStubBase(StubElement parent, IStubElementType elementType, String name, String containingUnitName) {
         super(parent, elementType);
@@ -29,4 +32,24 @@ public class PasNamedStubBase<T extends PsiElement> extends StubBase<T> {
     public String getContainingUnitName() {
         return containingUnitName;
     }
+
+    public boolean isFlagSet(Flag flag) {
+        return (flags & (1 << flag.ordinal())) != 0;
+    }
+
+    public void setFlag(Flag flag, boolean value) {
+        //TODO: make atomic
+        int f = flags | (1 << flag.ordinal());
+        flags = f & (~((value ? 1 : 0) << flag.ordinal()));
+
+    }
+
+    public int getFlags() {
+        return flags;
+    }
+
+    public void setFlags(final int flags) {
+        this.flags = flags;
+    }
+
 }

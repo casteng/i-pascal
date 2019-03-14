@@ -13,4 +13,5 @@ public interface PascalStubElement<B extends PasNamedStub> extends StubBasedPsiE
     @Nullable
     String getContainingUnitName();
 
+    int getFlags();
 }

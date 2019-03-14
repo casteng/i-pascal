@@ -136,7 +136,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     @Override
     public boolean isLocal() {
         helper.ensureCacheActual();
-        if (null == helper.local) {
+        if (!helper.isLocalInit()) {
             boolean tempLocal;
             if (this instanceof PasExportedRoutine) {
                 if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this) || isExported()) {
@@ -166,9 +166,9 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
             } else  {
                 tempLocal = !isExported();
             }
-            helper.local = tempLocal;
+            helper.setLocal(tempLocal);
         }
-        return helper.local;
+        return helper.isLocal();
     }
 
     // Name qualified with container names
@@ -248,6 +248,10 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
             }
         }
         return this;
+    }
+
+    public int getFlags() {
+        return (int) helper.getFlags();
     }
 
 }
