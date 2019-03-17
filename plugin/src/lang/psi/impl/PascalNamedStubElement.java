@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.psi.impl;
 import com.intellij.extapi.psi.StubBasedPsiElementBase;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.roots.FileIndexFacade;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.LocalSearchScope;
@@ -29,6 +30,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
+import com.siberika.idea.pascal.lang.psi.field.Flag;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.search.GotoSuper;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
@@ -115,22 +117,28 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     }
 
     protected boolean calcIsExported() {
-        PsiElement parent = getParent();
-        if ((parent instanceof PasTypeDecl) || (parent instanceof PasGenericTypeIdent)) {
-            parent = parent.getParent();
-        }
-        if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration || parent instanceof PasExportsSection) {
-            return parent.getParent().getParent() instanceof PasUnitInterface;
-        } else {
-            PasEntityScope scope = PsiUtil.getNearestAffectingScope(parent);
-            if (scope instanceof PascalModule) {
-                return (((PascalModule) scope).getModuleType() == PascalModule.ModuleType.UNIT) && ContextUtil.belongsToInterface(parent);
-            } else if (scope instanceof PascalStructType) {
-                return scope.isExported();
-            } else {
-                return false;
+        helper.ensureCacheActual();
+        if (!helper.isFlagInit(Flag.EXPORTED)) {
+            boolean tempExported;
+            PsiElement parent = getParent();
+            if ((parent instanceof PasTypeDecl) || (parent instanceof PasGenericTypeIdent)) {
+                parent = parent.getParent();
             }
+            if (parent instanceof PasVarDeclaration || parent instanceof PasConstDeclaration || parent instanceof PasTypeDeclaration || parent instanceof PasExportsSection) {
+                tempExported = parent.getParent().getParent() instanceof PasUnitInterface;
+            } else {
+                PasEntityScope scope = PsiUtil.getNearestAffectingScope(parent);
+                if (scope instanceof PascalModule) {
+                    tempExported = (((PascalModule) scope).getModuleType() == PascalModule.ModuleType.UNIT) && ContextUtil.belongsToInterface(parent);
+                } else if (scope instanceof PascalStructType) {
+                    tempExported = scope.isExported();
+                } else {
+                    tempExported = false;
+                }
+            }
+            helper.setFlag(Flag.EXPORTED, tempExported);
         }
+        return helper.isFlagSet(Flag.EXPORTED);
     }
 
     @Override
@@ -146,7 +154,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
                     if (scope != null) {
                         if (!scope.isLocal()) {
                             tempLocal = false;
-                        } else {
+                        } else if (!DumbService.getInstance(getProject()).isDumb()) {
                             Collection<PasEntityScope> structs = new SmartHashSet<>();
                             GotoSuper.retrieveParentInterfaces(structs, scope, 0);
                             tempLocal = true;
@@ -158,6 +166,8 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
                                     }
                                 }
                             }
+                        } else {
+                            tempLocal = false;
                         }
                     } else {
                         tempLocal = true;
@@ -251,7 +261,13 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     }
 
     public int getFlags() {
+        initAllFlags();
         return (int) helper.getFlags();
+    }
+
+    protected void initAllFlags() {
+        isLocal();
+        isExported();
     }
 
 }

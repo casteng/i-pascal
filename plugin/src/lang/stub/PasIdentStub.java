@@ -24,4 +24,5 @@ public interface PasIdentStub extends PasNamedStub<PascalIdentDecl> {
     @Nullable
     String getValue();
 
+    boolean isDefaultProperty();
 }

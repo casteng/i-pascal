@@ -23,4 +23,6 @@ public interface PascalIdentDecl extends PascalStubElement<PasIdentStub>, PasNam
 
     @NotNull
     List<String> getSubMembers();
+
+    boolean isDefaultProperty();
 }

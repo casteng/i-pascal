@@ -40,7 +40,7 @@ public class PasNamedStubBase<T extends PsiElement> extends StubBase<T> {
     public void setFlag(Flag flag, boolean value) {
         //TODO: make atomic
         int f = flags | (1 << flag.ordinal());
-        flags = f & (~((value ? 1 : 0) << flag.ordinal()));
+        flags = f & (~((value ? 0 : 1) << flag.ordinal()));
 
     }
 

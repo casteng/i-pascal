@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
+import com.siberika.idea.pascal.lang.psi.field.Flag;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -126,7 +127,10 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         if (stub != null) {
             return stub.isConstructor();
         }
-        return RoutineUtil.isConstructor(this);
+        if (!helper.isFlagInit(Flag.CONSTRUCTOR)) {
+            helper.setFlag(Flag.CONSTRUCTOR, RoutineUtil.isConstructor(this));
+        }
+        return helper.isFlagSet(Flag.CONSTRUCTOR);
     }
 
     public boolean isFunction() {
@@ -134,7 +138,16 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         if (stub != null) {
             return stub.isFunction();
         }
-        return findChildByFilter(RoutineUtil.FUNCTION_KEYWORDS) != null;
+        if (!helper.isFlagInit(Flag.FUNCTION)) {
+            helper.setFlag(Flag.FUNCTION, findChildByFilter(RoutineUtil.FUNCTION_KEYWORDS) != null);
+        }
+        return helper.isFlagSet(Flag.FUNCTION);
+    }
+
+    protected void initAllFlags() {
+        super.initAllFlags();
+        isConstructor();
+        isFunction();
     }
 
     @Override

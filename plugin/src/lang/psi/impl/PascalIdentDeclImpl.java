@@ -211,4 +211,21 @@ public abstract class PascalIdentDeclImpl extends PascalNamedStubElement<PasIden
         return res;
     }
 
+    @Override
+    public boolean isDefaultProperty() {
+        PasIdentStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.isDefaultProperty();
+        }
+        if (!helper.isDefaultPropertyInit()) {
+            helper.setDefaultProperty(PsiUtil.isDefaultProperty(this));
+        }
+        return helper.isDefaultProperty();
+    }
+
+    protected void initAllFlags() {
+        super.initAllFlags();
+        isDefaultProperty();
+    }
+
 }

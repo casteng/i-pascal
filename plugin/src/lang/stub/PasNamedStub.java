@@ -15,5 +15,5 @@ public interface PasNamedStub<T extends PascalNamedElement> extends StubElement<
 
     boolean isExported();
 
-    public int getFlags();
+    int getFlags();
 }

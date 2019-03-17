@@ -41,6 +41,7 @@ public class PasIdentStubImpl extends PasNamedStubBase<PascalIdentDecl> implemen
         return isFlagSet(Flag.EXPORTED);
     }
 
+    @Override
     public boolean isDefaultProperty() {
         return isFlagSet(Flag.DEFAULT_PROPERTY);
     }

@@ -127,8 +127,8 @@ public class PascalHelperNamed {
 
     public void setFlag(Flag flag, boolean value) {
         //TODO: make atomic
-        long f = flags | (0x100000001L << flag.ordinal());         // set flag and its initialization flag
-        flags = f & (~((value ? 1L : 0L) << flag.ordinal()));                     // clear flag if it should be false
+        long f = flags | (0x1_00000001L << flag.ordinal());         // set flag and its initialization flag
+        flags = f & (~((value ? 0L : 1L) << flag.ordinal()));                     // clear flag if it should be false
 
     }
 
@@ -142,5 +142,17 @@ public class PascalHelperNamed {
 
     public void setLocal(final boolean value) {
         setFlag(Flag.LOCAL, value);
+    }
+
+    public boolean isDefaultPropertyInit() {
+        return isFlagInit(Flag.DEFAULT_PROPERTY);
+    }
+
+    public boolean isDefaultProperty() {
+        return isFlagSet(Flag.DEFAULT_PROPERTY);
+    }
+
+    public void setDefaultProperty(final boolean value) {
+        setFlag(Flag.DEFAULT_PROPERTY, value);
     }
 }
