@@ -299,8 +299,12 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             }
             PasEntityScope scope = PasReferenceUtil.resolveTypeScope(NamespaceRec.fromElement(fqi), null, true);
             if (scope instanceof PasRecordDecl) {
-                LookupElement el = LookupElementBuilder.create(scope, COMPLETE_RECORD_CONSTANT).withPresentableText(COMPLETE_RECORD_CONSTANT).withIcon(PascalIcons.RECORD).withInsertHandler(CompletionUtil.RECORD_INSERT_HANDLER);
-                result.caseInsensitive().addElement(el);
+                String content = CompletionUtil.getRecordConstText((PasRecordDecl) scope);
+                int caretOffset = content.indexOf(DocUtil.PLACEHOLDER_CARET);
+                content = content.replaceAll(DocUtil.PLACEHOLDER_CARET, "");
+                LookupElement el = LookupElementBuilder.create(scope, content).withIcon(PascalIcons.RECORD)
+                        .withInsertHandler(new CaretAdjustInsertHandler(completionContext.completionParameters.getEditor().getCaretModel().getOffset() + caretOffset));
+                result.caseInsensitive().addElement(PrioritizedLookupElement.withPriority(el, 100));
             }
         }
     }

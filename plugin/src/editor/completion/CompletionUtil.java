@@ -161,30 +161,6 @@ class CompletionUtil {
     );
     static final TokenSet PROPERTY_SPECIFIERS = TokenSet.create(PasTypes.READ, PasTypes.WRITE);
 
-    static final InsertHandler<LookupElement> RECORD_INSERT_HANDLER = new InsertHandler<LookupElement>() {
-        @Override
-        public void handleInsert(final InsertionContext context, LookupElement item) {
-            PasRecordDecl record = (PasRecordDecl) item.getObject();
-            StringBuilder sb = new StringBuilder("(");
-            for (PasClassField field : record.getClassFieldList()) {
-                for (PasNamedIdentDecl namedIdentDecl : field.getNamedIdentDeclList()) {
-                    String caretPH;
-                    if (sb.length() != 1) {
-                        caretPH = "";
-                        sb.append("; ");
-                    } else {
-                        caretPH = DocUtil.PLACEHOLDER_CARET;
-                    }
-                    sb.append(namedIdentDecl.getName()).append(": ").append(caretPH);
-                }
-            }
-            sb.append(");");
-            int caretPos = context.getEditor().getCaretModel().getOffset();
-            DocUtil.adjustDocument(context.getEditor(), caretPos, sb.toString());
-            context.commitDocument();
-        }
-    };
-
     private static Map<IElementType, TokenSet> TOKEN_TO_PAS = initTokenToPasToken();
 
     private static Map<IElementType, TokenSet> initTokenToPasToken() {
@@ -419,6 +395,24 @@ class CompletionUtil {
             }
         });
         return res;
+    }
+
+    static String getRecordConstText(final PasRecordDecl record) {
+        StringBuilder sb = new StringBuilder("(");
+        for (PasClassField field : record.getClassFieldList()) {
+            for (PasNamedIdentDecl namedIdentDecl : field.getNamedIdentDeclList()) {
+                String caretPH;
+                if (sb.length() != 1) {
+                    caretPH = "";
+                    sb.append("; ");
+                } else {
+                    caretPH = DocUtil.PLACEHOLDER_CARET;
+                }
+                sb.append(namedIdentDecl.getName()).append(": ").append(caretPH);
+            }
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
     private static void handleRoutineNameInsertion(Editor editor, String content) {
