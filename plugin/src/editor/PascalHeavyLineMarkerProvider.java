@@ -43,25 +43,27 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
         List<Computable<List<LineMarkerInfo>>> tasks = new ArrayList<>();
         Processor<? super PasEntityScope> consumer = (Processor<PasEntityScope>) descending -> false;
         for (PsiElement element : elements) {
-            tasks.add(new Computable<List<LineMarkerInfo>>() {
-                @Override
-                public List<LineMarkerInfo> compute() {
-                    boolean noMarker = true;
-                    if (element instanceof PascalStructType) {
-                        noMarker = PascalDefinitionsSearch.findImplementations(((PascalNamedElement) element).getNameIdentifier(), consumer);
-                    } else if ((element instanceof PasExportedRoutine) || (element instanceof PasRoutineImplDecl)) {
-                        PasEntityScope scope = ((PasEntityScope) element).getContainingScope();
-                        if (scope instanceof PascalStructType) {
-                            noMarker = PascalDefinitionsSearch.findImplementingMethods((PascalRoutine) element, consumer);
+            if (element instanceof PasEntityScope) {
+                tasks.add(new Computable<List<LineMarkerInfo>>() {
+                    @Override
+                    public List<LineMarkerInfo> compute() {
+                        boolean noMarker = true;
+                        if (element instanceof PascalStructType) {
+                            noMarker = PascalDefinitionsSearch.findImplementations(((PascalNamedElement) element).getNameIdentifier(), consumer);
+                        } else if ((element instanceof PasExportedRoutine) || (element instanceof PasRoutineImplDecl)) {
+                            PasEntityScope scope = ((PasEntityScope) element).getContainingScope();
+                            if (scope instanceof PascalStructType) {
+                                noMarker = PascalDefinitionsSearch.findImplementingMethods((PascalRoutine) element, consumer);
+                            }
+                        }
+                        if (noMarker) {
+                            return Collections.emptyList();
+                        } else {
+                            return Collections.singletonList(PascalLineMarkerProvider.createLineMarkerInfo(element, AllIcons.Gutter.OverridenMethod, PascalMarker.DESCENDING_ENTITIES));
                         }
                     }
-                    if (noMarker) {
-                        return Collections.emptyList();
-                    } else {
-                        return Collections.singletonList(PascalLineMarkerProvider.createLineMarkerInfo(element, AllIcons.Gutter.OverridenMethod, PascalMarker.DESCENDING_ENTITIES));
-                    }
-                }
-            });
+                });
+            }
         }
         Object lock = new Object();
         ProgressIndicator indicator = ProgressIndicatorProvider.getGlobalProgressIndicator();

@@ -8,6 +8,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
@@ -54,6 +55,7 @@ import javax.swing.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -110,19 +112,21 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     @SuppressWarnings("ConstantConditions")
     private static void addUsedUnitDeclarations(Collection<PascalNamedElement> result, PsiElement current, String name) {
         PsiFile file = current.getContainingFile();
+        Module module = ModuleUtilCore.findModuleForPsiElement(current);
+        List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(current.getProject(), module);
         for (PascalQualifiedIdent usedUnitName : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceUsesClause(file))) {
-            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName(), name);
+            addUnitDeclarations(result, current.getProject(), unitFiles, usedUnitName.getName(), name);
         }
         for (PascalQualifiedIdent usedUnitName : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationUsesClause(file))) {
-            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(usedUnitName), usedUnitName.getName(), name);
+            addUnitDeclarations(result, current.getProject(), unitFiles, usedUnitName.getName(), name);
         }
         for (String unitName : EXPLICIT_UNITS) {
-            addUnitDeclarations(result, current.getProject(), ModuleUtilCore.findModuleForPsiElement(current), unitName, name);
+            addUnitDeclarations(result, current.getProject(), unitFiles, unitName, name);
         }
     }
 
-    private static void addUnitDeclarations(Collection<PascalNamedElement> result, Project project, Module module, String unitName, String name) {
-        PascalNamedElement usedUnit = PasReferenceUtil.findUnit(project, PasReferenceUtil.findUnitFiles(project, module), unitName);
+    private static void addUnitDeclarations(Collection<PascalNamedElement> result, Project project, List<VirtualFile> unitFiles, String unitName, String name) {
+        PascalNamedElement usedUnit = PasReferenceUtil.findUnit(project, unitFiles, unitName);
         if (usedUnit != null) {
             addDeclarations(result, PsiUtil.getModuleInterfaceSection(usedUnit), name);
         }
@@ -258,7 +262,7 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                     return PascalIcons.VARIABLE;
                 } else if (element instanceof PasConstDeclaration) {
                     return PascalIcons.CONSTANT;
-                } else if (element instanceof PasClassProperty) {
+                } else if ((element instanceof PasClassProperty) || (element.getParent() instanceof PasClassProperty)) {
                     return PascalIcons.PROPERTY;
                 } else if (element instanceof PasModule) {
                     PascalModule.ModuleType moduleType = ((PasModule) element).getModuleType();
