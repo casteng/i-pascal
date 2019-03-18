@@ -851,7 +851,7 @@ ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 
 AttributeParamList	        ::= Expression (COMMA Expression)*
 
-InheritedCall               ::= INHERITED {implements="com.intellij.psi.ContributedReferenceHost"}
+InheritedCall               ::= INHERITED {implements="com.intellij.psi.ContributedReferenceHost" extends="com.siberika.idea.pascal.lang.psi.impl.PascalInheritedCall"}
 
 private customAttributes	::=	LBRACK CustomAttributeList RBRACK | assemblyAttribute {pin=1}
 private CustomAttributeList ::= CustomAttributeDecl (COMMA CustomAttributeDecl)* {recoverWhile=rec_attr2}
