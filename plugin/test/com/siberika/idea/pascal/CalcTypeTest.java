@@ -20,10 +20,11 @@ public class CalcTypeTest extends LightPlatformCodeInsightFixtureTestCase {
         return "testData/annotator";
     }
 
-    public void testGetDefaultProperty() throws Exception {
+    public void testIsDefaultProperty() throws Exception {
         myFixture.configureByFiles("structTypes.pas");
         PasEntityScope obj = TestUtil.findClass(PsiUtil.getElementPasModule(myFixture.getFile()), "TObserverMapping");
-        assertEquals("DefProp", PsiUtil.getDefaultProperty(obj).getName());
+        final PasField propField = obj.getField("DefProp");
+        assertTrue(PsiUtil.isDefaultProperty(propField.getElement()));
     }
 
     public void testExprType() throws Exception {

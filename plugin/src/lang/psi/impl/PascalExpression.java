@@ -40,6 +40,7 @@ import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.resolve.Resolve;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -85,9 +86,9 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             res = getChildType(getFirstChild(expr));
             if (!res.isEmpty()) {                                           // Replace scope if indexing default array property
                 PasEntityScope scope = res.iterator().next().getTypeScope();
-                PascalNamedElement defProp = scope != null ? PsiUtil.getDefaultProperty(scope) : null;
-                if (defProp instanceof PasClassProperty) {
-                    PasTypeID typeId = ((PasClassProperty) defProp).getTypeID();
+                PascalNamedElement defProp = scope != null ? Resolve.getDefaultProperty(scope) : null;
+                if ((defProp != null) && (defProp.getParent() instanceof PasClassProperty)) {
+                    PasTypeID typeId = ((PasClassProperty) defProp.getParent()).getTypeID();
                     if (typeId != null) {
                         PasField.ValueType fieldType = resolveType(scope, typeId.getFullyQualifiedIdent());
                         if (fieldType != null) {
@@ -418,8 +419,12 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                         return (expr != null) && (expr.getExpression() != null) ? inferType(expr.getExpression().getExpr()) : null;
                     }
                 } else if (type.field.fieldType == PasField.FieldType.PROPERTY) {
-                    PasTypeID typeId = PasReferenceUtil.resolvePropertyType(type.field, (PasClassProperty) type.field.getElement());
-                    return typeId.getText();
+                    final PascalNamedElement fieldElement = type.field.getElement();
+                    final PsiElement parent = fieldElement != null ? fieldElement.getParent() : null;
+                    if (parent instanceof PasClassProperty) {
+                        PasTypeID typeId = PasReferenceUtil.resolvePropertyType(type.field, (PasClassProperty) parent);
+                        return typeId.getText();
+                    }
                 }
             }
         }

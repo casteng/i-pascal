@@ -15,9 +15,12 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
+import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("Convert2Lambda")
 public class Resolve {
@@ -44,4 +47,16 @@ public class Resolve {
         return true;
     }
 
+    @Nullable
+    public static PascalNamedElement getDefaultProperty(PasEntityScope typeScope) {
+        for (PasField field : typeScope.getAllFields()) {
+            if (field.fieldType == PasField.FieldType.PROPERTY) {
+                PascalNamedElement el = field.getElement();
+                if ((el instanceof PascalIdentDecl) && ((PascalIdentDecl) el).isDefaultProperty()) {
+                    return el;
+                }
+            }
+        }
+        return null;
+    }
 }

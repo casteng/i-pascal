@@ -266,7 +266,6 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
     }
 
     protected void initAllFlags() {
-        isLocal();
         isExported();
     }
 

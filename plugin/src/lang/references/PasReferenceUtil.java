@@ -233,8 +233,9 @@ public class PasReferenceUtil {
                 PasField propField = parent != null ? parent.getField(field.name) : null;
                 if (propField != null && propField.fieldType == PasField.FieldType.PROPERTY) {
                     PascalNamedElement propEl = propField.getElement();
-                    if (propEl instanceof PasClassProperty) {
-                        typeId = resolvePropertyType(propField, (PasClassProperty) propEl);
+                    final PsiElement propDecl = propEl != null ? propEl.getParent() : null;
+                    if (propDecl instanceof PasClassProperty) {
+                        typeId = resolvePropertyType(propField, (PasClassProperty) propDecl);
                         if (typeId != null) {
                             break;
                         }

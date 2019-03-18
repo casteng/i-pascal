@@ -677,17 +677,8 @@ public class PsiUtil {
         return res;
     }
 
-    @Nullable
-    public static PascalNamedElement getDefaultProperty(PasEntityScope typeScope) {
-        for (PasField field : typeScope.getAllFields()) {
-            if (field.fieldType == PasField.FieldType.PROPERTY) {
-                PascalNamedElement el = field.getElement();
-                if ((el != null) && (el.getNode().findChildByType(PasTypes.DEFAULT) != null)) {
-                    return el;
-                }
-            }
-        }
-        return null;
+    public static boolean isDefaultProperty(final PascalNamedElement element) {
+        return (element != null) && (element.getParent().getNode().findChildByType(PasTypes.DEFAULT) != null);
     }
 
     public static PsiElement skipToExpressionParent(PsiElement element) {

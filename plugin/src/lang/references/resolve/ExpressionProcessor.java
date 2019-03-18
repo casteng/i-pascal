@@ -25,7 +25,6 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.search.routine.ParamCountRoutineMatcher;
 import com.siberika.idea.pascal.lang.search.routine.RoutineMatcher;
 import com.siberika.idea.pascal.util.ModuleUtil;
-import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -127,9 +126,9 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
 
     private boolean handleArray(final PasIndexExpr indexExpr, final boolean lastPart) {
         final boolean result = resolveExprTypeScope((PascalExpression) indexExpr.getExpr(), lastPart);
-        PascalNamedElement defProp = currentScope != null ? PsiUtil.getDefaultProperty(currentScope) : null;    // Replace scope if indexing default array property
-        if (defProp instanceof PasClassProperty) {
-            PasTypeID typeId = ((PasClassProperty) defProp).getTypeID();
+        PascalNamedElement defProp = currentScope != null ? Resolve.getDefaultProperty(currentScope) : null;    // Replace scope if indexing default array property
+        if (defProp != null && defProp.getParent() instanceof PasClassProperty) {
+            PasTypeID typeId = ((PasClassProperty) defProp.getParent()).getTypeID();
             final PasField field = typeId != null ? resolveType(currentScope, typeId.getFullyQualifiedIdent()) : null;
             if (field != null) {
                 currentScope = retrieveScope(currentScope, field);

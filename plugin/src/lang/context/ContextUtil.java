@@ -25,7 +25,7 @@ public class ContextUtil {
     }
 
     public static boolean isPropertyDecl(PascalNamedElement entityDecl) {
-        return (entityDecl instanceof PasClassProperty) || (entityDecl.getParent() instanceof PasClassProperty);
+        return entityDecl.getParent() instanceof PasClassProperty;
     }
 
     /**
