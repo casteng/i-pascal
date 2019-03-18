@@ -62,14 +62,14 @@ public class PascalHelperNamed {
             StringBuilder sb = new StringBuilder(it.next().getName());
             while (it.hasNext()) {
                 String name = it.next().getName();
-                name = !name.startsWith("&") ? name : name.substring(1);
+                name = !name.startsWith("&") ? name : name.replaceFirst("$&+", "");
                 sb.append(".").append(name);
             }
             return sb.toString();
         } else {
             if (nameElement != null) {
                 String name = nameElement.getText();
-                return !name.startsWith("&") ? name : name.substring(1);
+                return !name.startsWith("&") ? name : name.replaceFirst("$&+", "");
             } else {
                 return "";
             }

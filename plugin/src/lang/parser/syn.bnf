@@ -321,7 +321,7 @@
         COMMENT='regexp://.*'
         COMMENT='regexp:\(\*(.*\n)*.*\*\)'
         NAME='regexp:[_A-Za-z]\w*'
-        NAME_='regexp:&[_A-Za-z]\w*'
+        NAME_='regexp:&+[_A-Za-z]\w*'
         RANGE='..'
         STRING_LITERAL="regexp:'[^'\n\r]*'"
         STRING_LITERAL_UNC="regexp:'[^'\n\r]*'?"

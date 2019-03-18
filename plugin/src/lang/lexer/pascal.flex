@@ -41,7 +41,7 @@ COMMENT         = {LINE_COMMENT}|{BLOCK_COMMENT}|{BRACE_COMMENT}
 INACTIVE_CODE   = [^{\r\n]*
 
 IDENTIFIER=[:jletter:] [:jletterdigit:]{0,126}
-IDENTIFIER_="&"{IDENTIFIER}
+IDENTIFIER_="&"+{IDENTIFIER}
 //identifier      = [_a-zA-Z][_a-zA-Z0-9]{0,126}
 
 STRING_ELEMENT  = "''"|[^'\n\r]
