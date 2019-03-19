@@ -21,7 +21,6 @@ import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.search.Helper;
@@ -43,6 +42,7 @@ abstract class FQNResolver {
     private final ResolveContext context;
     private final List<PasEntityScope> sortedUnits;
     private boolean wasType;
+    public PasField result;
 
     FQNResolver(final PasEntityScope scope, final NamespaceRec fqn, final ResolveContext context) {
         this.scope = scope;
@@ -166,7 +166,7 @@ abstract class FQNResolver {
         }
         ResolveContext ctx = new ResolveContext(scope, PasField.TYPES_ALL, true, null, context.unitNamespaces);
 
-        return PasReferenceUtil.retrieveFieldTypeScope(field, ctx);
+        return Types.retrieveFieldTypeScope(field, ctx);
     }
 
     private boolean processWithScopes(PasEntityScope scope, PsiElement ident) {
@@ -188,9 +188,9 @@ abstract class FQNResolver {
         for (PasExpression expr : withElement.getExpressionList()) {
             PasExpr expression = expr != null ? expr.getExpr() : null;
             if (expression instanceof PascalExpression) {
-                List<PasField.ValueType> types = PascalExpression.getTypes((PascalExpression) expr.getExpr());
+                List<PasField.ValueType> types = Types.getTypes((PascalExpression) expr.getExpr());
                 if (!types.isEmpty()) {
-                    PasEntityScope ns = PascalExpression.retrieveScope(types);
+                    PasEntityScope ns = Types.retrieveScope(types);
                     if (ns != null) {
                         if (!processScope(ns, false)) {
                             return false;

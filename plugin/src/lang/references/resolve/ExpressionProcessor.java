@@ -15,19 +15,16 @@ import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
-import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.search.routine.ParamCountRoutineMatcher;
 import com.siberika.idea.pascal.lang.search.routine.RoutineMatcher;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.List;
 
 class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
@@ -91,11 +88,6 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
         }
     }
 
-    private boolean isInherited(PasReferenceExpr refExpr) {
-        final PsiElement firstChild = getFirstChild((PascalExpression) refExpr);
-        return (refExpr.getExpr() == null) && (firstChild != null) && (firstChild.getNode().getElementType() == PasTypes.INHERITED);
-    }
-
     boolean resolveExprTypeScope(PascalExpression expression, boolean lastPart) {
         if (expression instanceof PasReferenceExpr) {
             PasExpr scopeExpr = ((PasReferenceExpr) expression).getExpr();
@@ -141,15 +133,22 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
 
     private static PasField resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
         ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null, null);
-        final Collection<PasField> references = PasReferenceUtil.resolve(NamespaceRec.fromElement(fullyQualifiedIdent), context, 0);
-        if (!references.isEmpty()) {
-            PasField field = references.iterator().next();
-            if (!field.isConstructor()) {        // TODO: move constructor handling to main resolve routine
-                PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, context.unitNamespaces));
+
+        final FQNResolver fqnResolver = new FQNResolver(scope, NamespaceRec.fromElement(fullyQualifiedIdent), context) {
+            @Override
+            boolean processField(final PasEntityScope scope, final PasField field) {
+                if (!field.isConstructor()) {
+                    Types.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, context.unitNamespaces));
+                }
+                result = field;
+                return false;
             }
-            return field;
+        };
+        if (!fqnResolver.resolve(true)) {
+            return fqnResolver.result;
+        } else {
+            return null;
         }
-        return null;
     }
 
     private PasField callTarget;
@@ -235,7 +234,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
         if (field.fieldType == PasField.FieldType.UNIT) {
             return (PasEntityScope) field.getElement();
         }
-        return PasReferenceUtil.retrieveFieldTypeScope(field, context);
+        return Types.retrieveFieldTypeScope(field, context);
     }
 
 }
