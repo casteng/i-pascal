@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.references;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReferenceBase;
@@ -19,6 +20,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 class PascalInheritedReference extends PsiReferenceBase<PasInheritedCall> {
 
+    private static final Logger LOG = Logger.getInstance(PascalInheritedReference.class.getName());
+
+    private static final int MAX_RECURSION_COUNT = 100;
+
     PascalInheritedReference(@NotNull PsiElement element) {
         super((PasInheritedCall) element, TextRange.from(element.getStartOffsetInParent(), element.getTextLength()));
     }
@@ -36,14 +41,18 @@ class PascalInheritedReference extends PsiReferenceBase<PasInheritedCall> {
                     return false;
                 }
             };
-            findInheritedMethod(getParentScope(method.getContainingScope()), matcher);
+            findInheritedMethod(getParentScope(method.getContainingScope()), matcher, 0);
         }
         return result.get();
     }
 
-    private void findInheritedMethod(final PasEntityScope parentScope, final ParamCountRoutineMatcher matcher) {
+    private void findInheritedMethod(final PasEntityScope parentScope, final ParamCountRoutineMatcher matcher, int recCount) {
+        if ((parentScope != null) && (recCount > MAX_RECURSION_COUNT)) {
+            LOG.info(String.format("ERROR: findInheritedMethod: reached max recursion count for %s", parentScope.getUniqueName()));
+            return;
+        }
         if ((parentScope != null) && matcher.process(parentScope.getAllFields())) {
-            findInheritedMethod(getParentScope(parentScope), matcher);
+            findInheritedMethod(getParentScope(parentScope), matcher, recCount + 1);
         }
     }
 
