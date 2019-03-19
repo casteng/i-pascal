@@ -116,6 +116,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         return calcIsExported();
     }
 
+    // All nontrivial overrides should set the flag
     protected boolean calcIsExported() {
         helper.ensureCacheActual();
         if (!helper.isFlagInit(Flag.EXPORTED)) {

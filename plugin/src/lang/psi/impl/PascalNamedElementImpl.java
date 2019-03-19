@@ -15,6 +15,7 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.PascalReference;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
+import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
@@ -79,6 +80,9 @@ public abstract class PascalNamedElementImpl extends ASTWrapperPsiElement implem
 
     @Override
     public boolean isExported() {
+        if (this instanceof PasGenericTypeIdent) {
+            return ((PasGenericTypeIdent) this).getNamedIdentDecl().isExported();
+        }
         PsiElement parent = getParent();
         if (parent instanceof PascalNamedElement) {
             return ((PascalNamedElement) parent).isLocal();

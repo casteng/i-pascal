@@ -70,12 +70,18 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @Override
     protected boolean calcIsExported() {
-        PsiElement parent = getParent();
-        if (parent instanceof PascalStructType) {
-            return ((PascalStructType) parent).isExported();
-        } else {
-            return parent instanceof PasUnitInterface;
+        helper.ensureCacheActual();
+        if (!helper.isFlagInit(Flag.EXPORTED)) {
+            boolean tempExported;
+            PsiElement parent = getParent();
+            if (parent instanceof PascalStructType) {
+                tempExported = ((PascalStructType) parent).isExported();
+            } else {
+                tempExported = parent instanceof PasUnitInterface;
+            }
+            helper.setFlag(Flag.EXPORTED, tempExported);
         }
+        return helper.isFlagSet(Flag.EXPORTED);
     }
 
     @Override
