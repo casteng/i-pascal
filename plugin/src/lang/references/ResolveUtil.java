@@ -200,7 +200,7 @@ public class ResolveUtil {
         } else if (type instanceof PasPointerType) {
             Pair<String, PasField.Kind> baseType = retrieveType(((PasPointerType) type).getTypeDecl(), null);
             if (baseType != null) {
-                return Pair.create("^" + baseType.first, baseType.second != PasField.Kind.STRUCT ? PasField.Kind.POINTER : PasField.Kind.STRUCT);
+                return Pair.create(baseType.first, baseType.second != PasField.Kind.STRUCT ? PasField.Kind.POINTER : PasField.Kind.STRUCT);
             } else {
                 return Pair.create(null, PasField.Kind.POINTER);
             }
