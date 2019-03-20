@@ -407,7 +407,8 @@ private rec_case            ::= !(ELSE | END) & rec_section
 private rec_caseItem        ::= !(END | ELSE | caseLabel)
 private rec_classparent     ::= !(CASE | FOR) & rec_name
 private rec_typeId          ::= !("=" | "." | ";" | DO)
-private rec_formal_param    ::= !(";" | ":" | ">" | "]" | "," | OF | identifier) & rec_section
+private rec_formal_param_sec::= !(";" | ":" | ">" | "]" | "," | OF | identifier) & rec_section
+private rec_formal_param    ::= !(";" | ")" | "]") & rec_section
 private rec_propspec        ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
 private rec_generic_def     ::= !(">" | "," | ":" | ">""=") & rec_section
 
@@ -856,9 +857,10 @@ private callGroup           ::= callExpr | indexExpr | dereferenceExpr
 literalExpr                 ::= NUMBER_REAL | NUMBER_INT | NUMBER_HEX | NUMBER_OCT | NUMBER_BIN | TRUE | FALSE | NIL | StringFactor
 // **********************************************************************
 FormalParameterSection      ::= formalParameterSect
-private formalParameterSect ::= "(" [ formalParameterList ] ")" {pin=1 recoverWhile=rec_formal_param}
+private formalParameterSect ::= "(" [ formalParameterList ] ")" {pin=1 recoverWhile=rec_formal_param_sec}
 private formalParameterList ::= FormalParameter (";" FormalParameter)*
 FormalParameter             ::= customAttributes* [ ParamType ] identList [ ":" TypeDecl ] [ "=" ConstExpression ] {pin=3
+                                                        recoverWhile=rec_formal_param
                                                         mixin="com.siberika.idea.pascal.lang.psi.impl.PasFormalParameterMixin"}
 ParamType                   ::= CONST | VAR | OUT | CONSTREF//ParmType
 
