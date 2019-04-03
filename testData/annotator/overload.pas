@@ -18,4 +18,5 @@ implementation
 begin
     GetR().x;
     GetR(1).y;
+    GetR.x;
 end.

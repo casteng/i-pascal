@@ -19,8 +19,10 @@ public abstract class ParamCountRoutineMatcher implements RoutineMatcher {
 
     @Override
     public boolean process(final Collection<PasField> fields) {
+        final String nameWithParen = name + "(";
         for (PasField field : fields) {
-            if ((field.fieldType == PasField.FieldType.ROUTINE) && field.name.toUpperCase().startsWith(name)) {
+            if ((field.fieldType == PasField.FieldType.ROUTINE)
+                    && (field.name.equalsIgnoreCase(name) || field.name.toUpperCase().startsWith(nameWithParen))) {
                 PascalNamedElement el = field.getElement();
                 if (el instanceof PascalRoutine) {
                     final PascalRoutine routine = (PascalRoutine) el;

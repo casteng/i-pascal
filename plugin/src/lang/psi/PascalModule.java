@@ -32,7 +32,7 @@ public interface PascalModule extends PasEntityScope, PascalStubElement<PasModul
     Collection<PasField> getPrivateFields();
 
     @NotNull
-    Collection<PasField> getPubicFields();
+    Collection<PasField> getPublicFields();
 
     List<SmartPsiElementPointer<PasEntityScope>> getPrivateUnits();
 

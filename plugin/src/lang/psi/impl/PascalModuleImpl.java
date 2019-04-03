@@ -186,7 +186,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
                 invalidateCache(false);
             }
             Collection<PasField> result = new LinkedHashSet<PasField>();
-            result.addAll(getPubicFields());
+            result.addAll(getPublicFields());
             result.addAll(getPrivateFields());
             return result;
         }
@@ -266,7 +266,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     @Override
     @NotNull
-    public Collection<PasField> getPubicFields() {
+    public Collection<PasField> getPublicFields() {
         return getMembers(publicCache, PUBLIC_BUILDER).all.values();
     }
 
@@ -385,7 +385,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Nullable
     @Override
     public PascalRoutine getPublicRoutine(String reducedName) {
-        return RoutineUtil.findRoutine(getPubicFields(), reducedName);
+        return RoutineUtil.findRoutine(getPublicFields(), reducedName);
     }
 
     @Nullable
@@ -433,13 +433,6 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
             collectFields(section, PasField.Visibility.PRIVATE, res.all, res.redeclared);
 
-            for (SmartPsiElementPointer<PasEntityScope> unitPtr : PascalModuleImpl.this.getPrivateUnits()) {
-                PasEntityScope unit = unitPtr.getElement();
-                if (unit != null) {
-                    res.all.put(unit.getName().toUpperCase(), new PasField(PascalModuleImpl.this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
-                }
-            }
-
             res.stamp = getStamp(getContainingFile());
             LOG.debug(String.format("Unit %s private: %d", getName(), res.all.size()));
             return res;
@@ -464,13 +457,6 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             }
 
             collectFields(section, PasField.Visibility.PUBLIC, res.all, res.redeclared);
-
-            for (SmartPsiElementPointer<PasEntityScope> unitPtr : PascalModuleImpl.this.getPublicUnits()) {
-                PasEntityScope unit = unitPtr.getElement();
-                if (unit != null) {
-                    res.all.put(unit.getName().toUpperCase(), new PasField(PascalModuleImpl.this, unit, unit.getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
-                }
-            }
 
             LOG.debug(String.format("Unit %s public: %d", getName(), res.all.size()));
             return res;

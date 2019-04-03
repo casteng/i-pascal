@@ -45,7 +45,7 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testRoutinesFwd() {
         PsiElement ref = myFixture.configureByFile("routinesFwd.pas").findElementAt(95);
         PsiElement decl = SectionToggle.getRoutineForwardDeclaration((PasRoutineImplDeclImpl) ref.getParent().getParent());
-        assertEquals(46, decl.getTextRange().getStartOffset());
+        assertEquals(85, decl.getTextRange().getStartOffset());
     }
 
     private List<PascalNamedElement> retrieveSymbols(String filename) {
@@ -75,7 +75,10 @@ public class SectionToggleTest extends LightPlatformCodeInsightFixtureTestCase {
             assertTrue(String.format("Implementation of %s found but should not", decl.getName()), !invalid || (impl == null));
             printElement("Impl: " + decl.getName(), impl);
             assertTrue(String.format("Wrong implementation of %s found", decl.getName()), invalid || impl.getName().endsWith(decl.getName()));
-            impls.add((PascalRoutine) SectionToggle.retrieveImplementation(decl, false));
+            PsiElement declarationFound = SectionToggle.retrieveImplementation(decl, false);
+            if (declarationFound instanceof PascalRoutine) {
+                impls.add((PascalRoutine) declarationFound);
+            }
         }
 
         for (PascalRoutine impl : impls) {

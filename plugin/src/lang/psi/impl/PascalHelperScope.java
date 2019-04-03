@@ -10,6 +10,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.util.ModuleUtil;
@@ -88,10 +89,15 @@ class PascalHelperScope extends PascalHelperNamed {
                         if ((existing != null) && (field.offset > existing.offset)) {
                             field.offset = existing.offset;               // replace field but keep offset to resolve fields declared later
                         }
+                        final String nameUpper = name.toUpperCase();
                         if (field.fieldType == PasField.FieldType.ROUTINE) {
                             members.put(memberName, field);
+                            if (!memberName.contains(nameUpper) || isParameterlessRoutine(field)) {
+                                members.put(nameUpper, field);
+                            }
+                        } else {
+                            members.put(nameUpper, field);
                         }
-                        members.put(name.toUpperCase(), field);
                     } else {
                         redeclaredMembers.add(namedElement);
                     }
@@ -100,11 +106,17 @@ class PascalHelperScope extends PascalHelperNamed {
         }
     }
 
+    private static boolean isParameterlessRoutine(final PasField field) {
+        final PascalNamedElement el = field.getElement();
+        return (el instanceof PascalRoutine) && ((PascalRoutine) el).getFormalParameterNames().isEmpty();
+    }
+
     // Add forward declared field even if it exists as we need full declaration
     // Routines can have various signatures
     private static boolean shouldAddField(PasField existing, PascalNamedElement namedElement) {
         return (null == existing) || (PsiUtil.isForwardClassDecl(existing.getElement())
-                || ((existing.fieldType == PasField.FieldType.ROUTINE) && (existing.offset > namedElement.getTextRange().getStartOffset())));
+                || (existing.fieldType == PasField.FieldType.ROUTINE));
+//                || ((existing.fieldType == PasField.FieldType.ROUTINE) && (existing.offset > namedElement.getTextRange().getStartOffset())));
     }
 
     private static PasField addField(PasEntityScope owner, String name, PascalNamedElement namedElement, PasField.Visibility visibility) {

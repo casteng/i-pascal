@@ -106,11 +106,16 @@ public class SectionToggle {
             if (routine != null) {
                 return routine;
             } else if (!strict || !RoutineUtil.isOverloaded((PasExportedRoutine) container.element)) {                          // Try to find implementation w/o parameters
-                PasField field = checkRoutineField(((PascalModule) container.scope).getPrivateField(container.prefix + container.element.getName()));
-                if (strict && (field != null) && hasParametersOrReturnType((PascalRoutine) field.getElement())) {           // Only empty parameters list and return type allowed in strict mode
-                    return null;
-                } else {
-                    return field != null ? field.getElement() : null;
+                final String name = container.prefix + container.element.getName();
+                final Collection<PasField> fields = ((PasModuleImpl) container.scope).getPrivateFields();
+                for (PasField field : fields) {
+                    if (field.fieldType == PasField.FieldType.ROUTINE && name.equalsIgnoreCase(field.name)) {
+                        if (strict && hasParametersOrReturnType((PascalRoutine) field.getElement())) {           // Only empty parameters list and return type allowed in strict mode
+                            return null;
+                        } else {
+                            return field.getElement();
+                        }
+                    }
                 }
             }
         }
@@ -188,11 +193,21 @@ public class SectionToggle {
     }
 
     private static PasField retrieveField(PasEntityScope scope, String name) {
+        PasField result;
         if (scope instanceof PasModuleImpl) {
-            return checkRoutineField(((PasModuleImpl) scope).getPublicField(name));
+            result = checkRoutineField(((PasModuleImpl) scope).getPublicField(name));
         } else {
-            return checkRoutineField(scope.getField(name));
+            result = checkRoutineField(scope.getField(name));
         }
+        if (null == result) {                                // search for routine with same name to handle short routine header form in implementation part
+            final Collection<PasField> fields = scope instanceof PasModuleImpl ? ((PasModuleImpl) scope).getPublicFields() : scope.getAllFields();
+            for (PasField field : fields) {
+                if (field.fieldType == PasField.FieldType.ROUTINE && name.equalsIgnoreCase(field.name)) {
+                    return field;
+                }
+            }
+        }
+        return result;
     }
 
     private static PascalRoutine retrieveRoutine(PasEntityScope scope, String name) {
@@ -317,7 +332,7 @@ public class SectionToggle {
     @NotNull
     public static Collection<PasField> getDeclFields(PasEntityScope scope) {
         if (scope instanceof PascalModule) {
-            return ((PascalModule) scope).getPubicFields();
+            return ((PascalModule) scope).getPublicFields();
         } else if (scope != null) {
             return scope.getAllFields();
         } else {
