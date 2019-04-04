@@ -41,12 +41,17 @@ import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.resolve.Resolve;
+import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
+import com.siberika.idea.pascal.lang.search.routine.ParamCountRoutineMatcher;
+import com.siberika.idea.pascal.lang.search.routine.RoutineMatcher;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Author: George Bakhtadze
@@ -156,20 +161,41 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
 
     public static String calcFormalParameterType(PsiElement param) {
         PasCallExpr callExpr = RoutineUtil.retrieveCallExpr(param);
-        if (null == callExpr) {
+        PasFullyQualifiedIdent ident = callExpr != null ? PsiTreeUtil.findChildOfType(callExpr.getExpr(), PasFullyQualifiedIdent.class) : null;
+        if (null == ident) {
             return null;
         }
-        Collection<PascalRoutineEntity> routines = PasReferenceUtil.resolveRoutines(callExpr);
+
+        AtomicReference<String> result = new AtomicReference<>();
+
         int paramIndex = ParameterInfoUtils.getCurrentParameterIndex(callExpr.getArgumentList().getNode(), param.getTextRange().getStartOffset(), PasTypes.COMMA);
-        for (PascalRoutineEntity routine : routines) {
-            if (RoutineUtil.isSuitable(callExpr, routine)) {
-                List<String> paramTypeList = routine.getFormalParameterTypes();
-                if ((paramIndex >= 0) && (paramIndex < paramTypeList.size())) {
-                    return routine.getFormalParameterTypes().get(paramIndex);
-                }
+
+        ResolveContext context = new ResolveContext(PasField.TYPES_PROPERTY_SPECIFIER, true);
+        final RoutineMatcher matcher = new ParamCountRoutineMatcher(ident.getNamePart(), callExpr.getArgumentList().getExprList().size()) {
+            @Override
+            protected boolean onMatch(final PasField field, final PascalRoutine routine) {
+                return false;
             }
-        }
-        return null;
+        };
+        Resolve.resolveExpr(NamespaceRec.fromElement(ident), context,
+                new ResolveProcessor() {
+                    @Override
+                    public boolean process(final PasEntityScope originalScope, final PasEntityScope scope, final PasField field, final PasField.FieldType type) {
+                        if (!matcher.process(Collections.singleton(field))) {
+                            final PascalNamedElement el = field.getElement();
+                            if (el instanceof PascalRoutineEntity) {
+                                final PascalRoutineEntity routine = (PascalRoutineEntity) el;
+                                if ((paramIndex >= 0) && (paramIndex < routine.getFormalParameterNames().size())) {
+                                    result.set(routine.getFormalParameterTypes().get(paramIndex));
+                                    return false;
+                                }
+                            }
+                        }
+                        return true;
+                    }
+                });
+
+        return result.get();
     }
 
     public static String inferType(PasExpr expression) {

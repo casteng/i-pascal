@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.10</version>
+    <version>2.20</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,11 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>2.20</p>
+        <ul>
+            <li>Inherited keyword resolves to inherited method</li>
+            <li>Overloaded methods support in resolve</li>
+        </ul>
         <p>2.10</p>
         <ul>
             <li>Class/record helpers support and line markers</li>

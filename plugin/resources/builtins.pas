@@ -203,8 +203,12 @@ const
     function Pred(const X): Variant;
     // Converts a specified address to a pointer.
     function Ptr(Address: Integer): Pointer;
+    // Read reads data from standard input.
+    procedure Read();
     // Read reads data from a file.
     procedure Read(var t: Text);
+    // Read reads a line of text from standard input.
+    procedure ReadLn();
     // Read reads a line of text from a file.
     procedure ReadLn(var t: Text);
     // ReallocMem reallocates a memory block.

@@ -2,5 +2,6 @@ package com.siberika.idea.pascal.lang.references.resolve;
 
 public enum ResolveOptions {
     // FQN last part
-    LAST_PART
+    LAST_PART,
+    PROPERTY_SPECIFIER
 }

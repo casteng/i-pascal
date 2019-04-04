@@ -6,6 +6,7 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
+import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -36,6 +37,9 @@ public class Resolve {
             ExpressionProcessor expressionProcessor = new ExpressionProcessor(fqn, context, processor);
             expressionProcessor.resolveExprTypeScope((PascalExpression) expr, true);
         } else {
+            if (fqn.getParentIdent() instanceof PasClassPropertySpecifier) {
+                context.options.add(ResolveOptions.PROPERTY_SPECIFIER);
+            }
             final FQNResolver fqnResolver = new FQNResolver(null, fqn, context) {
                 @Override
                 boolean processField(final PasEntityScope scope, final PasField field) {

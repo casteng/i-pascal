@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
 import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRecordDecl;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -93,6 +94,16 @@ abstract class FQNResolver {
     boolean processDefault(PasEntityScope scope, String fieldName) {
         PasField field = scope.getField(fieldName);
         if (field != null) {
+            if (field.fieldType == PasField.FieldType.ROUTINE) {
+                PascalNamedElement el = field.getElement();
+                if (el instanceof PascalRoutine) {
+                    if (!(((PascalRoutine) el).getFormalParameterNames().isEmpty()
+                            || context.options.contains(ResolveOptions.PROPERTY_SPECIFIER) && fqn.isTarget()
+                    )) {   // routines with parameters allowed only when resolving a property specifier
+                        return true;
+                    }
+                }
+            }
             fqn.next();
             wasType = field.fieldType == PasField.FieldType.TYPE;
             if (!fqn.isComplete()) {
@@ -100,6 +111,7 @@ abstract class FQNResolver {
                 return (fieldScope != null) && resolveNext(fieldScope);
             } else {
                 return processField(scope, field);
+//                return !((null == context.matcher) || context.matcher.process(Collections.singleton(field))) || processField(scope, field);
             }
         }
         return true;
