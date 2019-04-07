@@ -144,7 +144,7 @@ public class DelphiSdkType extends BasePascalSdkType {
     @NotNull
     private String[] getVersionLines(String sdkHome) {
         try {
-            String out = SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getDCC32Executable(sdkHome).getAbsolutePath(), PascalSdkUtil.DELPHI_PARAMS_VERSION_GET);
+            String out = SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getDCC32Executable(sdkHome).getAbsolutePath(), SysUtils.SHORT_TIMEOUT, PascalSdkUtil.DELPHI_PARAMS_VERSION_GET);
             return out != null ? out.split("\n", 3) : EMPTY_STRINGS;
         } catch (PascalException e) {
             LOG.info("Error: " + e.getMessage(), e);

@@ -35,7 +35,7 @@ import java.util.List;
 public class FPCSdkType extends BasePascalSdkType {
 
     private static final Logger LOG = Logger.getInstance(FPCSdkType.class.getName());
-    private static final String[] LIBRARY_DIRS = {"rtl", "rtl-objpas", "pthreads", "regexpr", "x11", "windows"};
+    private static final String[] LIBRARY_DIRS = {"rtl", "rtl-objpas", "rtl-console", "pthreads", "regexpr", "x11", "windows"};
 
     @NotNull
     public static FPCSdkType getInstance() {
@@ -94,7 +94,7 @@ public class FPCSdkType extends BasePascalSdkType {
     public String getVersionString(String sdkHome) {
         LOG.info("Getting version for SDK path: " + sdkHome);
         try {
-            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getFPCExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_VERSION_GET);
+            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getFPCExecutable(sdkHome).getAbsolutePath(), SysUtils.SHORT_TIMEOUT, PascalSdkUtil.FPC_PARAMS_VERSION_GET);
         } catch (PascalException e) {
             LOG.info("Error: " + e.getMessage(), e);
         } catch (RuntimeException e) {
@@ -107,7 +107,7 @@ public class FPCSdkType extends BasePascalSdkType {
     private static String getTargetString(String sdkHome) {
         LOG.info("Getting target for SDK path: " + sdkHome);
         try {
-            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getFPCExecutable(sdkHome).getAbsolutePath(), PascalSdkUtil.FPC_PARAMS_TARGET_GET);
+            return SysUtils.runAndGetStdOut(sdkHome, PascalSdkUtil.getFPCExecutable(sdkHome).getAbsolutePath(), SysUtils.SHORT_TIMEOUT, PascalSdkUtil.FPC_PARAMS_TARGET_GET);
         } catch (PascalException e) {
             LOG.info("Error: " + e.getMessage(), e);
         }

@@ -21,12 +21,8 @@ import java.io.IOException;
 public class SysUtils {
     public static final Logger LOG = Logger.getInstance(SysUtils.class.getName());
 
-    public static final int STANDARD_TIMEOUT = 10 * 1000;
-    @NotNull
-    public static ProcessOutput getProcessOutput(@NotNull final String workDir, @NotNull final String exePath,
-                                                 @NotNull final String... arguments) throws ExecutionException {
-        return getProcessOutput(STANDARD_TIMEOUT, workDir, exePath, arguments);
-    }
+    public static final int LONG_TIMEOUT = 5 * 60 * 1000;
+    public static final int SHORT_TIMEOUT = 5 * 1000;
 
     @NotNull
     public static ProcessOutput getProcessOutput(final int timeout, @NotNull final String workDir,
@@ -46,7 +42,7 @@ public class SysUtils {
 
     @NotNull
     public static ProcessOutput execute(@NotNull final GeneralCommandLine cmd) throws ExecutionException {
-        return execute(cmd, STANDARD_TIMEOUT);
+        return execute(cmd, LONG_TIMEOUT);
     }
 
     @NotNull
@@ -58,10 +54,10 @@ public class SysUtils {
     }
 
     @Nullable
-    public static String runAndGetStdOut(String workDir, String exePath, String...params) throws PascalException {
+    public static String runAndGetStdOut(String workDir, String exePath, int timeoutMs, String...params) throws PascalException {
         final ProcessOutput processOutput;
         try {
-            processOutput = getProcessOutput(workDir, exePath, params);
+            processOutput = getProcessOutput(timeoutMs, workDir, exePath, params);
         } catch (final ExecutionException e) {
             return null;
         }
@@ -87,4 +83,5 @@ public class SysUtils {
             LOG.warn("Error closing resource", e);
         }
     }
+    
 }

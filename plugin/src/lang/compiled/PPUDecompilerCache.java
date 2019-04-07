@@ -112,7 +112,7 @@ public class PPUDecompilerCache {
         if (files.isEmpty()) {
             throw new PascalRTException(PascalBundle.message("decompile.file.notfound", key));
         }
-        return SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
+        return SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), SysUtils.LONG_TIMEOUT, PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
     }
 
     File retrievePpuDump(String key) throws IOException {
@@ -131,7 +131,7 @@ public class PPUDecompilerCache {
     private static String getPPUDumpVersion(File ppuDump) {
         String res = "";
         try {
-            res = SysUtils.runAndGetStdOut(ppuDump.getParent(), ppuDump.getCanonicalPath(), PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_VERSION);
+            res = SysUtils.runAndGetStdOut(ppuDump.getParent(), ppuDump.getCanonicalPath(), SysUtils.SHORT_TIMEOUT, PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_VERSION);
             if (res != null) {
                 int i1 = res.indexOf("Version");
                 int i2 = res.indexOf("\n");
