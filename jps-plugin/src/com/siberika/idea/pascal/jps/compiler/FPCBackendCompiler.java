@@ -80,11 +80,14 @@ public class FPCBackendCompiler extends PascalBackendCompiler {
 
         if (pascalSdkData != null) {
             if (isDebug) {
-                String[] compilerOptionsDebug = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS_DEBUG.getKey()).split("\\s+");
-                Collections.addAll(commandLine, compilerOptionsDebug);
+                String debugOpts = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS_DEBUG.getKey());
+                if (StringUtil.isNotEmpty(debugOpts)) {
+                    Collections.addAll(commandLine, debugOpts.split("\\s+"));
+                }
             } else {
-                String[] compilerOptions = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS.getKey()).split("\\s+");
-                Collections.addAll(commandLine, compilerOptions);
+                String compilerOptions = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS.getKey());
+                if (StringUtil.isNotEmpty(compilerOptions))
+                    Collections.addAll(commandLine, compilerOptions.split("\\s+"));
             }
         }
         return true;

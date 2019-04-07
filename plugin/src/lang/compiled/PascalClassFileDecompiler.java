@@ -26,4 +26,5 @@ public class PascalClassFileDecompiler extends ClassFileDecompilers.Full {
     public boolean accepts(@NotNull VirtualFile file) {
         return (file.getFileType() == PPUFileType.INSTANCE) || (file.getFileType() == DCUFileType.INSTANCE);
     }
+
 }

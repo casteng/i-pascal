@@ -547,6 +547,8 @@
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex"/>
         <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalHelperIndex"/>
 
+        <fileBasedIndex implementation="com.siberika.idea.pascal.lang.compiled.PascalFakeCompiledIndex" />
+
 <!--        <intentionAction>
             <className>com.siberika.idea.pascal.ide.RemoveWithAction</className>
             <category>Pascal/Control Flow</category>

@@ -71,7 +71,6 @@ public class DCUFileDecompiler implements BinaryFileDecompiler {
         if ((sdk.getHomePath() == null) || !(sdk.getSdkType() instanceof DelphiSdkType)) {
             return PascalBundle.message("decompile.wrong.sdktype.delphi");
         }
-
         File decompilerCommand = BasePascalSdkType.getDecompilerCommand(sdk, NULL_FILE);
         String result = "";
         try {
