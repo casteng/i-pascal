@@ -5,6 +5,7 @@ import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.concurrency.JobLauncher;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ex.ApplicationEx;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressIndicatorProvider;
 import com.intellij.openapi.util.Computable;
@@ -67,7 +68,8 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
         }
         Object lock = new Object();
         ProgressIndicator indicator = ProgressIndicatorProvider.getGlobalProgressIndicator();
-        JobLauncher.getInstance().invokeConcurrentlyUnderProgress(tasks, indicator, computable -> {
+        JobLauncher.getInstance().invokeConcurrentlyUnderProgress(tasks, indicator, true,
+                ((ApplicationEx)ApplicationManager.getApplication()).isInImpatientReader(), computable -> {
             List<LineMarkerInfo> infos = computable.compute();
             synchronized (lock) {
                 result.addAll(infos);
