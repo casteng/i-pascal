@@ -27,15 +27,18 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.PascalClassByNameContributor;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.references.resolve.Resolve;
+import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
 import com.siberika.idea.pascal.lang.stub.PascalStructIndex;
 import com.siberika.idea.pascal.lang.stub.StubUtil;
+import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Author: George Bakhtadze
@@ -150,22 +153,28 @@ public class PascalDefinitionsSearch extends QueryExecutorBase<PasEntityScope, D
     }
 
     private static PasEntityScope resolveParent(PascalStructType parent, PascalStructType descendant, String name) {
-        ResolveContext ctx = new ResolveContext(descendant, PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null, null);
+        ResolveContext ctx = new ResolveContext(descendant, PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null, ModuleUtil.retrieveUnitNamespaces(descendant));
         NamespaceRec rec = NamespaceRec.fromFQN(descendant, name);
-        Collection<PasField> fields = PasReferenceUtil.resolve(rec, ctx, 0);
-        for (PasField field : fields) {
-            PascalNamedElement el = field.getElement();
-            if (el instanceof PasGenericTypeIdent) {
-                return PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(el, name), null, PsiUtil.isFromLibrary(parent));
-            } else if (ResolveUtil.isStubPowered(el)) {          // not tested
-                ctx = new ResolveContext(StubUtil.retrieveScope((PascalStubElement) el), PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null, ctx.unitNamespaces);
-                PasField.ValueType types = ResolveUtil.resolveTypeWithStub((PascalStubElement) el, ctx, 0);
-                if (types != null) {
-                    return types.getTypeScopeStub();
+        AtomicReference<PasEntityScope> result = new AtomicReference<>();
+        Resolve.resolveExpr(rec, ctx, new ResolveProcessor() {
+            @Override
+            public boolean process(final PasEntityScope originalScope, final PasEntityScope scope, final PasField field, final PasField.FieldType type) {
+                PascalNamedElement el = field.getElement();
+                if (el instanceof PasGenericTypeIdent) {
+                    result.set(PasReferenceUtil.resolveTypeScope(NamespaceRec.fromFQN(el, name), null, PsiUtil.isFromLibrary(parent)));
+                    return false;
+                } else if (ResolveUtil.isStubPowered(el)) {          // not tested
+                    final ResolveContext ctx2 = new ResolveContext(StubUtil.retrieveScope((PascalStubElement) el), PasField.TYPES_TYPE, PsiUtil.isFromLibrary(parent), null, ctx.unitNamespaces);
+                    PasField.ValueType types = ResolveUtil.resolveTypeWithStub((PascalStubElement) el, ctx2, 0);
+                    if (types != null) {
+                        result.set(types.getTypeScopeStub());
+                        return false;
+                    }
                 }
+                return true;
             }
-        }
-        return null;
+        });
+        return result.get();
     }
 
 }

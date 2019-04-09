@@ -11,8 +11,8 @@ import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.resolve.Types;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 
@@ -64,7 +64,7 @@ class PascalHelperScope extends PascalHelperNamed {
         if (null == field) {
             return null;
         }
-        PasEntityScope tempScope = PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE,
+        PasEntityScope tempScope = Types.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE,
                 true, null, ModuleUtil.retrieveUnitNamespaces(field.owner)));
         return tempScope != null ? tempScope : scope;
     }

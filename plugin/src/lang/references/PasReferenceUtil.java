@@ -193,7 +193,7 @@ public class PasReferenceUtil {
 
 //-------------------------------------------------------------------
 
-    static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
+    private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
         final PascalNamedElement element = field.getElement();
         if (recursionCount > PascalParserUtil.MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
             throw new PascalRTException("Too much recursion during resolving type for: " + element);
@@ -303,7 +303,7 @@ public class PasReferenceUtil {
     }
 
     @Nullable
-    public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
+    private static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
         if (ResolveUtil.isStubPowered(field.owner)) {
             return ResolveUtil.retrieveFieldTypeScope(field, context, recursionCount);
         }

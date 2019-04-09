@@ -58,6 +58,7 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.references.resolve.Resolve;
 import com.siberika.idea.pascal.lang.search.GotoSuper;
 import com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex;
 import com.siberika.idea.pascal.util.DocUtil;
@@ -102,7 +103,6 @@ import static com.siberika.idea.pascal.lang.context.CodePlace.USES;
 public class PascalCtxCompletionContributor extends CompletionContributor {
 
     private static final Map<IElementType, TokenSet> DO_THEN_OF_MAP = initDoThenOfMap();
-    private static final String COMPLETE_RECORD_CONSTANT = "Complete record constant";
 
     @Override
     public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
@@ -208,7 +208,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
                     if (field.fieldType == PasField.FieldType.ROUTINE) {
                         //filter out strict private methods as well as private ones from other units
                         if (field.visibility != PasField.Visibility.STRICT_PRIVATE && (field.visibility != PasField.Visibility.PRIVATE || isFromSameUnit(field, completionContext.completionParameters.getOriginalFile()))) {
-                            fieldToEntity(result, field, completionContext);
+                            FieldCollectProcessor.fieldToEntity(result, field, completionContext);
                         }
                     }
                 }
@@ -353,7 +353,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             namespace.clearTarget();
             ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) file.getVirtualFile()).getContextElement()),
                     PasField.TYPES_ALL, false, null, null);
-            fieldsToEntities(result, PasReferenceUtil.resolve(namespace, resolveContext, 0), completionContext);
+            Resolve.resolveExpr(namespace, resolveContext, new FieldCollectProcessor(result, completionContext));
             result.stopHere();
             return true;
         } else {
@@ -515,22 +515,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
 
     private static void fieldsToEntities(CompletionResultSet result, Collection<PasField> fields, EntityCompletionContext completionContext) {
         for (PasField pasField : fields) {
-            fieldToEntity(result, pasField, completionContext);
-        }
-    }
-
-    private static void fieldToEntity(CompletionResultSet result, PasField field, EntityCompletionContext completionContext) {
-        if ((field.name != null) && !field.name.contains(ResolveUtil.STRUCT_SUFFIX)) {
-            LookupElement lookupElement;
-            LookupElementBuilder el = CompletionUtil.buildFromElement(field) ? CompletionUtil.createLookupElement(completionContext.completionParameters.getEditor(), field) : LookupElementBuilder.create(field.name);
-            if (null == el) {
-                return;
-            }
-            lookupElement = el.appendTailText(" : " + field.fieldType.toString().toLowerCase(), true).
-                    withCaseSensitivity(true).withTypeText(field.owner != null ? field.owner.getName() : "-", false);
-            int priority = completionContext.calcPriority(lookupElement.getLookupString(), field.name, field.fieldType, completionContext.isFromOtherFile(field));
-            lookupElement = priority != 0 ? PrioritizedLookupElement.withPriority(lookupElement, priority) : lookupElement;
-            result.caseInsensitive().addElement(lookupElement);
+            FieldCollectProcessor.fieldToEntity(result, pasField, completionContext);
         }
     }
 

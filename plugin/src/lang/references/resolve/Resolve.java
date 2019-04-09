@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("Convert2Lambda")
 public class Resolve {
 
+    // Returns True if no candidates found or all processor invocations returned True
     public static boolean resolveExpr(NamespaceRec fqn, ResolveContext context, ResolveProcessor processor) {
         PsiElement expr = PsiTreeUtil.skipParentsOfType(fqn.getParentIdent(),
                 PasFullyQualifiedIdent.class, PasSubIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
@@ -35,7 +36,7 @@ public class Resolve {
                 expr = expr.getParent();
             }
             ExpressionProcessor expressionProcessor = new ExpressionProcessor(fqn, context, processor);
-            expressionProcessor.resolveExprTypeScope((PascalExpression) expr, true);
+            return expressionProcessor.resolveExprTypeScope((PascalExpression) expr, true);
         } else {
             if (fqn.getParentIdent() instanceof PasClassPropertySpecifier) {
                 context.options.add(ResolveOptions.PROPERTY_SPECIFIER);
@@ -46,9 +47,8 @@ public class Resolve {
                     return processor.process(scope, scope, field, field.fieldType);
                 }
             };
-            fqnResolver.resolve(true);
+            return fqnResolver.resolve(true);
         }
-        return true;
     }
 
     @Nullable

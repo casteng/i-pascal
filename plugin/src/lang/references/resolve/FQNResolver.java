@@ -272,8 +272,8 @@ abstract class FQNResolver {
 
     private static void calcScope(NamespaceRec fqn, ResolveContext context) {
         if (context.scope == null) {
-            if (fqn.getParentIdent() instanceof PascalStubElement) {
-                LOG.info("!!!*** FQN parent is a stub element: " + ((PascalStubElement) fqn.getParentIdent()).getName());
+            if (ResolveUtil.isStubPowered(fqn.getParentIdent())) {
+                LOG.info("!!!*** FQN parent is stub-powered: " + ((PascalStubElement) fqn.getParentIdent()).getName());
                 StubElement stub = ((PascalStubElement) fqn.getParentIdent()).retrieveStub();
                 stub = stub != null ? stub.getParentStub() : null;
                 context.scope = stub != null ? (PasEntityScope) stub.getPsi() : null;

@@ -121,7 +121,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
         PascalNamedElement defProp = currentScope != null ? Resolve.getDefaultProperty(currentScope) : null;    // Replace scope if indexing default array property
         if (defProp != null && defProp.getParent() instanceof PasClassProperty) {
             PasTypeID typeId = ((PasClassProperty) defProp.getParent()).getTypeID();
-            final PasField field = typeId != null ? resolveType(currentScope, typeId.getFullyQualifiedIdent()) : null;
+            final PasField field = typeId != null ? Types.resolveType(currentScope, typeId.getFullyQualifiedIdent()) : null;
             if (field != null) {
                 currentScope = retrieveScope(currentScope, field);
             } else {
@@ -129,26 +129,6 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             }
         }
         return result;
-    }
-
-    private static PasField resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
-        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null, null);
-
-        final FQNResolver fqnResolver = new FQNResolver(scope, NamespaceRec.fromElement(fullyQualifiedIdent), context) {
-            @Override
-            boolean processField(final PasEntityScope scope, final PasField field) {
-                if (!field.isConstructor()) {
-                    Types.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, context.unitNamespaces));
-                }
-                result = field;
-                return false;
-            }
-        };
-        if (!fqnResolver.resolve(true)) {
-            return fqnResolver.result;
-        } else {
-            return null;
-        }
     }
 
     private PasField callTarget;
@@ -216,6 +196,8 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                         return false;
                     }
                 }
+            } else {
+                return false;
             }
         }
         return true;

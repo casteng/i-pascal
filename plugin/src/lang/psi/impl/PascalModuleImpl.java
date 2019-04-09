@@ -13,7 +13,6 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
-import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasBlockGlobal;
@@ -24,9 +23,10 @@ import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.references.resolve.Resolve;
+import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
 import com.siberika.idea.pascal.lang.stub.PasModuleStub;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
@@ -403,21 +403,31 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         @Override
         public Idents call() throws Exception {
             Idents res = new Idents();
-            //noinspection unchecked
-            for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(PascalModuleImpl.this, PasSubIdentImpl.class, PasRefNamedIdentImpl.class)) {
-                if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
-                    Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(namedElement), new ResolveContext(PasField.TYPES_ALL, true), 0);
-                    if (!refs.isEmpty()) {
-                        if (ContextUtil.belongsToInterface(namedElement)) {
-                            res.identsIntf.put(namedElement, refs.iterator().next());
-                        } else {
-                            res.identsImpl.put(namedElement, refs.iterator().next());
-                        }
-                    }
-                }
+            final PsiElement intf = PsiUtil.getModuleInterfaceSection(PascalModuleImpl.this);
+            if (intf != null) {
+                collectIdents(intf, res.identsIntf);
             }
+            final PsiElement impl = PsiUtil.getModuleImplementationSection(PascalModuleImpl.this);
+            collectIdents(impl, res.identsImpl);
             res.stamp = getStamp(getContainingFile());
             return res;
+        }
+    }
+
+    private void collectIdents(final PsiElement section, final Map<PascalNamedElement, PasField> identsMap) {
+        //noinspection unchecked
+        for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, PasSubIdentImpl.class, PasRefNamedIdentImpl.class)) {
+            if (!PsiUtil.isLastPartOfMethodImplName(namedElement)) {
+                Resolve.resolveExpr(NamespaceRec.fromElement(namedElement), new ResolveContext(PasField.TYPES_ALL, true),
+                        new ResolveProcessor() {
+                            @Override
+                            public boolean process(final PasEntityScope originalScope, final PasEntityScope scope, final PasField field, final PasField.FieldType type) {
+                                identsMap.put(namedElement, field);
+                                return false;
+                            }
+                        }
+                );
+            }
         }
     }
 

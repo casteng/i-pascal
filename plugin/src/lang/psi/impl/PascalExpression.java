@@ -42,13 +42,13 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.resolve.Resolve;
 import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
+import com.siberika.idea.pascal.lang.references.resolve.Types;
 import com.siberika.idea.pascal.lang.search.routine.ParamCountRoutineMatcher;
 import com.siberika.idea.pascal.lang.search.routine.RoutineMatcher;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -80,7 +80,8 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
 
         if (expr instanceof PasReferenceExpr) {
             res = getChildType(getFirstChild(expr));
-            PasField.ValueType fieldType = resolveType(retrieveScope(res), ((PasReferenceExpr) expr).getFullyQualifiedIdent());
+            final PasField field = Types.resolveType(retrieveScope(res), ((PasReferenceExpr) expr).getFullyQualifiedIdent());
+            PasField.ValueType fieldType = field != null ? field.getValueType() : null;
             if (fieldType != null) {
                 res.add(fieldType);
             }
@@ -95,7 +96,8 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                 if ((defProp != null) && (defProp.getParent() instanceof PasClassProperty)) {
                     PasTypeID typeId = ((PasClassProperty) defProp.getParent()).getTypeID();
                     if (typeId != null) {
-                        PasField.ValueType fieldType = resolveType(scope, typeId.getFullyQualifiedIdent());
+                        PasField field = Types.resolveType(scope, typeId.getFullyQualifiedIdent());
+                        PasField.ValueType fieldType = field != null ? field.getValueType() : null;
                         if (fieldType != null) {
                             res = new SmartList<PasField.ValueType>(fieldType);
                         }
@@ -110,19 +112,6 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         }
 
         return res;
-    }
-
-    private static PasField.ValueType resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
-        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null, null);
-        final Collection<PasField> references = PasReferenceUtil.resolve(NamespaceRec.fromElement(fullyQualifiedIdent), context, 0);
-        if (!references.isEmpty()) {
-            PasField field = references.iterator().next();
-            if (!field.isConstructor()) {        // TODO: move constructor handling to main resolve routine
-                PasReferenceUtil.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, context.unitNamespaces));
-            }
-            return field.getValueType();
-        }
-        return null;
     }
 
     private static List<PasField.ValueType> getChildType(PsiElement child) {
@@ -307,34 +296,43 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         if (null == ref) {
             return null;
         }
-        Collection<PasField> routines = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(ref), new ResolveContext(PasField.TYPES_ROUTINE, true), 0);
-
-        PascalRoutine suitable = null;
-        for (PasField routine : routines) {
-            PascalNamedElement el = routine.getElement();
-            if (el instanceof PascalRoutine) {
-                suitable = (PascalRoutine) el;
-                if (RoutineUtil.isSuitable(expression, suitable)) {
-                    if (suitable.isConstructor()) {
-                        // TODO: handle metaclass constructor calls
-                        if (expression.getExpr() instanceof PasReferenceExpr) {
-                            String typeName = expression.getExpr().getText();
-                            return typeName.substring(0, typeName.length() - suitable.getName().length() - 1);
+        AtomicReference<String> result = new AtomicReference<>();
+        AtomicReference<PascalRoutine> suitable = new AtomicReference<>();
+        if (Resolve.resolveExpr(NamespaceRec.fromElement(ref), new ResolveContext(PasField.TYPES_ROUTINE, true),
+                new ResolveProcessor() {
+                    @Override
+                    public boolean process(final PasEntityScope originalScope, final PasEntityScope scope, final PasField field, final PasField.FieldType type) {
+                        PascalNamedElement el = field.getElement();
+                        if (el instanceof PascalRoutine) {
+                            PascalRoutine suitableRoutine = (PascalRoutine) el;
+                            suitable.set(suitableRoutine);
+                            if (RoutineUtil.isSuitable(expression, suitableRoutine)) {
+                                if (suitableRoutine.isConstructor()) {
+                                    // TODO: handle metaclass constructor calls
+                                    if (expression.getExpr() instanceof PasReferenceExpr) {
+                                        String typeName = expression.getExpr().getText();
+                                        result.set(typeName.substring(0, typeName.length() - suitableRoutine.getName().length() - 1));
+                                        return false;
+                                    }
+                                } else {
+                                    result.set(suitableRoutine.getFunctionTypeStr());
+                                    return false;
+                                }
+                            }
                         }
-                    } else {
-                        return suitable.getFunctionTypeStr();
+                        return true;
                     }
                 }
+        )) {
+            if (suitable.get() != null) {
+                return suitable.get().getFunctionTypeStr();
             }
         }
-        if (suitable != null) {
-            return suitable.getFunctionTypeStr();
-        }
         // Handle as typecast
-        if ((expression.getExpr() instanceof PasReferenceExpr) && (expression.getArgumentList().getExprList().size() == 1)) {
+        if ((result.get() == null) && (expression.getExpr() instanceof PasReferenceExpr) && (expression.getArgumentList().getExprList().size() == 1)) {
             return expression.getExpr().getText();
         }
-        return null;
+        return result.get();
     }
 
     private static String infereUnaryExprType(PasUnaryExpr expression) {

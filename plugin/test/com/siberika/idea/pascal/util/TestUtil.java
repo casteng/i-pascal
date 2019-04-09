@@ -20,8 +20,8 @@ import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.resolve.Types;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 public class TestUtil {
     public static PasEntityScope findClass(PasModule module, String name) {
         PasField parentField = module.getField(name);
-        return PasReferenceUtil.retrieveFieldTypeScope(parentField, new ResolveContext(module, PasField.TYPES_TYPE, true, null, null));
+        return Types.retrieveFieldTypeScope(parentField, new ResolveContext(module, PasField.TYPES_TYPE, true, null, null));
     }
 
     @NotNull

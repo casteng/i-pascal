@@ -82,7 +82,6 @@ class PascalHelperRoutine extends PascalHelperScope {
     }
 
     private void resolveParameterTypes(List<String> formalParameterTypes) {
-        ensureCacheActual();
         String[] parameterTypes = new String[formalParameterTypes.size()];
         for (int i = 0, formalParameterTypesSize = formalParameterTypes.size(); i < formalParameterTypesSize; i++) {
             String typeName = formalParameterTypes.get(i);

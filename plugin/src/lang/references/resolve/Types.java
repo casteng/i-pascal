@@ -1,6 +1,8 @@
 package com.siberika.idea.pascal.lang.references.resolve;
 
+import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
@@ -19,5 +21,25 @@ public class Types {
 
     public static PasEntityScope retrieveScope(final List<PasField.ValueType> types) {
         return PascalExpression.retrieveScope(types);
+    }
+
+    public static PasField resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
+        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null, null);
+
+        final FQNResolver fqnResolver = new FQNResolver(scope, NamespaceRec.fromElement(fullyQualifiedIdent), context) {
+            @Override
+            boolean processField(final PasEntityScope scope, final PasField field) {
+                if (!field.isConstructor()) {
+                    retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, context.unitNamespaces));
+                }
+                result = field;
+                return false;
+            }
+        };
+        if (!fqnResolver.resolve(true)) {
+            return fqnResolver.result;
+        } else {
+            return null;
+        }
     }
 }
