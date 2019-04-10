@@ -103,6 +103,16 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(false, false, false);
     }
 
+    public void testRoutineCalls() {
+        myFixture.configureByFiles("routineCalls.pas");
+        myFixture.checkHighlighting(false, false, false);
+    }
+
+    public void testRoutineCallsUnresolved() {
+        myFixture.configureByFiles("routineCallsUnresolved.pas");
+        myFixture.checkHighlighting(false, false, false);
+    }
+
     public void testRoutinesForward() {
         myFixture.configureByFiles("routinesForward.pas");
         myFixture.checkHighlighting(false, false, false);

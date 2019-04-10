@@ -16,7 +16,6 @@ import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
 import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRecordDecl;
-import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -94,7 +93,7 @@ abstract class FQNResolver {
     boolean processDefault(PasEntityScope scope, String fieldName) {
         PasField field = scope.getField(fieldName);
         if (field != null) {
-            if (field.fieldType == PasField.FieldType.ROUTINE) {
+            /*if (field.fieldType == PasField.FieldType.ROUTINE) {
                 PascalNamedElement el = field.getElement();
                 if (el instanceof PascalRoutine) {
                     if (!(((PascalRoutine) el).getFormalParameterNames().isEmpty()
@@ -103,7 +102,7 @@ abstract class FQNResolver {
                         return true;
                     }
                 }
-            }
+            }*/
             fqn.next();
             wasType = field.fieldType == PasField.FieldType.TYPE;
             if (!fqn.isComplete()) {

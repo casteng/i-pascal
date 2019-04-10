@@ -92,7 +92,7 @@ class PascalHelperScope extends PascalHelperNamed {
                         final String nameUpper = name.toUpperCase();
                         if (field.fieldType == PasField.FieldType.ROUTINE) {
                             members.put(memberName, field);
-                            if (!memberName.contains(nameUpper) || isParameterlessRoutine(field)) {
+                            if (!members.containsKey(nameUpper) || isParameterlessRoutine(field)) {
                                 members.put(nameUpper, field);
                             }
                         } else {

@@ -7,10 +7,11 @@ import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasInheritedCall;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.search.routine.ParamCountRoutineMatcher;
+import com.siberika.idea.pascal.lang.search.routine.ParamCountFieldMatcher;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,10 +35,10 @@ class PascalInheritedReference extends PsiReferenceBase<PasInheritedCall> {
         AtomicReference<PsiElement> result = new AtomicReference<>();
         final PasEntityScope method = PsiUtil.getNearestAffectingScope(myElement);
         if (method instanceof PascalRoutine) {
-            final ParamCountRoutineMatcher matcher = new ParamCountRoutineMatcher(method.getNamePart(), ((PascalRoutine) method).getFormalParameterNames().size()) {
+            final ParamCountFieldMatcher matcher = new ParamCountFieldMatcher(method.getNamePart(), ((PascalRoutine) method).getFormalParameterNames().size()) {
                 @Override
-                protected boolean onMatch(final PasField field, final PascalRoutine routine) {
-                    result.set(routine);
+                protected boolean onMatch(final PasField field, final PascalNamedElement element) {
+                    result.set(element);
                     return false;
                 }
             };
@@ -46,7 +47,7 @@ class PascalInheritedReference extends PsiReferenceBase<PasInheritedCall> {
         return result.get();
     }
 
-    private void findInheritedMethod(final PasEntityScope parentScope, final ParamCountRoutineMatcher matcher, int recCount) {
+    private void findInheritedMethod(final PasEntityScope parentScope, final ParamCountFieldMatcher matcher, int recCount) {
         if ((parentScope != null) && (recCount > MAX_RECURSION_COUNT)) {
             LOG.info(String.format("ERROR: findInheritedMethod: reached max recursion count for %s", parentScope.getUniqueName()));
             return;

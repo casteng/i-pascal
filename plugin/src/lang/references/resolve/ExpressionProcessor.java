@@ -20,8 +20,8 @@ import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
-import com.siberika.idea.pascal.lang.search.routine.ParamCountRoutineMatcher;
-import com.siberika.idea.pascal.lang.search.routine.RoutineMatcher;
+import com.siberika.idea.pascal.lang.search.routine.FieldMatcher;
+import com.siberika.idea.pascal.lang.search.routine.ParamCountFieldMatcher;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -131,13 +131,9 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
         return result;
     }
 
-    private PasField callTarget;
-    private PasEntityScope callTargetScope;
-
     private boolean handleCall(final PasCallExpr callExpr, final boolean lastPart) {
         final PasExpr expr = callExpr.getExpr();
         if (expr instanceof PasReferenceExpr) {             // call of a routine specified explicitly with its name
-            callTarget = null;
             PasExpr scopeExpr = ((PasReferenceExpr) expr).getExpr();
             if (scopeExpr != null) {
                 resolveExprTypeScope((PascalExpression) scopeExpr, false);
@@ -152,13 +148,13 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                 boolean processScope(final PasEntityScope scope, final String fieldName) {
                     final PasArgumentList args = callExpr.getArgumentList();
                     if (this.fqn.isTarget()) {
-                        RoutineMatcher matcher = new ParamCountRoutineMatcher(fullyQualifiedIdent.getNamePart(), args.getExprList().size()) {
+                        FieldMatcher matcher = new ParamCountFieldMatcher(fullyQualifiedIdent.getNamePart(), args.getExprList().size()) {
                             @Override
-                            protected boolean onMatch(final PasField field, final PascalRoutine routine) {
+                            protected boolean onMatch(final PasField field, final PascalNamedElement element) {
                                 if (lastPart) {                  // Return resolved field
                                     return ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType);
                                 } else {                         // Resolve next scope
-                                    currentScope = routine.isConstructor() ? (lastPartScope != null ? lastPartScope : scope) : retrieveScope(scope, field);
+                                    currentScope = ((element instanceof PascalRoutine) && ((PascalRoutine) element).isConstructor()) ? ((lastPartScope != null) ? lastPartScope : scope) : retrieveScope(scope, field);
                                     return false;
                                 }
                             }
@@ -166,18 +162,13 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                         if (!matcher.process(scope.getAllFields())) {
                             return false;
                         }
-                    } else {                          // No need to resolve intermediate names of FQN as routines
+                    } else {                                     // No need to resolve intermediate names of FQN as routines
                         PasField field = scope.getField(fieldName);
                         if (field != null) {
                             this.fqn.next();
                             lastPartScope = getScope(scope, field, field.fieldType);
                             return (lastPartScope != null) && resolveNext(lastPartScope);
                         }
-                    }
-                    // Get call target field to use if exact call target will be not found
-                    if (null == callTarget) {
-                        callTarget = scope.getField(fieldName);
-                        callTargetScope = scope;
                     }
                     return true;
                 }
@@ -187,18 +178,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                     return true;
                 }
             };
-            if (fqnResolver.resolve(scopeExpr == null)) {               // No call candidates found
-                if (callTarget != null) {
-                    if (lastPart) {                  // Return resolved field
-                        return ExpressionProcessor.this.processor.process(currentScope, callTargetScope, callTarget, callTarget.fieldType);
-                    } else {                         // Resolve next scope
-                        currentScope = retrieveScope(callTargetScope, callTarget);
-                        return false;
-                    }
-                }
-            } else {
-                return false;
-            }
+            return fqnResolver.resolve(scopeExpr == null);
         }
         return true;
     }

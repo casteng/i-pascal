@@ -4,6 +4,6 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 
 import java.util.Collection;
 
-public interface RoutineMatcher {
+public interface FieldMatcher {
     boolean process(Collection<PasField> fields);
 }

@@ -15,7 +15,7 @@ end;
 
 function TGList.GetCurrent: T;
 begin
-    Result := T();
+    Result := specialize Add(1, 2);
 end;
 
 end.

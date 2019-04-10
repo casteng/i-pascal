@@ -80,7 +80,7 @@ const
     // Prepares an existing file for adding text to the end.
     function Append(var F: Text): Integer;
     // Tests whether a Boolean expression is true.
-    function Assert(expr: Boolean; const msg: string): boolean; overload;
+    function Assert(expr: Boolean): boolean; overload;
     // Tests whether a Boolean expression is true.
     function Assert(expr: Boolean; const msg: string): boolean; overload;
     // Associates the name of an external file with a file variable.

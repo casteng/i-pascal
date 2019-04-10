@@ -1,9 +1,14 @@
 type
   TClosure = reference to procedure(const param: Integer);
-var
-c: TClosure;
+
+procedure test(a: TClosure);
 begin
-  c := _GenVector.Create(
+end;
+
+var c: TClosure;
+
+begin
+  c := test(
   function : Integer begin
     Result := 2;
   end

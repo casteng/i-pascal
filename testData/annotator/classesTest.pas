@@ -62,7 +62,7 @@ var
 begin
     TOuterClass.staticField := TOuterClass.y;
     x.outerProc(1);
-    y := TOuterClass.TInnerClass.Create();
+    y := TOuterClass.TInnerClass.Create(nil);
     y.innerProc;
     m2(1,2,3);
 end.

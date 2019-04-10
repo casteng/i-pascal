@@ -43,8 +43,8 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.resolve.Resolve;
 import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
 import com.siberika.idea.pascal.lang.references.resolve.Types;
-import com.siberika.idea.pascal.lang.search.routine.ParamCountRoutineMatcher;
-import com.siberika.idea.pascal.lang.search.routine.RoutineMatcher;
+import com.siberika.idea.pascal.lang.search.routine.FieldMatcher;
+import com.siberika.idea.pascal.lang.search.routine.ParamCountFieldMatcher;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -160,9 +160,9 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         int paramIndex = ParameterInfoUtils.getCurrentParameterIndex(callExpr.getArgumentList().getNode(), param.getTextRange().getStartOffset(), PasTypes.COMMA);
 
         ResolveContext context = new ResolveContext(PasField.TYPES_PROPERTY_SPECIFIER, true);
-        final RoutineMatcher matcher = new ParamCountRoutineMatcher(ident.getNamePart(), callExpr.getArgumentList().getExprList().size()) {
+        final FieldMatcher matcher = new ParamCountFieldMatcher(ident.getNamePart(), callExpr.getArgumentList().getExprList().size()) {
             @Override
-            protected boolean onMatch(final PasField field, final PascalRoutine routine) {
+            protected boolean onMatch(final PasField field, final PascalNamedElement element) {
                 return false;
             }
         };
