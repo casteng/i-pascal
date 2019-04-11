@@ -159,7 +159,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     @Nullable
     public final PasField getField(final String name) {
-        if (retrieveStub() != null) {
+        if ((name != null) && (retrieveStub() != null)) {
             return getFieldStub(name);
         } else {
             PasField result = getPublicField(name);
@@ -299,7 +299,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     private PasField getPasField(String name, Cache<String, PascalHelperScope.Members> cache, Callable<? extends PascalHelperScope.Members> builder) {
-        PasField res = getMembers(cache, builder).all.get(name.toUpperCase());
+        PasField res = name != null ? getMembers(cache, builder).all.get(name.toUpperCase()) : null;
         if ((res != null) && !PsiUtil.isElementUsable(res.getElement())) {
             LOG.info(String.format("WARN: element for name %s in %s is invalid. Clearing caches.", name, getUniqueName()));
             invalidateCache(false);

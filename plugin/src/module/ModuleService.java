@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.module;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.util.PsiUtil;
@@ -49,6 +50,8 @@ public class ModuleService implements ModuleComponent {
                 if (result != null) {
                     cache.put(key, PsiUtil.createSmartPointer(result));
                 }
+            } catch (ProcessCanceledException e) {
+                throw e;
             } catch (Exception e) {
                 LOG.error("Error calculating value", e);
             }

@@ -68,8 +68,8 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                         if (field != null) {
                             return processField(scope, field);
                         }
-                        fqn.next();
                         if (isDefault) {
+                            fqn.next();
                             PasField defaultField = new PasField(scope, scope, "default", PasField.FieldType.CONSTANT, PasField.Visibility.PUBLIC);
                             return processField(scope, defaultField);
                         }

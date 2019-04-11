@@ -91,7 +91,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
 
     PasField getFieldStub(String name) {
         if (fieldsMap.containsKey(PascalHelperScope.KEY_EMPTY_MARKER)) {
-            PasNamedStub stub = fieldsMap.get(name.toUpperCase());
+            PasNamedStub stub = name != null ? fieldsMap.get(name.toUpperCase()) : null;
             return stub != null ? new PasField(stub, name) : null;
         }
 
