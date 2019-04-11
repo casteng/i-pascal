@@ -11,8 +11,11 @@
     <change-notes><![CDATA[
         <p>2.20</p>
         <ul>
+            <li>Overloaded methods support in resolve (partial)</li>
+            <li>Filter by usage type in find usages</li>
             <li>Inherited keyword resolves to inherited method</li>
-            <li>Overloaded methods support in resolve</li>
+            <li>Remove file size limit for compiled files while indexing (Issue #88 on BB)</li>
+            <li>Many minor fixes</li>
         </ul>
         <p>2.10</p>
         <ul>
@@ -473,6 +476,7 @@
 
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
         <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
+        <usageTypeProvider implementation="com.siberika.idea.pascal.lang.references.PascalUsageTypeProvider"/>
         <referencesSearch implementation="com.siberika.idea.pascal.lang.references.PascalReferencesSearcher"/>
         <targetElementEvaluator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalTargetElementEvaluator"/>
 

@@ -191,9 +191,6 @@ public class Context {
         if (tempPos instanceof PasRaiseStatement) {
             addToContext(CodePlace.STMT_RAISE);
         }
-        if (tempPos instanceof PasHandler) {
-            addToContext(CodePlace.STMT_EXCEPT);
-        }
         if (tempPos instanceof PasCaseStatement) {
             addToContext(CodePlace.STMT_CASE);
         }
@@ -230,6 +227,9 @@ public class Context {
         }
         if (tempPos instanceof PasTypeDecl) {
             tempPos = tempPos.getParent();
+        }
+        if (tempPos instanceof PasHandler) {
+            addToContext(CodePlace.STMT_EXCEPT);
         }
 
         if (tempPos instanceof PasArrayIndex) {
@@ -278,6 +278,15 @@ public class Context {
         if (tempPos instanceof PasTypeSection) {
             addToContext(CodePlace.SECTION_TYPE);
         }
+
+        if (tempPos instanceof PasFormalParameter) {
+            addToContext(CodePlace.FORMAL_PARAMETER);
+        }
+
+        if (tempPos instanceof PasUsesClause) {
+            addToContext(CodePlace.USES);
+        }
+
         if (tempPos instanceof PasUnitInterface) {
             addToContext(CodePlace.INTERFACE);
         }
