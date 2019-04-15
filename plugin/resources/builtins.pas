@@ -116,7 +116,11 @@ const
     // Concatenates two or more strings into one.
     function Concat(S1, S2: string): string;
     // Returns a substring of a string or a segment of a dynamic array.
-    function Copy(S; Index, Count: Integer): string;
+    function Copy(const S: string; From: integer = 1; Count: integer = MaxInt): string; overload;
+    // Returns a substring of a string or a segment of a dynamic array.
+    function Copy(S; Index, From: Integer): string; overload;
+    // Returns a substring of a string or a segment of a dynamic array.
+    function Copy(S): string; overload;
     // Decrements a variable by 1 or N.
     procedure Dec(var X); overload;
     // Decrements a variable by 1 or N.

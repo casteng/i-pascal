@@ -31,6 +31,7 @@ public class PascalCompiledStubBuilder extends ClsStubBuilder {
         FileViewProvider vp = manager.findViewProvider(fileContent.getFile());
         PsiFile file = vp != null ? vp.getPsi(PascalLanguage.INSTANCE) : null;
         if (file instanceof CompiledFileImpl) {
+            LOG.info(String.format("Computing stub index for %s", file.getVirtualFile().getPath()));
             return (PsiFileStub<?>) ((CompiledFileImpl) file).calcStubTree().getRoot();
         } else {
             VirtualFile vf = fileContent.getFile();

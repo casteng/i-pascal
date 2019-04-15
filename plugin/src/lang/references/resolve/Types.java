@@ -7,6 +7,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.util.ModuleUtil;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class Types {
     }
 
     public static PasField resolveType(PasEntityScope scope, PasFullyQualifiedIdent fullyQualifiedIdent) {
-        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null, null);
+        ResolveContext context = new ResolveContext(scope, PasField.TYPES_ALL, true, null, ModuleUtil.retrieveUnitNamespaces(fullyQualifiedIdent));
 
         final FQNResolver fqnResolver = new FQNResolver(scope, NamespaceRec.fromElement(fullyQualifiedIdent), context) {
             @Override
