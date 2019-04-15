@@ -487,7 +487,7 @@ private externalSpecifier   ::= "name" ConstExpression | INDEX ConstExpressionOr
 ProcBodyBlock               ::= ProcForwardDecl | ExternalDirective | BlockLocal [";"]
 ProcForwardDecl             ::= FORWARD ";" FunctionDirective*
 
-private dispIDDirective     ::= DISPID Expression {pin=1}
+private dispIDDirective     ::= DISPID Expression [";"] {pin=1}
 private callConvention      ::= CDECL | PASCAL | REGISTER | SAFECALL | STDCALL | EXPORT | varagrs
 private abstractDirective   ::= ABSTRACT | FINAL
 private bindingDirective    ::= (MESSAGE Expression) | STATIC | DYNAMIC | OVERRIDE | VIRTUAL
@@ -500,12 +500,14 @@ private identListDecl       ::= identListDeclItem identListDeclRest*
 private identListDeclRest   ::= "," identListDeclItem {pin=1}
 private identListDeclItem   ::= NamedIdentDecl
 
-VarSection	                ::=	varKey VarDeclaration+ {pin=1 name="var section" recoverWhile=rec_block_local_end}
+VarSection	                ::=	varKey varDeclarations [";"] {pin=1 name="var section" recoverWhile=rec_block_local_end}
+private varDeclarations     ::= VarDeclaration+ {recoverWhile=rec_block_local_end}
 private varKey	            ::=	VAR | THREADVAR
 VarDeclaration	            ::=	customAttributes* identListDecl ":" TypeDecl [VarValueSpec] hintingDirective* ";" {pin=2 recoverWhile=rec_name}
 VarValueSpec	            ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
-ConstSection                ::= constKey ConstDeclaration+ {pin=1 name="const section" recoverWhile=rec_block_local_end}
+ConstSection                ::= constKey constDeclarations [";"] {pin=1 name="const section" recoverWhile=rec_block_local_end}
+private constDeclarations   ::= ConstDeclaration+ {recoverWhile=rec_block_local_end}
 private constKey            ::= CONST |	RESOURCESTRING
 ConstDeclaration            ::= customAttributes* NamedIdentDecl [":" TypeDecl] "=" ConstExpression hintingDirective* ";" {pin=2 recoverWhile=rec_name}
 NamedIdentDecl              ::= identifier {extends="com.siberika.idea.pascal.lang.psi.impl.PascalIdentDeclImpl"
@@ -514,7 +516,8 @@ NamedIdentDecl              ::= identifier {extends="com.siberika.idea.pascal.la
                                             elementTypeClass="com.siberika.idea.pascal.lang.stub.PasIdentStubElementType"}
 NamedIdent                  ::= identifier
 
-TypeSection                 ::= TYPE TypeDeclaration+ {pin=1 name="type section" recoverWhile=rec_block_local_end}
+TypeSection                 ::= TYPE typeDeclarations [";"] {pin=1 name="type section" recoverWhile=rec_block_local_end}
+private typeDeclarations    ::= TypeDeclaration+ {recoverWhile=rec_block_local_end}
 TypeDeclaration             ::= customAttributes* GenericTypeIdent "=" type {pin=2 recoverWhile=rec_name}
 private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
