@@ -434,8 +434,8 @@ public class PPUDumpParser {
         private void appendReference(Section sec, int pos, String refName, String prefix, String postfix, String def) {
             Object unit = sec.data.get(refName + "/unit");
             if (unit != null) {
-                pos = sec.insertText(pos, prefix);
-                pos = resolveUsed(sec, pos, sec.data.get(refName + "/id"), sec.data.get(refName + "/symid"), Integer.parseInt((String) unit));
+//                pos = sec.insertText(pos, prefix);
+                pos = resolveUsed(sec, pos, sec.data.get(refName + "/id"), sec.data.get(refName + "/symid"), Integer.parseInt((String) unit), prefix);
                 pos = sec.insertText(pos, postfix);
             } else {
                 appendLocalReference(sec, pos, sec.data.get(refName + "/id"), sec.data.get(refName + "/symid"), prefix, postfix, def,
@@ -480,15 +480,15 @@ public class PPUDumpParser {
         }
 
         @SuppressWarnings("UnusedAssignment")
-        private int resolveUsed(Section sec, int pos, Object id, Object symid, int unitIndex) {
+        private int resolveUsed(Section sec, int pos, Object id, Object symid, int unitIndex, String prefix) {
             String unitName = getUnit(unitIndex);
-            pos = sec.insertText(pos, unitName + ".");
+//            pos = sec.insertText(pos, unitName + ".");
             String def = "__unresolved_" + id;
             Section section = cache != null ? cache.getContents(unitName, null) : null;
             if (section != null) {
-                return appendLocalReference(sec, pos, id, symid, "", "", def, section.idNameMap, section.symidNameMap);
+                return appendLocalReference(sec, pos, id, symid, prefix + unitName + ".", "", def, section.idNameMap, section.symidNameMap);
             } else {
-                return sec.insertText(pos, def);
+                return sec.insertText(pos, unitName + "." + def);
             }
         }
 
