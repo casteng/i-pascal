@@ -325,13 +325,24 @@ public class PPUDumpParser {
                 sec.insertVisibility(LF.length(), getDefaultVisibility());
             } else if ("/obj".equalsIgnoreCase(sec.type)) {
                 StringBuilder psb = new StringBuilder(LF + "type ");
-                psb.append(sec.name).append(" = ").append(sec.getDataStr("objtype"));
-                int pos = psb.length();
-                if (!StringUtil.isEmpty(sec.getDataStr("iid"))) {
-                    psb.append(LF).append(INDENT).append("['").append(sec.getDataStr("iid")).append("']");
+                String objType = sec.getDataStr("objtype");
+                if ("helper".equalsIgnoreCase(objType)) {
+                    psb.append(sec.name).append(" = class helper");   // TODO: handle record helpers
+                    appendReference(sec, psb.length(), "ancestor", "(", ")", UNRESOLVED_INTERNAL);
+                    psb.append(" for ");
+                    int pos = psb.length();
+                    psb.append(LF);
+                    sec.insertText(0, psb.toString());
+                    appendReference(sec, pos, "helperparent", "", "", UNRESOLVED_INTERNAL);
+                } else {
+                    psb.append(sec.name).append(" = ").append(objType);
+                    int pos = psb.length();
+                    if (!StringUtil.isEmpty(sec.getDataStr("iid"))) {
+                        psb.append(LF).append(INDENT).append("['").append(sec.getDataStr("iid")).append("']");
+                    }
+                    sec.insertText(0, psb.toString());
+                    appendReference(sec, pos, "ancestor", "(", ")", UNRESOLVED_INTERNAL);
                 }
-                sec.insertText(0, psb.toString());
-                appendReference(sec, pos, "ancestor", "(", ")", UNRESOLVED_INTERNAL);
             } else if ("/rec".equalsIgnoreCase(sec.type)) {
                 StringBuilder psb = new StringBuilder("");
                 if (!StringUtil.isEmpty(sec.name)) {
