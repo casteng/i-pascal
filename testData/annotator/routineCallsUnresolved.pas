@@ -12,7 +12,7 @@ type
 
 implementation
 
-function test1(a: Int): Int;
+function test1;
 begin
 end;
 
