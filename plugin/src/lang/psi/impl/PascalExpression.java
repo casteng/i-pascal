@@ -60,7 +60,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiElement {
 
     private static final int MAX_KIND_DIFF = 2;
-    private static final String BUILTIN_SELF_UPPER = PasEntityScope.BUILTIN_SELF.toUpperCase();
 
     public PascalExpression(ASTNode node) {
         super(node);
@@ -429,7 +428,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     public static String getTypeIdentifier(PasField.ValueType type) {
         if (type.field != null) {
             PascalNamedElement el = type.field.getElement();
-            if ((type.field.fieldType == PasField.FieldType.PSEUDO_VARIABLE) && BUILTIN_SELF_UPPER.equals(type.field.name.toUpperCase())) {
+            if ((type.field.fieldType == PasField.FieldType.PSEUDO_VARIABLE) && PasEntityScope.BUILTIN_SELF_UPPER.equals(type.field.name.toUpperCase())) {
                 return el instanceof PascalStructType ? el.getName() : null;
             } else if (el instanceof PasGenericTypeIdent) {
                 return el.getText();

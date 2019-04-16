@@ -203,8 +203,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
         for (PascalNamedElement parameter : params) {
             addField(res, parameter, PasField.FieldType.VARIABLE);
         }
-        if (routine.isFunction() && !res.all.containsKey(BUILTIN_RESULT.toUpperCase())) {
-            res.all.put(BUILTIN_RESULT.toUpperCase(), new PasField(this, routine, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
+        if (routine.isFunction() && !res.all.containsKey(BUILTIN_RESULT_UPPER)) {
+            res.all.put(BUILTIN_RESULT_UPPER.toUpperCase(), new PasField(this, routine, BUILTIN_RESULT, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE));
         }
     }
 
@@ -258,7 +258,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             PasField field = new PasField(this, scope, BUILTIN_SELF, PasField.FieldType.PSEUDO_VARIABLE, PasField.Visibility.STRICT_PRIVATE);
             PasTypeDecl typeDecl = (PasTypeDecl) scope.getParent();
             field.setValueType(new PasField.ValueType(field, PasField.Kind.STRUCT, null, typeDecl));
-            res.all.put(BUILTIN_SELF.toUpperCase(), field);
+            res.all.put(BUILTIN_SELF_UPPER, field);
         }
     }
 

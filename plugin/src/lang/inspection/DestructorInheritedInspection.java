@@ -4,10 +4,7 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.ide.actions.quickfix.IdentQuickFixes;
-import com.siberika.idea.pascal.lang.psi.PasBlockBody;
-import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
-import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
@@ -22,18 +19,14 @@ public class DestructorInheritedInspection extends PascalLocalInspectionBase {
     public void checkRoutine(PascalRoutine routine, ProblemsHolder holder, boolean isOnTheFly) {
         if (routine instanceof PasRoutineImplDecl) {
             if (RoutineUtil.isDestructor(routine)) {
-                PasProcBodyBlock block = ((PasRoutineImplDecl) routine).getProcBodyBlock();
-                PasBlockLocal blockLocal = block != null ? block.getBlockLocal() : null;
-                PasBlockBody blockBody = blockLocal != null ? blockLocal.getBlockBody() : null;
-                PasCompoundStatement code = blockBody != null ? blockBody.getCompoundStatement() : null;
+                PasCompoundStatement code = RoutineUtil.retrieveRoutineCodeBlock(routine);
                 if (code != null) {
                     PsiElement inherited = PsiUtil.findChildByElementType(code, PasTypes.INHERITED);
-
                     if (null == inherited) {
                         PsiElement end = code.getLastChild();
                         holder.registerProblem(holder.getManager().createProblemDescriptor(end, message("inspection.warn.destructor.no.inherited"), true,
                                 ProblemHighlightType.GENERIC_ERROR_OR_WARNING, isOnTheFly,
-                                new IdentQuickFixes.addInheritedAction()));
+                                new IdentQuickFixes.AddInheritedAction()));
                     }
                 }
             }

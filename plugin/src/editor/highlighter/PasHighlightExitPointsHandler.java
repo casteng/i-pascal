@@ -15,6 +15,7 @@ import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRaiseStatement;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PascalPsiElement;
+import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -66,7 +67,7 @@ public class PasHighlightExitPointsHandler extends HighlightUsagesHandlerBase<Ps
             if (PsiUtil.getNearestAffectingScope(st) == scope) {
                 if (st instanceof PasFullyQualifiedIdent) {
                     List<PasSubIdent> subidents = ((PasFullyQualifiedIdent) st).getSubIdentList();
-                    if (!subidents.isEmpty() && "RESULT".equalsIgnoreCase(subidents.get(0).getName())) {
+                    if (!subidents.isEmpty() && RoutineUtil.isFunctionResultReference(subidents.get(0), scope.getName())) {
                         if (PascalReadWriteAccessDetector.isWriteAccess(st)) {
                             addWriteOccurrence(st.getFirstChild());
                         } else {

@@ -7,7 +7,10 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
+import com.siberika.idea.pascal.lang.psi.PasBlockBody;
+import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
+import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
@@ -15,7 +18,9 @@ import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasFunctionDirective;
 import com.siberika.idea.pascal.lang.psi.PasParamType;
+import com.siberika.idea.pascal.lang.psi.PasProcBodyBlock;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
+import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -226,5 +231,16 @@ public class RoutineUtil {
             }
         }
         return null;
+    }
+
+    public static boolean isFunctionResultReference(PascalNamedElement element, String name) {
+        return PasEntityScope.BUILTIN_RESULT.equalsIgnoreCase(element.getName()) || name.equalsIgnoreCase(element.getName());
+    }
+
+    public static PasCompoundStatement retrieveRoutineCodeBlock(PascalRoutine routine) {
+        PasProcBodyBlock block = ((PasRoutineImplDecl) routine).getProcBodyBlock();
+        PasBlockLocal blockLocal = block != null ? block.getBlockLocal() : null;
+        PasBlockBody blockBody = blockLocal != null ? blockLocal.getBlockBody() : null;
+        return blockBody != null ? blockBody.getCompoundStatement() : null;
     }
 }

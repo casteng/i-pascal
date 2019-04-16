@@ -16,7 +16,9 @@ import java.util.List;
  */
 public interface PasEntityScope extends PascalNamedElement, NavigatablePsiElement, HasUniqueName {
     String BUILTIN_RESULT = "Result";
+    String BUILTIN_RESULT_UPPER = BUILTIN_RESULT.toUpperCase();
     String BUILTIN_SELF = "Self";
+    String BUILTIN_SELF_UPPER = BUILTIN_SELF.toUpperCase();
 
     @NotNull
     String getName();

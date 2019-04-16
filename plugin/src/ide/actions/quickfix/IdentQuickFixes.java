@@ -8,7 +8,9 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.PascalDocumentationProvider;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
+import com.siberika.idea.pascal.lang.psi.PasExitStatement;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
 import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
@@ -111,7 +113,7 @@ public class IdentQuickFixes {
         }
     }
 
-    public static class addInheritedAction extends PascalBaseFix {
+    public static class AddInheritedAction extends PascalBaseFix {
 
         @Nls
         @NotNull
@@ -124,9 +126,52 @@ public class IdentQuickFixes {
             PsiElement end = descriptor.getPsiElement();
             PsiElement code = end != null ? end.getParent() : null;
             if (code != null) {
-                code.addBefore(PasElementFactory.createElementFromText(end.getProject(), "inherited;\n"), end);
-                DocUtil.reformat(code, true);
+                addElements(code, end, false, "inherited", ";");
             }
+        }
+    }
+
+    public static class AddResultAssignmentAction extends PascalBaseFix {
+
+        @Nls
+        @NotNull
+        public String getName() {
+            return message("action.result.assignment.add");
+        }
+
+        @Override
+        public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+            PsiElement element = descriptor.getPsiElement();
+            if ((null == element) || (element.getParent() == null)) {
+                return;
+            }
+            PsiElement parent = element.getParent();
+            if (element instanceof PasExitStatement) {
+                addElements(parent, element, false, "Result", ":=", "0", ";");
+            } else {
+                PsiElement begin = parent.getFirstChild();
+                if (begin != null) {
+                    addElements(parent, begin, true, "Result", ":=", "0", ";");
+                }
+            }
+        }
+
+    }
+
+    private static void addElements(PsiElement parent, PsiElement anchor, boolean after, String first, String...other) {
+        PsiElement newElement;
+        Project project = parent.getProject();
+        if (after) {
+            newElement = parent.addAfter(PasElementFactory.createElementFromText(project, first), anchor);
+        } else {
+            newElement = parent.addBefore(PasElementFactory.createElementFromText(project, first), anchor);
+        }
+        for (String elementText : other) {
+            newElement = parent.addAfter(PasElementFactory.createElementFromText(project, elementText), newElement);
+        }
+        PasModule module = PsiUtil.getElementPasModule(parent);
+        if (module != null) {
+            DocUtil.reformatRange(module, parent.getTextRange().getStartOffset(), parent.getTextRange().getEndOffset());
         }
     }
 

@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,12 +41,13 @@ public class PascalHighlightHandlerFactory extends HighlightUsagesHandlerFactory
     }
 
     static boolean isResultReference(PsiElement target) {
+        PasEntityScope scope = PsiUtil.getNearestAffectingScope(target);
+        if (!isFunction(scope)) {
+            return false;
+        }
         if (target.getParent() instanceof PasSubIdent) {
             PasSubIdent ident = (PasSubIdent) target.getParent();
-            if ("RESULT".equalsIgnoreCase(ident.getName())) {
-                PasEntityScope scope = PsiUtil.getNearestAffectingScope(target);
-                return isFunction(scope);
-            }
+            return RoutineUtil.isFunctionResultReference(ident, scope.getName());
         }
         return false;
     }

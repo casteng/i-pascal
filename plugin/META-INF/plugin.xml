@@ -13,6 +13,7 @@
         <ul>
             <li>Overloaded methods support in resolve (partial)</li>
             <li>Filter by usage type in find usages</li>
+            <li>Not assigned function result inspection</li>
             <li>Inherited keyword resolves to inherited method</li>
             <li>Remove file size limit for compiled files while indexing (Issue #88 on BB)</li>
             <li>Many minor fixes</li>
@@ -418,7 +419,7 @@
 
 
     <extensions defaultExtensionNs="com.intellij">
-
+        <elementDescriptionProvider implementation=""></elementDescriptionProvider>
         <codeInsight.overrideMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalOverrideMethodsHandler"/>
         <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
 
@@ -460,6 +461,8 @@
                          implementationClass="com.siberika.idea.pascal.lang.inspection.NotImplementedInspection"/>
         <localInspection language="Pascal" displayName="No inherited destructor call detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.DestructorInheritedInspection"/>
+        <localInspection language="Pascal" displayName="No result assignment detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.ResultAssignmentInspection"/>
         <lang.inspectionSuppressor language="Pascal" implementationClass="com.siberika.idea.pascal.lang.inspection.PascalInspectionSuppressor"/>
 
         <editorNotificationProvider implementation="com.siberika.idea.pascal.sdk.SDKNotificationProvider"/>
