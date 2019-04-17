@@ -21,6 +21,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("Convert2Lambda")
@@ -28,7 +29,7 @@ public class Resolve {
 
     // Returns True if no candidates found or all processor invocations returned True
     public static boolean resolveExpr(NamespaceRec fqn, ResolveContext context, ResolveProcessor processor) {
-        PsiElement expr = PsiTreeUtil.skipParentsOfType(fqn.getParentIdent(),
+        PsiElement expr = ResolveUtil.isStubPowered(fqn.getParentIdent()) ? null : PsiTreeUtil.skipParentsOfType(fqn.getParentIdent(),
                 PasFullyQualifiedIdent.class, PasSubIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
                 PsiWhiteSpace.class, PsiErrorElement.class);
         if (expr instanceof PasReferenceExpr) {

@@ -117,11 +117,9 @@ public class PasReferenceUtil {
     /**
      * Finds and returns file of a module with the given name
      * If more than one file matches the one with longest name is returned
-     *
-     * @return list of PsiFiles
      */
     @Nullable
-    public static VirtualFile findUnitFile(@NotNull List<VirtualFile> unitFiles, @NotNull final String moduleName) {
+    private static VirtualFile findUnitFile(@NotNull List<VirtualFile> unitFiles, @NotNull final String moduleName) {
         List<VirtualFile> candidates = new ArrayList<VirtualFile>();
         for (VirtualFile virtualFile : unitFiles) {
             if (isFileOfModuleWithName(virtualFile, moduleName)) {
@@ -342,7 +340,7 @@ public class PasReferenceUtil {
             if (ResolveUtil.isStubPowered(el)) {
                 return ResolveUtil.retrieveFieldTypeScope(field, context, 0);
             }
-            PasEntityScope struct = field.getElement() != null ? PascalParserUtil.getStructTypeByIdent(field.getElement(), 0) : null;
+            PasEntityScope struct = el != null ? PascalParserUtil.getStructTypeByIdent(el, 0) : null;
             if (struct != null) {
                 return struct;
             }

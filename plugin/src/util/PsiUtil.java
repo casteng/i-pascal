@@ -17,6 +17,7 @@ import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.PsiElementProcessor;
+import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.FileContentUtil;
@@ -36,6 +37,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasSubIdentImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasTypeIDImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.stub.PasNamedStub;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -938,4 +940,13 @@ public class PsiUtil {
         return (PascalStubElement) stubbedElement;
     }
 
+    public static PsiElement retrieveElementScope(PascalNamedElement element) {
+        PasNamedStub stub = ((PascalStubElement) element).retrieveStub();
+        if (stub != null) {
+            StubElement parent = stub.getParentStub();
+            return parent != null ? parent.getPsi() : null;
+        } else {
+            return getNearestAffectingScope(element);
+        }
+    }
 }

@@ -135,7 +135,7 @@ abstract class FQNResolver {
             if (!processFirstPartScopes(context, implAffects)) {
                 return false;
             }
-            context.scope = PsiUtil.getNearestAffectingScope(context.scope);
+            context.scope = context.scope.getContainingScope();
         }
         return true;
     }
@@ -272,7 +272,7 @@ abstract class FQNResolver {
     private static void calcScope(NamespaceRec fqn, ResolveContext context) {
         if (context.scope == null) {
             if (ResolveUtil.isStubPowered(fqn.getParentIdent())) {
-                LOG.info("!!!*** FQN parent is stub-powered: " + ((PascalStubElement) fqn.getParentIdent()).getName());
+//                LOG.info("!!!*** FQN parent is stub-powered: " + ((PascalStubElement) fqn.getParentIdent()).getName());
                 StubElement stub = ((PascalStubElement) fqn.getParentIdent()).retrieveStub();
                 stub = stub != null ? stub.getParentStub() : null;
                 context.scope = stub != null ? (PasEntityScope) stub.getPsi() : null;

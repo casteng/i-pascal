@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
@@ -20,7 +21,6 @@ import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
 import com.siberika.idea.pascal.lang.context.CodePlace;
 import com.siberika.idea.pascal.lang.context.Context;
-import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
@@ -134,8 +134,8 @@ public class UsesActions {
                             if ((element instanceof PascalStubElement) &&
                                     (searchFor.equalsIgnoreCase(element.getName())
                                             || (name.toUpperCase().startsWith(searchForUpper) && (element instanceof PascalRoutine)))) {
+                                PsiElement affScope = PsiUtil.retrieveElementScope(element);
                                 String uName = ((PascalStubElement) element).getContainingUnitName();
-                                PasEntityScope affScope = PsiUtil.getNearestAffectingScope(element);
                                 if ((uName != null) && (affScope instanceof PasModule) && (((PasModule) affScope).getModuleType() == PascalModule.ModuleType.UNIT)) {
                                     unitName = uName;
                                     return false;
