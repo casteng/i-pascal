@@ -29,14 +29,14 @@ class PascalCompilerMessager implements CompilerMessager {
         String url = "";
         if (null != matcher) {
             int groupCount = matcher.groupCount();
-            if (groupCount >= 4) {
+            if (groupCount >= 5) {
                 url = matcher.group(2);
                 if (url != null) {
                     url = VirtualFileManager.extractPath(VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, url));
                 }
                 try {
                     lineNum = Integer.parseInt(matcher.group(3));
-                    colNum = Integer.parseInt(matcher.group(4));
+                    colNum = Integer.parseInt(matcher.group(5));
                 } catch (NumberFormatException ignore) {}
             }
             message = matcher.group(groupCount);
