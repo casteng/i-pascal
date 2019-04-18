@@ -24,7 +24,8 @@ public class PascalStringManipulator extends AbstractElementManipulator<PascalSt
         return getStringTokenRange(element);
     }
 
-    public static TextRange getStringTokenRange(final PascalStringImpl element) {
-        return TextRange.from(1, element.getTextLength()-2);
+    private static TextRange getStringTokenRange(final PascalStringImpl element) {
+        int textLength = element.getTextLength();
+        return textLength >= 2 ? TextRange.from(1, textLength -2) : TextRange.EMPTY_RANGE;
     }
 }

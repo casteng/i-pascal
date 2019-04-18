@@ -16,7 +16,7 @@
             <li>Not assigned function result inspection</li>
             <li>Inherited keyword resolves to inherited method</li>
             <li>Remove file size limit for compiled files while indexing (Issue #88 on BB)</li>
-            <li>Many minor fixes</li>
+            <li>Multiline injected strings support</li>
         </ul>
         <p>2.10</p>
         <ul>

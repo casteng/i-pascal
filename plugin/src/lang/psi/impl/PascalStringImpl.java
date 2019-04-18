@@ -12,13 +12,18 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Author: George Bakhtadze
  * Date: 21/01/2016
  */
 public abstract class PascalStringImpl extends PascalPsiElementImpl implements PsiLanguageInjectionHost, PascalPsiElement {
 
-    public PascalStringImpl(ASTNode node) {
+    private static final Pattern PATTERN_STRINGS = Pattern.compile("'[^']*'");
+
+    PascalStringImpl(ASTNode node) {
         super(node);
     }
 
@@ -32,7 +37,20 @@ public abstract class PascalStringImpl extends PascalPsiElementImpl implements P
         ASTNode valueNode = getNode().getFirstChildNode();
         assert valueNode instanceof LeafElement;
         if (text.length() > 1) {
-            text = text.charAt(0) + text.substring(1, text.length()-1).replace("'", "''") + text.charAt(text.length()-1);
+            StringBuilder sb = new StringBuilder();
+            Matcher m = PATTERN_STRINGS.matcher(text);
+            while (m.find()) {
+                String str = m.group();
+                if (sb.length() > 0) {
+                    str = str.replace("''", "");
+                }
+                sb.append(str);
+            }
+            text = sb.toString();
+            if (text.length() > 1) {
+                text = text.charAt(0) + text.substring(1, text.length() - 1).replace("'", "''") + text.charAt(text.length() - 1);
+                text = text.charAt(0) + text.substring(1, text.length() - 1).replace("\n", "' +\n'") + text.charAt(text.length() - 1);
+            }
         }
         ((LeafElement)valueNode).replaceWithText(text);
         return this;
@@ -77,7 +95,7 @@ public abstract class PascalStringImpl extends PascalPsiElementImpl implements P
 
             @Override
             public boolean isOneLine() {
-                return true;
+                return false;
             }
         };
     }
