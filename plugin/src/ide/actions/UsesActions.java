@@ -15,7 +15,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
 import com.intellij.psi.stubs.StubIndex;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.Processor;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.PascalImportOptimizer;
@@ -126,24 +125,19 @@ public class UsesActions {
             final GlobalSearchScope scope = module != null ? GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false) : ProjectScope.getAllScope(namedElement.getProject());
             String searchFor = namedElement.getName();
             String searchForUpper = searchFor.toUpperCase();
-            StubIndex.getInstance().processElements(PascalUnitSymbolIndex.KEY, searchForUpper, namedElement.getProject(), scope,
-                    PascalNamedElement.class, new Processor<PascalNamedElement>() {
-                        @Override
-                        public boolean process(PascalNamedElement element) {
-                            String name = element.getName();
-                            if ((element instanceof PascalStubElement) &&
-                                    (searchFor.equalsIgnoreCase(element.getName())
-                                            || (name.toUpperCase().startsWith(searchForUpper) && (element instanceof PascalRoutine)))) {
-                                PsiElement affScope = PsiUtil.retrieveElementScope(element);
-                                String uName = ((PascalStubElement) element).getContainingUnitName();
-                                if ((uName != null) && (affScope instanceof PasModule) && (((PasModule) affScope).getModuleType() == PascalModule.ModuleType.UNIT)) {
-                                    unitName = uName;
-                                    return false;
-                                }
-                            }
-                            return true;
-                        }
-                    });
+            for (PascalNamedElement element : StubIndex.getElements(PascalUnitSymbolIndex.KEY, searchForUpper, namedElement.getProject(), scope, PascalNamedElement.class)) {
+                String name = element.getName();
+                if ((element instanceof PascalStubElement) &&
+                        (searchFor.equalsIgnoreCase(element.getName())
+                                || (name.toUpperCase().startsWith(searchForUpper) && (element instanceof PascalRoutine)))) {
+                    PsiElement affScope = PsiUtil.retrieveElementScope(element);
+                    String uName = ((PascalStubElement) element).getContainingUnitName();
+                    if ((uName != null) && (affScope instanceof PasModule) && (((PasModule) affScope).getModuleType() == PascalModule.ModuleType.UNIT)) {
+                        unitName = uName;
+                        break;
+                    }
+                }
+            }
         }
 
     }

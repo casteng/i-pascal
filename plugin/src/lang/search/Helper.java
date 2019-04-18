@@ -24,7 +24,7 @@ public class Helper {
         return new ExecutorsQuery<>(new Options(entity), Collections.singletonList(new QueryExecutor()));
     }
 
-    public static boolean isHelperFor(PascalStructType helper, PascalStructType target) {
+    private static boolean isHelperFor(PascalStructType helper, PascalStructType target) {
         PascalNamedElement resolved = resolveTarget(helper);
         return (resolved == target) || PsiUtil.hasSameUniqueName(resolved, target) || (target.getManager().areElementsEquivalent(resolved, target));
     }
@@ -64,16 +64,13 @@ public class Helper {
         @Override
         public void processQuery(@NotNull Options queryParameters, @NotNull Processor<? super PascalStructType> consumer) {
             String name = queryParameters.element.getName().toUpperCase();
-            ReadAction.run(() -> StubIndex.getInstance().processElements(
-                    PascalHelperIndex.KEY, name, queryParameters.element.getProject(), queryParameters.scope, PascalStructType.class, new Processor<PascalStructType>() {
-                        @Override
-                        public boolean process(PascalStructType structType) {
-                            if (isHelperFor(structType, queryParameters.element)) {
-                                return consumer.process(structType);
-                            }
-                            return true;
-                        }
-                    }));
+            ReadAction.run(() -> {
+                for (PascalStructType structType : StubIndex.getElements(PascalHelperIndex.KEY, name, queryParameters.element.getProject(), queryParameters.scope, PascalStructType.class)) {
+                    if (isHelperFor(structType, queryParameters.element) && (!consumer.process(structType))) {
+                        break;
+                    }
+                }
+            });
         }
     }
 }

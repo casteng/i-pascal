@@ -112,12 +112,12 @@ public class NotImplementedInspection extends PascalLocalInspectionBase {
     }
 
     private boolean hasNoDescendants(PasClassTypeDecl classTypeDecl) {
-        return PascalDefinitionsSearch.processDescendingStructs(null, classTypeDecl, false, new Processor<PasEntityScope>() {
+        return PascalDefinitionsSearch.processDescendingStructs(classTypeDecl, false, new Processor<PasEntityScope>() {
             @Override
             public boolean process(PasEntityScope pascalStructType) {
                 return false;
             }
-        }, 0);
+        });
     }
 
     private class ImplementMethodFix extends PascalBaseFix {
