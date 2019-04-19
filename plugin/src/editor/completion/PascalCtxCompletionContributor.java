@@ -487,7 +487,8 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
 
     private static void addFromUnrelatedUnits(CompletionResultSet result, EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes, String pattern) {
         if (StringUtil.isNotEmpty(pattern) && completionContext.isUnrelatedUnitsEnabled()) {
-            PascalChooseByNameContributor.processByName(PascalUnitSymbolIndex.KEY, pattern, completionContext.completionParameters.getOriginalFile().getProject(), true, new Processor<PascalNamedElement>() {
+            PascalChooseByNameContributor.processByName(PascalUnitSymbolIndex.KEY, pattern.replaceAll("_", ""),
+                    completionContext.completionParameters.getOriginalFile().getProject(), true, new Processor<PascalNamedElement>() {
                 @Override
                 public boolean process(PascalNamedElement namedElement) {
                     if (!fieldTypes.contains(namedElement.getType()) || !(namedElement instanceof HasUniqueName) || !namedElement.isExported()) {

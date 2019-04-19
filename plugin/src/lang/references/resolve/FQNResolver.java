@@ -117,6 +117,9 @@ abstract class FQNResolver {
     }
 
     private boolean processScope(final PasEntityScope scope, boolean first) {
+        if (context.resultScope != null) {
+            context.resultScope.add(scope);
+        }
         if (!processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }

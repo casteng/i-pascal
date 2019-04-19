@@ -13,7 +13,7 @@ public class ResolveContext {
     public PasEntityScope scope;
     public Set<PasField.FieldType> fieldTypes;
     public final boolean includeLibrary;
-    final List<PsiElement> resultScope;
+    public final List<PsiElement> resultScope;
     public boolean disableParentNamespaces;
     public List<String> unitNamespaces;
     public Set<ResolveOptions> options = EnumSet.noneOf(ResolveOptions.class);
