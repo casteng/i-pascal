@@ -35,15 +35,14 @@ import com.siberika.idea.pascal.lang.psi.impl.PasExportedRoutineImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.psi.impl.PasVariantScope;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
+import com.siberika.idea.pascal.lang.references.resolve.Resolve;
 import com.siberika.idea.pascal.util.PsiContext;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -72,11 +71,12 @@ public class PascalAnnotator implements Annotator {
         if (PsiUtil.isEntityName(element) && !PsiUtil.isLastPartOfMethodImplName((PascalNamedElement) element)) {
             //noinspection ConstantConditions
             PascalNamedElement namedElement = (PascalNamedElement) element;
-            List<PsiElement> scopes = new SmartList<PsiElement>();
+            List<PsiElement> scopes = new SmartList<>();
             ResolveContext resolveContext = new ResolveContext(null, PasField.TYPES_ALL, true, scopes, null);
-            Collection<PasField> refs = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(element), resolveContext, 0);
 
-            if (refs.isEmpty() && !isVariantField(scopes)) {
+            boolean noTargets = Resolve.resolveExpr(NamespaceRec.fromElement(element), resolveContext, (originalScope, scope, field, type) -> false);
+
+            if (noTargets && !isVariantField(scopes)) {
                 Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
                 PsiContext context = PsiUtil.getContext(namedElement);
                 Set<AddFixType> fixes = EnumSet.of(AddFixType.VAR, AddFixType.TYPE, AddFixType.CONST, AddFixType.ROUTINE, AddFixType.UNIT_FIND); // [*] => var type const routine

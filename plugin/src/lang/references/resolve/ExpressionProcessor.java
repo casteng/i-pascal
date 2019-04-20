@@ -104,7 +104,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             Operation op = Operation.forId(((PasProductExpr) expression).getMulOp().getText());
             if (op == Operation.AS) {
                 List<PasExpr> exprs = ((PasProductExpr) expression).getExprList();
-                return exprs.size() < 2 || resolveExprTypeScope((PascalExpression) exprs.get(1), false);
+                return (exprs.size() < 2) || resolveExprTypeScope((PascalExpression) exprs.get(1), false);
             }
         } else if (expression instanceof PasCallExpr) {
             return handleCall((PasCallExpr) expression, lastPart);
@@ -167,7 +167,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                         if (field != null) {
                             this.fqn.next();
                             lastPartScope = getScope(scope, field, field.fieldType);
-                            return (lastPartScope != null) && resolveNext(lastPartScope);
+                            return (lastPartScope == null) || resolveNext(lastPartScope);
                         }
                     }
                     return true;

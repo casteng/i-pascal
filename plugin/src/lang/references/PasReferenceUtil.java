@@ -191,7 +191,7 @@ public class PasReferenceUtil {
 
 //-------------------------------------------------------------------
 
-    private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
+    public static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
         final PascalNamedElement element = field.getElement();
         if (recursionCount > PascalParserUtil.MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
             throw new PascalRTException("Too much recursion during resolving type for: " + element);

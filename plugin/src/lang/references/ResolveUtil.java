@@ -286,8 +286,9 @@ public class ResolveUtil {
             return resolveTypeForStub(type, element, typeResolveContext, recursionCount);
         } else if (element.getTypeKind() == PasField.Kind.STRUCT) {
             return retrieveStruct(element.getName(), element, typeResolveContext, ++recursionCount);
+        } else {
+            return new PasField.ValueType(null, element.getTypeKind(), null, element);
         }
-        return null;
     }
 
     private static ResolveContext getTypeResolveContext(PascalIdentDecl element, boolean includeLibrary, List<String> unitNamespaces) {

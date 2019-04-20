@@ -11,11 +11,11 @@
     <change-notes><![CDATA[
         <p>2.20</p>
         <ul>
-            <li>Overloaded methods support in resolve (partial)</li>
             <li>Filter by usage type in find usages</li>
             <li>Not assigned function result inspection</li>
             <li>Inherited keyword resolves to inherited method</li>
-            <li>Remove file size limit for compiled files while indexing (Issue #88 on BB)</li>
+            <li>Overloaded methods support in resolve (partial)</li>
+            <li>Removed file size limit for compiled files while indexing (Issue #88 on BitBucket)</li>
             <li>Multiline injected strings support</li>
         </ul>
         <p>2.10</p>

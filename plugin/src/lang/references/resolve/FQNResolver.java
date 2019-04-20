@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.StubElement;
+import com.intellij.util.Processor;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -32,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 abstract class FQNResolver {
 
@@ -66,7 +68,7 @@ abstract class FQNResolver {
         if (firstPart) {
             return resolveFirst();
         } else {
-            return (scope != null) && resolveNext(scope);
+            return (scope == null) || resolveNext(scope);
         }
     }
 
@@ -107,7 +109,7 @@ abstract class FQNResolver {
             wasType = field.fieldType == PasField.FieldType.TYPE;
             if (!fqn.isComplete()) {
                 PasEntityScope fieldScope = getScope(scope, field, field.fieldType);
-                return (fieldScope != null) && resolveNext(fieldScope);
+                return (fieldScope == null) || resolveNext(fieldScope);
             } else {
                 return processField(scope, field);
 //                return !((null == context.matcher) || context.matcher.process(Collections.singleton(field))) || processField(scope, field);
@@ -144,8 +146,7 @@ abstract class FQNResolver {
     }
 
     private boolean processFirstPartScopes(ResolveContext context, boolean implAffects) {
-        processHelperScopes(context.scope);
-        if (!processScope(context.scope, true)) {
+        if (!processHelperScopes(context.scope) || !processScope(context.scope, true)) {
             return false;
         }
         if (context.scope instanceof PascalModuleImpl) {
@@ -167,8 +168,7 @@ abstract class FQNResolver {
     .search in scopes for name from FQN
     */
     boolean resolveNext(PasEntityScope scope) {
-        processHelperScopes(scope);
-        if (!processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
+        if (!processHelperScopes(scope) || !processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }
         return processParentScopes(scope, false);
@@ -212,8 +212,7 @@ abstract class FQNResolver {
                         if (ns instanceof PascalStructType) {
                             for (SmartPsiElementPointer<PasEntityScope> scopePtr : ns.getParentScope()) {
                                 PasEntityScope scope = scopePtr.getElement();
-                                processHelperScopes(scope);           // TODO: ===*** is it needed?
-                                if (!processScope(scope, false)) {
+                                if (!processHelperScopes(scope) || !processScope(scope, false)) {
                                     return false;
                                 }
                             }
@@ -254,8 +253,7 @@ abstract class FQNResolver {
             PasEntityScope entityScope = scopePtr.getElement();
             if (first || (entityScope instanceof PascalStructType)) {                  // Search for parents for first namespace (method) or any for structured types
                 if (null != entityScope) {
-                    processHelperScopes(entityScope);
-                    if (!processScope(entityScope, first) || !processParentScopes(entityScope, first)) {
+                    if (!processHelperScopes(entityScope) || !processScope(entityScope, first) || !processParentScopes(entityScope, first)) {
                         return false;
                     }
                 }
@@ -264,12 +262,22 @@ abstract class FQNResolver {
         return true;
     }
 
-    private void processHelperScopes(PasEntityScope scope) {
+    private boolean processHelperScopes(PasEntityScope scope) {
+        AtomicBoolean result = new AtomicBoolean(true);
         if (scope instanceof PascalRecordDecl || scope instanceof PascalClassDecl) {
-            Helper.getQuery((PascalStructType) scope).forEach(helper -> {
-                return processScope(helper, false);
+            Helper.getQuery((PascalStructType) scope).forEach(new Processor<PascalStructType>() {
+                @Override
+                public boolean process(PascalStructType helper) {
+                    if (!processScope(helper, false)) {
+                        result.set(false);
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
             });
         }
+        return result.get();
     }
 
     private static void calcScope(NamespaceRec fqn, ResolveContext context) {

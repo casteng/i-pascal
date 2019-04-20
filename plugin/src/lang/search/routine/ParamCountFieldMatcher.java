@@ -20,6 +20,7 @@ public abstract class ParamCountFieldMatcher implements FieldMatcher {
         this.paramsCount = paramsCount;
     }
 
+    // should returns false to stop processing
     protected abstract boolean onMatch(final PasField field, final PascalNamedElement routine);
 
     @Override
@@ -38,7 +39,7 @@ public abstract class ParamCountFieldMatcher implements FieldMatcher {
                     }
                 }
             } else if (field.name.equalsIgnoreCase(name)) {
-                return !onMatch(field, field.getElement());
+                return onMatch(field, field.getElement());
             }
         }
         return true;

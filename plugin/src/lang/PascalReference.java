@@ -9,19 +9,22 @@ import com.intellij.psi.PsiPolyVariantReferenceBase;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.resolve.Resolve;
+import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * Date: 3/13/13
@@ -78,20 +81,24 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
                 return resolveRoutineImpl((PasRoutineImplDeclImpl) parent);
             }
 
-            final Collection<PasField> references = PasReferenceUtil.resolveExpr(NamespaceRec.fromElement(named),
-                    new ResolveContext(PasField.TYPES_ALL, true), 0);
-            // return only first reference
-            for (PasField el : references) {
-                if (el != null) {
-                    PsiElement element = el.target != null ? el.target : el.getElement();
-                    if (element != null) {
-                        return createResults(element);
+            List<PsiElement> result = new SmartList<>();
+
+            Resolve.resolveExpr(NamespaceRec.fromElement(named), new ResolveContext(PasField.TYPES_ALL, true), new ResolveProcessor() {
+                @Override
+                public boolean process(PasEntityScope originalScope, PasEntityScope scope, PasField field, PasField.FieldType type) {
+                    if (field != null) {
+                        PsiElement element = field.target != null ? field.target : field.getElement();
+                        if (element != null) {
+                            result.add(element);
+                        }
+                    } else {
+                        LOG.info("ERROR: null resolved for " + named);
                     }
-                } else {
-                    LOG.info("ERROR: null resolved for " + named);
+                    return false;
                 }
-            }
-            return ResolveResult.EMPTY_ARRAY;
+            });
+
+            return result.isEmpty() ? ResolveResult.EMPTY_ARRAY : PsiElementResolveResult.createResults(result);
         }
 
         private static ResolveResult[] resolveRoutineImpl(PasRoutineImplDeclImpl routine) {

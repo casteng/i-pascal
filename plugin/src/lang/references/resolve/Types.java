@@ -3,11 +3,17 @@ package com.siberika.idea.pascal.lang.references.resolve;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.util.ModuleUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -43,4 +49,27 @@ public class Types {
             return null;
         }
     }
+
+    @Nullable
+    public static PasField.ValueType retrieveFieldType(@NotNull PasField field, int recursionCount) {
+        if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
+            try {
+                if (!field.isTypeResolved()) {
+                    PascalNamedElement el = field.getElement();
+                    if (ResolveUtil.isStubPowered(el)) {
+                        ResolveContext context = new ResolveContext(field.owner, PasField.TYPES_TYPE, true, null, ModuleUtil.retrieveUnitNamespaces(el));
+                        field.setValueType(ResolveUtil.resolveTypeWithStub((PascalStubElement) el, context, recursionCount));
+                    } else {
+                        field.setValueType(PasReferenceUtil.resolveFieldType(field, true, recursionCount));
+                    }
+                }
+                return field.getValueType();
+            } finally {
+                field.getTypeLock().unlock();
+            }
+        } else {
+            return null;
+        }
+    }
+
 }
