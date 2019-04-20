@@ -8,6 +8,7 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.PascalDocumentationProvider;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExitStatement;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
@@ -17,6 +18,9 @@ import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasElementFactory;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
+import com.siberika.idea.pascal.lang.references.resolve.Types;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import kotlin.reflect.jvm.internal.impl.utils.SmartList;
@@ -145,13 +149,26 @@ public class IdentQuickFixes {
             if ((null == element) || (element.getParent() == null)) {
                 return;
             }
+            PasEntityScope scope = PsiUtil.getNearestAffectingScope(element);
+            PasField.ValueType type = null;
+            if (scope instanceof PascalRoutine) {
+                PasEntityScope parent = scope.getContainingScope();
+                if (parent != null) {
+                    PasField field = parent.getField(((PascalRoutine) scope).getCanonicalName());
+                    if (null == field) {
+                        field = parent.getField(RoutineUtil.getCanonicalNameWoScope((PascalRoutine) scope));
+                    }
+                    type = field != null ? Types.retrieveFieldType(field, 0) : null;
+                }
+            }
+            String typeDefault = Types.getTypeDefaultValueStr(type);
             PsiElement parent = element.getParent();
             if (element instanceof PasExitStatement) {
-                addElements(parent, element, false, "Result", ":=", "0", ";");
+                addElements(parent, element, false, "Result", ":=", typeDefault, ";");
             } else {
                 PsiElement begin = parent.getFirstChild();
                 if (begin != null) {
-                    addElements(parent, begin, true, "Result", ":=", "0", ";");
+                    addElements(parent, begin, true, "Result", ":=", typeDefault, ";");
                 }
             }
         }
@@ -167,7 +184,9 @@ public class IdentQuickFixes {
             newElement = parent.addBefore(PasElementFactory.createElementFromText(project, first), anchor);
         }
         for (String elementText : other) {
-            newElement = parent.addAfter(PasElementFactory.createElementFromText(project, elementText), newElement);
+            if ((elementText != null) && (elementText.length() > 0)) {
+                newElement = parent.addAfter(PasElementFactory.createElementFromText(project, elementText), newElement);
+            }
         }
         PasModule module = PsiUtil.getElementPasModule(parent);
         if (module != null) {

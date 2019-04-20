@@ -201,7 +201,11 @@ public class PasReferenceUtil {
         if (element instanceof PasNamedIdentDecl && element.getType() == PasField.FieldType.PROPERTY) {
             typeId = resolvePropertyType(field, (PasClassProperty) element.getParent());
         } else if (element instanceof PascalRoutine) {                                          // routine declaration case
-            typeId = ((PascalRoutine) element).getFunctionTypeIdent();
+            final PascalRoutine routine = (PascalRoutine) element;
+            typeId = routine.getFunctionTypeIdent();
+            if ((null == typeId) && "string".equalsIgnoreCase(routine.getFunctionTypeStr())) {
+                res = new PasField.ValueType(null, PasField.Kind.STRING, null, null);
+            }
         } else if ((element != null) && (element.getParent() instanceof PasHandler)) {          // exception handler case
             typeId = ((PasHandler) element.getParent()).getTypeID();
         } else {

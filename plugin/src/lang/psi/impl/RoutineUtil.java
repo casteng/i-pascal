@@ -243,4 +243,14 @@ public class RoutineUtil {
         PasBlockBody blockBody = blockLocal != null ? blockLocal.getBlockBody() : null;
         return blockBody != null ? blockBody.getCompoundStatement() : null;
     }
+
+    public static String getCanonicalNameWoScope(PascalRoutine routine) {
+        String result = routine.getCanonicalName();
+        if (result != null) {
+            int nameEnd = result.indexOf('(');
+            int lastDot = result.substring(0, nameEnd).indexOf('.');
+            result = lastDot > 0 ? result.substring(lastDot + 1) : result;
+        }
+        return result;
+    }
 }

@@ -1,8 +1,10 @@
 package com.siberika.idea.pascal.lang.references.resolve;
 
+import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStubElement;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
@@ -72,4 +74,40 @@ public class Types {
         }
     }
 
+    public static String getTypeDefaultValueStr(PasField.ValueType type) {
+        if (null == type) {
+            return null;
+        }
+        switch (type.kind) {
+            case BOOLEAN:
+                return "false";
+            case POINTER:
+            case CLASSREF:
+            case PROCEDURE:
+            case ARRAY:
+            case STRUCT:
+            case VARIANT:
+                return "nil";
+            case INTEGER:
+            case FLOAT:
+                return "0";
+            case SUBRANGE: {
+                PsiElement decl = type.declaration.getElement();
+                if (decl instanceof PascalIdentDecl) {
+                    final String typeString = ((PascalIdentDecl) decl).getTypeString();
+                    if (typeString != null && typeString.toUpperCase().contains("TRUE")) {
+                        return "false";
+                    }
+                }
+                return "0";
+            }
+            case CHAR:
+                return "#0";
+            case STRING:
+                return "''";
+            case SET:
+                return "[]";
+        }
+        return "";
+    }
 }
