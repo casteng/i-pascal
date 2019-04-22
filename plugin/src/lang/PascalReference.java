@@ -14,7 +14,6 @@ import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PasRoutineImplDeclImpl;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
@@ -75,10 +74,8 @@ public class PascalReference extends PsiPolyVariantReferenceBase<PascalNamedElem
                 return ResolveResult.EMPTY_ARRAY;
             }
 
-            PsiElement parent = named.getParent();
-            parent = parent instanceof PascalQualifiedIdent ? parent.getParent() : parent;
-            if (parent instanceof PasRoutineImplDeclImpl) {
-                return resolveRoutineImpl((PasRoutineImplDeclImpl) parent);
+            if (PsiUtil.isLastPartOfMethodImplName(named)) {
+                return resolveRoutineImpl((PasRoutineImplDeclImpl) named.getParent().getParent());
             }
 
             List<PsiElement> result = new SmartList<>();

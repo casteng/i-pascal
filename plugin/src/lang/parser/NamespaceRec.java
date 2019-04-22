@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.lang.parser;
 import com.intellij.psi.PsiElement;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasSubIdent;
+import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -44,6 +45,10 @@ public class NamespaceRec {
     private NamespaceRec(@NotNull PasRefNamedIdent element) {
         this(new String[] {!element.getName().startsWith("&") ? element.getName() : element.getName().substring(1)},
                 element.getParent() != null ? element.getParent() : element, 0);
+    }
+
+    private NamespaceRec(@NotNull PascalNamedElement element) {
+        this(new String[] {element.getName()}, element.getParent() != null ? element.getParent() : element, 0);
     }
 
     /**
@@ -155,6 +160,8 @@ public class NamespaceRec {
             return new NamespaceRec((PascalQualifiedIdent) element, null);
         } else if (element instanceof PasRefNamedIdent) {
             return new NamespaceRec((PasRefNamedIdent) element);
+        } else if (element instanceof PascalNamedElement) {
+            return new NamespaceRec((PascalNamedElement) element);
         }
         NamespaceRec namespace;
         if (PsiUtil.isIdent(element)) {
