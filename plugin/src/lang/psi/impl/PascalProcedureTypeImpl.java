@@ -9,6 +9,7 @@ import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.psi.field.ParamModifier;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.List;
 
 public abstract class PascalProcedureTypeImpl extends PascalPsiElementImpl implements PascalRoutineEntity {
@@ -19,14 +20,15 @@ public abstract class PascalProcedureTypeImpl extends PascalPsiElementImpl imple
     volatile private List<String> formalParameterTypes;
     volatile private List<ParamModifier> formalParameterAccess;
 
-    public PascalProcedureTypeImpl(ASTNode node) {
+    PascalProcedureTypeImpl(ASTNode node) {
         super(node);
     }
 
     @Override
     public String getName() {
         if (null == canonicalName) {
-            canonicalName = RoutineUtil.calcCanonicalName("", getFormalParameterNames(), getFormalParameterTypes(), getFormalParameterAccess(), getFunctionTypeStr());
+            canonicalName = RoutineUtil.calcCanonicalName("", getFormalParameterNames(), getFormalParameterTypes(),
+                    getFormalParameterAccess(), getFunctionTypeStr(), Collections.emptyList());
         }
         return canonicalName;
     }
@@ -84,12 +86,18 @@ public abstract class PascalProcedureTypeImpl extends PascalPsiElementImpl imple
         return formalParameterAccess;
     }
 
+    @NotNull
+    @Override
+    public List<String> getFormalParameterDefaultValues() {
+        return Collections.emptyList();   // No default parameters in procedural types
+    }
+
     private void calcFormalParameters() {
         if (null == formalParameterNames) {
             SmartList<String> formalParamNames = new SmartList<>();
             SmartList<String> formalParamTypes = new SmartList<>();
             SmartList<ParamModifier> formalParamAccess = new SmartList<>();
-            RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParamNames, formalParamTypes, formalParamAccess);
+            RoutineUtil.calcFormalParameterNames(getFormalParameterSection(), formalParamNames, formalParamTypes, formalParamAccess, null);
             formalParameterAccess = formalParamAccess;
             formalParameterTypes = formalParamTypes;
             formalParameterNames = formalParamNames;

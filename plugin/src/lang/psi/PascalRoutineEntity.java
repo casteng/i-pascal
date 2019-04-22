@@ -28,6 +28,9 @@ public interface PascalRoutineEntity extends PascalPsiElement {
     @NotNull
     List<ParamModifier> getFormalParameterAccess();
 
+    @NotNull
+    List<String> getFormalParameterDefaultValues();
+
     @Nullable
     PasFormalParameterSection getFormalParameterSection();         // TODO: replace with getFormalParameters()
 }

@@ -141,7 +141,8 @@ public class PasField {
         if (stub instanceof PasExportedRoutineStub) {
             PasExportedRoutineStub exportedRoutineStub = (PasExportedRoutineStub) stub;
             return RoutineUtil.calcCanonicalName(exportedRoutineStub.getName(), exportedRoutineStub.getFormalParameterNames(),
-                    exportedRoutineStub.getFormalParameterTypes(), exportedRoutineStub.getFormalParameterAccess(), exportedRoutineStub.getFunctionTypeStr());
+                    exportedRoutineStub.getFormalParameterTypes(), exportedRoutineStub.getFormalParameterAccess(),
+                    exportedRoutineStub.getFunctionTypeStr(), exportedRoutineStub.getFormalParameterValues());
         } else {
             return stub.getName();
         }

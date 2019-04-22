@@ -24,6 +24,7 @@ class PascalHelperRoutine extends PascalHelperScope {
     volatile List<String> formalParameterNames;
     volatile List<String> formalParameterTypes;
     volatile List<ParamModifier> formalParameterAccess;
+    volatile List<String> formalParameterDefaultValues;
     volatile private String functionTypeStr;
     private ReentrantLock calcParamLock = new ReentrantLock();
 
@@ -37,6 +38,7 @@ class PascalHelperRoutine extends PascalHelperScope {
             formalParameterNames = null;
             formalParameterTypes = null;
             formalParameterAccess = null;
+            formalParameterDefaultValues = null;
             canonicalName = null;
             reducedName = null;
             functionTypeStr = null;
@@ -48,7 +50,8 @@ class PascalHelperRoutine extends PascalHelperScope {
     String getCanonicalName() {
         ensureCacheActual();
         if (null == canonicalName) {
-            canonicalName = RoutineUtil.calcCanonicalName(self.getName(), getSelf().getFormalParameterNames(), getSelf().getFormalParameterTypes(), getSelf().getFormalParameterAccess(), getSelf().getFunctionTypeStr());
+            canonicalName = RoutineUtil.calcCanonicalName(self.getName(), getSelf().getFormalParameterNames(), getSelf().getFormalParameterTypes(),
+                    getSelf().getFormalParameterAccess(), getSelf().getFunctionTypeStr() ,getSelf().getFormalParameterDefaultValues());
         }
         return canonicalName;
     }
@@ -73,10 +76,12 @@ class PascalHelperRoutine extends PascalHelperScope {
                 List<String> parameterNames = new SmartList<>();
                 List<String> parameterTypes = new SmartList<>();
                 List<ParamModifier> parameterAccess = new SmartList<>();
-                RoutineUtil.calcFormalParameterNames(getSelf().getFormalParameterSection(), parameterNames, parameterTypes, parameterAccess);
+                List<String> parameterValues = new SmartList<>();
+                RoutineUtil.calcFormalParameterNames(getSelf().getFormalParameterSection(), parameterNames, parameterTypes, parameterAccess, parameterValues);
                 formalParameterNames = parameterNames;
                 formalParameterTypes = parameterTypes;
                 formalParameterAccess = parameterAccess;
+                formalParameterDefaultValues = parameterValues;
             }
         });
     }

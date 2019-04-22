@@ -117,7 +117,7 @@ public abstract class PasStubScopeImpl<B extends PasNamedStub> extends PascalNam
             } else if (stubElement instanceof PasExportedRoutineStub) {
                 PasExportedRoutineStub rStub = (PasExportedRoutineStub) stubElement;
                 fieldsMap.put(RoutineUtil.calcCanonicalName(rStub.getName(), rStub.getFormalParameterNames(), rStub.getFormalParameterTypes(),
-                        rStub.getFormalParameterAccess(), rStub.getFunctionTypeStr()), (PasNamedStub) stubElement);
+                        rStub.getFormalParameterAccess(), rStub.getFunctionTypeStr(), rStub.getFormalParameterValues()), (PasNamedStub) stubElement);
             }
         }
         fieldsMap.put(PascalHelperScope.KEY_EMPTY_MARKER, new PasIdentStubImpl(null, "", 0, "", PasField.FieldType.VARIABLE, "", null, PasField.Access.READONLY, null, null));

@@ -100,6 +100,7 @@ public class PPUDumpParser {
             addSection("prop/params", "[", "", "", "]", 2);
             addSection("/params", "(", "", "", ")", 2);
             addSection("/param", "", "", "", "; ", 0);
+            addSection("/param/const", "", "", "", "", 0);
 
             addSection("/const", LF + "const ", " = ", "", ";\n", 0);
             addSection("/var", LF + "var ", ": ", "", ";\n", 0);
@@ -289,6 +290,15 @@ public class PPUDumpParser {
             } else if ("/param".equalsIgnoreCase(sec.type)) {
                 sec.insertText(0, sec.getDataStr("spez") + " ");
                 appendReference(sec, sec.sb.length(), "vartype", ": ", "", UNRESOLVED_INTERNAL);
+                if (sec.data.get("value") != null) {
+                    sec.sb.append(" = ");
+                    appendConstValue(sec, "/const", (String) sec.data.get("value"));
+                }
+            } else if ("/param/const".equalsIgnoreCase(sec.type)) {
+                if (!stack.isEmpty()) {
+                    stack.getFirst().data.put("value", "");
+                    stack.getFirst().data.putAll(sec.data);
+                }
             } else if ("/field".equalsIgnoreCase(sec.type)) {
                 sec.insertVisibility(LF.length(), getDefaultVisibility());
                 appendReference(sec, sec.sb.length(), "vartype", "", "", UNRESOLVED_INTERNAL);
@@ -624,16 +634,10 @@ public class PPUDumpParser {
                         sec.putData(sec.type + "/" + txt, "");
                     }
                     if (null == sec.dataPrefix) {
-                        if (sec.data.get(sec.type + "/isString") != null) {
-                            sec.sb.append('\'').append(handleStringData(txt)).append('\'');
-                        } else {
-                            sec.sb.append(txt);
-                        }
+                        appendConstValue(sec, "", txt);
                     }
                 } else if ("valtype".equalsIgnoreCase(qName)) {
-                    if ("string".equalsIgnoreCase(txt)) {
-                        sec.putData(sec.type + "/isString", Boolean.TRUE);
-                    }
+                    handleValType(sec, txt);
                 }
                 if (txt.length() > 0) {
                     sec.putData(qName, txt);
@@ -643,8 +647,32 @@ public class PPUDumpParser {
             path = path.substring(0, path.lastIndexOf("/"));
         }
 
-        private String handleStringData(String txt) {
+        private void handleValType(Section sec, String txt) {
+            if ("string".equalsIgnoreCase(txt) || "set".equalsIgnoreCase(txt)) {
+                sec.putData(sec.type + "/is_" + txt.toLowerCase(), Boolean.TRUE);
+            }
+        }
+
+        private static void appendConstValue(Section sec, String levels, String txt) {
+            if (null == txt) {
+                return;
+            }
+            String sect = sec.type + levels;
+            if (sec.data.get(sect + "/is_string") != null) {
+                sec.sb.append('\'').append(handleStringData(txt)).append('\'');
+            } else if (sec.data.get(sect + "/is_set") != null) {
+                sec.sb.append('[').append(handleSetData(txt)).append(']');
+            } else {
+                sec.sb.append(txt);
+            }
+        }
+
+        private static String handleStringData(String txt) {
             return txt.replaceAll("'", "''").replaceAll("\n", "'#10'").replaceAll("\r", "'#13'");
+        }
+
+        private static String handleSetData(String txt) {
+            return txt;
         }
 
         public void fixupUndefined(Section sec) {

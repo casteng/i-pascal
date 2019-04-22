@@ -35,7 +35,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @Override
     public PasExportedRoutineStub createStub(LighterAST tree, LighterASTNode node, StubElement parentStub) {
         return new PasExportedRoutineStubImpl(parentStub, "-", PasField.Visibility.PUBLIC, 0,
-                "", "--", null, Collections.emptyList(), null);
+                "", "--", null, Collections.emptyList(), null, null);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
     @Override
     public PasExportedRoutineStub createStub(@NotNull PascalExportedRoutine psi, StubElement parentStub) {
         return new PasExportedRoutineStubImpl(parentStub, psi.getName(), psi.getVisibility(), psi.getFlags(), psi.getContainingUnitName(),
-                psi.getFunctionTypeStr(), psi.getFormalParameterNames(), psi.getFormalParameterTypes(), psi.getFormalParameterAccess());
+                psi.getFunctionTypeStr(), psi.getFormalParameterNames(), psi.getFormalParameterTypes(), psi.getFormalParameterAccess(), psi.getFormalParameterDefaultValues());
     }
 
     @NotNull
@@ -68,6 +68,7 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         StubUtil.writeStringCollection(dataStream, stub.getFormalParameterNames());
         StubUtil.writeStringCollection(dataStream, stub.getFormalParameterTypes());
         StubUtil.writeEnumCollection(dataStream, stub.getFormalParameterAccess());
+        StubUtil.writeStringCollection(dataStream, stub.getFormalParameterValues());
     }
 
     @NotNull
@@ -84,8 +85,10 @@ public class PasExportedRoutineStubElementType extends ILightStubElementType<Pas
         StubUtil.readStringCollection(dataStream, parameterTypes);
         List<ParamModifier> parameterAccess = new SmartList<>();
         StubUtil.readEnumCollection(dataStream, parameterAccess, ParamModifier.values());
+        List<String> parameterValues = new SmartList<>();
+        StubUtil.readStringCollection(dataStream, parameterValues);
         return new PasExportedRoutineStubImpl(parentStub, name, visibility, flags, containingUnitName,
-                typeStr, parameterNames, parameterTypes, parameterAccess);
+                typeStr, parameterNames, parameterTypes, parameterAccess, parameterValues);
     }
 
     @Override

@@ -19,10 +19,11 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     private List<String> parameterNames;
     private List<String> parameterTypes;
     private List<ParamModifier> parameterAccess;
+    private List<String> parameterValues;
 
     public PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility, int flags,
                                       String containingUnitName, String functionTypeStr,
-                                      List<String> parameterNames, List<String> parameterTypes, List<ParamModifier> parameterAccess) {
+                                      List<String> parameterNames, List<String> parameterTypes, List<ParamModifier> parameterAccess, List<String> parameterValues) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE, name, containingUnitName);
         this.visibility = visibility;
         setFlags(flags);
@@ -30,8 +31,9 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
         this.parameterNames = parameterNames;
         this.parameterTypes = parameterTypes;
         this.parameterAccess = parameterAccess;
+        this.parameterValues = parameterValues;
         this.uniqueName = (parent instanceof PasNamedStub ? ((PasNamedStub) parent).getUniqueName() + "." : "")
-                + RoutineUtil.calcCanonicalName(name, parameterNames, parameterTypes, parameterAccess, functionTypeStr);
+                + RoutineUtil.calcCanonicalName(name, parameterNames, parameterTypes, parameterAccess, functionTypeStr, parameterValues);
     }
 
     @Override
@@ -77,5 +79,10 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     @Override
     public List<ParamModifier> getFormalParameterAccess() {
         return parameterAccess;
+    }
+
+    @Override
+    public List<String> getFormalParameterValues() {
+        return parameterValues;
     }
 }

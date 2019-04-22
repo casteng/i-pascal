@@ -10,7 +10,7 @@ import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
-import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalRoutineEntity;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.resolve.Types;
 import com.siberika.idea.pascal.util.ModuleUtil;
@@ -92,7 +92,7 @@ class PascalHelperScope extends PascalHelperNamed {
                         final String nameUpper = name.toUpperCase();
                         if (field.fieldType == PasField.FieldType.ROUTINE) {
                             members.put(memberName, field);
-                            if (!members.containsKey(nameUpper) || isParameterlessRoutine(field)) {
+                            if (!members.containsKey(nameUpper) || canBeParameterlessRoutine(field)) {
                                 members.put(nameUpper, field);
                             }
                         } else {
@@ -106,9 +106,14 @@ class PascalHelperScope extends PascalHelperNamed {
         }
     }
 
-    private static boolean isParameterlessRoutine(final PasField field) {
+    private static boolean canBeParameterlessRoutine(final PasField field) {
         final PascalNamedElement el = field.getElement();
-        return (el instanceof PascalRoutine) && ((PascalRoutine) el).getFormalParameterNames().isEmpty();
+        if (el instanceof PascalRoutineEntity) {
+            PascalRoutineEntity routine = (PascalRoutineEntity) el;
+            return routine.getFormalParameterNames().size() - routine.getFormalParameterDefaultValues().size() <= 0;
+        } else {
+            return false;
+        }
     }
 
     // Add forward declared field even if it exists as we need full declaration

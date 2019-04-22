@@ -81,7 +81,7 @@ public class RoutineUtil {
         }
     }
 
-    static void calcFormalParameterNames(PasFormalParameterSection formalParameterSection, List<String> formalParameterNames, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess) {
+    static void calcFormalParameterNames(PasFormalParameterSection formalParameterSection, List<String> formalParameterNames, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess, List<String> formalParameterValues) {
         if (formalParameterSection != null) {
             for (PasFormalParameter parameter : formalParameterSection.getFormalParameterList()) {
                 PasTypeDecl td = parameter.getTypeDecl();
@@ -91,6 +91,9 @@ public class RoutineUtil {
                     formalParameterNames.add(pasNamedIdent.getName());
                     formalParameterTypes.add(typeStr != null ? typeStr : "");
                     formalParameterAccess.add(modifier);
+                }
+                if ((formalParameterValues != null) && (parameter.getConstExpression() != null)) {
+                    formalParameterValues.add(parameter.getConstExpression().getText());
                 }
             }
         }
@@ -124,14 +127,16 @@ public class RoutineUtil {
 
     public static boolean isSuitable(PasCallExpr expression, PascalRoutineEntity routine) {
         List<String> params = routine.getFormalParameterNames();
+        List<String> defValues = routine.getFormalParameterDefaultValues();
+        int actCount = expression.getArgumentList().getExprList().size();
         // TODO: make type check and handle overload
-        if (params.size() == expression.getArgumentList().getExprList().size()) {
+        if (((params.size() - defValues.size()) <= actCount) && ((params.size() + defValues.size()) >= actCount)) {
             return true;
         }
         return false;
     }
 
-    public static String calcCanonicalName(String name, List<String> formalParameterNames, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess, String typeStr) {
+    public static String calcCanonicalName(String name, List<String> formalParameterNames, List<String> formalParameterTypes, List<ParamModifier> formalParameterAccess, String typeStr, List<String> formalParameterValues) {
         StringBuilder res = new StringBuilder(name);
         res.append("(");
         for (int i = 0; i < formalParameterTypes.size(); i++) {
@@ -144,6 +149,11 @@ public class RoutineUtil {
             }
             res.append(formalParameterNames.get(i)).append(":");
             res.append(typeName);
+            if (i >= formalParameterNames.size() - formalParameterValues.size()) {
+                int idx = i - (formalParameterNames.size() - formalParameterValues.size());
+                res.append(" = ").append(formalParameterValues.get(idx));
+            }
+
         }
         res.append(")");
         if (StringUtil.isNotEmpty(typeStr)) {

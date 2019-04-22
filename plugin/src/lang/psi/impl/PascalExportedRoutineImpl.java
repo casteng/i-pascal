@@ -225,6 +225,17 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @NotNull
     @Override
+    public List<String> getFormalParameterDefaultValues() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.getFormalParameterValues();
+        }
+        getHelper().calcFormalParameters();
+        return getHelper().formalParameterDefaultValues;
+    }
+
+    @NotNull
+    @Override
     public Collection<PasWithStatement> getWithStatements() {
         return Collections.emptyList();
     }

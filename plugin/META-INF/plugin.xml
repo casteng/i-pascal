@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.20</version>
+    <version>2.30</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>2.30</p>
+        <ul>
+            <li>Default formal parameters support in resolve</li>
+        </ul>
         <p>2.20</p>
         <ul>
             <li>Filter by usage type in find usages</li>

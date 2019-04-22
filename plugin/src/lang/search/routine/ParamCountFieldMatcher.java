@@ -32,7 +32,11 @@ public abstract class ParamCountFieldMatcher implements FieldMatcher {
                     PascalNamedElement el = field.getElement();
                     if (el instanceof PascalRoutine) {
                         final PascalRoutine routine = (PascalRoutine) el;
-                        if (((routine.getFormalParameterNames().size() == paramsCount) || (VARARGS_ROUTINES.contains(name)))
+                        int routineParamCount = routine.getFormalParameterNames().size();
+                        int routineDefParamCount = routine.getFormalParameterDefaultValues().size();
+                        if ((
+                                ((routineParamCount - routineDefParamCount <= paramsCount) && (routineParamCount + routineDefParamCount >= paramsCount))
+                                || (VARARGS_ROUTINES.contains(name)))
                                 && !onMatch(field, routine)) {
                             return false;
                         }

@@ -107,6 +107,7 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
         int hlStart = -1;
         int hlEnd = -1;
         List<String> names = p.getFormalParameterNames();
+        List<String> defaultValues = p.getFormalParameterDefaultValues();
         for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
             String type = p.getFormalParameterTypes().get(i);
@@ -125,6 +126,10 @@ public class PascalParameterInfoHandler implements ParameterInfoHandler<PasCallE
             sb.append(name).append(": ").append(type);
             if (i == context.getCurrentParameterIndex()) {
                 hlEnd = sb.length();
+            }
+            if (i >= names.size() - defaultValues.size()) {
+                int idx = i - (names.size() - defaultValues.size());
+                sb.append(" = ").append(defaultValues.get(idx));
             }
         }
         boolean isDisabled = context.getCurrentParameterIndex() >= names.size();
