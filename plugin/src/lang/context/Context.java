@@ -167,38 +167,34 @@ public class Context {
         if (tempPos instanceof PasAssignPart) {
             addToContext(CodePlace.ASSIGN_RIGHT);
         }
-        if (tempPos.getClass() == PasStatementImpl.class) {
-            addToContext(CodePlace.STATEMENT);
-        }
-        if (tempPos instanceof PasIfThenStatement) {
-            addToContext(CodePlace.STMT_IF_THEN);
-        }
-        if (tempPos instanceof PasIfStatement) {
-            addToContext(CodePlace.STMT_IF);
-        }
-        if (tempPos instanceof PasForStatement) {
-            addToContext(CodePlace.STMT_FOR);
-        }
-        if (tempPos instanceof PasWhileStatement) {
-            addToContext(CodePlace.STMT_WHILE);
-        }
-        if (tempPos instanceof PasRepeatStatement) {
-            addToContext(CodePlace.STMT_REPEAT);
-        }
-        if (tempPos instanceof PasTryStatement) {
-            addToContext(CodePlace.STMT_TRY);
-        }
-        if (tempPos instanceof PasRaiseStatement) {
-            addToContext(CodePlace.STMT_RAISE);
-        }
-        if (tempPos instanceof PasCaseStatement) {
-            addToContext(CodePlace.STMT_CASE);
-        }
         if (tempPos instanceof PasCaseItem) {
             addToContext(CodePlace.STMT_CASE_ITEM);
         }
         if (tempPos instanceof PasCaseElse) {
             addToContext(CodePlace.STMT_CASE_ELSE);
+        }
+        while (tempPos instanceof PasStatement) {
+            if (tempPos.getClass() == PasStatementImpl.class) {
+                addToContext(CodePlace.STATEMENT);
+            } else if (tempPos instanceof PasIfThenStatement) {
+                addToContext(CodePlace.STMT_IF_THEN);
+            } else if (tempPos instanceof PasIfStatement) {
+                addToContext(CodePlace.STMT_IF);
+            } else if (tempPos instanceof PasForStatement) {
+                addToContext(CodePlace.STMT_FOR);
+            } else if (tempPos instanceof PasWhileStatement) {
+                addToContext(CodePlace.STMT_WHILE);
+            } else if (tempPos instanceof PasRepeatStatement) {
+                addToContext(CodePlace.STMT_REPEAT);
+            } else if (tempPos instanceof PasTryStatement) {
+                addToContext(CodePlace.STMT_TRY);
+            } else if (tempPos instanceof PasRaiseStatement) {
+                addToContext(CodePlace.STMT_RAISE);
+            } else if (tempPos instanceof PasCaseStatement) {
+                addToContext(CodePlace.STMT_CASE);
+            } else {
+                tempPos = tempPos.getParent();
+            }
         }
 
         if (tempPos instanceof PasClassPropertyArray) {
