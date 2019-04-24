@@ -148,7 +148,7 @@ public abstract class PascalNamedStubElement<B extends PasNamedStub> extends Stu
         if (!helper.isLocalInit()) {
             boolean tempLocal;
             if (this instanceof PasExportedRoutine) {
-                if (RoutineUtil.isExternal((PasExportedRoutine) this) || RoutineUtil.isOverridden((PasExportedRoutine) this) || isExported()) {
+                if (RoutineUtil.isExternal((PasExportedRoutine) this) || ((PasExportedRoutine) this).isOverridden() || isExported()) {
                     tempLocal = false;
                 } else {
                     PasEntityScope scope = ((PasEntityScope) this).getContainingScope();

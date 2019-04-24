@@ -6,6 +6,7 @@ import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasBlockBody;
 import com.siberika.idea.pascal.lang.psi.PasBlockLocal;
@@ -188,25 +189,64 @@ public class RoutineUtil {
     }
 
     public static boolean isOverloaded(PasExportedRoutine routine) {
-        for (PasFunctionDirective directive : routine.getFunctionDirectiveList()) {
-            if (directive.getText().toUpperCase().startsWith("OVERLOAD")) {
-                return true;
-            }
-        }
-        return false;
+        return findDirective(routine, "OVERLOAD");
+    }
+
+    public static boolean isOverloaded(PascalRoutineImpl routine) {
+        return isOverloaded(getExportedRoutine(routine));
     }
 
     public static boolean isOverridden(PasExportedRoutine routine) {
-        for (PasFunctionDirective directive : routine.getFunctionDirectiveList()) {
-            if (directive.getText().toUpperCase().startsWith("OVERRIDE")) {
-                return true;
-            }
-        }
-        return false;
+        return findDirective(routine, "OVERRIDE");
+    }
+
+    public static boolean isOverridden(PascalRoutineImpl routine) {
+        return isOverridden(getExportedRoutine(routine));
     }
 
     public static boolean isExternal(PasExportedRoutine routine) {
         return routine.getExternalDirective() != null;
+    }
+
+    public static boolean isAbstract(PasExportedRoutine routine) {
+        return findDirective(routine, "ABSTRACT");
+    }
+
+    public static boolean isFinal(PasExportedRoutine routine) {
+        return findDirective(routine, "FINAL");
+    }
+
+    public static boolean isFinal(PascalRoutineImpl routine) {
+        return isFinal(getExportedRoutine(routine));
+    }
+
+    private static PasExportedRoutine getExportedRoutine(PascalRoutineImpl routine) {
+        return routine instanceof PasExportedRoutine ? (PasExportedRoutine) routine : (PasExportedRoutine) SectionToggle.retrieveDeclaration(routine, true);
+    }
+
+    private static boolean findDirective(PasExportedRoutine routine, String name) {
+        if (routine != null) {
+            for (PasFunctionDirective directive : routine.getFunctionDirectiveList()) {
+                if (directive.getText().toUpperCase().startsWith(name)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isVirtual(PasExportedRoutine routine) {
+        for (PasFunctionDirective directive : routine.getFunctionDirectiveList()) {
+            if (directive.getText().toUpperCase().startsWith("VIRTUAL") || directive.getText().toUpperCase().startsWith("DYNAMIC")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isVirtual(PascalRoutineImpl routine) {
+        PasExportedRoutine exportedRoutine = routine instanceof PasExportedRoutine ? (PasExportedRoutine) routine : (PasExportedRoutine) SectionToggle.retrieveDeclaration(routine, true);
+        return exportedRoutine != null && isVirtual(exportedRoutine);
     }
 
     public static int calcMethodPos(PasEntityScope scope, PsiElement prevMethod) {
@@ -263,4 +303,5 @@ public class RoutineUtil {
         }
         return result;
     }
+
 }

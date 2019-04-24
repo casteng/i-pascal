@@ -21,9 +21,9 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     private List<ParamModifier> parameterAccess;
     private List<String> parameterValues;
 
-    public PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility, int flags,
-                                      String containingUnitName, String functionTypeStr,
-                                      List<String> parameterNames, List<String> parameterTypes, List<ParamModifier> parameterAccess, List<String> parameterValues) {
+    PasExportedRoutineStubImpl(StubElement parent, String name, PasField.Visibility visibility, int flags,
+                               String containingUnitName, String functionTypeStr,
+                               List<String> parameterNames, List<String> parameterTypes, List<ParamModifier> parameterAccess, List<String> parameterValues) {
         super(parent, PasExportedRoutineStubElementType.INSTANCE, name, containingUnitName);
         this.visibility = visibility;
         setFlags(flags);
@@ -59,6 +59,31 @@ public class PasExportedRoutineStubImpl extends PasNamedStubBase<PascalExportedR
     @Override
     public boolean isFunction() {
         return isFlagSet(Flag.FUNCTION);
+    }
+
+    @Override
+    public boolean isOverloaded() {
+        return isFlagSet(Flag.OVERLOADED);
+    }
+
+    @Override
+    public boolean isOverridden() {
+        return isFlagSet(Flag.OVERRIDDEN);
+    }
+
+    @Override
+    public boolean isAbstract() {
+        return isFlagSet(Flag.ABSTRACT);
+    }
+
+    @Override
+    public boolean isVirtual() {
+        return isFlagSet(Flag.VIRTUAL);
+    }
+
+    @Override
+    public boolean isFinal() {
+        return isFlagSet(Flag.FINAL);
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
@@ -150,10 +151,75 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
         return helper.isFlagSet(Flag.FUNCTION);
     }
 
+    @Override
+    public boolean isOverloaded() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.isOverloaded();
+        }
+        if (!helper.isFlagInit(Flag.OVERLOADED)) {
+            helper.setFlag(Flag.OVERLOADED, RoutineUtil.isOverloaded((PasExportedRoutine) this));
+        }
+        return helper.isFlagSet(Flag.OVERLOADED);
+    }
+
+    @Override
+    public boolean isOverridden() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.isOverridden();
+        }
+        if (!helper.isFlagInit(Flag.OVERRIDDEN)) {
+            helper.setFlag(Flag.OVERRIDDEN, RoutineUtil.isOverridden((PasExportedRoutine) this));
+        }
+        return helper.isFlagSet(Flag.OVERRIDDEN);
+    }
+
+    @Override
+    public boolean isAbstract() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.isAbstract();
+        }
+        if (!helper.isFlagInit(Flag.ABSTRACT)) {
+            helper.setFlag(Flag.ABSTRACT, RoutineUtil.isAbstract((PasExportedRoutine) this));
+        }
+        return helper.isFlagSet(Flag.ABSTRACT);
+    }
+
+    @Override
+    public boolean isVirtual() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.isAbstract();
+        }
+        if (!helper.isFlagInit(Flag.VIRTUAL)) {
+            helper.setFlag(Flag.VIRTUAL, RoutineUtil.isVirtual((PasExportedRoutine) this));
+        }
+        return helper.isFlagSet(Flag.VIRTUAL);
+    }
+
+    @Override
+    public boolean isFinal() {
+        PasExportedRoutineStub stub = retrieveStub();
+        if (stub != null) {
+            return stub.isAbstract();
+        }
+        if (!helper.isFlagInit(Flag.FINAL)) {
+            helper.setFlag(Flag.FINAL, RoutineUtil.isFinal((PasExportedRoutine) this));
+        }
+        return helper.isFlagSet(Flag.FINAL);
+    }
+
     protected void initAllFlags() {
         super.initAllFlags();
         isConstructor();
         isFunction();
+        isOverloaded();
+        isOverridden();
+        isAbstract();
+        isVirtual();
+        isFinal();
     }
 
     @Override

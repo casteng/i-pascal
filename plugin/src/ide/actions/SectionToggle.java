@@ -105,7 +105,7 @@ public class SectionToggle {
             PascalRoutine routine = ((PascalModule) container.scope).getPrivateRoutine(container.prefix + container.element.getReducedName());
             if (routine != null) {
                 return routine;
-            } else if (!strict || !RoutineUtil.isOverloaded((PasExportedRoutine) container.element)) {                          // Try to find implementation w/o parameters
+            } else if (!strict || !container.element.isOverloaded()) {                          // Try to find implementation w/o parameters
                 final String name = container.prefix + container.element.getName();
                 final Collection<PasField> fields = ((PasModuleImpl) container.scope).getPrivateFields();
                 for (PasField field : fields) {
@@ -183,7 +183,7 @@ public class SectionToggle {
                 if (field != null) {
                     PasExportedRoutine el = (PasExportedRoutine) field.getElement();
                     if ((el != null) &&
-                            (!strict || !(RoutineUtil.isOverloaded(el) || hasParametersOrReturnType(container.element)))) {
+                            (!strict || !(el.isOverloaded() || hasParametersOrReturnType(container.element)))) {
                         return el;
                     }
                 }

@@ -245,6 +245,31 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     @Override
+    public boolean isOverloaded() {
+        return RoutineUtil.isOverloaded(this);
+    }
+
+    @Override
+    public boolean isOverridden() {
+        return RoutineUtil.isOverridden(this);
+    }
+
+    @Override
+    public boolean isAbstract() {
+        return false;
+    }
+
+    @Override
+    public boolean isVirtual() {
+        return RoutineUtil.isVirtual(this);
+    }
+
+    @Override
+    public boolean isFinal() {
+        return RoutineUtil.isFinal(this);
+    }
+
+    @Override
     public boolean hasParameters() {
         return PsiUtil.hasParameters(this);
     }

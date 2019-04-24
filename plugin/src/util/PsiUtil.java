@@ -648,12 +648,7 @@ public class PsiUtil {
         if (routine.getContainingScope() instanceof PasInterfaceTypeDecl) {
             return false;
         }
-        for (PasFunctionDirective dir : routine.getFunctionDirectiveList()) {
-            if (dir.getText().toUpperCase().startsWith("ABSTRACT")) {
-                return false;
-            }
-        }
-        return true;
+        return !routine.isAbstract();
     }
 
     public static String cleanGenericDef(String name) {

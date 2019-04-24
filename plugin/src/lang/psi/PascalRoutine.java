@@ -14,4 +14,13 @@ public interface PascalRoutine extends PascalRoutineEntity, PasEntityScope {
     @Nullable
     PasTypeID getFunctionTypeIdent();                              // TODO: remove
 
+    boolean isOverloaded();
+
+    boolean isOverridden();
+
+    boolean isAbstract();
+
+    boolean isVirtual();
+
+    boolean isFinal();
 }

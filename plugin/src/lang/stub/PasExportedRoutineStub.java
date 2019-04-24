@@ -19,6 +19,16 @@ public interface PasExportedRoutineStub extends PasNamedStub<PascalExportedRouti
 
     boolean isFunction();
 
+    boolean isOverloaded();
+
+    boolean isOverridden();
+
+    boolean isAbstract();
+
+    boolean isVirtual();
+
+    boolean isFinal();
+
     String getFunctionTypeStr();
 
     List<String> getFormalParameterNames();
