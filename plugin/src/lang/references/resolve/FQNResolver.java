@@ -11,7 +11,6 @@ import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
-import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
 import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
@@ -93,6 +92,14 @@ abstract class FQNResolver {
     }
 
     boolean processDefault(PasEntityScope scope, String fieldName) {
+        if (context.ignoreNames() && fqn.isTarget()) {
+            for (PasField field : scope.getAllFields()) {
+                if ((!processField(scope, field))) {
+                    return false;
+                }
+            }
+            return true;
+        }
         PasField field = scope.getField(fieldName);
         if (field != null) {
             /*if (field.fieldType == PasField.FieldType.ROUTINE) {
@@ -125,9 +132,6 @@ abstract class FQNResolver {
         if (!processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }
-        if (first && (scope instanceof PasModule) && !StringUtils.isEmpty(scope.getName())) {
-            sortedUnits.add(scope);
-        }
         return true;
     }
 
@@ -142,6 +146,9 @@ abstract class FQNResolver {
             }
             context.scope = context.scope.getContainingScope();
         }
+        if (context.ignoreNames() && fqn.isTarget()) {
+            return false;
+        }
         return true;
     }
 
@@ -150,6 +157,9 @@ abstract class FQNResolver {
             return false;
         }
         if (context.scope instanceof PascalModuleImpl) {
+            if (!StringUtils.isEmpty(context.scope.getName())) {
+                sortedUnits.add(context.scope);
+            }
             if (implAffects) {
                 if (!processUnitScopes(((PascalModuleImpl) context.scope).getPrivateUnits(), context.includeLibrary)) {
                     return false;
@@ -171,7 +181,8 @@ abstract class FQNResolver {
         if (!processHelperScopes(scope) || !processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }
-        return processParentScopes(scope, false);
+        return processParentScopes(scope, false)
+                && !(context.ignoreNames() && fqn.isTarget());
     }
 
     PasEntityScope getScope(PasEntityScope scope, PasField field, PasField.FieldType type) {
@@ -228,8 +239,12 @@ abstract class FQNResolver {
         for (SmartPsiElementPointer<PasEntityScope> unitPtr : units) {
             PasEntityScope unit = unitPtr.getElement();
             if ((unit != null) && (includeLibrary || !PsiUtil.isFromLibrary(unit))) {
-                if (!processScope(unit, true)) {        // Add unit scopes to sorted units list
+                if (!processScope(unit, true)) {
                     return false;
+                }
+                // Add unit scopes to sorted units list
+                if (!StringUtils.isEmpty(unit.getName())) {
+                    sortedUnits.add(unit);
                 }
             }
         }

@@ -59,6 +59,7 @@ import com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.references.resolve.Resolve;
+import com.siberika.idea.pascal.lang.references.resolve.ResolveOptions;
 import com.siberika.idea.pascal.lang.search.GotoSuper;
 import com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex;
 import com.siberika.idea.pascal.util.DocUtil;
@@ -466,23 +467,24 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     }
 
     private static void addEntities(CompletionResultSet result, EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes) {
-        NamespaceRec namespace = NamespaceRec.fromFQN(completionContext.context.getDummyIdent(), PasField.DUMMY_IDENTIFIER);
+        NamespaceRec fqn = NamespaceRec.fromFQN(completionContext.context.getDummyIdent(), PasField.DUMMY_IDENTIFIER);
         if (completionContext.context.getDummyIdent() != null && completionContext.context.getDummyIdent().getParent() instanceof PasSubIdent) {
-            namespace = NamespaceRec.fromElement(completionContext.context.getDummyIdent().getParent());
+            fqn = NamespaceRec.fromElement(completionContext.context.getDummyIdent().getParent());
         } else if (completionContext.context.getNamedElement() != null) {
             if (completionContext.context.getNamedElement().getParent() instanceof PascalNamedElement) {
-                namespace = NamespaceRec.fromElement(completionContext.context.getNamedElement());
+                fqn = NamespaceRec.fromElement(completionContext.context.getNamedElement());
             } else {
-                namespace = NamespaceRec.fromFQN(completionContext.context.getDummyIdent(), completionContext.context.getNamedElement().getName());
+                fqn = NamespaceRec.fromFQN(completionContext.context.getDummyIdent(), completionContext.context.getNamedElement().getName());
             }
         }
-        String pattern = namespace.getCurrentName();
-        namespace.clearTarget();
-        Collection<PasField> fields = PasReferenceUtil.resolveExpr(namespace, new ResolveContext(fieldTypes, true), 0);
+        String pattern = fqn.getCurrentName();
+        fqn.clearTarget();
 
         addFromUnrelatedUnits(result, completionContext, fieldTypes, pattern);
 
-        fieldsToEntities(result, fields, completionContext);
+        ResolveContext context = new ResolveContext(fieldTypes, true);
+        context.options.add(ResolveOptions.IGNORE_NAME);
+        Resolve.resolveExpr(fqn, context, new FieldCollectProcessor(result, completionContext));
     }
 
     private static void addFromUnrelatedUnits(CompletionResultSet result, EntityCompletionContext completionContext, Set<PasField.FieldType> fieldTypes, String pattern) {

@@ -53,6 +53,11 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(false, false, true);
     }
 
+    public void testDottedUnit() {
+        myFixture.configureByFiles("scoped.types.pas");
+        myFixture.checkHighlighting(false, false, true);
+    }
+
     public void testInterfaces() {
         myFixture.configureByFiles("interfaces.pas");
         myFixture.checkHighlighting(false, false, true);

@@ -40,4 +40,7 @@ public class ResolveContext {
         this.options = context.options;
     }
 
+    public boolean ignoreNames() {
+        return options.contains(ResolveOptions.IGNORE_NAME) && options.contains(ResolveOptions.LAST_PART);
+    }
 }

@@ -54,6 +54,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                     return false;
                 }
             };
+            setLastPartOption(false);
             return fqnResolver.resolve(refExpr.getExpr() == null);
         } else {
             final FQNResolver fqnResolver = new FQNResolver(currentScope, fqn, context) {
@@ -84,6 +85,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                     return processor.process(scope, scope, field, field.fieldType);
                 }
             };
+            setLastPartOption(true);
             return fqnResolver.resolve(refExpr.getExpr() == null);
         }
     }
@@ -148,19 +150,28 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                 boolean processScope(final PasEntityScope scope, final String fieldName) {
                     final PasArgumentList args = callExpr.getArgumentList();
                     if (this.fqn.isTarget()) {
-                        FieldMatcher matcher = new ParamCountFieldMatcher(fullyQualifiedIdent.getNamePart(), args.getExprList().size()) {
-                            @Override
-                            protected boolean onMatch(final PasField field, final PascalNamedElement element) {
-                                if (lastPart) {                  // Return resolved field
-                                    return ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType);
-                                } else {                         // Resolve next scope
-                                    currentScope = ((element instanceof PascalRoutine) && ((PascalRoutine) element).isConstructor()) ? ((lastPartScope != null) ? lastPartScope : scope) : retrieveScope(scope, field);
+                        if (context.ignoreNames()) {
+                            for (PasField field : scope.getAllFields()) {
+                                if (!ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType)) {
                                     return false;
                                 }
                             }
-                        };
-                        if (!matcher.process(scope.getAllFields())) {
-                            return false;
+                            return true;
+                        } else {
+                            FieldMatcher matcher = new ParamCountFieldMatcher(fullyQualifiedIdent.getNamePart(), args.getExprList().size()) {
+                                @Override
+                                protected boolean onMatch(final PasField field, final PascalNamedElement element) {
+                                    if (lastPart) {                  // Return resolved field
+                                        return ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType);
+                                    } else {                         // Resolve next scope
+                                        currentScope = ((element instanceof PascalRoutine) && ((PascalRoutine) element).isConstructor()) ? ((lastPartScope != null) ? lastPartScope : scope) : retrieveScope(scope, field);
+                                        return false;
+                                    }
+                                }
+                            };
+                            if (!matcher.process(scope.getAllFields())) {
+                                return false;
+                            }
                         }
                     } else {                                     // No need to resolve intermediate names of FQN as routines
                         PasField field = scope.getField(fieldName);
@@ -178,9 +189,19 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                     return true;
                 }
             };
+            setLastPartOption(lastPart);
             return fqnResolver.resolve(scopeExpr == null);
         }
         return true;
+    }
+
+    private void setLastPartOption(boolean lastPart) {
+        if (lastPart) {
+            context.options.add(ResolveOptions.LAST_PART);
+        } else {
+            context.options.remove(ResolveOptions.LAST_PART);
+
+        }
     }
 
     private static PsiElement getFirstChild(PascalExpression expr) {
