@@ -128,7 +128,7 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
     static boolean extractMethodsByName(PasEntityScope scope, PascalRoutine routine, boolean handleParents, int recursionCount, Processor<? super PasEntityScope> consumer) {
         if (scope != null) {
             if (scope instanceof PascalStructType) {
-                PasField field = scope.getField(StrUtil.getFieldName(PsiUtil.getFieldName(routine)));
+                PasField field = scope.getField(StrUtil.getMethodName(PsiUtil.getFieldName(routine)));
                 if ((field != null) && (field.fieldType == PasField.FieldType.ROUTINE)) {
                     PascalNamedElement el = field.getElement();
                     if (el instanceof PascalRoutine) {
