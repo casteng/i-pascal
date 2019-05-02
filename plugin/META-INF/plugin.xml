@@ -12,6 +12,7 @@
         <p>2.30</p>
         <ul>
             <li>Default formal parameters support in resolve</li>
+            <li>Create field/property for parameter quickfix</li>
         </ul>
         <p>2.20</p>
         <ul>
@@ -468,7 +469,7 @@
         <localInspection language="Pascal" displayName="No result assignment detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.ResultAssignmentInspection"/>
         <lang.inspectionSuppressor language="Pascal" implementationClass="com.siberika.idea.pascal.lang.inspection.PascalInspectionSuppressor"/>
-
+        
         <editorNotificationProvider implementation="com.siberika.idea.pascal.sdk.SDKNotificationProvider"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>

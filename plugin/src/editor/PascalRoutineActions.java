@@ -34,7 +34,7 @@ public class PascalRoutineActions {
 
     public static class ActionDeclare extends PascalActionDeclare {
         public ActionDeclare(String name, PascalNamedElement element) {
-            super(name, null, element, null);
+            super(name, element, null, null);
         }
 
         @Override
@@ -77,7 +77,7 @@ public class PascalRoutineActions {
     public static class ActionImplement extends PascalActionDeclare {
 
         public ActionImplement(String name, PascalNamedElement element) {
-            super(name, null, element, null);
+            super(name, element, null, null);
         }
 
         @Override

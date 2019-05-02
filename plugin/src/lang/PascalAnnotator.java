@@ -16,6 +16,7 @@ import com.siberika.idea.pascal.editor.refactoring.PascalRenameAction;
 import com.siberika.idea.pascal.ide.actions.AddFixType;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.ide.actions.UsesActions;
+import com.siberika.idea.pascal.lang.annotator.FormalParam;
 import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
@@ -66,6 +67,7 @@ public class PascalAnnotator implements Annotator {
         }
 
         annotateModuleHead(element, holder);
+        FormalParam.annotateFormalParam(element, holder);
 
         //noinspection ConstantConditions
         if (PsiUtil.isEntityName(element) && !PsiUtil.isLastPartOfMethodImplName((PascalNamedElement) element)) {
@@ -122,12 +124,12 @@ public class PascalAnnotator implements Annotator {
                                 if (StrUtil.PATTERN_FIELD.matcher(name).matches()) {
                                     ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.field"), namedElement, adjustedScope, priority, null));
                                     if (context != PsiContext.PROPERTY_SPEC) {
-                                        ann.registerFix(PascalActionDeclare.newActionCreateProperty(message("action.create.property"), namedElement, adjustedScope, false));
+                                        ann.registerFix(PascalActionDeclare.newActionCreateProperty(message("action.create.property"), namedElement, null, adjustedScope, false));
                                     }
                                 } else {
                                     ann.registerFix(PascalActionDeclare.newActionCreateVar(message("action.create.field"), namedElement, adjustedScope, false, null));
                                     if (context != PsiContext.PROPERTY_SPEC) {
-                                        ann.registerFix(PascalActionDeclare.newActionCreateProperty(message("action.create.property"), namedElement, adjustedScope, priority));
+                                        ann.registerFix(PascalActionDeclare.newActionCreateProperty(message("action.create.property"), namedElement, null, adjustedScope, priority));
                                     }
                                 }
                             }

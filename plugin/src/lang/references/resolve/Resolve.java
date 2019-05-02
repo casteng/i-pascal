@@ -23,6 +23,8 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 @SuppressWarnings("Convert2Lambda")
 public class Resolve {
 
@@ -60,5 +62,17 @@ public class Resolve {
             }
         }
         return null;
+    }
+
+    public static PasField resolveFQN(String fqn, PsiElement context) {
+        AtomicReference<PasField> result = new AtomicReference<>();
+        resolveExpr(NamespaceRec.fromFQN(context, fqn), new ResolveContext(PasField.TYPES_ALL, true), new ResolveProcessor() {
+            @Override
+            public boolean process(PasEntityScope originalScope, PasEntityScope scope, PasField field, PasField.FieldType type) {
+                result.set(field);
+                return false;
+            }
+        });
+        return result.get();
     }
 }

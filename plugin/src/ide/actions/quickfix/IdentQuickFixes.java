@@ -175,7 +175,7 @@ public class IdentQuickFixes {
 
     }
 
-    private static void addElements(PsiElement parent, PsiElement anchor, boolean after, String first, String...other) {
+    public static void addElements(PsiElement parent, PsiElement anchor, boolean after, String first, String... other) {
         PsiElement newElement;
         Project project = parent.getProject();
         if (after) {

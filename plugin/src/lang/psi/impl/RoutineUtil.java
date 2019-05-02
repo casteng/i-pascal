@@ -304,4 +304,12 @@ public class RoutineUtil {
         return result;
     }
 
+    public static String getParameterType(PascalNamedElement param) {
+        if (PsiUtil.isFormalParameterName(param)) {
+            PasFormalParameter fp = (PasFormalParameter) param.getParent();
+            PasTypeDecl typeDecl = fp.getTypeDecl();
+            return typeDecl != null ? typeDecl.getText() : null;
+        }
+        return null;
+    }
 }

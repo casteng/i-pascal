@@ -65,6 +65,17 @@ public class ContextUtil {
         return false;
     }
 
+    // Check if the named element is the right part of an assignment statement
+    public static boolean isAssignRightPart(PascalNamedElement element) {
+        PsiElement expr = PsiUtil.skipToExpression(element);
+        if (expr instanceof PasReferenceExpr) {
+            PsiElement parent = expr.getParent();
+            parent = parent instanceof PasExpression ? parent.getParent() : null;
+            return parent instanceof PasAssignPart;
+        }
+        return false;
+    }
+
     public static boolean isPropertyGetter(PasClassPropertySpecifier spec) {
         return "read".equalsIgnoreCase(spec.getFirstChild().getText());
     }

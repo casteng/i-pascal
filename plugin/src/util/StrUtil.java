@@ -38,7 +38,8 @@ public class StrUtil {
         return false;
     }
 
-    public static String getFieldName(String name) {
+    // Returns method name by full method signature
+    public static String getMethodName(String name) {
         int ind = Math.min(getPos(name, '('), getPos(name, ':'));
         ind = name.substring(0, ind).lastIndexOf('.');
         if (ind > 0) {

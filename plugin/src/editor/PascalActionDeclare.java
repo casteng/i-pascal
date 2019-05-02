@@ -103,7 +103,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     abstract void calcData(final PsiFile file, final FixActionData data);
 
-    PascalActionDeclare(String name, String type, PascalNamedElement element, PsiElement scope) {
+    PascalActionDeclare(String name, PascalNamedElement element, String type, PsiElement scope) {
         this.name = name;
         this.type = type;
         this.scope = scope;
@@ -294,7 +294,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         private PascalRoutine routine;
 
         public ActionCreateParameter(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, null, element, scope);
+            super(name, element, null, scope);
         }
 
         @Override
@@ -357,7 +357,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     static class ActionCreateVar extends PascalActionDeclare {
 
         ActionCreateVar(String name, PascalNamedElement element, PsiElement scope, String type) {
-            super(name, type, element, scope);
+            super(name, element, type, scope);
         }
 
         @Override
@@ -391,7 +391,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     public static class ActionCreateField extends PascalActionDeclare {
 
         protected ActionCreateField(String name, String type, PascalNamedElement element, @NotNull PsiElement scope) {
-            super(name, type, element, scope);
+            super(name, element, type, scope);
         }
 
         @Override
@@ -408,8 +408,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
         private FixActionData varData;
 
-        ActionCreateProperty(String name, PascalNamedElement element, @NotNull PsiElement scope) {
-            super(name, null, element, scope);
+        ActionCreateProperty(String name, PascalNamedElement element, String type, @NotNull PsiElement scope) {
+            super(name, element, type, scope);
             varData = new FixActionData(element);
             addData(varData);
         }
@@ -431,22 +431,22 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreatePropertyHP extends ActionCreateProperty implements HighPriorityAction {
-        ActionCreatePropertyHP(String name, PascalNamedElement element, @NotNull PsiElement scope) {
-            super(name, element, scope);
+        public ActionCreatePropertyHP(String name, PascalNamedElement element, String type, @NotNull PsiElement scope) {
+            super(name, element, type, scope);
         }
     }
 
-    public static IntentionAction newActionCreateProperty(String message, PascalNamedElement namedElement, PsiElement scope, boolean priority) {
+    public static IntentionAction newActionCreateProperty(String message, PascalNamedElement namedElement, String type, PsiElement scope, boolean priority) {
         if (priority) {
-            return new PascalActionDeclare.ActionCreatePropertyHP(message, namedElement, scope);
+            return new PascalActionDeclare.ActionCreatePropertyHP(message, namedElement, type, scope);
         } else {
-            return new PascalActionDeclare.ActionCreateProperty(message, namedElement, scope);
+            return new PascalActionDeclare.ActionCreateProperty(message, namedElement, type, scope);
         }
     }
 
     static class ActionCreateConst extends PascalActionDeclare {
         ActionCreateConst(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, null, element, scope);
+            super(name, element, null, scope);
         }
 
         @Override
@@ -485,7 +485,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     public static class ActionCreateEnum extends PascalActionDeclare {
         public ActionCreateEnum(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, null, element, scope);
+            super(name, element, null, scope);
         }
 
         @Override
@@ -509,7 +509,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     static class ActionCreateType extends PascalActionDeclare {
         ActionCreateType(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, null, element, scope);
+            super(name, element, null, scope);
         }
 
         @Override
@@ -551,7 +551,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         private final PasClassPropertySpecifier propertySpecifier;
 
         ActionCreateRoutine(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier propertySpecifier) {
-            super(name, null, element, scope);
+            super(name, element, null, scope);
             this.callScope = callScope;
             this.namedElement = element;
             this.propertySpecifier = propertySpecifier;
