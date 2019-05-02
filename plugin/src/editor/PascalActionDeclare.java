@@ -87,9 +87,10 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     private static final Logger LOG = Logger.getInstance(PascalActionDeclare.class.getName());
 
-    public static final int MAX_SECTION_LEVELS = 20;
+    private static final int MAX_SECTION_LEVELS = 20;
     final List<FixActionData> fixActionDataArray;
     private final String name;
+    protected final String type;
     protected final PsiElement scope;
     private static final String TPL_VAR_RETURN_TYPE = "RETURN_TYPE";
 
@@ -102,17 +103,18 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     abstract void calcData(final PsiFile file, final FixActionData data);
 
-    public PascalActionDeclare(String name, PascalNamedElement element, PsiElement scope) {
+    PascalActionDeclare(String name, String type, PascalNamedElement element, PsiElement scope) {
         this.name = name;
+        this.type = type;
         this.scope = scope;
-        this.fixActionDataArray = new SmartList<FixActionData>(data(element));
+        this.fixActionDataArray = new SmartList<>(data(element));
     }
 
     public static FixActionData data(PascalNamedElement element) {
         return new FixActionData(element);
     }
 
-    public void addData(FixActionData data) {
+    void addData(FixActionData data) {
         fixActionDataArray.add(data);
     }
 
@@ -273,6 +275,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     String calcType(FixActionData data) {
+        if (type != null) {
+            return type;
+        }
         String res = "T";
         if (ContextUtil.isAssignLeftPart(data.element)) {
             String type = PascalExpression.calcAssignStatementType(PsiUtil.skipToExpressionParent(data.element));
@@ -289,7 +294,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         private PascalRoutine routine;
 
         public ActionCreateParameter(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, element, scope);
+            super(name, null, element, scope);
         }
 
         @Override
@@ -349,13 +354,10 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
-    public static class ActionCreateVar extends PascalActionDeclare {
+    static class ActionCreateVar extends PascalActionDeclare {
 
-        private final String defaultType;
-
-        public ActionCreateVar(String name, PascalNamedElement element, PsiElement scope, String defaultType) {
-            super(name, element, scope);
-            this.defaultType = defaultType;
+        ActionCreateVar(String name, PascalNamedElement element, PsiElement scope, String type) {
+            super(name, type, element, scope);
         }
 
         @Override
@@ -364,17 +366,16 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             if (!fillMemberPlace(getScope(file, scope), data, PasField.Visibility.PRIVATE, PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
                 prefix = "\nvar ";
             }
-            String type = defaultType != null ? defaultType : calcType(data);
             if (data.parent != null) {
                 data.createTemplate(data.text.replace(PLACEHOLDER_DATA, String.format("%s%s: $%s$;", prefix, data.element.getName(), TPL_VAR_TYPE)),
-                        StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, type))));
+                        StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, calcType(data)))));
             }
         }
 
     }
 
     public static class ActionCreateVarHP extends ActionCreateVar implements HighPriorityAction {
-        public ActionCreateVarHP(String name, PascalNamedElement element, PsiElement scope, String defaultType) {
+        ActionCreateVarHP(String name, PascalNamedElement element, PsiElement scope, String defaultType) {
             super(name, element, scope, defaultType);
         }
     }
@@ -387,12 +388,28 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
-    public static class ActionCreateProperty extends PascalActionDeclare {
+    public static class ActionCreateField extends PascalActionDeclare {
+
+        protected ActionCreateField(String name, String type, PascalNamedElement element, @NotNull PsiElement scope) {
+            super(name, type, element, scope);
+        }
+
+        @Override
+        void calcData(final PsiFile file, final FixActionData data) {
+            if (fillMemberPlace(scope, data, PasField.Visibility.PRIVATE, PasField.FieldType.VARIABLE, PasVarSection.class, null)) {
+                data.text = data.text.replace(PLACEHOLDER_DATA, String.format("F%s: $%s$;", StringUtil.capitalize(data.element.getName()), TPL_VAR_TYPE));
+                data.dataType = FixActionData.DataType.COMPLEX_TEMPLATE;
+            }
+            data.variableDefaults = StrUtil.getParams(Collections.singletonList(Pair.create(TPL_VAR_TYPE, calcType(data))));
+        }
+    }
+
+    static class ActionCreateProperty extends PascalActionDeclare {
 
         private FixActionData varData;
 
-        public ActionCreateProperty(String name, PascalNamedElement element, @NotNull PsiElement scope) {
-            super(name, element, scope);
+        ActionCreateProperty(String name, PascalNamedElement element, @NotNull PsiElement scope) {
+            super(name, null, element, scope);
             varData = new FixActionData(element);
             addData(varData);
         }
@@ -414,7 +431,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreatePropertyHP extends ActionCreateProperty implements HighPriorityAction {
-        public ActionCreatePropertyHP(String name, PascalNamedElement element, @NotNull PsiElement scope) {
+        ActionCreatePropertyHP(String name, PascalNamedElement element, @NotNull PsiElement scope) {
             super(name, element, scope);
         }
     }
@@ -427,9 +444,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
-    public static class ActionCreateConst extends PascalActionDeclare {
-        public ActionCreateConst(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, element, scope);
+    static class ActionCreateConst extends PascalActionDeclare {
+        ActionCreateConst(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, null, element, scope);
         }
 
         @Override
@@ -446,13 +463,13 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateConstHP extends ActionCreateConst implements HighPriorityAction {
-        public ActionCreateConstHP(String name, PascalNamedElement element, PsiElement scope) {
+        ActionCreateConstHP(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
         }
     }
 
     public static class ActionCreateConstLP extends ActionCreateConst implements LowPriorityAction {
-        public ActionCreateConstLP(String name, PascalNamedElement element, PsiElement scope) {
+        ActionCreateConstLP(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
         }
     }
@@ -468,7 +485,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
     public static class ActionCreateEnum extends PascalActionDeclare {
         public ActionCreateEnum(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, element, scope);
+            super(name, null, element, scope);
         }
 
         @Override
@@ -490,9 +507,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
     }
 
-    public static class ActionCreateType extends PascalActionDeclare {
-        public ActionCreateType(String name, PascalNamedElement element, PsiElement scope) {
-            super(name, element, scope);
+    static class ActionCreateType extends PascalActionDeclare {
+        ActionCreateType(String name, PascalNamedElement element, PsiElement scope) {
+            super(name, null, element, scope);
         }
 
         @Override
@@ -508,13 +525,13 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateTypeHP extends ActionCreateType implements HighPriorityAction {
-        public ActionCreateTypeHP(String name, PascalNamedElement element, PsiElement scope) {
+        ActionCreateTypeHP(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
         }
     }
 
     public static class ActionCreateTypeLP extends ActionCreateType implements LowPriorityAction {
-        public ActionCreateTypeLP(String name, PascalNamedElement element, PsiElement scope) {
+        ActionCreateTypeLP(String name, PascalNamedElement element, PsiElement scope) {
             super(name, element, scope);
         }
     }
@@ -533,8 +550,8 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         private final PascalNamedElement namedElement;
         private final PasClassPropertySpecifier propertySpecifier;
 
-        public ActionCreateRoutine(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier propertySpecifier) {
-            super(name, element, scope);
+        ActionCreateRoutine(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier propertySpecifier) {
+            super(name, null, element, scope);
             this.callScope = callScope;
             this.namedElement = element;
             this.propertySpecifier = propertySpecifier;
@@ -542,23 +559,25 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
 
         @Override
         void calcData(final PsiFile file, final FixActionData data) {
-            String type = null;
-            if (propertySpecifier != null) {
+            String inferredType = null;
+            if (type != null) {
+                inferredType = type;
+            } else if (propertySpecifier != null) {
                 PasClassProperty prop = (PasClassProperty) propertySpecifier.getParent();
-                type = prop.getTypeID() != null ? prop.getTypeID().getText() : null;
+                inferredType = prop.getTypeID() != null ? prop.getTypeID().getText() : null;
             } else {
                 PsiElement parent = PsiUtil.skipToExpressionParent(namedElement);
                 if (parent instanceof PasAssignPart) {
-                    type = PascalExpression.calcAssignExpectedType(parent.getParent());
-                    type = type != null ? type : "";
+                    inferredType = PascalExpression.calcAssignExpectedType(parent.getParent());
+                    inferredType = inferredType != null ? inferredType : "";
                 } else if (parent instanceof PasArgumentList) {
-                    type = "";  // TODO: infere actual type
+                    inferredType = PascalExpression.calcFormalParameterType(parent);
                 }
             }
             if ((scope instanceof PascalStructType) && (null == callScope)) {
-                addToInterface(data, type);
+                addToInterface(data, inferredType);
             } else {
-                addToImplementation(data, type);
+                addToImplementation(data, inferredType);
             }
         }
 
@@ -592,7 +611,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             Pair<String, Map<String, String>> arguments;
             if (propertySpecifier != null) {
                 if (ContextUtil.isPropertyGetter(propertySpecifier)) {
-                    Map<String, String> defaults = new SmartHashMap<String, String>();
+                    Map<String, String> defaults = new SmartHashMap<>();
                     arguments = Pair.create("", defaults);
                 } else {
                     Map<String, String> defaults = ImmutableMap.of(TPL_VAR_TYPE, returnType);
@@ -614,7 +633,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         private Pair<String, Map<String, String>> calcArguments(FixActionData data) {
             PasExpr expression = PsiTreeUtil.getParentOfType(data.element, PasExpr.class);
             StringBuilder params = new StringBuilder();
-            Map<String, String> defaults = new SmartHashMap<String, String>();
+            Map<String, String> defaults = new SmartHashMap<>();
             if ((expression != null) && (expression.getNextSibling() instanceof PasArgumentList)) {
                 PasArgumentList args = (PasArgumentList) expression.getNextSibling();
                 int count = 0;
@@ -676,7 +695,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     }
 
     public static class ActionCreateRoutineHP extends ActionCreateRoutine implements HighPriorityAction {
-        public ActionCreateRoutineHP(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier spec) {
+        ActionCreateRoutineHP(String name, PascalNamedElement element, PsiElement scope, PsiElement callScope, PasClassPropertySpecifier spec) {
             super(name, element, scope, callScope, spec);
         }
     }
@@ -749,7 +768,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         DataType dataType = DataType.TEXT;
         Map<String, String> variableDefaults;
 
-        public FixActionData(PascalNamedElement element) {
+        FixActionData(PascalNamedElement element) {
             this.element = element;
         }
 
@@ -758,7 +777,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
             return data.offset - offset;
         }
 
-        public void createTemplate(String text, Map<String, String> variableDefaults) {
+        void createTemplate(String text, Map<String, String> variableDefaults) {
             assert dataType != DataType.COMPLEX_TEMPLATE;
             this.variableDefaults = variableDefaults;
             dataType = DataType.TEMPLATE;
