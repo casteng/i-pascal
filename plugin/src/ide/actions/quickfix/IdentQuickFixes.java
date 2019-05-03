@@ -14,9 +14,9 @@ import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
-import com.siberika.idea.pascal.lang.psi.PasVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
 import com.siberika.idea.pascal.lang.psi.impl.PasElementFactory;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
@@ -66,9 +66,9 @@ public class IdentQuickFixes {
             List<PsiElement> toRemove = new SmartList<>();
             PsiElement parent = identName.getParent();
             parent = parent instanceof PasGenericTypeIdent ? parent.getParent() : parent;
-            if (parent instanceof PasVarDeclaration) {
+            if (parent instanceof PascalVariableDeclaration) {
                 toRemove.add(identName);
-                if (((PasVarDeclaration) parent).getNamedIdentDeclList().size() <= 1) {
+                if (((PascalVariableDeclaration) parent).getNamedIdentDeclList().size() <= 1) {
                     toRemove.add(parent);
                     PsiElement section = parent.getParent();
                     if (section instanceof PasVarSection) {
