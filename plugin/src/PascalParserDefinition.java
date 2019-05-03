@@ -5,6 +5,7 @@ import com.intellij.lang.ParserDefinition;
 import com.intellij.lang.PsiParser;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -16,6 +17,7 @@ import com.siberika.idea.pascal.lang.parser.PascalFileElementType;
 import com.siberika.idea.pascal.lang.parser.PascalParser;
 import com.siberika.idea.pascal.lang.parser.impl.PascalFileImpl;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
+import com.siberika.idea.pascal.module.PascalProjectService;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -31,7 +33,10 @@ public class PascalParserDefinition implements ParserDefinition {
     @NotNull
     @Override
     public Lexer createLexer(Project project) {
-        return new PascalLexer.ParsingPascalLexer(project, null);
+        PascalProjectService service = project.getComponent(PascalProjectService.class);
+        Object parsing = service.getData(PascalProjectService.KEY_PARSING);
+        service.remove(PascalProjectService.KEY_PARSING);
+        return new PascalLexer.ParsingPascalLexer(project, parsing instanceof VirtualFile ? (VirtualFile) parsing : null);
     }
 
     @Override

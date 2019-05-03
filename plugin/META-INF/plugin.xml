@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.30</version>
+    <version>2.31</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,7 +9,7 @@
       ]]></description>
 
     <change-notes><![CDATA[
-        <p>2.30</p>
+        <p>2.31</p>
         <ul>
             <li>Default formal parameters support in resolve</li>
             <li>Create field/property for parameter quickfix</li>
@@ -397,6 +397,11 @@
             <implementation-class>com.siberika.idea.pascal.module.ModuleService</implementation-class>
         </component>
     </module-components>
+    <project-components>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.module.PascalProjectService</implementation-class>
+        </component>
+    </project-components>
 
     <actions>
         <action id="Pascal.NewHPascalModule" class="com.siberika.idea.pascal.ide.actions.CreateModuleAction"

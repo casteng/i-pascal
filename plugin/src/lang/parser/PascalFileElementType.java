@@ -1,8 +1,13 @@
 package com.siberika.idea.pascal.lang.parser;
 
+import com.intellij.lang.ASTNode;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.PsiFileStub;
 import com.intellij.psi.tree.IStubFileElementType;
 import com.siberika.idea.pascal.PascalLanguage;
+import com.siberika.idea.pascal.module.PascalProjectService;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Author: George Bakhtadze
@@ -22,4 +27,12 @@ public class PascalFileElementType extends IStubFileElementType<PsiFileStub<Pasc
         return 111;
     }
 
+    @Override
+    protected ASTNode doParseContents(@NotNull ASTNode chameleon, @NotNull PsiElement psi) {
+        Project project = psi.getProject();
+        PascalProjectService service = project.getComponent(PascalProjectService.class);
+        // store file being parsed to retrieve in lexer
+        service.setData(PascalProjectService.KEY_PARSING, psi.getContainingFile().getVirtualFile());
+        return super.doParseContents(chameleon, psi);
+    }
 }
