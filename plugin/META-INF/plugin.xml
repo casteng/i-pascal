@@ -424,7 +424,6 @@
 
 
     <extensions defaultExtensionNs="com.intellij">
-        <elementDescriptionProvider implementation=""></elementDescriptionProvider>
         <codeInsight.overrideMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalOverrideMethodsHandler"/>
         <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
 

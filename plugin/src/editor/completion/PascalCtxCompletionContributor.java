@@ -354,6 +354,7 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
             namespace.clearTarget();
             ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) file.getVirtualFile()).getContextElement()),
                     PasField.TYPES_ALL, false, null, null);
+            resolveContext.options.add(ResolveOptions.IGNORE_NAME);
             Resolve.resolveExpr(namespace, resolveContext, new FieldCollectProcessor(result, completionContext));
             result.stopHere();
             return true;
