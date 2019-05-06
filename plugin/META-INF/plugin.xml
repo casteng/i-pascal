@@ -13,6 +13,7 @@
         <ul>
             <li>Default formal parameters support in resolve</li>
             <li>Create field/property for parameter quickfix</li>
+            <li>Add/remove compound statement quickfix for structured operators</li>
         </ul>
         <p>2.20</p>
         <ul>

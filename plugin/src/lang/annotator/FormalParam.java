@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.lang.annotator;
 
-import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.openapi.application.ApplicationManager;
@@ -40,7 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class FormalParam {
-    public static void annotateFormalParam(PsiElement element, AnnotationHolder holder) {
+    public static void annotate(PsiElement element, AnnotationHolder holder) {
         if (element instanceof PasNamedIdent && element.getParent() instanceof PasFormalParameter) {
             PascalNamedElement namedElement = (PascalNamedElement) element;
             PascalRoutine routine = geRoutine(namedElement);
@@ -52,7 +51,6 @@ public class FormalParam {
                         Annotation ann = holder.createInfoAnnotation(element, PascalBundle.message("action.fix.create.field", namedElement.getName()));
                         ann.registerFix(new CreateFieldFix(namedElement));
                         ann.registerFix(new CreatePropertyFix(namedElement));
-                        //, new IdentQuickFixes.ExcludeIdentAction());
                     }
                 }
             }
@@ -75,31 +73,13 @@ public class FormalParam {
         return null;
     }
 
-    private abstract static class CreateFromParamFixBase extends BaseIntentionAction {
+    private abstract static class CreateFromParamFixBase extends FixBase<PascalNamedElement> {
 
-        protected final PascalNamedElement param;
-
-        CreateFromParamFixBase(PascalNamedElement param) {
-            this.param = param;
+        CreateFromParamFixBase(PascalNamedElement element) {
+            super(element);
         }
 
-        @NotNull
-        @Override
-        public String getFamilyName() {
-            return PascalBundle.message("action.familyName");
-        }
-
-        @Override
-        public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
-            return true;
-        }
-
-        @Override
-        public boolean startInWriteAction() {
-            return false;
-        }
-
-        protected void addParamAssignment(PasEntityScope classScope, PascalRoutine routine, PascalNamedElement namedElement, String fieldName) {
+        void addParamAssignment(PasEntityScope classScope, PascalRoutine routine, PascalNamedElement namedElement, String fieldName) {
             if (routine instanceof PascalExportedRoutine) {
                 PsiElement element = SectionToggle.retrieveImplementation(routine, true);
                 routine = element instanceof PasRoutineImplDecl ? (PascalRoutine) element : null;
@@ -140,19 +120,14 @@ public class FormalParam {
                     PsiElement anchorFinal = anchor;
                     boolean afterFinal = after;
                     ApplicationManager.getApplication().runWriteAction(
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    IdentQuickFixes.addElements(parent, anchorFinal, afterFinal, fieldName, ":=", namedElement.getName(), ";");
-                                }
-                            }
+                            () -> IdentQuickFixes.addElements(parent, anchorFinal, afterFinal, fieldName, ":=", namedElement.getName(), ";")
                     );
                 }
             }
         }
 
         private PascalNamedElement getAssignment(PascalNamedElement element) {
-            Query<PsiReference> usages = ReferencesSearch.search(element, new LocalSearchScope(param.getContainingFile()));
+            Query<PsiReference> usages = ReferencesSearch.search(element, new LocalSearchScope(element.getContainingFile()));
             AtomicReference<PascalNamedElement> result = new AtomicReference<>();
             usages.forEach(new Processor<PsiReference>() {
                 @Override
@@ -189,19 +164,19 @@ public class FormalParam {
         @NotNull
         @Override
         public String getText() {
-            return PascalBundle.message("action.fix.create.field", param.getName());
+            return PascalBundle.message("action.fix.create.field", element.getName());
         }
 
         @Override
         public void invoke(@NotNull final Project project, final Editor editor, final PsiFile file) throws IncorrectOperationException {
-            PascalRoutine routine = geRoutine(param);
+            PascalRoutine routine = geRoutine(element);
             if (routine != null) {
                 PasEntityScope classScope = routine.getContainingScope();
                 if (classScope instanceof PascalStructType) {
-                    String fieldName = getFieldName(param.getName());
-                    PascalActionDeclare.ActionCreateField cfa = new PascalActionDeclare.ActionCreateField(getText(), RoutineUtil.getParameterType(param), param, classScope) {
+                    String fieldName = getFieldName(element.getName());
+                    PascalActionDeclare.ActionCreateField cfa = new PascalActionDeclare.ActionCreateField(getText(), RoutineUtil.getParameterType(element), element, classScope) {
                         public void afterExecution(Editor editor, PsiFile file) {
-                            addParamAssignment(classScope, routine, param, fieldName);
+                            addParamAssignment(classScope, routine, element, fieldName);
                         }
                     };
                     cfa.invoke(project, editor, routine.getContainingFile());
@@ -218,19 +193,19 @@ public class FormalParam {
         @NotNull
         @Override
         public String getText() {
-            return PascalBundle.message("action.fix.create.property", param.getName());
+            return PascalBundle.message("action.fix.create.property", element.getName());
         }
 
         @Override
         public void invoke(@NotNull final Project project, final Editor editor, final PsiFile file) throws IncorrectOperationException {
-            PascalRoutine routine = geRoutine(param);
+            PascalRoutine routine = geRoutine(element);
             if (routine != null) {
                 PasEntityScope classScope = routine.getContainingScope();
                 if (classScope instanceof PascalStructType) {
-                    String fieldName = getFieldName(param.getName());
-                    PascalActionDeclare.ActionCreatePropertyHP cfa = new PascalActionDeclare.ActionCreatePropertyHP(getText(), param, RoutineUtil.getParameterType(param), classScope) {
+                    String fieldName = getFieldName(element.getName());
+                    PascalActionDeclare.ActionCreatePropertyHP cfa = new PascalActionDeclare.ActionCreatePropertyHP(getText(), element, RoutineUtil.getParameterType(element), classScope) {
                         public void afterExecution(Editor editor, PsiFile file) {
-                            addParamAssignment(classScope, routine, param, fieldName);
+                            addParamAssignment(classScope, routine, element, fieldName);
                         }
                     };
                     cfa.invoke(project, editor, routine.getContainingFile());

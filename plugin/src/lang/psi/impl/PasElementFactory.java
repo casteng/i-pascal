@@ -40,4 +40,10 @@ public class PasElementFactory {
             return createLeafFromText(element.getProject(), text);
         }
     }
+
+    public static <T extends PsiElement> T createElementFromText(Project project, String text, Class<T> aClass) {
+        PsiElement file = createElementFromText(project, text);
+        return PsiTreeUtil.findChildOfType(file, aClass);
+
+    }
 }
