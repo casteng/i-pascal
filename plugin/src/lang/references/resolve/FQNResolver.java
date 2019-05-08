@@ -71,7 +71,7 @@ abstract class FQNResolver {
         }
     }
 
-    public boolean isWasType() {
+    boolean isWasType() {
         return wasType;
     }
 
@@ -94,14 +94,14 @@ abstract class FQNResolver {
     boolean processDefault(PasEntityScope scope, String fieldName) {
         if (context.ignoreNames() && fqn.isTarget()) {
             for (PasField field : scope.getAllFields()) {
-                if ((!processField(scope, field))) {
+                if ((isFieldSuitable(field) && !processField(scope, field))) {
                     return false;
                 }
             }
             return true;
         }
         PasField field = scope.getField(fieldName);
-        if (field != null) {
+        if (isFieldSuitable(field)) {
             /*if (field.fieldType == PasField.FieldType.ROUTINE) {
                 PascalNamedElement el = field.getElement();
                 if (el instanceof PascalRoutine) {
@@ -123,6 +123,10 @@ abstract class FQNResolver {
             }
         }
         return true;
+    }
+
+    boolean isFieldSuitable(PasField field) {
+        return (field != null) && context.fieldTypes.contains(field.fieldType);
     }
 
     private boolean processScope(final PasEntityScope scope, boolean first) {

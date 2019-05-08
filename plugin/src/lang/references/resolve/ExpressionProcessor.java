@@ -66,7 +66,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                     boolean isDefault = "DEFAULT".equals(fieldName.toUpperCase());
                     if ((fqn.isTarget() || isDefault) && isWasType()) {         // "default" type pseudo value
                         PasField field = scope.getField(fieldName);
-                        if (field != null) {
+                        if (isFieldSuitable(field)) {
                             return processField(scope, field);
                         }
                         if (isDefault) {
