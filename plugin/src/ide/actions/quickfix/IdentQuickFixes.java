@@ -3,6 +3,8 @@ package com.siberika.idea.pascal.ide.actions.quickfix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.TokenType;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.PascalDocumentationProvider;
@@ -10,10 +12,13 @@ import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasConstSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExitStatement;
+import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
+import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeSection;
+import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasVarSection;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalVariableDeclaration;
@@ -75,6 +80,15 @@ public class IdentQuickFixes {
                         if (((PasVarSection) section).getVarDeclarationList().size() <= 1) {
                             toRemove.add(section);
                         }
+                    } else if (section instanceof PasFormalParameterSection) {
+                        List<PasFormalParameter> params = ((PasFormalParameterSection) section).getFormalParameterList();
+                        if (!params.isEmpty() && (params.get(0) == parent)) {       // First
+                            addSeparatorsToRemove(toRemove, parent, true);
+                        } else if (params.size() > 1) {
+                            toRemove.remove(parent);                       // parameter should be removed after preceding separators
+                            addSeparatorsToRemove(toRemove, parent, false);
+                            toRemove.add(parent);
+                        }
                     }
                 }
             } else if ((parent instanceof PasConstDeclaration) || (parent instanceof PasTypeDeclaration)) {
@@ -104,6 +118,18 @@ public class IdentQuickFixes {
             }
             for (PsiElement psiElement : toRemove) {
                 psiElement.delete();
+            }
+        }
+
+        private final static TokenSet WS_SEMI = TokenSet.create(PasTypes.SEMI, TokenType.WHITE_SPACE, PasTypes.COMMENT);
+
+        private void addSeparatorsToRemove(List<PsiElement> toRemove, PsiElement param, boolean forward) {
+            PsiElement el = forward ? param.getNextSibling() : param.getPrevSibling();
+            while (WS_SEMI.contains(el.getNode().getElementType())) {
+                if (el.getNode().getElementType() != PasTypes.COMMENT) {
+                    toRemove.add(el);
+                }
+                el = forward ? el.getNextSibling() : el.getPrevSibling();
             }
         }
 
