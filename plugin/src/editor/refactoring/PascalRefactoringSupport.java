@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.editor.refactoring;
 
 import com.intellij.lang.refactoring.RefactoringSupportProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.refactoring.RefactoringActionHandler;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,5 +24,11 @@ public class PascalRefactoringSupport extends RefactoringSupportProvider {
             return false;
         }
         return true;
+    }
+
+    @Nullable
+    @Override
+    public RefactoringActionHandler getIntroduceVariableHandler() {
+        return new PascalIntroduceVariableHandler();
     }
 }

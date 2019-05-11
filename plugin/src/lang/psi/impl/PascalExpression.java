@@ -190,6 +190,13 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         return doInferType(expression, false);
     }
 
+    public static String inferType(PsiElement element) {
+        if (element instanceof PasExpr) {
+            return inferType((PasExpr) element);
+        }
+        return "T";
+    }
+
     private static String doInferType(PasExpr expression, boolean minus) {
         if (expression instanceof PasLiteralExpr) {
             PsiElement literal = expression.getFirstChild();
@@ -488,5 +495,9 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             this.kind = kind;
             this.size = size;
         }
+    }
+
+    public PasExpr getExpr() {
+        return PsiTreeUtil.getChildOfType(this, PasExpr.class);
     }
 }

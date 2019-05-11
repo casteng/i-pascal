@@ -944,4 +944,9 @@ public class PsiUtil {
             return getNearestAffectingScope(element);
         }
     }
+
+    public static boolean isStructuredOperatorStatement(PsiElement parent) {
+        return isInstanceOfAny(parent, PasIfThenStatement.class, PasIfElseStatement.class, PasWhileStatement.class, PasForStatement.class,
+                PasWithStatement.class, PasHandler.class, PasCaseItem.class, PasCaseElse.class);
+    }
 }

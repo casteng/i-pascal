@@ -12,19 +12,11 @@ import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.PascalBundle;
-import com.siberika.idea.pascal.lang.psi.PasCaseElse;
-import com.siberika.idea.pascal.lang.psi.PasCaseItem;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
-import com.siberika.idea.pascal.lang.psi.PasForStatement;
-import com.siberika.idea.pascal.lang.psi.PasHandler;
-import com.siberika.idea.pascal.lang.psi.PasIfElseStatement;
 import com.siberika.idea.pascal.lang.psi.PasIfStatement;
-import com.siberika.idea.pascal.lang.psi.PasIfThenStatement;
 import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasStmtEmpty;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
-import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
-import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.impl.PasElementFactory;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -38,8 +30,7 @@ public class Statement {
 
     public static void annotate(PsiElement element, AnnotationHolder holder) {
         PsiElement parent = getStatement(element);
-        if (PsiUtil.isInstanceOfAny(parent, PasIfThenStatement.class, PasIfElseStatement.class, PasWhileStatement.class, PasForStatement.class,
-                PasWithStatement.class, PasHandler.class, PasCaseItem.class, PasCaseElse.class)) {
+        if (PsiUtil.isStructuredOperatorStatement(parent)) {
             PasStatement stmt = PsiTreeUtil.getChildOfType(parent, PasStatement.class);
             if (null == stmt) {
                 return;
