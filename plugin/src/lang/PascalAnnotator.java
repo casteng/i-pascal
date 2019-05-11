@@ -181,7 +181,7 @@ public class PascalAnnotator implements Annotator {
                             break;
                         }
                         case PARAMETER: {
-                            ann.registerFix(new PascalActionDeclare.ActionCreateParameter(message("action.create.parameter"), namedElement, scope));
+                            ann.registerFix(new PascalActionDeclare.ActionCreateParameter(namedElement, namedElement.getName(), scope));
                             break;
                         }
                         case UNIT: {

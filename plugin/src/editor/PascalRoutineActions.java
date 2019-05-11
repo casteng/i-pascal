@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.editor;
 import com.intellij.codeInsight.intention.LowPriorityAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
@@ -34,7 +35,7 @@ public class PascalRoutineActions {
 
     public static class ActionDeclare extends PascalActionDeclare {
         public ActionDeclare(String name, PascalNamedElement element) {
-            super(name, element, null, null);
+            super(name, element, element.getName(), null, null);
         }
 
         @Override
@@ -77,7 +78,7 @@ public class PascalRoutineActions {
     public static class ActionImplement extends PascalActionDeclare {
 
         public ActionImplement(String name, PascalNamedElement element) {
-            super(name, element, null, null);
+            super(name, element, element.getName(), null, null);
         }
 
         @Override
@@ -91,7 +92,7 @@ public class PascalRoutineActions {
                     data.text = data.text.replace(directive.getText(), "");
                 }
             }
-            String name = data.element.getName();
+            String name = data.name;
             data.text = "\n\n" + data.text.replaceFirst(" " + name, " " + prefix + name) + "\nbegin\n" + DocUtil.PLACEHOLDER_CARET + "\nend;\n\n";
             data.offset = SectionToggle.findImplPos(routine);
             data.parent = routine;
@@ -134,7 +135,7 @@ public class PascalRoutineActions {
             if (initDone) {
                 return;
             }
-            PascalNamedElement element = fixActionDataArray.isEmpty() ? null : fixActionDataArray.get(0).element;
+            PsiElement element = fixActionDataArray.isEmpty() ? null : fixActionDataArray.get(0).element;
             if (!(element instanceof PascalRoutine)) {
                 return;
             }

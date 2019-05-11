@@ -81,7 +81,7 @@ public class PascalReadWriteAccessDetector extends ReadWriteAccessDetector {
                 if (element.getParent() instanceof PascalQualifiedIdent) {
                     element = element.getParent();
                 }
-                PasCallExpr callExpr = RoutineUtil.retrieveCallExpr((PascalNamedElement) element);
+                PasCallExpr callExpr = RoutineUtil.retrieveCallExpr(element);
                 if (callExpr != null) {
                     return isWriteModifier(retrieveActualParamAccess(callExpr, (PascalNamedElement) element));
                 }

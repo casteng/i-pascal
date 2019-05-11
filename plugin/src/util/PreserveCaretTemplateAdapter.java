@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.util;
 
 import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateEditingAdapter;
+import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.RangeMarker;
 import com.intellij.openapi.editor.ScrollType;
@@ -30,14 +31,14 @@ public class PreserveCaretTemplateAdapter extends TemplateEditingAdapter {
     }
 
     @Override
-    public void templateFinished(Template template, boolean brokenOff) {
+    public void beforeTemplateFinished(TemplateState state, Template template, boolean brokenOff) {
         if ((editor != null) && (editor.getProject() != null) && (file != null) && marker.isValid()) {
             editor.getCaretModel().moveToOffset(marker.getStartOffset());
             editor.getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
             FileEditorManager.getInstance(editor.getProject()).openFile(file.getVirtualFile(), true, true);
             DocUtil.reformat(elementToReformat, true);
             if (actionDeclare != null) {
-                actionDeclare.afterExecution(editor, file);
+                actionDeclare.afterExecution(editor, file, state);
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.lang.annotator;
 
+import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.openapi.application.ApplicationManager;
@@ -175,7 +176,7 @@ public class FormalParam {
                 if (classScope instanceof PascalStructType) {
                     String fieldName = getFieldName(element.getName());
                     PascalActionDeclare.ActionCreateField cfa = new PascalActionDeclare.ActionCreateField(getText(), RoutineUtil.getParameterType(element), element, classScope) {
-                        public void afterExecution(Editor editor, PsiFile file) {
+                        public void afterExecution(Editor editor, PsiFile file, TemplateState state) {
                             addParamAssignment(classScope, routine, element, fieldName);
                         }
                     };
@@ -204,7 +205,7 @@ public class FormalParam {
                 if (classScope instanceof PascalStructType) {
                     String fieldName = getFieldName(element.getName());
                     PascalActionDeclare.ActionCreatePropertyHP cfa = new PascalActionDeclare.ActionCreatePropertyHP(getText(), element, RoutineUtil.getParameterType(element), classScope) {
-                        public void afterExecution(Editor editor, PsiFile file) {
+                        public void afterExecution(Editor editor, PsiFile file, TemplateState state) {
                             addParamAssignment(classScope, routine, element, fieldName);
                         }
                     };

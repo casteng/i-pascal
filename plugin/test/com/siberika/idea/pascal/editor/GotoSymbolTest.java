@@ -77,7 +77,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
         for (IntentionAction fix : fixes) {
             if (fix instanceof PascalActionDeclare) {
                 PascalActionDeclare ad = (PascalActionDeclare) fix;
-                map.put(getData(ad).element.getName() + "." + ad.getText(), ad);
+                map.put(getData(ad).name + "." + ad.getText(), ad);
             }
         }
         System.out.println("Idents: " + map.keySet().toString());

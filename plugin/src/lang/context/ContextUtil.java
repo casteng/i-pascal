@@ -53,7 +53,7 @@ public class ContextUtil {
     }
 
     // Check if the named element is the left part of an assignment statement
-    public static boolean isAssignLeftPart(PascalNamedElement element) {
+    public static boolean isAssignLeftPart(PsiElement element) {
         PsiElement expr = PsiUtil.skipToExpression(element);
         if (expr instanceof PasReferenceExpr) {
             PsiElement parent = expr.getParent();
