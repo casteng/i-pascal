@@ -11,10 +11,10 @@
     <change-notes><![CDATA[
         <p>2.31</p>
         <ul>
-            <li>Default formal parameters support in resolve</li>
-            <li>Create field/property for parameter quickfix</li>
-            <li>Add/remove compound statement quickfix for structured operators</li>
             <li>Introduce variable refactoring</li>
+            <li>Create field/property for parameter quickfix</li>
+            <li>Default formal parameters support in resolving</li>
+            <li>Add/remove compound statement quickfix for structured operators</li>
         </ul>
         <p>2.20</p>
         <ul>

@@ -37,7 +37,7 @@ public class Statement {
             }
             PasCompoundStatement compoundStatement = stmt.getCompoundStatement();
             if (compoundStatement != null) {
-                if (isSingleOrEmptycompoundStatement(compoundStatement)) {
+                if (isSingleOrEmptyCompoundStatement(compoundStatement)) {
                     Annotation ann = holder.createInfoAnnotation(element, PascalBundle.message("action.fix.statement.remove.compound"));
                     ann.registerFix(new RemoveCompoundStatementFix(stmt));
                 }
@@ -62,7 +62,7 @@ public class Statement {
         return parent;
     }
 
-    private static boolean isSingleOrEmptycompoundStatement(PasCompoundStatement statement) {
+    private static boolean isSingleOrEmptyCompoundStatement(PasCompoundStatement statement) {
         List<PasStatement> list = statement.getStatementList();
         return (list.size() < 2) || ((list.size() == 2) && (list.get(1).getFirstChild() instanceof PasStmtEmpty));
     }
@@ -82,7 +82,7 @@ public class Statement {
         public void invoke(@NotNull final Project project, final Editor editor, final PsiFile file) throws IncorrectOperationException {
             PasCompoundStatement compoundStatement = element.getCompoundStatement();
             PasStatement statement;
-            if ((compoundStatement != null) && isSingleOrEmptycompoundStatement(compoundStatement)) {
+            if ((compoundStatement != null) && isSingleOrEmptyCompoundStatement(compoundStatement)) {
                 statement = !compoundStatement.getStatementList().isEmpty() ? compoundStatement.getStatementList().get(0) : null;
                 ApplicationManager.getApplication().runWriteAction(
                         () -> {
