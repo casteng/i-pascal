@@ -553,7 +553,7 @@ public class PasReferenceUtil {
         }
     }
 
-    static PasEntityScope checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn, List<String> unitPrefixes) {
+    private static PasEntityScope checkUnitScope(Collection<PasField> result, List<PasEntityScope> namespaces, NamespaceRec fqn, List<String> unitPrefixes) {
         List<PasEntityScope> sorted = new ArrayList<PasEntityScope>(namespaces.size());
         for (PasEntityScope namespace : namespaces) {
             if ((namespace instanceof PasModule) && !StringUtils.isEmpty(namespace.getName())) {

@@ -13,15 +13,19 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.compiled.CompiledFileImpl;
+import com.siberika.idea.pascal.lang.psi.PasAssignPart;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasInlineConstDeclaration;
+import com.siberika.idea.pascal.lang.psi.PasInlineVarDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasParamType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalExportedRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalIdentDecl;
+import com.siberika.idea.pascal.lang.psi.PascalInlineDeclaration;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.HasUniqueName;
@@ -67,6 +71,19 @@ public class PascalDocumentationProvider implements DocumentationProvider {
             }
             if (element instanceof PascalIdentDecl) {
                 type = ((PascalIdentDecl) element).getTypeString();
+            } else if (element.getParent() instanceof PascalInlineDeclaration) {
+                PasTypeDecl typeDecl = ((PascalInlineDeclaration) element.getParent()).getTypeDecl();
+                type = typeDecl != null ? typeDecl.getText() : type;
+                PsiElement parent = element.getParent();
+                if (parent instanceof PasInlineVarDeclaration) {
+                    parent = parent.getParent();
+                    PasAssignPart assignPart = PsiTreeUtil.getChildOfType(parent, PasAssignPart.class);
+                    value = assignPart != null ? assignPart.getText() : value;
+                    value = value != null ? value.replace(":=", "") : value;
+                } else if (parent instanceof PasInlineConstDeclaration) {
+                    PasConstExpression constValue = ((PasInlineConstDeclaration) parent).getConstExpression();
+                    value = constValue != null ? constValue.getText() : value;
+                }
             }
         }
         if (element instanceof PasNamedIdentDecl) {
@@ -124,18 +141,12 @@ public class PascalDocumentationProvider implements DocumentationProvider {
                 }
             }
         }
-        return comment != null ? formatDocumentation(file, getQuickNavigateInfo(element, originalElement), sb.toString()) : null;
+        return formatDocumentation(file, getQuickNavigateInfo(element, originalElement), comment != null ? sb.toString() : null);
     }
 
     private String formatDocumentation(PsiFile file, String quickNavigateInfo, String text) {
-        return
-                DocumentationMarkup.DEFINITION_START +
-                        quickNavigateInfo +
-                        DocumentationMarkup.DEFINITION_END
-                        + DocumentationMarkup.CONTENT_START
-                        + text
-                        + DocumentationMarkup.CONTENT_END
-                ;
+        return DocumentationMarkup.DEFINITION_START + quickNavigateInfo + DocumentationMarkup.DEFINITION_END
+                + (text != null ? (DocumentationMarkup.CONTENT_START + text + DocumentationMarkup.CONTENT_END) : "");
     }
 
     /* Search for comments above element, empty line breaks the search
@@ -151,7 +162,7 @@ public class PascalDocumentationProvider implements DocumentationProvider {
     @NotNull
     static TextRange findElementCommentRange(PsiFile file, PsiElement element) {
         List<PsiElement> elements = findElementCommentElements(file, element);
-        return elements.isEmpty() ? TextRange.EMPTY_RANGE : TextRange.create(elements.get(elements.size()-1).getTextRange().getStartOffset(), elements.get(0).getTextRange().getEndOffset());
+        return elements.isEmpty() ? TextRange.EMPTY_RANGE : TextRange.create(elements.get(elements.size() - 1).getTextRange().getStartOffset(), elements.get(0).getTextRange().getEndOffset());
     }
 
     @NotNull
