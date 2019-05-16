@@ -160,7 +160,7 @@ public class PascalDocumentationProvider implements DocumentationProvider {
     }
 
     @NotNull
-    static TextRange findElementCommentRange(PsiFile file, PsiElement element) {
+    public static TextRange findElementCommentRange(PsiFile file, PsiElement element) {
         List<PsiElement> elements = findElementCommentElements(file, element);
         return elements.isEmpty() ? TextRange.EMPTY_RANGE : TextRange.create(elements.get(elements.size() - 1).getTextRange().getStartOffset(), elements.get(0).getTextRange().getEndOffset());
     }

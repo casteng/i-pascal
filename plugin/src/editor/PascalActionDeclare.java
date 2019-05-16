@@ -36,6 +36,7 @@ import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
+import com.siberika.idea.pascal.lang.PascalDocumentationProvider;
 import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PasArgumentList;
 import com.siberika.idea.pascal.lang.psi.PasAssignPart;
@@ -751,8 +752,9 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                 if ((sectionItemClass != null) && (PsiTreeUtil.getParentOfType(data.element, sectionClass) == data.parent)) {
                     PsiElement sectionItem = PsiTreeUtil.getParentOfType(data.element, sectionItemClass);
                     if (sectionItem != null) {
-                        data.offset = sectionItem.getTextRange().getStartOffset();
+                        TextRange commentRange = PascalDocumentationProvider.findElementCommentRange(sectionItem.getContainingFile(), sectionItem);
                         data.text = data.text + "\n";
+                        data.offset = commentRange != TextRange.EMPTY_RANGE ? commentRange.getStartOffset() : sectionItem.getTextRange().getStartOffset();
                     }
                 }
                 return true;
