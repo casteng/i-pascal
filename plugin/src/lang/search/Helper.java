@@ -13,6 +13,7 @@ import com.siberika.idea.pascal.lang.psi.PascalHelperDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PascalHelperIndex;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -63,7 +64,7 @@ public class Helper {
 
         @Override
         public void processQuery(@NotNull Options queryParameters, @NotNull Processor<? super PascalStructType> consumer) {
-            String name = queryParameters.element.getName().toUpperCase();
+            String name = ResolveUtil.cleanupName(queryParameters.element.getName()).toUpperCase();
             ReadAction.run(() -> {
                 for (PascalStructType structType : StubIndex.getElements(PascalHelperIndex.KEY, name, queryParameters.element.getProject(), queryParameters.scope, PascalStructType.class)) {
                     if (isHelperFor(structType, queryParameters.element) && (!consumer.process(structType))) {
