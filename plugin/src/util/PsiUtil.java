@@ -462,6 +462,9 @@ public class PsiUtil {
     }
 
     public static PascalStructType getStructTypeByName(PsiElement name) {
+        if ((name != null) && (name.getParent() instanceof PasGenericTypeIdent)) {
+            name = name.getParent();
+        }
         PasTypeDecl typeDecl = PsiTreeUtil.getNextSiblingOfType(name, PasTypeDecl.class);
         return typeDecl != null ? PsiTreeUtil.findChildOfType(typeDecl, PascalStructType.class) : null;
     }
@@ -631,6 +634,9 @@ public class PsiUtil {
 
     // Returns structured type declaration by any of its contained element or name element
     public static PascalStructType getStructByElement(PsiElement element) {
+        if (element instanceof PascalStructType) {
+            return (PascalStructType) element;
+        }
         PascalNamedElement named;
         if (element instanceof PascalNamedElement) {
             named = (PascalNamedElement) element;

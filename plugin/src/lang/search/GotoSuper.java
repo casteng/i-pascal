@@ -89,7 +89,7 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         return new ExecutorsQuery<>(new OptionsStruct(entity), Collections.singletonList(new QueryExecutorStruct()));
     }
 
-    private static Query<PasEntityScope> searchForRoutine(PascalRoutine entity) {
+    static Query<PasEntityScope> searchForRoutine(PascalRoutine entity) {
         return new ExecutorsQuery<>(new OptionsRoutine(entity), Collections.singletonList(new QueryExecutorRoutine()));
     }
 
@@ -229,12 +229,17 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
         }
     }
 
-    private static class OptionsRoutine {
+    static class OptionsRoutine {
         @NotNull
         private final PascalRoutine element;
 
         private OptionsRoutine(@NotNull PascalRoutine element) {
             this.element = element;
+        }
+
+        @NotNull
+        public PascalRoutine getElement() {
+            return element;
         }
     }
 }

@@ -439,6 +439,7 @@
         <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
 
         <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.lang.search.GotoSuper"/>
+        <superMethodsSearch implementation="com.siberika.idea.pascal.lang.search.PascalSuperMethodSearch"/>
         <definitionsScopedSearch implementation="com.siberika.idea.pascal.lang.search.PascalDefinitionsSearch"/>
         <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
 
@@ -479,7 +480,7 @@
         <localInspection language="Pascal" displayName="No result assignment detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.ResultAssignmentInspection"/>
         <lang.inspectionSuppressor language="Pascal" implementationClass="com.siberika.idea.pascal.lang.inspection.PascalInspectionSuppressor"/>
-        
+
         <editorNotificationProvider implementation="com.siberika.idea.pascal.sdk.SDKNotificationProvider"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
@@ -575,6 +576,14 @@
             <className>com.siberika.idea.pascal.ide.RemoveWithAction</className>
             <category>Pascal/Control Flow</category>
         </intentionAction>-->
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.GotoSuperAction</className>
+            <category>Pascal/Control Flow</category>
+        </intentionAction>
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.GotoImplementationAction</className>
+            <category>Pascal/Control Flow</category>
+        </intentionAction>
 
     </extensions>
 </idea-plugin>
