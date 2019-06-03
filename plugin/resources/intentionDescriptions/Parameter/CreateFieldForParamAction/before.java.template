@@ -1,0 +1,12 @@
+type
+  TTest = class
+    x: Integer;
+    constructor Create(<spot>arg1</spot>: Integer);
+  end;
+
+constructor TTest.Create(arg1: Integer);
+begin
+end;
+
+begin
+end.

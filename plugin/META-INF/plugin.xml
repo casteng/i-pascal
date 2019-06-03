@@ -11,7 +11,7 @@
     <change-notes><![CDATA[
         <p>2.40</p>
         <ul>
-            <li>*</li>
+            <li>add intention actions for create field/property from parameter, goto super/descending, add/remove compound statement</li>
         </ul>
         <p>2.31</p>
         <ul>
@@ -407,6 +407,9 @@
         <component>
             <implementation-class>com.siberika.idea.pascal.module.PascalProjectService</implementation-class>
         </component>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.ide.intention.GotoSuperAction</implementation-class>
+        </component>
     </project-components>
 
     <actions>
@@ -572,17 +575,31 @@
 
         <fileBasedIndex implementation="com.siberika.idea.pascal.lang.compiled.PascalFakeCompiledIndex" />
 
-<!--        <intentionAction>
-            <className>com.siberika.idea.pascal.ide.RemoveWithAction</className>
-            <category>Pascal/Control Flow</category>
-        </intentionAction>-->
         <intentionAction>
             <className>com.siberika.idea.pascal.ide.intention.GotoSuperAction</className>
-            <category>Pascal/Control Flow</category>
+            <category>Pascal</category>
         </intentionAction>
         <intentionAction>
             <className>com.siberika.idea.pascal.ide.intention.GotoImplementationAction</className>
-            <category>Pascal/Control Flow</category>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.AddCompoundStatement</className>
+            <category>Pascal</category>
+        </intentionAction>
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.RemoveCompoundStatement</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.CreateFieldForParamAction</className>
+            <category>Pascal</category>
+        </intentionAction>
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.CreatePropertyForParamAction</className>
+            <category>Pascal</category>
         </intentionAction>
 
     </extensions>

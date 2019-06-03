@@ -1,8 +1,9 @@
 package com.siberika.idea.pascal.ide.intention;
 
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
+import com.intellij.util.IncorrectOperationException;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.search.GotoSuper;
@@ -11,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-class GotoSuperAction extends IntentionActionBase {
+class GotoSuperAction extends NavIntentionActionBase {
 
     @NotNull
     @Override
@@ -20,14 +21,13 @@ class GotoSuperAction extends IntentionActionBase {
     }
 
     @Override
-    protected boolean isAvailable(PsiFile file, PsiElement element) {
+    public boolean isAvailable(@NotNull Project project, Editor editor, @NotNull PsiElement element) {
         return GotoSuper.hasSuperTargets(element);
     }
 
     @Override
-    protected void invoke(PsiFile file, PsiElement element, Editor editor) {
+    public void invoke(@NotNull Project project, Editor editor, @NotNull PsiElement element) throws IncorrectOperationException {
         Collection<PasEntityScope> targets = GotoSuper.search(element).findAll();
         EditorUtil.navigateTo(editor, getText(), targets);
     }
-
 }

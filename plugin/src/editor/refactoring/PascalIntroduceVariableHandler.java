@@ -35,6 +35,7 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.resolve.Resolve;
 import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.StmtUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -102,7 +103,7 @@ public class PascalIntroduceVariableHandler implements RefactoringActionHandler 
         }
         if (element != null) {             // Check if the statement is not child of a single-statement structured operator
             PsiElement parent = element.getParent();
-            while (PsiUtil.isStructuredOperatorStatement(parent)) {
+            while (StmtUtil.isStructuredOperatorStatement(parent)) {
                 parent = parent.getParent();
                 element = parent;
             }

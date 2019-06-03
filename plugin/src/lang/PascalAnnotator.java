@@ -16,8 +16,6 @@ import com.siberika.idea.pascal.editor.refactoring.PascalRenameAction;
 import com.siberika.idea.pascal.ide.actions.AddFixType;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.ide.actions.UsesActions;
-import com.siberika.idea.pascal.lang.annotator.FormalParam;
-import com.siberika.idea.pascal.lang.annotator.Statement;
 import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
@@ -68,8 +66,6 @@ public class PascalAnnotator implements Annotator {
         }
 
         annotateModuleHead(element, holder);
-        FormalParam.annotate(element, holder);
-        Statement.annotate(element, holder);
 
         //noinspection ConstantConditions
         if (PsiUtil.isEntityName(element) && !PsiUtil.isLastPartOfMethodImplName((PascalNamedElement) element)) {
