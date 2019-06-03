@@ -10,6 +10,7 @@ import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasDereferenceExpr;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
+import com.siberika.idea.pascal.lang.psi.PasForStatement;
 import com.siberika.idea.pascal.lang.psi.PasIndexExpr;
 import com.siberika.idea.pascal.lang.psi.PasParenExpr;
 import com.siberika.idea.pascal.lang.psi.PasReferenceExpr;
@@ -52,7 +53,7 @@ public class ContextUtil {
         return PsiTreeUtil.getParentOfType(ident, PasUnitInterface.class) != null;
     }
 
-    // Check if the named element is the left part of an assignment statement
+    // Check if the named element is the left part of an assignment statement including assignment in FOR statement
     public static boolean isAssignLeftPart(PsiElement element) {
         PsiElement expr = PsiUtil.skipToExpression(element);
         if (expr instanceof PasReferenceExpr) {
@@ -61,6 +62,8 @@ public class ContextUtil {
             if (parent instanceof PasExpression) {
                 return PsiTreeUtil.skipSiblingsForward(parent, PsiUtil.ELEMENT_WS_COMMENTS) instanceof PasAssignPart;
             }
+        } else if (expr instanceof PasForStatement) {
+            return true;
         }
         return false;
     }
