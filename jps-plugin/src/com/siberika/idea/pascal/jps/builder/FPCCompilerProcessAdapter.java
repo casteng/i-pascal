@@ -14,7 +14,7 @@ public class FPCCompilerProcessAdapter extends PascalCompilerProcessAdapter {
 
     @NonNls private static final String PATTERN_COMMON = "((.*)\\((\\d+)(,(\\d+))?\\))?\\s*";
     @NonNls private static final String PATTERN_MESSAGE = "\\s*(.*)$";
-    @NonNls private static final Pattern PATTERN_ERROR = Pattern.compile("((.*)\\((\\d+)(,(\\d+))?\\))\\s*(Error|Fatal):" + PATTERN_MESSAGE);
+    @NonNls private static final Pattern PATTERN_ERROR = Pattern.compile("((.*)\\((\\d+)(,(\\d+))?\\))?\\s*(Error|Fatal):" + PATTERN_MESSAGE);
     @NonNls private static final Pattern PATTERN_WARNING = Pattern.compile(PATTERN_COMMON + "(Error|Fatal|Warning|warning):" + PATTERN_MESSAGE);
     @NonNls private static final Pattern PATTERN_INFO = Pattern.compile(PATTERN_COMMON + PATTERN_MESSAGE);
 
