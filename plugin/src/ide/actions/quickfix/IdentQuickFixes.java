@@ -28,6 +28,7 @@ import com.siberika.idea.pascal.lang.psi.impl.RoutineUtil;
 import com.siberika.idea.pascal.lang.references.resolve.Types;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.StmtUtil;
 import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -190,7 +191,8 @@ public class IdentQuickFixes {
             String typeDefault = Types.getTypeDefaultValueStr(type);
             PsiElement parent = element.getParent();
             if (element instanceof PasExitStatement) {
-                addElements(parent, element, false, "Result", ":=", typeDefault, ";");
+                element = StmtUtil.findAssignmentLocation(element.getParent());
+                addElements(element.getParent(), element, false, "Result", ":=", typeDefault, ";");
             } else {
                 PsiElement begin = parent.getFirstChild();
                 if (begin != null) {

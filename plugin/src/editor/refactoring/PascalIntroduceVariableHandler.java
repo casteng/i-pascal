@@ -54,7 +54,7 @@ public class PascalIntroduceVariableHandler implements RefactoringActionHandler 
 
     private void doIntroduceVar(Project project, Editor editor, PsiFile file, PsiElement element) {
         List<PsiElement> expressionList = findExpressions(element);
-        PsiElement nearestStatement = findNearestStatement(element);
+        PsiElement nearestStatement = StmtUtil.findAssignmentLocation(element);
         PasEntityScope scope = PsiUtil.getNearestAffectingScope(nearestStatement);
         if (!expressionList.isEmpty()) {
             if (editor != null) {
@@ -95,20 +95,6 @@ public class PascalIntroduceVariableHandler implements RefactoringActionHandler 
                     }
             );
         }
-    }
-
-    private PsiElement findNearestStatement(PsiElement element) {
-        while ((element != null) && !(element instanceof PasStatement)) {
-            element = element.getParent();
-        }
-        if (element != null) {             // Check if the statement is not child of a single-statement structured operator
-            PsiElement parent = element.getParent();
-            while (StmtUtil.isStructuredOperatorStatement(parent)) {
-                parent = parent.getParent();
-                element = parent;
-            }
-        }
-        return element;
     }
 
     private List<PsiElement> findExpressions(PsiElement element) {

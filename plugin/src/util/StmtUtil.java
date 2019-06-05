@@ -11,6 +11,7 @@ import com.siberika.idea.pascal.lang.psi.PasHandler;
 import com.siberika.idea.pascal.lang.psi.PasIfElseStatement;
 import com.siberika.idea.pascal.lang.psi.PasIfStatement;
 import com.siberika.idea.pascal.lang.psi.PasIfThenStatement;
+import com.siberika.idea.pascal.lang.psi.PasStatement;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
 import com.siberika.idea.pascal.lang.psi.PasWhileStatement;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
@@ -36,5 +37,20 @@ public class StmtUtil {
     public static boolean isStructuredOperatorStatement(PsiElement parent) {
         return PsiUtil.isInstanceOfAny(parent, PasIfThenStatement.class, PasIfElseStatement.class, PasWhileStatement.class, PasForStatement.class,
                 PasWithStatement.class, PasHandler.class, PasCaseItem.class, PasCaseElse.class);
+    }
+
+    // returns element before which an assignment statement can be placed without breaking code structure
+    public static PsiElement findAssignmentLocation(PsiElement element) {
+        while ((element != null) && !(element instanceof PasStatement)) {
+            element = element.getParent();
+        }
+        if (element != null) {             // Check if the statement is not child of a single-statement structured operator
+            PsiElement parent = element.getParent();
+            while (isStructuredOperatorStatement(parent)) {
+                parent = parent.getParent();
+                element = parent;
+            }
+        }
+        return element;
     }
 }
