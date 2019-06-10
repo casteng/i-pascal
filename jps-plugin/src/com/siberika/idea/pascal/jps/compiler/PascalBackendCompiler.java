@@ -76,7 +76,7 @@ public abstract class PascalBackendCompiler {
         return fileName != null ? new File(fileName) : null;
     }
 
-    static String getExeOutputPath(ParamMap moduleData) {
+    public static String getExeOutputPath(ParamMap moduleData) {
         return moduleData != null ? moduleData.get(JpsPascalModuleType.USERDATA_KEY_EXE_OUTPUT_PATH.toString()) : null;
     }
 

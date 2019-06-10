@@ -179,6 +179,6 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     @Override
     public String toString() {
-        return (debugMode ? "[debug]" : "[]") + super.toString();
+        return (debugMode ? "[debug]" : "[]") + super.toString();     // needed to pass debug/run mode to builder process
     }
 }

@@ -207,4 +207,14 @@ public class ModuleUtil {
         }
         return Collections.emptyList();
     }
+
+    // Searches for files by name with the specified list of extensions
+    public static List<VirtualFile> findFileByName(Project project, String name, GlobalSearchScope scope, String...extensions) {
+        List<VirtualFile> result = new SmartList<>();
+        for (String ext : extensions) {
+            result.addAll(FilenameIndex.getVirtualFilesByName(project, name + "." + ext, false, scope));
+        }
+        return result;
+    }
+
 }
