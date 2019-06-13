@@ -19,6 +19,12 @@ begin
   vR;
 end;
 
+procedure proc2(out b: Integer);
+begin
+end;
+
 begin
   vW := vR;
+  proc1(vR);
+  proc2(vW);
 end.

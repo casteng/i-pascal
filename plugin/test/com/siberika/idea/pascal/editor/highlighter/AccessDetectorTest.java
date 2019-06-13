@@ -20,7 +20,7 @@ public class AccessDetectorTest extends LightPlatformCodeInsightFixtureTestCase 
         return "testData/misc";
     }
 
-    public void testSectionToggle() {
+    public void testAccessDetector() {
         myFixture.configureByFiles("accessDetector.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
                 PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "accessDetector");

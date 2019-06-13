@@ -345,6 +345,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         if (stub != null) {
             return stub.getUsedUnitsPublic();
         }
+        List<String> result = null;
         if (SyncUtil.lockOrCancel(unitsLock)) {
             try {
                 if (null == usedUnitsPublic) {
@@ -356,8 +357,9 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             } finally {
                 unitsLock.unlock();
             }
+            result = usedUnitsPublic;
         }
-        return usedUnitsPublic;
+        return result;
     }
 
     @NotNull
@@ -367,6 +369,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         if (stub != null) {
             return stub.getUsedUnitsPrivate();
         }
+        List<String> result = null;
         if (SyncUtil.lockOrCancel(unitsLock)) {
             try {
                 if (null == usedUnitsPrivate) {
@@ -378,8 +381,9 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             } finally {
                 unitsLock.unlock();
             }
+            result = usedUnitsPrivate;
         }
-        return usedUnitsPrivate;
+        return result;
     }
 
     @Nullable
