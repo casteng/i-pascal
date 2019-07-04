@@ -935,7 +935,7 @@ public class PsiUtil {
         PsiElement stubbedElement = null;
         if (element instanceof PasGenericTypeIdent) {
             stubbedElement = ((PasGenericTypeIdent) element).getNamedIdentDecl();
-        } else if (element.getParent() instanceof PasExportedRoutine) {
+        } else if ((element != null) && (element.getParent() instanceof PasExportedRoutine)) {
             stubbedElement = element.getParent();
         }
         return (PascalStubElement) stubbedElement;

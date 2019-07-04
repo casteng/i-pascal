@@ -203,4 +203,9 @@ public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
         myFixture.checkHighlighting(true, false, false);
     }
 
+    public void testScopedAccess() {
+        myFixture.configureByFiles("scopedAccess.pas");
+        myFixture.checkHighlighting(true, false, false);
+    }
+
 }

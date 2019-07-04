@@ -44,6 +44,7 @@ abstract class FQNResolver {
     private final List<PasEntityScope> sortedUnits;
     private boolean wasType;
     public PasField result;
+    PasEntityScope lastPartScope;
 
     FQNResolver(final PasEntityScope scope, final NamespaceRec fqn, final ResolveContext context) {
         this.scope = scope;
@@ -80,14 +81,48 @@ abstract class FQNResolver {
         boolean implAffects = !ResolveUtil.isStubPowered(context.scope) && file instanceof PascalFile
                 && PsiUtil.isBefore(((PascalFile) file).getImplementationSection(), fqn.getParentIdent());
         calcScope(fqn, context);
-
-        if (processFirstPartScopes(fqn, context, implAffects)) {         // current name not found, search for units
-            fqn.reset();
-            // sort namespaces by name length in reverse order to check longer named namespaces first
-            sortedUnits.sort(new UnitNameLengthComparator());
-            return checkForDottedUnitName(implAffects);
+        PasEntityScope moduleScope = context.scope;
+        if (!processFirstPartScopes(fqn, context, implAffects)) {
+            while (!fqn.isComplete() && (lastPartScope != null)) {
+                if (resolveNext(lastPartScope)) {
+                    return resolveUnits(moduleScope, implAffects);         // Nothing matches, try unit names
+                }
+            }
+            return !fqn.isComplete();
         } else {
-            return false;
+            return resolveUnits(moduleScope, implAffects);
+        }
+    }
+
+    private boolean resolveUnits(PasEntityScope moduleScope, boolean implAffects) {
+        // current name not found, search for units
+        fqn.reset();
+
+        if (moduleScope instanceof PascalModuleImpl) {
+            if (implAffects) {
+                addSortedUnits(((PascalModuleImpl) moduleScope).getPrivateUnits());
+            }
+            addSortedUnits(((PascalModuleImpl) moduleScope).getPublicUnits());
+        }
+        // sort namespaces by name length in reverse order to check longer named namespaces first
+        sortedUnits.sort(new UnitNameLengthComparator());
+        boolean res = checkForDottedUnitName(implAffects);
+        if (!res) {                     // Found unit
+            return !fqn.isComplete() && resolveNext(lastPartScope);
+        } else {
+            return true;
+        }
+    }
+
+    private void addSortedUnits(List<SmartPsiElementPointer<PasEntityScope>> units) {
+        for (SmartPsiElementPointer<PasEntityScope> unitPtr : units) {
+            PasEntityScope unit = unitPtr.getElement();
+            if ((unit != null) && (context.includeLibrary || !PsiUtil.isFromLibrary(unit))) {
+                // Add unit scopes to sorted units list
+                if (!StringUtils.isEmpty(unit.getName())) {
+                    sortedUnits.add(unit);
+                }
+            }
         }
     }
 
@@ -95,7 +130,7 @@ abstract class FQNResolver {
         if (context.ignoreNames() && fqn.isTarget()) {
             for (PasField field : scope.getAllFields()) {
                 if ((isFieldSuitable(field) && !processField(scope, field))) {
-                    return false;
+                    break;                        // No need to return false for ignoreNames mode
                 }
             }
             return true;
@@ -115,11 +150,10 @@ abstract class FQNResolver {
             fqn.next();
             wasType = field.fieldType == PasField.FieldType.TYPE;
             if (!fqn.isComplete()) {
-                PasEntityScope fieldScope = getScope(scope, field, field.fieldType);
-                return (fieldScope == null) || resolveNext(fieldScope);
+                lastPartScope = getScope(scope, field, field.fieldType);
+                return false;
             } else {
                 return processField(scope, field);
-//                return !((null == context.matcher) || context.matcher.process(Collections.singleton(field))) || processField(scope, field);
             }
         }
         return true;
@@ -149,9 +183,6 @@ abstract class FQNResolver {
                 return false;
             }
             context.scope = context.scope.getContainingScope();
-        }
-        if (context.ignoreNames() && fqn.isTarget()) {
-            return false;
         }
         return true;
     }
@@ -185,8 +216,12 @@ abstract class FQNResolver {
         if (!processHelperScopes(scope) || !processScope(scope, fqn.getCurrentName())) {       // found current name in the scope
             return false;
         }
-        return processParentScopes(scope, false)
+        boolean res = processParentScopes(scope, false)
                 && !(context.ignoreNames() && fqn.isTarget());
+        if (context.ignoreNames() && fqn.isTarget()) {
+            fqn.next();
+        }
+        return res;
     }
 
     PasEntityScope getScope(PasEntityScope scope, PasField field, PasField.FieldType type) {
@@ -245,10 +280,6 @@ abstract class FQNResolver {
             if ((unit != null) && (includeLibrary || !PsiUtil.isFromLibrary(unit))) {
                 if (!processScope(unit, true)) {
                     return false;
-                }
-                // Add unit scopes to sorted units list
-                if (!StringUtils.isEmpty(unit.getName())) {
-                    sortedUnits.add(unit);
                 }
             }
         }

@@ -67,6 +67,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                     if ((fqn.isTarget() || isDefault) && isWasType()) {         // "default" type pseudo value
                         PasField field = scope.getField(fieldName);
                         if (isFieldSuitable(field)) {
+                            fqn.next();
                             return processField(scope, field);
                         }
                         if (isDefault) {
@@ -144,8 +145,6 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             PasFullyQualifiedIdent fullyQualifiedIdent = ((PasReferenceExpr) expr).getFullyQualifiedIdent();
             final FQNResolver fqnResolver = new FQNResolver(currentScope, NamespaceRec.fromElement(fullyQualifiedIdent), context) {
 
-                private PasEntityScope lastPartScope;
-
                 @Override
                 boolean processScope(final PasEntityScope scope, final String fieldName) {
                     final PasArgumentList args = callExpr.getArgumentList();
@@ -153,7 +152,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                         if (context.ignoreNames()) {
                             for (PasField field : scope.getAllFields()) {
                                 if (!ExpressionProcessor.this.processor.process(scope, scope, field, field.fieldType)) {
-                                    return false;
+                                    break;    // No need to return false in ignoreNames mode
                                 }
                             }
                             return true;
@@ -170,15 +169,16 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
                                 }
                             };
                             if (!matcher.process(scope.getAllFields())) {
+                                this.fqn.next();
                                 return false;
                             }
                         }
-                    } else {                                     // No need to resolve intermediate names of FQN as routines
+                    } else {                  // No need to resolve intermediate names of FQN as routines
                         PasField field = scope.getField(fieldName);
                         if (field != null) {
                             this.fqn.next();
                             lastPartScope = getScope(scope, field, field.fieldType);
-                            return (lastPartScope == null) || resolveNext(lastPartScope);
+                            return false;
                         }
                     }
                     return true;

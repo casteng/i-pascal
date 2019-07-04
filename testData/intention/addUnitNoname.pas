@@ -1,0 +1,3 @@
+begin
+  scope.glob;
+end.

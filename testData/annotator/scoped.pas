@@ -6,4 +6,6 @@ uses scoped.types;
 
 implementation
 
+var a: scoped.types.TEnumArray;
+
 end.
