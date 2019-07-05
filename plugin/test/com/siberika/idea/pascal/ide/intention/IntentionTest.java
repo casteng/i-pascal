@@ -8,10 +8,10 @@ import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
 import com.intellij.testFramework.fixtures.JavaTestFixtureFactory;
 import com.intellij.testFramework.fixtures.TestFixtureBuilder;
+import com.siberika.idea.pascal.ide.actions.UsesActions;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
 public class IntentionTest extends UsefulTestCase {
     protected CodeInsightTestFixture myFixture;
@@ -40,19 +40,23 @@ public class IntentionTest extends UsefulTestCase {
         myFixture.checkResultByFile(testName + ".after.pas");
     }
 
-    @Test
     public void testAddCompound() {
         doTest("addCompound", "Add compound");
     }
 
-    @Test
     public void testRemoveCompound() {
         doTest("removeCompound", "Remove compound");
     }
 
-    @Test
     public void testCreatePropertyFromParam() {
         doTest("createPropertyForParam", "Create property");
+    }
+
+    public void testAddUnitNoname() throws InterruptedException {
+        myFixture.configureByFile("addUnitNoname.pas");
+        UsesActions.AddUnitAction act = new UsesActions.AddUnitAction("scope", "scope", false);
+        myFixture.launchAction(act);
+        myFixture.checkResultByFile("addUnitNoname.after.pas");
     }
 
 }

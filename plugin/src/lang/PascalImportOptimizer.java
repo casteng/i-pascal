@@ -236,7 +236,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
             offs = uses.getTextRange().getEndOffset() - 1;
             content = ",\n" + content + ";";
         } else {
-            content = "\n\nuses\n" + content + ";";
+            content = "\n\nuses\n" + content + ";\n";
             @SuppressWarnings("unchecked") PsiElement prev = PsiTreeUtil.findChildOfAnyType(module, PasProgramModuleHead.class, PasLibraryModuleHead.class, PasPackageModuleHead.class);
             if (calcOffset(prev) >= 0) {
                 offs = calcOffset(prev);
@@ -246,7 +246,7 @@ public class PascalImportOptimizer implements ImportOptimizer {
                     offs = section != null ? section.getTextRange().getStartOffset() + "interface".length() : offs;
                 } else {
                     PsiElement section = PsiUtil.getModuleImplementationSection(module);
-                    offs = section != null ? section.getTextRange().getStartOffset() + "implementation".length(): offs;
+                    offs = section != module ? section.getTextRange().getStartOffset() + "implementation".length(): offs;
                 }
             }
         }
