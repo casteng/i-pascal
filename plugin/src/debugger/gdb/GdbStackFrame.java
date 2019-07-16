@@ -18,9 +18,13 @@ import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
+import com.siberika.idea.pascal.lang.psi.PascalModule;
+import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -96,8 +100,15 @@ public class GdbStackFrame extends XStackFrame {
 
     private String formatRoutine(GdbMiResults frame) {
         String name = frame.getString("func");
-        PasField routine = resolveIdentifierName(name, PasField.TYPES_ROUTINE);
-        name = routine != null ? routine.name : name;
+        if (process.options.resolveNames() && (sourcePosition != null)) {
+            PsiElement el = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), process.getSession().getProject(), false);
+            PasEntityScope scope = el != null ? PsiUtil.getNearestAffectingScope(el) : null;
+            if (scope instanceof PascalRoutine) {
+                name = scope.getName();
+            } else if (scope instanceof PascalModule) {
+                name = String.format("%s(%s)", name, scope.getName());
+            }
+        }
         if (StringUtils.isEmpty(name) || "??".equals(name)) {
             String addr = frame.getString("addr");
             name = String.format("?? (%s)", addr != null ? addr : "-");
@@ -163,6 +174,7 @@ public class GdbStackFrame extends XStackFrame {
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
         process.setLastQueriedVariablesCompositeNode(node);
+        process.sendCommand("-stack-select-frame " + level);
         process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --simple-values", executionStack.getThreadId(), level));
     }
 

@@ -280,7 +280,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         GdbVariableObject var = variableObjectMap.get(key);
         if (null == var) {
             variableObjectMap.put(key, new GdbVariableObject(key, expression, callback));
-            sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, VAR_FRAME, expression, VAR_NAME_QUOTE_CHAR));
+            sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, VAR_FRAME, expression.toUpperCase(), VAR_NAME_QUOTE_CHAR));
         } else {
             var.setCallback(callback);
             updateVariableObjectUI(var);
@@ -313,7 +313,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     synchronized public void computeValueChildren(String name, XCompositeNode node) {
         lastParentNode = node;
-        sendCommand("-var-list-children --all-values " + name);
+        sendCommand("-var-list-children --all-values " + name + " 0 100");
     }
 
     synchronized public void handleVariablesResponse(List<Object> variables) {
