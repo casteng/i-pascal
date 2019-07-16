@@ -9,9 +9,14 @@ import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.lang.psi.PascalStubElement;
+import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
+import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasExportedRoutineStub;
 import com.siberika.idea.pascal.lang.stub.PasNamedStub;
+import com.siberika.idea.pascal.util.ModuleUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +32,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class PasField {
 
     public static final String DUMMY_IDENTIFIER = "____";
+    private static final long PERSISTENT_VALUE = -1;
 
     public enum FieldType {UNIT, TYPE, VARIABLE, CONSTANT, ROUTINE, PROPERTY, PSEUDO_VARIABLE}
 
@@ -100,6 +106,8 @@ public class PasField {
     public final PsiElement target;
 
     private ValueType valueType;
+
+    private long typeTimestamp;
 
     private final int cachedHash;
 
@@ -212,28 +220,50 @@ public class PasField {
         return result;
     }
 
-    public boolean isTypeResolved() {
-        return (valueType != NOT_INITIALIZED);
-    }
-
-    public boolean isInteger() {
-        return (getValueType() != null) && (valueType.kind == Kind.INTEGER);
-    }
-
-    public boolean isFloat() {
-        return (getValueType() != null) && (valueType.kind == Kind.FLOAT);
-    }
-
-    public boolean isNumeric() {
-        return isInteger() || isFloat();
-    }
-
-    public ValueType getValueType() {
+    @Nullable
+    public ValueType getValueType(int recursionCount) {
+        calcValueType(recursionCount);
         return valueType;
     }
 
-    public void setValueType(ValueType valueType) {
-        this.valueType = valueType;
+    private void calcValueType(int recursionCount) {
+        PascalNamedElement el = getElement();
+        long timestamp = el != null ? el.getContainingFile().getModificationStamp() : 0;
+        if (SyncUtil.tryLockQuiet(typeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
+            try {
+                if (isValueTypeCacheDirty(timestamp)) {
+                    if (ResolveUtil.isStubPowered(el)) {
+                        ResolveContext context = new ResolveContext(owner, PasField.TYPES_TYPE, true, null, ModuleUtil.retrieveUnitNamespaces(el));
+                        valueType = ResolveUtil.resolveTypeWithStub((PascalStubElement) el, context, recursionCount);
+                    } else {
+                        valueType = PasReferenceUtil.resolveFieldType(this, true, recursionCount);
+                    }
+                    if (valueType != null) {
+                        if (el != null) {
+                            typeTimestamp = el.getContainingFile().getModificationStamp();
+                        }
+                        valueType.field = this;
+                    }
+                }
+            } finally {
+                typeLock.unlock();
+            }
+        }
+    }
+
+    private boolean isValueTypeCacheDirty(long timestamp) {
+        return (typeTimestamp != PERSISTENT_VALUE) && ((valueType == NOT_INITIALIZED) || (timestamp > typeTimestamp));
+    }
+
+    void setValueType(@NotNull ValueType valueType) {
+        if (SyncUtil.tryLockQuiet(typeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
+            try {
+                this.valueType = valueType;
+                this.typeTimestamp = PERSISTENT_VALUE;
+            } finally {
+                typeLock.unlock();
+            }
+        }
     }
 
     public static ValueType getValueType(String name) {
@@ -328,7 +358,4 @@ public class PasField {
 
     }
 
-    public ReentrantLock getTypeLock() {
-        return typeLock;
-    }
 }

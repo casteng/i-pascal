@@ -80,7 +80,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         if (expr instanceof PasReferenceExpr) {
             res = getChildType(getFirstChild(expr));
             final PasField field = Types.resolveType(retrieveScope(res), ((PasReferenceExpr) expr).getFullyQualifiedIdent());
-            PasField.ValueType fieldType = field != null ? Types.retrieveFieldType(field, 0) : null;
+            PasField.ValueType fieldType = field != null ? field.getValueType(0) : null;
             if (fieldType != null) {
                 res.add(fieldType);
             }
@@ -96,7 +96,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                     PasTypeID typeId = ((PasClassProperty) defProp.getParent()).getTypeID();
                     if (typeId != null) {
                         PasField field = Types.resolveType(scope, typeId.getFullyQualifiedIdent());
-                        PasField.ValueType fieldType = field != null ? field.getValueType() : null;
+                        PasField.ValueType fieldType = field != null ? field.getValueType(0) : null;
                         if (fieldType != null) {
                             res = new SmartList<PasField.ValueType>(fieldType);
                         }

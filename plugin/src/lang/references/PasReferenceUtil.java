@@ -66,7 +66,6 @@ import com.siberika.idea.pascal.lang.search.Helper;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
-import com.siberika.idea.pascal.util.SyncUtil;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -309,25 +308,15 @@ public class PasReferenceUtil {
         if (ResolveUtil.isStubPowered(field.owner)) {
             return ResolveUtil.retrieveFieldTypeScope(field, context, recursionCount);
         }
-        if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
-            try {
-                if (!field.isTypeResolved()) {
-                    field.setValueType(resolveFieldType(field, true, recursionCount));
-                }
-                if (field.getValueType() != null) {
-                    if (field.getValueType() == PasField.VARIANT) {
-                        return new PasVariantScope(field.getElement());
-                    } else if (field.getValueType().kind == PasField.Kind.ENUM) {
-                        return PasEnumTypeScope.fromNamedElement(field.owner, field.getElement());
-                    }
-                }
-                return field.getValueType() != null ? field.getValueType().getTypeScope() : null;
-            } finally {
-                field.getTypeLock().unlock();
+        PasField.ValueType valueType = field.getValueType(recursionCount);
+        if (valueType != null) {
+            if (valueType == PasField.VARIANT) {
+                return new PasVariantScope(field.getElement());
+            } else if (valueType.kind == PasField.Kind.ENUM) {
+                return PasEnumTypeScope.fromNamedElement(field.owner, field.getElement());
             }
-        } else {
-            return null;
         }
+        return valueType != null ? valueType.getTypeScope() : null;
     }
 
     @Nullable

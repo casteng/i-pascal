@@ -185,7 +185,7 @@ public class IdentQuickFixes {
                     if (null == field) {
                         field = parent.getField(RoutineUtil.getCanonicalNameWoScope((PascalRoutine) scope));
                     }
-                    type = field != null ? Types.retrieveFieldType(field, 0) : null;
+                    type = field != null ? field.getValueType(0) : null;
                 }
             }
             String typeDefault = Types.getTypeDefaultValueStr(type);

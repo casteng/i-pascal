@@ -59,7 +59,6 @@ import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
-import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -230,28 +229,11 @@ public class ResolveUtil {
 
     @Nullable
     public static PasEntityScope retrieveFieldTypeScope(@NotNull PasField field, ResolveContext context, int recursionCount) {
-        if (SyncUtil.tryLockQuiet(field.getTypeLock(), SyncUtil.LOCK_TIMEOUT_MS)) {
-            try {
-                if (!field.isTypeResolved()) {
-                    PascalNamedElement el = field.getElement();
-                    if ((el instanceof PascalStubElement) && (((PascalStubElement) el).retrieveStub() != null)) {
-                        PasField.ValueType valueType = resolveTypeWithStub((PascalStubElement) el, context, recursionCount);
-                        if (valueType != null) {
-                            valueType.field = field;
-                            field.setValueType(valueType);
-                        }
-                    }
-                }
-                if (field.getValueType() == PasField.VARIANT) {
-                    return new PasVariantScope(field.getElement());
-                }
-                return field.getValueType() != null ? field.getValueType().getTypeScopeStub() : null;
-            } finally {
-                field.getTypeLock().unlock();
-            }
-        } else {
-            return null;
+        PasField.ValueType valueType = field.getValueType(recursionCount);
+        if (valueType == PasField.VARIANT) {
+            return new PasVariantScope(field.getElement());
         }
+        return valueType != null ? valueType.getTypeScopeStub() : null;
     }
 
     public static PasField.ValueType resolveTypeWithStub(PascalStubElement element, ResolveContext context, int recursionCount) {
