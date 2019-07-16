@@ -51,7 +51,8 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
         PascalLineBreakpointProperties key = new PascalLineBreakpointProperties(filename, line);
         registered.add(key);
         queue.add(breakpoint);
-        if (!PascalXDebugProcess.getData(PascalXDebugProcess.retrieveSdk(debugProcess.environment)).getBoolean(PascalSdkData.Keys.DEBUGGER_BREAK_FULL_NAME)) {
+        PascalSdkData data = debugProcess.getData();
+        if (data.isLldbBackend() || !data.getBoolean(PascalSdkData.Keys.DEBUGGER_BREAK_FULL_NAME)) {  // LLDB doesn't support full names in breakpoints
             filename = FileUtil.getFilename(filename);
         }
         debugProcess.sendCommand(String.format("-break-insert %s -f \"%s:%d\"", debugProcess.isInferiorRunning() ? "-h" : "", filename, line));

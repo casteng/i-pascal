@@ -154,8 +154,12 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         gdbRedirectConsole = new JCheckBox();
         panel.add(gdbRedirectConsole, new GridConstraints(row++, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 
-        addLabel(panel, PascalBundle.message("ui.sdkSettings.debug.break.fullnames"), row);
         debugBreakFullNames = new JCheckBox();
+        if (!BasePascalSdkType.getAdditionalData(sdk).isLldbBackend()) {
+            addLabel(panel, PascalBundle.message("ui.sdkSettings.debug.break.fullnames"), row);
+        } else {
+            debugBreakFullNames.setVisible(false);
+        }
         panel.add(debugBreakFullNames, new GridConstraints(row++, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 
         addLabel(panel, PascalBundle.message("ui.sdkSettings.gdb.retrieve.childs"), row);
@@ -269,7 +273,10 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
 
     public void reset() {
         for (Map.Entry<String, JComponent> entry : keyComponentMap.entrySet()) {
-            setValue(keyComponentMap.get(entry.getKey()), BasePascalSdkType.getAdditionalData(sdk).getValue(entry.getKey()));
+            JComponent control = keyComponentMap.get(entry.getKey());
+            if (control.isVisible()) {
+                setValue(control, BasePascalSdkType.getAdditionalData(sdk).getValue(entry.getKey()));
+            }
         }
     }
 
