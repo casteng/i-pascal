@@ -40,7 +40,9 @@ public enum GdbStopReason {
     // The inferior returned from a system call. This is reported when catch syscall (see Set Catchpoints) has been used.
     SYSCALL_RETURN("syscall-return"),
     // The inferior called exec. This is reported when catch exec (see Set Catchpoints) has been used.
-    EXEC("exec"),;
+    EXEC("exec"),
+    // Exception occured
+    EXCEPTION("exception-received");
 
     private final String uid;
 

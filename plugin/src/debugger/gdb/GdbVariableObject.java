@@ -16,6 +16,7 @@ public class GdbVariableObject {
     private String type;
     private String value;
     private Integer childrenCount;
+    private int length;
 
     public GdbVariableObject(String key, String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
         this.key = key;
@@ -50,6 +51,11 @@ public class GdbVariableObject {
         childrenCount = res.getValue("numchild") != null ? res.getInteger("numchild") : 1;
     }
 
+    public void update(String type, String value) {
+        this.type = type;
+        this.value = value;
+    }
+
     public String getType() {
         return type;
     }
@@ -60,5 +66,13 @@ public class GdbVariableObject {
 
     public Integer getChildrenCount() {
         return childrenCount;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
+
+    public int getLength() {
+        return length;
     }
 }

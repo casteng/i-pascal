@@ -299,6 +299,16 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         }
     }
 
+    public void handleVarUpdate(String varKey, String type, String value) {
+        GdbVariableObject var = variableObjectMap.get(varKey);
+        if (var != null) {
+            var.update(type, value);
+            if (var.getCallback() != null) {
+                updateVariableObjectUI(var);
+            }
+        }
+    }
+
     private void updateVariableObjectUI(@NotNull GdbVariableObject var) {
         var.getCallback().evaluated(new PascalDebuggerValue(this, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount()));
     }
@@ -309,6 +319,10 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
             GdbMiResults change = (GdbMiResults) o;
             handleVarResult(change);
         }
+    }
+
+    public void removeVariable(String varKey) {
+        variableObjectMap.remove(varKey);
     }
 
     synchronized public void computeValueChildren(String name, XCompositeNode node) {
@@ -344,6 +358,10 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                     if (varName.startsWith(VAR_PREFIX_LOCAL) || varName.startsWith(VAR_PREFIX_WATCHES)) {
                         varName = varName.substring(2);
                     }
+                    if (varName.startsWith("high") && lastVar != null) {
+                        handleVarArg(varName, lastVar, res);
+                        continue;
+                    }
                     String varNameResolved = varName;
                     PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
                     XStackFrame frame = getSession().getCurrentStackFrame();
@@ -376,6 +394,15 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                 }
             }
             node.addChildren(childrenList, true);
+        }
+    }
+
+    private void handleVarArg(String varName, GdbVariableObject lastVar, GdbMiResults res) {
+        Integer value = res.getInteger("value");
+        if (value != null) {
+            lastVar.setLength(value + 1);
+            sendCommand("type summary add -s " + lastVar.getKey() + "\"\\$${var[0-" + value + "]}\" -n " + lastVar.getKey());
+            sendCommand("fr v " + varName.substring(4) + " --summary " + lastVar.getKey());
         }
     }
 

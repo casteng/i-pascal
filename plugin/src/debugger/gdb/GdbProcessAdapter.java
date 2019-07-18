@@ -14,6 +14,8 @@ import com.siberika.idea.pascal.jps.util.PascalConsoleProcessAdapter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -24,45 +26,67 @@ public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
     private final PascalXDebugProcess process;
     private GdbSuspendContext suspendContext;
 
+    private static final Pattern PATTERN_VAR_UPDATE_FAILED = Pattern.compile("\\w+ 'var-update'\\. Variable '(.+)' does not exist");
+
     public GdbProcessAdapter(PascalXDebugProcess xDebugProcess) {
         this.process = xDebugProcess;
     }
 
     @Override
     public boolean onLine(String text) {
-        GdbMiLine res = GdbMiParser.parseLine(text);
-        if (GdbMiLine.Type.EXEC_ASYNC.equals(res.getType())) {
-            if ("stopped".equals(res.getRecClass())) {
-                handleStop(res);
-            } else if ("running".equals(res.getRecClass())) {
-                process.setInferiorRunning(true);
-            }
-        } else if (GdbMiLine.Type.RESULT_RECORD.equals(res.getType())) {
-            if ("done".equals(res.getRecClass())) {
-                if (res.getResults().getValue("stack") != null) {
-                    addStackFramesToContainer(res.getResults().getList("stack"));
-                } else if (res.getResults().getValue("bkpt") != null) {
-                    process.getBreakpointHandler().handleBreakpointResult(res.getResults().getTuple("bkpt"));
-                } else if (res.getResults().getValue("variables") != null) {
-                    process.handleVariablesResponse(res.getResults().getList("variables"));
-                } else if (isCreateVarResult(res.getResults())) {
-                    process.handleVarResult(res.getResults());
-                } else if (res.getResults().getValue("changelist") != null) {
-                    process.handleVarUpdate(res.getResults());
-                } else if (res.getResults().getValue("children") != null) {
-                    process.handleChildrenResult(res.getResults().getList("children"));
-                } else if ("0".equals(res.getResults().getString("numchild"))) {
-                    process.handleChildrenResult(Collections.emptyList());
+        try {
+            GdbMiLine res = GdbMiParser.parseLine(text);
+            if (GdbMiLine.Type.EXEC_ASYNC.equals(res.getType())) {
+                if ("stopped".equals(res.getRecClass())) {
+                    handleStop(res);
+                } else if ("running".equals(res.getRecClass())) {
+                    process.setInferiorRunning(true);
                 }
-            } else if ("error".equals(res.getRecClass())) {
-                String msg = res.getResults().getString("msg");
-                if (msg != null) {
-                    process.getSession().reportMessage(PascalBundle.message("debug.error.response",
-                            msg.replace("\\n", "\n")), MessageType.ERROR);
+            } else if (GdbMiLine.Type.RESULT_RECORD.equals(res.getType())) {
+                if ("done".equals(res.getRecClass())) {
+                    if (res.getResults().getValue("stack") != null) {
+                        addStackFramesToContainer(res.getResults().getList("stack"));
+                    } else if (res.getResults().getValue("bkpt") != null) {
+                        process.getBreakpointHandler().handleBreakpointResult(res.getResults().getTuple("bkpt"));
+                    } else if (res.getResults().getValue("variables") != null) {
+                        process.handleVariablesResponse(res.getResults().getList("variables"));
+                    } else if (isCreateVarResult(res.getResults())) {
+                        process.handleVarResult(res.getResults());
+                    } else if (res.getResults().getValue("changelist") != null) {
+                        process.handleVarUpdate(res.getResults());
+                    } else if (res.getResults().getValue("children") != null) {
+                        process.handleChildrenResult(res.getResults().getList("children"));
+                    } else if ("0".equals(res.getResults().getString("numchild"))) {
+                        process.handleChildrenResult(Collections.emptyList());
+                    }
+                } else if ("error".equals(res.getRecClass())) {
+                    String msg = res.getResults().getString("msg");
+                    if ((msg != null) && !handleError(msg)) {
+                        process.getSession().reportMessage(PascalBundle.message("debug.error.response",
+                                msg.replace("\\n", "\n")), MessageType.ERROR);
+                    }
+                }
+            } else if ("(gdb)\n".equals(text)) {
+            } else {
+                Pattern PATTERN_LLDB_FRAME_VAR = Pattern.compile("(\\(.+\\)) \\w+ = (.*)\\$(.*)\\s*");
+                Matcher m = PATTERN_LLDB_FRAME_VAR.matcher(text);
+                if (m.matches()) {
+                    process.handleVarUpdate(m.group(2), m.group(1), m.group(3));
                 }
             }
+        } catch (Exception e) {
+            LOG.error("Error handling input line {}", e);
         }
         return true;
+    }
+
+    private boolean handleError(String msg) {
+        Matcher matcher = PATTERN_VAR_UPDATE_FAILED.matcher(msg);
+        if (matcher.matches()) {
+            process.removeVariable(matcher.group(1));
+            return true;
+        }
+        return false;
     }
 
     private boolean isCreateVarResult(GdbMiResults results) {
@@ -75,6 +99,7 @@ public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
         process.getSession().positionReached(suspendContext);
         GdbStopReason reason = GdbStopReason.fromUid(res.getResults().getString("reason"));
         String msg = null;
+        MessageType messageType = MessageType.INFO;
         if (reason != null) {
             switch (reason) {
                 case SIGNAL_RECEIVED: {
@@ -89,6 +114,7 @@ public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
                 case LOCATION_REACHED:
                 case FUNCTION_FINISHED: {
                     msg = reason.getUid();
+                    messageType = MessageType.WARNING;
                     break;
                 }
                 case EXITED:
@@ -96,10 +122,16 @@ public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
                 case EXITED_NORMALLY: {
                     msg = reason.getUid();
                     process.sendCommand("-gdb-exit");
+                    break;
+                }
+                case EXCEPTION: {
+                    msg = reason.getUid() + ": " + res.getResults().getString("exception");
+                    messageType = MessageType.ERROR;
+                    break;
                 }
             }
             if (msg != null) {
-                process.getSession().reportMessage(PascalBundle.message("debug.notify.stopped", msg), MessageType.INFO);
+                process.getSession().reportMessage(PascalBundle.message("debug.notify.stopped", msg), messageType);
             }
         }
     }
