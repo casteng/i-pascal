@@ -14,6 +14,10 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
+import com.intellij.xdebugger.frame.XValueChildrenList;
+import com.intellij.xdebugger.impl.ui.tree.XDebuggerTree;
+import com.intellij.xdebugger.impl.ui.tree.nodes.XValueContainerNode;
+import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.jps.util.FileUtil;
@@ -31,22 +35,31 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Author: George Bakhtadze
  * Date: 01/04/2017
  */
 public class GdbStackFrame extends XStackFrame {
+
+    private static final String VAR_PREFIX_LOCAL = "l%";
+    private static final String VAR_PREFIX_WATCHES = "w%";
+
     private final PascalXDebugProcess process;
     private final GdbExecutionStack executionStack;
     private final GdbMiResults frame;
     private final int level;
-    private final ConcurrentMap<String, Collection<PasField>> fieldsMap = new ConcurrentHashMap<String, Collection<PasField>>();
+    private final Map<String, Collection<PasField>> fieldsMap = new ConcurrentHashMap<String, Collection<PasField>>();
     private XSourcePosition sourcePosition;
+    protected Map<String, GdbVariableObject> variableObjectMap;
+    private XCompositeNode lastQueriedVariablesCompositeNode;
+    private XCompositeNode lastParentNode;
 
     public GdbStackFrame(GdbExecutionStack executionStack, GdbMiResults frame) {
         this.process = executionStack.getProcess();
@@ -56,6 +69,7 @@ public class GdbStackFrame extends XStackFrame {
         if (process.options.needPosition()) {
             sourcePosition = getSourcePosition();
         }
+        variableObjectMap = new LinkedHashMap<>();
     }
 
     @Override
@@ -171,18 +185,132 @@ public class GdbStackFrame extends XStackFrame {
         return new GdbEvaluator(this);
     }
 
+    @Nullable
     @Override
-    public void computeChildren(@NotNull XCompositeNode node) {
-        process.setLastQueriedVariablesCompositeNode(node);
-        process.sendCommand("-stack-select-frame " + level);
-        process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --simple-values", executionStack.getThreadId(), level));
+    public Object getEqualityObject() {
+        return getClass();
     }
 
-    public GdbExecutionStack getExecutionStack() {
-        return executionStack;
+    @Override
+    public void computeChildren(@NotNull XCompositeNode node) {
+        lastQueriedVariablesCompositeNode = node;
+        process.sendCommand("-stack-select-frame " + level);
+        process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", executionStack.getThreadId(), level));
+    }
+
+    public void evaluate(String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
+        String key = getVarKey(expression, false, VAR_PREFIX_WATCHES);
+        GdbVariableObject var = variableObjectMap.get(key);
+        if (null == var) {
+            variableObjectMap.put(key, new GdbVariableObject(key, expression, expression, callback));
+            process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, process.getVarFrame(), expression.toUpperCase(), process.getVarNameQuoteChar()));
+        } else {
+            var.setCallback(callback);
+            updateVariableObjectUI(var);
+//            process.sendCommand(String.format("-var-set-update-range %2$s%s%2$s 0 100", key, VAR_NAME_QUOTE_CHAR));
+            process.sendCommand(String.format("-var-update --all-values %2$s%s%2$s", key, process.getVarNameQuoteChar()));
+        }
     }
 
     public int getLevel() {
         return level;
+    }
+
+    public void refreshVariablesUI() {
+        refreshVarTree(lastQueriedVariablesCompositeNode, new ArrayList<>(variableObjectMap.values()));
+    }
+
+    private void refreshVarTree(XCompositeNode node, Collection<GdbVariableObject> variableObjects) {
+        if (null == node || node.isObsolete()) {
+            return;
+        }
+
+        if (node instanceof XValueContainerNode) {
+            XDebuggerTree tree = ((XValueContainerNode) node).getTree();
+            tree.getLaterInvocator().offer(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (variableObjects.isEmpty()) {
+                            node.addChildren(XValueChildrenList.EMPTY, true);
+                            return;
+                        }
+                        XValueChildrenList childrenList = new XValueChildrenList(variableObjects.size());
+                        for (GdbVariableObject var : variableObjects) {
+                            childrenList.add(var.getName().substring(var.getName().lastIndexOf('.') + 1),
+                                    new PascalDebuggerValue(process, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount(), var.getFieldType()));
+                        }
+                        node.addChildren(childrenList, true);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+    }
+
+    private void updateVariableObjectUI(@NotNull GdbVariableObject var) {
+        var.getCallback().evaluated(new PascalDebuggerValue(process, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount()));
+    }
+
+    public void createOrUpdateVar(GdbMiResults res, boolean valueNeeded) {
+        String varName = res.getString("name");
+        String varKey;
+        if (varName.startsWith(VAR_PREFIX_LOCAL) || varName.startsWith(VAR_PREFIX_WATCHES)) {
+            varKey = varName;
+            varName = varName.substring(2);
+        } else {
+            varKey = getVarKey(varName, false, VAR_PREFIX_LOCAL);
+        }
+        GdbVariableObject var = variableObjectMap.get(varKey);
+        if (var != null) {
+            var.updateFromResult(res);
+            if (var.getCallback() != null) {
+                updateVariableObjectUI(var);
+            }
+            if (valueNeeded) {
+//                process.sendCommand(String.format("-var-set-update-range %2$s%s%2$s 0 100", varKey, VAR_NAME_QUOTE_CHAR));
+                process.sendCommand(String.format("-var-update --all-values %2$s%s%2$s", varKey, process.getVarNameQuoteChar()));
+            }
+        } else {
+            String varNameResolved = varName;
+            PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
+            PasField field = resolveIdentifierName(varName, PasField.TYPES_LOCAL);
+            if (field != null) {
+                varNameResolved = formatVariableName(field);
+                fieldType = field.fieldType;
+            }
+            var = new GdbVariableObject(varKey, varNameResolved, varName, null, res);
+            var.setFieldType(fieldType);
+            variableObjectMap.put(varKey, var);
+            if (valueNeeded) {
+                process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, process.getVarFrame(), varName, process.getVarNameQuoteChar()));
+            }
+        }
+    }
+
+    public void removeVar(String varKey) {
+        variableObjectMap.remove(varKey);
+    }
+
+    public void clearVars() {
+        variableObjectMap.clear();
+    }
+
+    private void handleVarArg(String varName, GdbVariableObject lastVar, GdbMiResults res) {
+        Integer value = res.getInteger("value");
+        if (value != null) {
+            lastVar.setLength(value + 1);
+            process.sendCommand("type summary add -s " + lastVar.getKey() + "\"\\$${var[0-" + value + "]}\" -n " + lastVar.getKey());
+            process.sendCommand("fr v " + varName.substring(4) + " --summary " + lastVar.getKey());
+        }
+    }
+
+    private String formatVariableName(@NotNull PasField field) {
+        return field.name + (field.fieldType == PasField.FieldType.ROUTINE ? "()" : "");
+    }
+
+    private String getVarKey(String varName, boolean children, String varPrefixWatches) {
+        return (children ? "" : VAR_PREFIX_LOCAL) + varName.replace(' ', '_');
     }
 }

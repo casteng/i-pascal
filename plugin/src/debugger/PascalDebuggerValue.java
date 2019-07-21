@@ -31,7 +31,7 @@ public class PascalDebuggerValue extends XValue {
         this.type = type;
         this.value = value;
         this.childrenCount = childrenCount;
-        this.fieldType = fieldType;
+        this.fieldType = fieldType != null ? fieldType : PasField.FieldType.VARIABLE;
     }
 
     public PascalDebuggerValue(PascalXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount) {

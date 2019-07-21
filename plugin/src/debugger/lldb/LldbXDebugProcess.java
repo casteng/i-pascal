@@ -8,10 +8,7 @@ import com.intellij.openapi.util.SystemInfo;
 import com.intellij.xdebugger.XDebugSession;
 import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
 import com.siberika.idea.pascal.debugger.gdb.GdbProcessAdapter;
-import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
-
-import java.util.HashMap;
 
 /**
  * Author: George Bakhtadze
@@ -26,12 +23,12 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
-    protected String getVarFrame() {
+    public String getVarFrame() {
         return "*";
     }
 
     @Override
-    protected String getVarNameQuoteChar() {
+    public String getVarNameQuoteChar() {
         return "";
     }
 
@@ -41,7 +38,6 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
             createOutputConsole();
         }
         console = (ConsoleView) executionResult.getExecutionConsole();
-        variableObjectMap = new HashMap<String, GdbVariableObject>();
 
         sendCommand("-interpreter-exec console \"br delete\"");
     }

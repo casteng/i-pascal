@@ -18,6 +18,6 @@ public class GdbEvaluator extends XDebuggerEvaluator {
 
     @Override
     public void evaluate(@NotNull String expression, @NotNull XEvaluationCallback callback, @Nullable XSourcePosition expressionPosition) {
-        gdbStackFrame.getExecutionStack().getProcess().evaluate(expression, callback);
+        gdbStackFrame.evaluate(expression, callback);
     }
 }

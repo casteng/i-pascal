@@ -10,8 +10,6 @@ import com.intellij.xdebugger.XDebugSession;
 import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 
-import java.util.HashMap;
-
 /**
  * Author: George Bakhtadze
  * Date: 26/03/2017
@@ -25,12 +23,12 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
-    protected String getVarFrame() {
+    public String getVarFrame() {
         return "@";
     }
 
     @Override
-    protected String getVarNameQuoteChar() {
+    public String getVarNameQuoteChar() {
         return "\"";
     }
 
@@ -48,7 +46,6 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
             createOutputConsole();
         }
         console = (ConsoleView) executionResult.getExecutionConsole();
-        variableObjectMap = new HashMap<String, GdbVariableObject>();
         sendCommand("-break-delete");
     }
 

@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.debugger.gdb;
 
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
+import com.siberika.idea.pascal.lang.psi.impl.PasField;
 
 /**
  * Author: George Bakhtadze
@@ -9,6 +10,7 @@ import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
  */
 public class GdbVariableObject {
     private final String key;
+    private final String name;
     private final String expression;
 
     private XDebuggerEvaluator.XEvaluationCallback callback;
@@ -17,20 +19,26 @@ public class GdbVariableObject {
     private String value;
     private Integer childrenCount;
     private int length;
+    private PasField.FieldType fieldType;
 
-    public GdbVariableObject(String key, String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
+    public GdbVariableObject(String key, String name, String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
         this.key = key;
+        this.name = name;
         this.expression = expression;
         this.callback = callback;
     }
 
-    public GdbVariableObject(String key, String expression, XDebuggerEvaluator.XEvaluationCallback callback, GdbMiResults res) {
-        this(key, expression, callback);
+    public GdbVariableObject(String key, String name, String expression, XDebuggerEvaluator.XEvaluationCallback callback, GdbMiResults res) {
+        this(key, name, expression, callback);
         updateFromResult(res);
     }
 
     public String getKey() {
         return key;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getExpression() {
@@ -74,5 +82,13 @@ public class GdbVariableObject {
 
     public int getLength() {
         return length;
+    }
+
+    public PasField.FieldType getFieldType() {
+        return fieldType;
+    }
+
+    public void setFieldType(PasField.FieldType fieldType) {
+        this.fieldType = fieldType;
     }
 }
