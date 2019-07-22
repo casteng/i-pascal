@@ -6,7 +6,6 @@ import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
-import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.execution.ui.layout.PlaceInGrid;
@@ -42,6 +41,7 @@ import com.intellij.xdebugger.ui.XDebugTabLayouter;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
+import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
@@ -51,8 +51,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -60,20 +58,16 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     private static final Logger LOG = Logger.getInstance(PascalXDebugProcess.class);
 
-    private final String VAR_FRAME = getVarFrame();
-
-    private final String VAR_NAME_QUOTE_CHAR = getVarNameQuoteChar();
-
     public final Options options = new Options();
 
-    protected static final AnAction[] EMPTY_ACTIONS = new AnAction[0];
+    private static final AnAction[] EMPTY_ACTIONS = new AnAction[0];
 
     protected final ExecutionResult executionResult;
 
     protected ConsoleView console;
-    protected LogConsoleImpl outputConsole;
+    private LogConsoleImpl outputConsole;
     protected File outputFile;
-    protected ExecutionEnvironment environment;
+    ExecutionEnvironment environment;
     protected Sdk sdk;
 
     private final XBreakpointHandler<?>[] MY_BREAKPOINT_HANDLERS = new XBreakpointHandler[] {new PascalLineBreakpointHandler(this)};
@@ -83,6 +77,8 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     public abstract String getVarFrame();
     public abstract String getVarNameQuoteChar();
 
+    private CommandSender sender;
+
     protected abstract void init();
 
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
@@ -90,10 +86,30 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         this.environment = environment;
         this.sdk = retrieveSdk(environment);
         this.executionResult = executionResult;
+        this.sender = new CommandSender(this);
+        this.sender.start();
         try {
             init();
         } catch (Exception e) {
             LOG.warn("Error launching debug process", e);
+        }
+    }
+
+    @Override
+    protected synchronized void finalize() throws Throwable {
+        super.finalize();
+        LOG.info("Terminating sender in finalize");
+        terminateSender();
+    }
+
+    private void terminateSender() {
+        if (sender != null && sender.isAlive()) {
+            sender.interrupt();
+            try {
+                sender.join(200);
+            } catch (InterruptedException e) {
+                LOG.info("Interrupted while terminating sender thread", e);
+            }
         }
     }
 
@@ -141,12 +157,6 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         return console;
     }
 
-    public void printToConsole(String text, ConsoleViewContentType contentType) {
-        if (console != null) {
-            console.print(text, contentType);
-        }
-    }
-
     @Override
     public void startPausing() {
         sendCommand("-exec-interrupt");
@@ -174,7 +184,8 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     @Override
     public void stop() {
-        // finalize something
+        LOG.info("Terminating sender");
+        terminateSender();
     }
 
     @Override
@@ -183,19 +194,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     }
 
     public void sendCommand(String command) {
-        if (getSession().isStopped()) {
-            return;
-        }
-        try {
-            OutputStream commandStream = getProcessHandler().getProcessInput();
-            if (commandStream != null) {
-                commandStream.write((command + "\n").getBytes("UTF-8"));
-                commandStream.flush();
-                printToConsole(">>>> " + command + "\n", ConsoleViewContentType.NORMAL_OUTPUT);
-            }
-        } catch (IOException e) {
-            LOG.warn("ERROR: sending command to GDB", e);
-        }
+        sender.send(command, null, null);
     }
 
     @NotNull
@@ -304,7 +303,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     }
 
     // handling of -stack-list-variables command
-    synchronized public void handleVariablesResponse(List<Object> variables) {
+    synchronized public void handleVariablesResponse(List<Object> variables, CommandSender.FinishCallback callback) {
         XStackFrame frame = getCurrentFrame();
         if (frame instanceof GdbStackFrame) {
             ((GdbStackFrame) frame).clearVars();
@@ -340,6 +339,10 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     public static PascalSdkData getData(Sdk sdk) {
         return sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
+    }
+
+    public CommandSender.FinishCallback findCallback(GdbMiLine res) {
+        return sender.findCallback(res.getToken());
     }
 
     public final class Options {
