@@ -22,6 +22,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -40,9 +41,12 @@ import com.intellij.xdebugger.frame.XSuspendContext;
 import com.intellij.xdebugger.ui.XDebugTabLayouter;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.debugger.gdb.GdbExecutionStack;
 import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
+import com.siberika.idea.pascal.debugger.gdb.GdbSuspendContext;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
+import com.siberika.idea.pascal.debugger.gdb.parser.GdbStopReason;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.run.PascalRunConfiguration;
@@ -52,15 +56,21 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class PascalXDebugProcess extends XDebugProcess {
 
     private static final Logger LOG = Logger.getInstance(PascalXDebugProcess.class);
 
-    public final Options options = new Options();
-
+    private static final Pattern PATTERN_VAR_UPDATE_FAILED = Pattern.compile("\\w+ 'var-update'\\. Variable '(.+)' does not exist");
+    private static final Pattern PATTERN_LLDB_FRAME_VAR = Pattern.compile("(\\(.+\\)) \\w+ = (.*)\\$(.*)\\s*");
     private static final AnAction[] EMPTY_ACTIONS = new AnAction[0];
+
+    public final Options options = new Options();
 
     protected final ExecutionResult executionResult;
 
@@ -73,6 +83,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     private final XBreakpointHandler<?>[] MY_BREAKPOINT_HANDLERS = new XBreakpointHandler[] {new PascalLineBreakpointHandler(this)};
 
     private boolean inferiorRunning = false;
+    private GdbSuspendContext suspendContext;
 
     public abstract String getVarFrame();
     public abstract String getVarNameQuoteChar();
@@ -194,7 +205,11 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     }
 
     public void sendCommand(String command) {
-        sender.send(command, null, null);
+        sender.send(command, null);
+    }
+
+    public void sendCommand(String command, CommandSender.FinishCallback callback) {
+        sender.send(command, callback);
     }
 
     @NotNull
@@ -264,8 +279,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     public void handleVarResult(GdbMiResults res) {
         XStackFrame frame = getCurrentFrame();
         if (frame instanceof GdbStackFrame) {
-            ((GdbStackFrame) frame).createOrUpdateVar(res, false);
-            ((GdbStackFrame) frame).refreshVariablesUI();
+            ((GdbStackFrame) frame).createOrUpdateVar(res, false, null);
         }
     }
 
@@ -276,9 +290,8 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
             List<Object> changes = results.getList("changelist");
             for (Object o : changes) {
                 GdbMiResults change = (GdbMiResults) o;
-                ((GdbStackFrame) frame).createOrUpdateVar(change, false);
+                ((GdbStackFrame) frame).createOrUpdateVar(change, false, null);
             }
-            ((GdbStackFrame) frame).refreshVariablesUI();
         }
     }
 
@@ -290,8 +303,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
             res.setValue("name", varKey);
             res.setValue("type", type);
             res.setValue("value", value);
-            ((GdbStackFrame) frame).createOrUpdateVar(res, false);
-            ((GdbStackFrame) frame).refreshVariablesUI();
+            ((GdbStackFrame) frame).createOrUpdateVar(res, false, null);
         }
     }
 
@@ -345,6 +357,118 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         return sender.findCallback(res.getToken());
     }
 
+    public void handleResponse(String text, GdbMiLine res) {
+        LOG.info("DBG: " + res);
+        if (GdbMiLine.Type.EXEC_ASYNC.equals(res.getType())) {
+            if ("stopped".equals(res.getRecClass())) {
+                handleStop(res);
+            } else if ("running".equals(res.getRecClass())) {
+                setInferiorRunning(true);
+            }
+        } else if (GdbMiLine.Type.RESULT_RECORD.equals(res.getType())) {
+            if ("done".equals(res.getRecClass())) {
+                if (res.getResults().getValue("stack") != null) {
+                    addStackFramesToContainer(res.getResults().getList("stack"));
+                } else if (res.getResults().getValue("bkpt") != null) {
+                    getBreakpointHandler().handleBreakpointResult(res.getResults().getTuple("bkpt"));
+                } else if (isCreateVarResult(res.getResults())) {
+                    handleVarResult(res.getResults());
+                } else if (res.getResults().getValue("changelist") != null) {
+                    handleVarUpdate(res.getResults());
+                } else if (res.getResults().getValue("children") != null) {
+                    handleChildrenResult(res.getResults().getList("children"));
+                } else if ("0".equals(res.getResults().getString("numchild"))) {
+                    handleChildrenResult(Collections.emptyList());
+                }
+            } else if ("error".equals(res.getRecClass())) {
+                LOG.info(String.format("Debugger error: %s", res));
+                String msg = res.getResults().getString("msg");
+                if ((msg != null) && !handleError(msg)) {
+                    getSession().reportMessage(PascalBundle.message("debug.error.response",
+                            msg.replace("\\n", "\n")), MessageType.ERROR);
+                }
+            }
+        } else if (!"(gdb)\n".equals(text)) {
+            Matcher m = PATTERN_LLDB_FRAME_VAR.matcher(text);
+            if (m.matches()) {
+                handleVarUpdate(m.group(2), m.group(1), m.group(3));
+            }
+        }
+    }
+
+    private boolean handleError(String msg) {
+        Matcher matcher = PATTERN_VAR_UPDATE_FAILED.matcher(msg);
+        if (matcher.matches()) {
+            removeVariable(matcher.group(1));
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isCreateVarResult(GdbMiResults results) {
+        return (results.getValue("name") != null) && (results.getValue("value") != null);
+    }
+
+    private void handleStop(GdbMiLine res) {
+        suspendContext = new GdbSuspendContext(this, res);
+        setInferiorRunning(false);
+        getSession().positionReached(suspendContext);
+        GdbStopReason reason = GdbStopReason.fromUid(res.getResults().getString("reason"));
+        String msg = null;
+        MessageType messageType = MessageType.INFO;
+        if (reason != null) {
+            switch (reason) {
+                case SIGNAL_RECEIVED: {
+                    String detail = res.getResults().getString("signal-name");
+                    msg = detail != null ? String.format(", %s (%s)", res.getResults().getValue("signal-name"), res.getResults().getValue("signal-meaning")) : "";
+                    break;
+                }
+                case BREAKPOINT_HIT:
+                case WATCHPOINT_TRIGGER:
+                case READ_WATCHPOINT_TRIGGER:
+                case ACCESS_WATCHPOINT_TRIGGER:
+                case LOCATION_REACHED:
+                case FUNCTION_FINISHED: {
+                    msg = reason.getUid();
+                    messageType = MessageType.WARNING;
+                    break;
+                }
+                case EXITED:
+                case EXITED_SIGNALLED:
+                case EXITED_NORMALLY: {
+                    msg = reason.getUid();
+                    sendCommand("-gdb-exit");
+                    break;
+                }
+                case EXCEPTION: {
+                    msg = reason.getUid() + ": " + res.getResults().getString("exception");
+                    messageType = MessageType.ERROR;
+                    break;
+                }
+            }
+            if (msg != null) {
+                getSession().reportMessage(PascalBundle.message("debug.notify.stopped", msg), messageType);
+            }
+        }
+    }
+
+    private void addStackFramesToContainer(List<Object> stack) {
+        List<XStackFrame> frames = new ArrayList<>();
+        for (Object o : stack) {
+            if (o instanceof GdbMiResults) {
+                GdbMiResults res = (GdbMiResults) o;
+                frames.add(new GdbStackFrame((GdbExecutionStack) suspendContext.getActiveExecutionStack(), res.getTuple("frame")));
+            } else {
+                reportError("Invalid stack frames list entry");
+                return;
+            }
+        }
+        suspendContext.getStackFrameContainer().addStackFrames(frames, true);
+    }
+
+    private void reportError(String msg) {
+        LOG.warn("ERROR: " + msg);
+    }
     public final class Options {
         public boolean resolveNames() {
             return getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES);

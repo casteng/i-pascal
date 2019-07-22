@@ -1,5 +1,7 @@
 package com.siberika.idea.pascal.debugger.gdb.parser;
 
+import java.util.Objects;
+
 /**
  * Author: George Bakhtadze
  * Date: 29/03/2017
@@ -40,5 +42,10 @@ public class GdbMiLine {
         TARGET_STREAM,
         LOG_STREAM,
         RESULT_RECORD
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s(%s:%s)%s", token != null ? "#" + token + "-" : "", Objects.toString(type, "?"), recClass, Objects.toString(results, "[]"));
     }
 }

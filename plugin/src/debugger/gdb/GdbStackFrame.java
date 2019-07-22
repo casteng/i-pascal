@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.debugger.gdb;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -17,8 +18,10 @@ import com.intellij.xdebugger.frame.XStackFrame;
 import com.intellij.xdebugger.frame.XValueChildrenList;
 import com.intellij.xdebugger.impl.ui.tree.XDebuggerTree;
 import com.intellij.xdebugger.impl.ui.tree.nodes.XValueContainerNode;
+import com.siberika.idea.pascal.debugger.CommandSender;
 import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
+import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
@@ -38,6 +41,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +51,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Date: 01/04/2017
  */
 public class GdbStackFrame extends XStackFrame {
+
+    private static final Logger LOG = Logger.getInstance(GdbStackFrame.class);
 
     private static final String VAR_PREFIX_LOCAL = "l%";
     private static final String VAR_PREFIX_WATCHES = "w%";
@@ -195,7 +201,45 @@ public class GdbStackFrame extends XStackFrame {
     public void computeChildren(@NotNull XCompositeNode node) {
         lastQueriedVariablesCompositeNode = node;
         process.sendCommand("-stack-select-frame " + level);
-        process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", executionStack.getThreadId(), level));
+        process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", executionStack.getThreadId(), level), new CommandSender.FinishCallback() {
+            @Override
+            public void call(GdbMiLine res) {
+                if (res.getResults().getValue("variables") != null) {
+                    handleVariablesResponse(res.getResults().getList("variables"), new CommandSender.FinishCallback() {
+                        @Override
+                        public void call(GdbMiLine res) {
+                            process.handleResponse("", res);
+                            refreshVariablesUI();
+                        }
+                    });
+                } else {
+                    LOG.info(String.format("Invalid debugger response: %s", res.toString()));
+                }
+            }
+        });
+    }
+
+    // handling of -stack-list-variables command
+    private void handleVariablesResponse(List<Object> variables, CommandSender.FinishCallback callback) {
+        clearVars();
+        final int size = variables.size();
+        if (size > 0) {
+            for (int i = 0; i < size; i++) {
+                Object o = variables.get(i);
+                if (o instanceof GdbMiResults) {
+                    GdbMiResults res = (GdbMiResults) o;
+                    if (i < size - 1) {
+                        createOrUpdateVar(res, true, null);
+                    } else {                   // callback should be called for last var
+                        createOrUpdateVar(res, true, callback);
+                    }
+                } else {
+                    LOG.error(String.format("Invalid variables list entry: %s", o));
+                }
+            }
+        } else {                  // No variables in frame. Callback should be called anyway.
+            callback.call(new GdbMiLine(null, GdbMiLine.Type.RESULT_RECORD, "vars"));
+        }
     }
 
     public void evaluate(String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
@@ -253,7 +297,7 @@ public class GdbStackFrame extends XStackFrame {
         var.getCallback().evaluated(new PascalDebuggerValue(process, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount()));
     }
 
-    public void createOrUpdateVar(GdbMiResults res, boolean valueNeeded) {
+    public void createOrUpdateVar(GdbMiResults res, boolean valueNeeded, CommandSender.FinishCallback callback) {
         String varName = res.getString("name");
         String varKey;
         if (varName.startsWith(VAR_PREFIX_LOCAL) || varName.startsWith(VAR_PREFIX_WATCHES)) {
@@ -270,7 +314,7 @@ public class GdbStackFrame extends XStackFrame {
             }
             if (valueNeeded) {
 //                process.sendCommand(String.format("-var-set-update-range %2$s%s%2$s 0 100", varKey, VAR_NAME_QUOTE_CHAR));
-                process.sendCommand(String.format("-var-update --all-values %2$s%s%2$s", varKey, process.getVarNameQuoteChar()));
+                process.sendCommand(String.format("-var-update --all-values %2$s%s%2$s", varKey, process.getVarNameQuoteChar()), callback);
             }
         } else {
             String varNameResolved = varName;
@@ -284,7 +328,7 @@ public class GdbStackFrame extends XStackFrame {
             var.setFieldType(fieldType);
             variableObjectMap.put(varKey, var);
             if (valueNeeded) {
-                process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, process.getVarFrame(), varName, process.getVarNameQuoteChar()));
+                process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, process.getVarFrame(), varName, process.getVarNameQuoteChar()), callback);
             }
         }
     }

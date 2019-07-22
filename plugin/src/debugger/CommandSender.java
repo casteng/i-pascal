@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.debugger;
 
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.diagnostic.Logger;
+import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CommandSender extends Thread {
     private static final Logger LOG = Logger.getInstance(CommandSender.class);
@@ -18,6 +20,8 @@ public class CommandSender extends Thread {
 
     private final BlockingQueue<Command> queue = new ArrayBlockingQueue<>(200);
     private final Map<Long, FinishCallback> callbackMap = new ConcurrentHashMap<>();
+
+    private static final AtomicLong TOKEN_COUNTER = new AtomicLong();
 
     CommandSender(PascalXDebugProcess pascalXDebugProcess) {
         process = pascalXDebugProcess;
@@ -51,11 +55,15 @@ public class CommandSender extends Thread {
         }
     }
 
-    void send(String command, Long token, FinishCallback callback) {
-        assert ((callback != null) && (token != null)) || (null == callback) : "Token should be specified if callback is specified";
+    void send(String command, FinishCallback callback) {
+        Long token = callback != null ? nextToken() : null;
         if (!process.getSession().isStopped()) {
             queue.add(new Command(command, token, callback));
         }
+    }
+
+    private static long nextToken() {
+        return TOKEN_COUNTER.getAndIncrement();
     }
 
     public FinishCallback findCallback(Long token) {
@@ -86,6 +94,6 @@ public class CommandSender extends Thread {
     }
 
     public interface FinishCallback {
-        void call(boolean success);
+        void call(GdbMiLine res);
     }
 }
