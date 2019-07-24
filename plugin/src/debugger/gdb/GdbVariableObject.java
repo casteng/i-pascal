@@ -20,6 +20,7 @@ public class GdbVariableObject {
     private Integer childrenCount;
     private int length;
     private PasField.FieldType fieldType;
+    private boolean visible = true;
 
     public GdbVariableObject(String key, String name, String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
         this.key = key;
@@ -90,5 +91,13 @@ public class GdbVariableObject {
 
     public void setFieldType(PasField.FieldType fieldType) {
         this.fieldType = fieldType;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 }

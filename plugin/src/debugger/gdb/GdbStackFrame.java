@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.debugger.gdb;
 
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.DumbService;
@@ -16,7 +15,6 @@ import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
 import com.intellij.xdebugger.frame.XValueChildrenList;
-import com.intellij.xdebugger.impl.ui.tree.XDebuggerTree;
 import com.intellij.xdebugger.impl.ui.tree.nodes.XValueContainerNode;
 import com.siberika.idea.pascal.debugger.CommandSender;
 import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
@@ -45,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Author: George Bakhtadze
@@ -56,16 +55,18 @@ public class GdbStackFrame extends XStackFrame {
 
     private static final String VAR_PREFIX_LOCAL = "l%";
     private static final String VAR_PREFIX_WATCHES = "w%";
+    private static final String OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX = "high";
 
     private final PascalXDebugProcess process;
     private final GdbExecutionStack executionStack;
     private final GdbMiResults frame;
     private final int level;
-    private final Map<String, Collection<PasField>> fieldsMap = new ConcurrentHashMap<String, Collection<PasField>>();
+    private final Map<String, Collection<PasField>> fieldsMap = new ConcurrentHashMap<>();
     private XSourcePosition sourcePosition;
-    protected Map<String, GdbVariableObject> variableObjectMap;
+    private Map<String, GdbVariableObject> variableObjectMap;
     private XCompositeNode lastQueriedVariablesCompositeNode;
     private XCompositeNode lastParentNode;
+    private final AtomicLong refreshCounter = new AtomicLong();
 
     public GdbStackFrame(GdbExecutionStack executionStack, GdbMiResults frame) {
         this.process = executionStack.getProcess();
@@ -115,7 +116,6 @@ public class GdbStackFrame extends XStackFrame {
         String line = frame.getString("line");
         component.append(formatRoutine(frame), SimpleTextAttributes.REGULAR_ATTRIBUTES);
         component.append(String.format(" (%s:%s)", filename, line != null ? line : "-"), SimpleTextAttributes.GRAYED_ATTRIBUTES);
-        component.setIcon(AllIcons.Debugger.StackFrame);
     }
 
     private String formatRoutine(GdbMiResults frame) {
@@ -136,7 +136,7 @@ public class GdbStackFrame extends XStackFrame {
         return name + "()";
     }
 
-    public PasField resolveIdentifierName(final String name, final Set<PasField.FieldType> types) {
+    private PasField resolveIdentifierName(final String name, final Set<PasField.FieldType> types) {
         if (!process.options.resolveNames() || (null == sourcePosition)) {
             return null;
         }
@@ -205,15 +205,9 @@ public class GdbStackFrame extends XStackFrame {
             @Override
             public void call(GdbMiLine res) {
                 if (res.getResults().getValue("variables") != null) {
-                    handleVariablesResponse(res.getResults().getList("variables"), new CommandSender.FinishCallback() {
-                        @Override
-                        public void call(GdbMiLine res) {
-                            process.handleResponse("", res);
-                            refreshVariablesUI();
-                        }
-                    });
+                    handleVariablesResponse(res.getResults().getList("variables"), new RefreshVariablesCallback(GdbStackFrame.this, refreshCounter.incrementAndGet()));
                 } else {
-                    LOG.info(String.format("Invalid debugger response: %s", res.toString()));
+                    LOG.info(String.format("DBG Error: Invalid debugger response for variables: %s", res.toString()));
                 }
             }
         });
@@ -234,7 +228,7 @@ public class GdbStackFrame extends XStackFrame {
                         createOrUpdateVar(res, true, callback);
                     }
                 } else {
-                    LOG.error(String.format("Invalid variables list entry: %s", o));
+                    LOG.error(String.format("DBG Error: Invalid variables list entry: %s", o));
                 }
             }
         } else {                  // No variables in frame. Callback should be called anyway.
@@ -242,7 +236,7 @@ public class GdbStackFrame extends XStackFrame {
         }
     }
 
-    public void evaluate(String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
+    void evaluate(String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
         String key = getVarKey(expression, false, VAR_PREFIX_WATCHES);
         GdbVariableObject var = variableObjectMap.get(key);
         if (null == var) {
@@ -260,7 +254,7 @@ public class GdbStackFrame extends XStackFrame {
         return level;
     }
 
-    public void refreshVariablesUI() {
+    private void refreshVariablesUI() {
         refreshVarTree(lastQueriedVariablesCompositeNode, new ArrayList<>(variableObjectMap.values()));
     }
 
@@ -270,26 +264,22 @@ public class GdbStackFrame extends XStackFrame {
         }
 
         if (node instanceof XValueContainerNode) {
-            XDebuggerTree tree = ((XValueContainerNode) node).getTree();
-            tree.getLaterInvocator().offer(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (variableObjects.isEmpty()) {
-                            node.addChildren(XValueChildrenList.EMPTY, true);
-                            return;
-                        }
-                        XValueChildrenList childrenList = new XValueChildrenList(variableObjects.size());
-                        for (GdbVariableObject var : variableObjects) {
-                            childrenList.add(var.getName().substring(var.getName().lastIndexOf('.') + 1),
-                                    new PascalDebuggerValue(process, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount(), var.getFieldType()));
-                        }
-                        node.addChildren(childrenList, true);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+            try {
+                if (variableObjects.isEmpty()) {
+                    node.addChildren(XValueChildrenList.EMPTY, true);
+                    return;
+                }
+                XValueChildrenList childrenList = new XValueChildrenList(variableObjects.size());
+                for (GdbVariableObject var : variableObjects) {
+                    if (var.isVisible()) {
+                        childrenList.add(var.getName().substring(var.getName().lastIndexOf('.') + 1),
+                                new PascalDebuggerValue(process, var.getKey(), var.getType(), var.getValue(), var.getChildrenCount(), var.getFieldType()));
                     }
                 }
-            });
+                node.addChildren(childrenList, true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -308,6 +298,8 @@ public class GdbStackFrame extends XStackFrame {
         }
         GdbVariableObject var = variableObjectMap.get(varKey);
         if (var != null) {
+            handleOpenArray(var, res);
+            handleDynamicArray(var, res);
             var.updateFromResult(res);
             if (var.getCallback() != null) {
                 updateVariableObjectUI(var);
@@ -319,13 +311,17 @@ public class GdbStackFrame extends XStackFrame {
         } else {
             String varNameResolved = varName;
             PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
-            PasField field = resolveIdentifierName(varName, PasField.TYPES_LOCAL);
-            if (field != null) {
-                varNameResolved = formatVariableName(field);
-                fieldType = field.fieldType;
+            boolean hidden = isHidden(varName, res);
+            if (!hidden) {
+                PasField field = resolveIdentifierName(varName, PasField.TYPES_LOCAL);
+                if (field != null) {
+                    varNameResolved = formatVariableName(field);
+                    fieldType = field.fieldType;
+                }
             }
             var = new GdbVariableObject(varKey, varNameResolved, varName, null, res);
             var.setFieldType(fieldType);
+            var.setVisible(!hidden);
             variableObjectMap.put(varKey, var);
             if (valueNeeded) {
                 process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, process.getVarFrame(), varName, process.getVarNameQuoteChar()), callback);
@@ -333,28 +329,104 @@ public class GdbStackFrame extends XStackFrame {
         }
     }
 
+    private boolean isHidden(String varName, GdbMiResults res) {
+        return varName.startsWith(OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX) || "result".equals(varName);
+    }
+
     public void removeVar(String varKey) {
         variableObjectMap.remove(varKey);
     }
 
-    public void clearVars() {
+    private void clearVars() {
         variableObjectMap.clear();
     }
 
-    private void handleVarArg(String varName, GdbVariableObject lastVar, GdbMiResults res) {
-        Integer value = res.getInteger("value");
-        if (value != null) {
-            lastVar.setLength(value + 1);
-            process.sendCommand("type summary add -s " + lastVar.getKey() + "\"\\$${var[0-" + value + "]}\" -n " + lastVar.getKey());
-            process.sendCommand("fr v " + varName.substring(4) + " --summary " + lastVar.getKey());
+    private void handleOpenArray(GdbVariableObject highBoundVar, GdbMiResults res) {
+        if (highBoundVar.getName().startsWith(OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX)) {
+            Integer value = res.getInteger("value");
+            if (value != null) {
+                final String openArrayName = highBoundVar.getName().substring(4);
+                GdbVariableObject openArrayVar = variableObjectMap.get(getVarKey(openArrayName, false, VAR_PREFIX_LOCAL));
+                if (openArrayVar != null) {
+                    openArrayVar.setLength(value + 1);
+                    process.sendCommand("type summary add -s " + openArrayVar.getKey() + "\"\\$${var[0-" + value + "]}\" -n " + openArrayVar.getKey());
+                    process.sendCommand("fr v " + openArrayName + " --summary " + openArrayVar.getKey(), new RefreshVariablesCallback(GdbStackFrame.this, refreshCounter.incrementAndGet()));
+                } else {
+                    LOG.info(String.format("DBG Error: no array variable found for bound param %s", highBoundVar.getName()));
+                }
+            }
         }
+    }
+
+    private void handleDynamicArray(GdbVariableObject var, GdbMiResults res) {
+        String type = res.getString("type");
+        if (isDynamicArray(type)) {
+            String addressStr = res.getString("value");
+            if (addressStr != null) {
+                Long address = Long.decode(addressStr);
+                if (address == 0) {
+                    return;
+                }
+                int size = addressStr.length() > 8 ? 8 : 4;
+                refreshCounter.incrementAndGet();           // Increment to prevent refreshing UI by issued earlier -var-create
+                process.sendCommand(String.format("-data-read-memory-bytes %s-%d %d", addressStr, size * 2, size * 2), new CommandSender.FinishCallback() {
+                    @Override
+                    public void call(GdbMiLine res) {
+                        List<Object> memory = res.getResults().getValue("memory") != null ? res.getResults().getList("memory") : null;
+                        GdbMiResults tuple = ((memory != null) && (memory.size() > 0)) ? (GdbMiResults) memory.get(0) : null;
+                        String content = tuple != null ? tuple.getString("contents") : null;
+                        if ((content != null) && (content.length() == (size * 2 * 2))) {
+                            long refCount = parseHex(content.substring(0, size * 2));
+                            long length = parseHex(content.substring(size * 2));
+                            process.sendCommand(String.format("type summary add -s %s\"\\$(%d@%d)${var[0-%d]}\" -n %s", var.getKey(), length + 1, refCount, length, var.getKey()));
+                            process.sendCommand(String.format("fr v %s[0] --summary %s", var.getExpression(), var.getKey()), new RefreshVariablesCallback(GdbStackFrame.this, refreshCounter.incrementAndGet()));
+                        } else {
+                            LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    private long parseHex(String s) {
+        int len = s.length();
+        long data = 0;
+        for (int i = 0; i < len; i += 2) {
+            data = data * 256 + (byte) ((Character.digit(s.charAt(len-2-i), 16) << 4)
+                    + Character.digit(s.charAt(len-1-i), 16));
+        }
+        return data;
+    }
+
+    private boolean isDynamicArray(String type) {
+        return (type != null) && type.contains("(*)[]");
     }
 
     private String formatVariableName(@NotNull PasField field) {
         return field.name + (field.fieldType == PasField.FieldType.ROUTINE ? "()" : "");
     }
 
-    private String getVarKey(String varName, boolean children, String varPrefixWatches) {
-        return (children ? "" : VAR_PREFIX_LOCAL) + varName.replace(' ', '_');
+    private String getVarKey(String varName, boolean children, String prefix) {
+        return (children ? "" : prefix) + varName.replace(' ', '_');
     }
+
+    public static class RefreshVariablesCallback implements CommandSender.FinishCallback {
+        private final GdbStackFrame stackFrame;
+        private final long refreshValue;
+
+        RefreshVariablesCallback(GdbStackFrame stackFrame, long refreshValue) {
+            this.stackFrame = stackFrame;
+            this.refreshValue = refreshValue;
+        }
+
+        @Override
+        public void call(GdbMiLine res) {
+            stackFrame.process.handleResponse(res);
+            if (stackFrame.refreshCounter.get() == refreshValue) {
+                stackFrame.refreshVariablesUI();
+            }
+        }
+    }
+
 }

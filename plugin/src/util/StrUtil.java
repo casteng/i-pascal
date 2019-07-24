@@ -172,6 +172,10 @@ public class StrUtil {
         return name;
     }
 
+    public static String removeSuffix(String str, @NotNull String suffix) {
+        return ((str != null) && str.endsWith(suffix)) ? str.substring(0, str.length() - suffix.length()) : str;
+    }
+
     public static String[] extractWords(String s, ElementType type) {
         String[] splitNameIntoWords = NameUtil.splitNameIntoWords(s);
         String[] result = new String[splitNameIntoWords.length];

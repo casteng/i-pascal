@@ -67,7 +67,6 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     private static final Logger LOG = Logger.getInstance(PascalXDebugProcess.class);
 
     private static final Pattern PATTERN_VAR_UPDATE_FAILED = Pattern.compile("\\w+ 'var-update'\\. Variable '(.+)' does not exist");
-    private static final Pattern PATTERN_LLDB_FRAME_VAR = Pattern.compile("(\\(.+\\)) \\w+ = (.*)\\$(.*)\\s*");
     private static final AnAction[] EMPTY_ACTIONS = new AnAction[0];
 
     public final Options options = new Options();
@@ -295,18 +294,6 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         }
     }
 
-    // handling of LLDB fr v
-    public void handleVarUpdate(String varKey, String type, String value) {
-        XStackFrame frame = getCurrentFrame();
-        if (frame instanceof GdbStackFrame) {
-            GdbMiResults res = new GdbMiResults();
-            res.setValue("name", varKey);
-            res.setValue("type", type);
-            res.setValue("value", value);
-            ((GdbStackFrame) frame).createOrUpdateVar(res, false, null);
-        }
-    }
-
     public void removeVariable(String varKey) {
         XStackFrame frame = getCurrentFrame();
         if (frame instanceof GdbStackFrame) {
@@ -357,8 +344,8 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         return sender.findCallback(res.getToken());
     }
 
-    public void handleResponse(String text, GdbMiLine res) {
-        LOG.info("DBG: " + res);
+    public void handleResponse(GdbMiLine res) {
+//        LOG.info("DBG: " + res);
         if (GdbMiLine.Type.EXEC_ASYNC.equals(res.getType())) {
             if ("stopped".equals(res.getRecClass())) {
                 handleStop(res);
@@ -388,11 +375,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                             msg.replace("\\n", "\n")), MessageType.ERROR);
                 }
             }
-        } else if (!"(gdb)\n".equals(text)) {
-            Matcher m = PATTERN_LLDB_FRAME_VAR.matcher(text);
-            if (m.matches()) {
-                handleVarUpdate(m.group(2), m.group(1), m.group(3));
-            }
+//        } else if (!"(gdb)\n".equals(text)) {
         }
     }
 
