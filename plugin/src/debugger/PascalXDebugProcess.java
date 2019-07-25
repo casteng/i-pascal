@@ -446,7 +446,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                 return;
             }
         }
-        suspendContext.getStackFrameContainer().addStackFrames(frames, true);
+        ((GdbExecutionStack) suspendContext.getActiveExecutionStack()).addStackFrames(frames);
     }
 
     private void reportError(String msg) {

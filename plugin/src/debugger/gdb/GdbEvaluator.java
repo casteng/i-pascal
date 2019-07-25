@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public class GdbEvaluator extends XDebuggerEvaluator {
     private final GdbStackFrame gdbStackFrame;
 
-    public GdbEvaluator(GdbStackFrame gdbStackFrame) {
+    GdbEvaluator(GdbStackFrame gdbStackFrame) {
         this.gdbStackFrame = gdbStackFrame;
     }
 

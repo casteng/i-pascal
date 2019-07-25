@@ -14,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 public class GdbSuspendContext extends XSuspendContext {
     private final PascalXDebugProcess process;
     private final XExecutionStack stack;
-    private XExecutionStack.XStackFrameContainer stackFrameContainer;
 
     public GdbSuspendContext(PascalXDebugProcess process, GdbMiLine line) {
         this.process = process;
@@ -37,11 +36,4 @@ public class GdbSuspendContext extends XSuspendContext {
         return process;
     }
 
-    public XExecutionStack.XStackFrameContainer getStackFrameContainer() {
-        return stackFrameContainer;
-    }
-
-    public void setStackFrameContainer(XExecutionStack.XStackFrameContainer stackFrameContainer) {
-        this.stackFrameContainer = stackFrameContainer;
-    }
 }
