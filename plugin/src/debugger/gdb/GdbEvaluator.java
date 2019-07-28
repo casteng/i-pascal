@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.debugger.gdb;
 
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
+import com.siberika.idea.pascal.debugger.VariableManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,14 +11,14 @@ import org.jetbrains.annotations.Nullable;
  * Date: 04/04/2017
  */
 public class GdbEvaluator extends XDebuggerEvaluator {
-    private final GdbStackFrame gdbStackFrame;
+    private final VariableManager variableManager;
 
-    GdbEvaluator(GdbStackFrame gdbStackFrame) {
-        this.gdbStackFrame = gdbStackFrame;
+    GdbEvaluator(VariableManager variableManager) {
+        this.variableManager = variableManager;
     }
 
     @Override
     public void evaluate(@NotNull String expression, @NotNull XEvaluationCallback callback, @Nullable XSourcePosition expressionPosition) {
-        gdbStackFrame.evaluate(expression, callback);
+        variableManager.evaluate(expression, callback, expressionPosition);
     }
 }

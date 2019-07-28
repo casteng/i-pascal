@@ -10,13 +10,16 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
  */
 public class GdbVariableObject {
     private final String key;
+    // name in debugger
     private final String name;
-    private final String expression;
+    // expression entered by user or resolved name
+    private String expression;
 
     private XDebuggerEvaluator.XEvaluationCallback callback;
 
     private String type;
     private String value;
+    private String valueRefined;
     private Integer childrenCount;
     private int length;
     private PasField.FieldType fieldType;
@@ -46,6 +49,10 @@ public class GdbVariableObject {
         return expression;
     }
 
+    public void setExpression(String expression) {
+        this.expression = expression;
+    }
+
     public XDebuggerEvaluator.XEvaluationCallback getCallback() {
         return callback;
     }
@@ -71,6 +78,10 @@ public class GdbVariableObject {
 
     public String getValue() {
         return value;
+    }
+
+    public void setValueRefined(String valueRefined) {
+        this.valueRefined = valueRefined;
     }
 
     public Integer getChildrenCount() {
@@ -99,5 +110,13 @@ public class GdbVariableObject {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    public boolean isWatched() {
+        return this.callback != null;
+    }
+
+    public String getPresentation() {
+        return valueRefined != null ? valueRefined : value;
     }
 }

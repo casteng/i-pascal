@@ -858,6 +858,7 @@
             <desc>Set the compatibility mode of the compiler</desc>
             <value>Default</value>
             <value>Delphi</value>
+            <value>DelphiUnicode</value>
             <value>TP</value>
             <value>FPC</value>
             <value>OBJFPC</value>
