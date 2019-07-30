@@ -41,7 +41,7 @@ public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
                 process.handleResponse(res);
             }
         } catch (Exception e) {
-            LOG.error("Error handling input line {}", e);
+            LOG.info("DBG Error: error handling input line: " + text);
         }
         return true;
     }

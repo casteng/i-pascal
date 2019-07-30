@@ -11,10 +11,12 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class CommandSender extends Thread {
     private static final Logger LOG = Logger.getInstance(CommandSender.class);
+    public static final long TOKEN_UNREACHABLE = 1000000000000000000L;
 
     private final PascalXDebugProcess process;
 
@@ -74,6 +76,22 @@ public class CommandSender extends Thread {
         if (process.console != null) {
             process.console.print(text, contentType);
         }
+    }
+
+    void syncCalls(int levels, CommandSender.FinishCallback callback) {
+        AtomicInteger counter = new AtomicInteger(levels);
+        final FinishCallback syncCallback = new FinishCallback() {
+            @Override
+            public void call(GdbMiLine res) {
+                final int current = counter.decrementAndGet();
+                if (current > 0) {
+                    send(String.format("-gdb-set _sc_=%d", current), this);
+                } else {
+                    callback.call(res);
+                }
+            }
+        };
+        send(String.format("-gdb-set _sc_=%d", levels), syncCallback);
     }
 
     private static class Command {

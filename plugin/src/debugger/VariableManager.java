@@ -28,13 +28,13 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class VariableManager {
 
@@ -45,6 +45,7 @@ public class VariableManager {
     private static final String OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX = "high";
     private static final List<String> TYPES_STRING = Arrays.asList("ANSISTRING", "WIDESTRING", "UNICODESTRING", "UTF8STRING", "RAWBYTESTRING");
     private static final Map<Long, String> CODEPAGE_MAP = createCodePageMap();
+
     private static Map<Long, String> createCodePageMap() {
         HashMap<Long, String> res = new HashMap<>();
         res.put(0L, "ACP");
@@ -64,8 +65,6 @@ public class VariableManager {
     private final Map<String, Collection<PasField>> fieldsMap = new ConcurrentHashMap<>();
 
     private XCompositeNode lastQueriedVariablesCompositeNode;
-    private XCompositeNode lastParentNode;
-    private final AtomicLong refreshCounter = new AtomicLong();
 
     VariableManager(PascalXDebugProcess process) {
         this.process = process;
@@ -91,27 +90,7 @@ public class VariableManager {
                         }
                     }
                 });
-        process.waitLevel(1, new CommandSender.FinishCallback() {
-            @Override
-            public void call(GdbMiLine res) {                           // after -stack-list-variables
-                process.waitLevel(2, new CommandSender.FinishCallback() {
-                    @Override
-                    public void call(GdbMiLine res) {                   // after -var-create
-                        process.waitLevel(3, new CommandSender.FinishCallback() {
-                            @Override
-                            public void call(GdbMiLine res) {           // after memory read
-                                process.waitLevel(4, new CommandSender.FinishCallback() {
-                                    @Override
-                                    public void call(GdbMiLine res) {   // after fr v
-                                        refreshVarTree();
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
+        process.syncCalls(4, res -> refreshVarTree(lastQueriedVariablesCompositeNode, variableObjectMap.values()));
     }
 
     // handling of -stack-list-variables command
@@ -133,6 +112,10 @@ public class VariableManager {
 
     // handling of -var-create command
     void handleVarResult(GdbMiResults res) {
+        handleVarData(null, res);
+    }
+
+    private void handleVarData(GdbVariableObject parent, GdbMiResults res) {
         XStackFrame frame = process.getCurrentFrame();
         if (frame instanceof GdbStackFrame) {
             String varName = res.getString("name");
@@ -140,15 +123,30 @@ public class VariableManager {
             if (varName.startsWith(VAR_PREFIX_LOCAL) || varName.startsWith(VAR_PREFIX_WATCHES)) {
                 varKey = varName;
             } else {
+                LOG.info("=== DBG Error: name w/o prefix: " + varName);
                 varKey = getVarKey(varName, false, VAR_PREFIX_LOCAL);
             }
-            GdbVariableObject var = variableObjectMap.get(varKey);
+            GdbVariableObject var;
+            if (parent != null) {
+                String id = varName.substring(varName.lastIndexOf('.') + 1);
+                var = parent.findChild(id);
+                if (var != null) {
+                    LOG.info("=== DBG Error: child var already exists: " + varName);
+                } else {
+                    var = new GdbVariableObject(varKey, id, parent.getExpression() + "." + id, null);
+                    parent.getChildren().add(var);
+                }
+            } else {
+                var = variableObjectMap.get(varKey);
+            } 
             if (var != null) {
                 var.updateFromResult(res);
                 handleOpenArray(var, res);
                 handleDynamicArray(var, res);
                 handleString(var, res);
                 updateVariableObjectUI(var);
+            } else {
+                LOG.info("DBG Error: variable not found: " + varKey);
             }
         }
     }
@@ -188,16 +186,53 @@ public class VariableManager {
     }
 
     void computeValueChildren(String name, XCompositeNode node) {
-//        lastParentNode = node;
-//        sendCommand("-var-list-children --all-values " + name + " 0 100");
-//        if (children) {
-//            res = res.getTuple("child");
-//        }
+        GdbVariableObject tempParent = findVarObject(name);
+        if (tempParent != null) {
+            process.sendCommand("-var-list-children --all-values " + name + " 0 100", new CommandSender.FinishCallback() {
+                @Override
+                public void call(GdbMiLine res) {
+                    if ("0".equals(res.getResults().getString("numchild"))) {
+                        refreshVarTree(node, Collections.emptyList());
+                        return;
+                    }
+                    final List<Object> children = res.getResults() != null ? res.getResults().getList("children") : null;
+                    if (children != null) {
+                        for (Object variable : children) {
+                            if (variable instanceof GdbMiResults) {
+                                final GdbMiResults child = ((GdbMiResults) variable).getTuple("child");
+                                if (child != null) {
+                                    handleVarData(tempParent, child);
+                                } else {
+                                    LOG.info("DBG Error: invalid chldren entry: " + res);
+                                }
+                            }
+                        }
+                        process.syncCalls(3, new CommandSender.FinishCallback() {
+                            @Override
+                            public void call(GdbMiLine res) {
+                                refreshVarTree(node, tempParent.getChildren());
+                            }
+                        });
+                    }
+                }
+            });
+        }
     }
 
-    void handleChildrenResult(List<Object> variables) {
-//        handleVariables(lastParentNode, variables, true);
-//        lastParentNode = null;
+    private GdbVariableObject findVarObject(String name) {
+        GdbVariableObject res = null;
+        String[] nameList = name.split("\\.", 100);
+        for (String level : nameList) {
+            if (res != null) {
+                res = res.findChild(level);
+            } else {
+                res = variableObjectMap.get(level);
+            }
+            if (null == res) {
+                LOG.info(String.format("DBG Error: variable level %s not found in hierarchy %s", level, name));
+            }
+        }
+        return res;
     }
 
     private void handleOpenArray(GdbVariableObject highBoundVar, GdbMiResults res) {
@@ -222,14 +257,10 @@ public class VariableManager {
         if (isDynamicArray(type)) {
             String addressStr = res.getString("value");
             if (addressStr != null) {
-                Long address = Long.decode(addressStr);
-                if (address == 0) {
+                if (!isValidAddress(addressStr)) {
                     return;
                 }
                 int size = addressStr.length() > 8 ? 8 : 4;
-                if (!var.isWatched()) {
-                    refreshCounter.incrementAndGet();           // Increment to prevent refreshing UI by issued earlier -var-create
-                }
                 process.sendCommand(String.format("-data-read-memory-bytes %s-%d %d", addressStr, size * 2, size * 2), new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
@@ -254,7 +285,7 @@ public class VariableManager {
         String type = res.getString("type");
         if (isString(type)) {
             String addressStr = parseAddress(res.getString("value"));
-            if (validAddress(addressStr)) {
+            if (isValidAddress(addressStr)) {
                 int size = addressStr.length() > 8 ? 8 : 4;
                 boolean hasCP = hasCodepageInfo(type);
                 int headSize = size * (hasCP ? 3 : 2);
@@ -362,9 +393,7 @@ public class VariableManager {
         return fields;
     }
 
-    private void refreshVarTree() {
-        XCompositeNode node = lastQueriedVariablesCompositeNode;
-        Collection<GdbVariableObject> variableObjects = variableObjectMap.values();
+    private void refreshVarTree(XCompositeNode node, Collection<GdbVariableObject> variableObjects) {
         if (null == node || node.isObsolete()) {
             LOG.info("DBG Error: variables node is not ready");
             return;
@@ -464,9 +493,17 @@ public class VariableManager {
         return !"WIDESTRING".equalsIgnoreCase(type);
     }
 
-    private boolean validAddress(String addressStr) {
-        long address = addressStr != null ? Long.decode(addressStr) : 0;
+    private boolean isValidAddress(String addressStr) {
+        long address = addressStr != null ? decodeLong(addressStr, 0L) : 0;
         return address != 0;
+    }
+
+    private long decodeLong(String addressStr, Long defaultValue) {
+        try {
+            return Long.decode(addressStr);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     private static long parseHex(String s) {

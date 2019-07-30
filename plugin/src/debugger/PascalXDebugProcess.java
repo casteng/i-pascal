@@ -56,7 +56,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -212,10 +211,6 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         sender.send(command, callback);
     }
 
-    void waitLevel(int level, CommandSender.FinishCallback callback) {
-        sender.send(String.format("-gdb-set _p_%d=1", level), callback);
-    }
-
     @NotNull
     @Override
     public XDebuggerEditorsProvider getEditorsProvider() {
@@ -298,10 +293,6 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                     variableManager.handleVarResult(res.getResults());
                 } else if (res.getResults().getValue("changelist") != null) {
                     variableManager.handleVarUpdate(res.getResults());
-                } else if (res.getResults().getValue("children") != null) {
-                    variableManager.handleChildrenResult(res.getResults().getList("children"));
-                } else if ("0".equals(res.getResults().getString("numchild"))) {
-                    variableManager.handleChildrenResult(Collections.emptyList());
                 }
             } else if ("error".equals(res.getRecClass())) {
                 LOG.info(String.format("Debugger error: %s", res));
@@ -423,6 +414,10 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     public VariableManager getVariableManager() {
         return variableManager;
+    }
+
+    void syncCalls(int levels, CommandSender.FinishCallback callback) {
+        sender.syncCalls(levels, callback);
     }
 
     public final class Options {

@@ -4,6 +4,9 @@ import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Author: George Bakhtadze
  * Date: 04/04/2017
@@ -24,6 +27,8 @@ public class GdbVariableObject {
     private int length;
     private PasField.FieldType fieldType;
     private boolean visible = true;
+
+    private List<GdbVariableObject> children;
 
     public GdbVariableObject(String key, String name, String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
         this.key = key;
@@ -84,6 +89,7 @@ public class GdbVariableObject {
         this.valueRefined = valueRefined;
     }
 
+    // May not be the same as getChildren().getSize()
     public Integer getChildrenCount() {
         return childrenCount;
     }
@@ -118,5 +124,23 @@ public class GdbVariableObject {
 
     public String getPresentation() {
         return valueRefined != null ? valueRefined : value;
+    }
+
+    public List<GdbVariableObject> getChildren() {
+        if (children == null) {
+            children = new ArrayList<>();
+        }
+        return children;
+    }
+
+    public GdbVariableObject findChild(String id) {
+        if (children != null) {
+            for (GdbVariableObject child : children) {
+                if (id.equals(child.name)) {
+                    return child;
+                }
+            }
+        }
+        return null;
     }
 }
