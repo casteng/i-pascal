@@ -30,7 +30,7 @@ public class GdbProcessAdapter extends PascalConsoleProcessAdapter {
     public boolean onLine(String text) {
         try {
             GdbMiLine res = GdbMiParser.parseLine(text);
-            if (res.getType() == GdbMiLine.Type.CONSOLE_STREAM) {             // Not parsed, try other options
+            if ((res.getType() == GdbMiLine.Type.CONSOLE_STREAM) || (res.getType() == null)) {             // Not parsed, try other options
                 res = parseLLDBFrameVar(text, res);
             }
             final CommandSender.FinishCallback callback = process.findCallback(res);

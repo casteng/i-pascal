@@ -34,6 +34,7 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
 
     @Override
     protected void init() {
+        options.supportsBulkDelete = true;
         if (isOutputConsoleNeeded()) {
             createOutputConsole();
         }

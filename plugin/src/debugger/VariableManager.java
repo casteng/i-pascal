@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.IntConsumer;
 
 public class VariableManager {
 
@@ -77,7 +78,9 @@ public class VariableManager {
 
     public void queryVariables(int level, GdbExecutionStack executionStack) {
         process.sendCommand("-stack-select-frame " + level);
-        process.sendCommand("-var-delete *");
+        if (process.options.supportsBulkDelete) {
+            process.sendCommand("-var-delete *");
+        }
         variableObjectMap.clear();
         process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", executionStack.getThreadId(), level),
                 new CommandSender.FinishCallback() {
@@ -100,6 +103,9 @@ public class VariableManager {
                 GdbMiResults res = (GdbMiResults) o;
                 String varName = res.getString("name");
                 final String varKey = getVarKey(varName, false, VAR_PREFIX_LOCAL);
+                if (!process.options.supportsBulkDelete) {
+                    process.sendCommand("-var-delete " + varKey);
+                }
                 process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, process.getVarFrame(), varName, process.getVarNameQuoteChar()));
                 GdbVariableObject var = new GdbVariableObject(varKey, varName, varName, null, res);
                 variableObjectMap.put(varKey, var);
@@ -138,7 +144,7 @@ public class VariableManager {
                 }
             } else {
                 var = variableObjectMap.get(varKey);
-            } 
+            }
             if (var != null) {
                 var.updateFromResult(res);
                 handleOpenArray(var, res);
@@ -188,7 +194,7 @@ public class VariableManager {
     void computeValueChildren(String name, XCompositeNode node) {
         GdbVariableObject tempParent = findVarObject(name);
         if (tempParent != null) {
-            process.sendCommand("-var-list-children --all-values " + name + " 0 100", new CommandSender.FinishCallback() {
+            process.sendCommand("-var-list-children --all-values " + name + " 0 " + process.options.limitChilds, new CommandSender.FinishCallback() {
                 @Override
                 public void call(GdbMiLine res) {
                     if ("0".equals(res.getResults().getString("numchild"))) {
@@ -243,7 +249,7 @@ public class VariableManager {
                 GdbVariableObject openArrayVar = variableObjectMap.get(getVarKey(openArrayName, false, VAR_PREFIX_LOCAL));
                 if (openArrayVar != null) {
                     openArrayVar.setLength(value + 1);
-                    process.sendCommand(String.format("type summary add -s %s\"\\$${var[0-%d]}\" -n %s", openArrayVar.getKey(), value, openArrayVar.getKey()));
+                    process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", openArrayVar.getKey(), value, openArrayVar.getKey()));
                     process.sendCommand(String.format("fr v %s --summary %s", openArrayName, openArrayVar.getKey()));
                 } else {
                     LOG.info(String.format("DBG Error: no array variable found for bound param %s", highBoundVar.getName()));
@@ -270,7 +276,7 @@ public class VariableManager {
                         if ((content != null) && (content.length() == (size * 2 * 2))) {
                             long refCount = parseHex(content.substring(0, size * 2));
                             long length = parseHex(content.substring(size * 2));
-                            process.sendCommand(String.format("type summary add -s %s\"\\$(%d@%d)${var[0-%d]}\" -n %s", var.getKey(), length + 1, refCount, length, var.getKey()));
+                            process.sendCommand(String.format("type summary add -s \"%s\\$(%d@%d)${var[0-%d]}\" -n %s", var.getKey(), length + 1, refCount, length, var.getKey()));
                             process.sendCommand(String.format("fr v %s[0] --summary %s", var.getName(), var.getKey()));
                         } else {
                             LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
@@ -288,7 +294,8 @@ public class VariableManager {
             if (isValidAddress(addressStr)) {
                 int size = addressStr.length() > 8 ? 8 : 4;
                 boolean hasCP = hasCodepageInfo(type);
-                int headSize = size * (hasCP ? 3 : 2);
+                boolean hasRefcount = hasRefcountInfo(type);
+                int headSize = size * (1 + (hasRefcount ? 1 : 0) + (hasCP ? 1 : 0));
                 process.sendCommand(String.format("-data-read-memory-bytes %s-%d %d", addressStr, headSize, headSize), new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
@@ -304,7 +311,7 @@ public class VariableManager {
                             }
                             Long codepageFinal = codepage != null ? codepage.longValue() : null;
                             Long refCount = null;
-                            if (hasRefcountInfo(type)) {
+                            if (hasRefcount) {
                                 refCount = parseHex(content.substring(base, base + size * 2));
                                 base = base + size * 2;
                             }
@@ -384,9 +391,8 @@ public class VariableManager {
                 namespace = NamespaceRec.fromFQN(el, name);
             }
         } else {
-            namespace = NamespaceRec.fromFQN(el, PasField.DUMMY_IDENTIFIER);
+            namespace = NamespaceRec.fromFQN(el, name);
         }
-        namespace.clearTarget();
         namespace.setIgnoreVisibility(true);
         fields = PasReferenceUtil.resolveExpr(namespace, new ResolveContext(PasField.TYPES_LOCAL, true), 0);
         fieldsMap.put(name, fields);
@@ -425,8 +431,8 @@ public class VariableManager {
         if (var != null) {
             process.sendCommand("-var-delete " + key);
         }
-            variableObjectMap.put(key, new GdbVariableObject(key, expression.toUpperCase(), expression, callback));
-            process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, process.getVarFrame(), expression.toUpperCase(), process.getVarNameQuoteChar()));
+        variableObjectMap.put(key, new GdbVariableObject(key, expression.toUpperCase(), expression, callback));
+        process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, process.getVarFrame(), expression.toUpperCase(), process.getVarNameQuoteChar()));
     }
 
     private String parseAddress(String value) {
@@ -443,15 +449,29 @@ public class VariableManager {
             } else if (charSize == 2) {
                 str = new String(data, StandardCharsets.UTF_16LE);
             }
-            return String.format("(%d@%s%s)'%s'", length, refCount != null ? refCount.toString() : "", printCodepage(codepage), str);
+            if ((str != null) && process.options.showNonPrintable) {
+                StringBuilder sb = new StringBuilder(str.length() + str.length() / 4);
+                str.chars().forEachOrdered(new IntConsumer() {
+                    @Override
+                    public void accept(int value) {
+                        if (value >= 32) {
+                            sb.append((char) value);
+                        } else {
+                            sb.append("'#").append(value).append('\'');
+                        }
+                    }
+                });
+                str = sb.toString();
+            }
+            return String.format("%d%s%s| '%s'", length, refCount != null ? "," + refCount.toString() : "", printCodepage(codepage), str);
         } catch (DecoderException e) {
             return null;
         }
     }
-    
+
     private String printCodepage(Long codepage) {
         String mapped = CODEPAGE_MAP.get(codepage);
-        return codepage != null ? "[cp" + (mapped != null ? mapped : codepage) + "]" : "";
+        return codepage != null ? ",cp" + (mapped != null ? mapped : codepage) : "";
     }
 
     private String parseReadMemory(GdbMiLine res) {

@@ -421,6 +421,12 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     }
 
     public final class Options {
+        public boolean supportsBulkDelete;
+        public boolean showNonPrintable = true;
+        public int limitChars = 10;
+        public int limitElements = 10;
+        public int limitChilds = 10;
+
         public boolean resolveNames() {
             return getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES);
         }

@@ -85,13 +85,13 @@ public class CommandSender extends Thread {
             public void call(GdbMiLine res) {
                 final int current = counter.decrementAndGet();
                 if (current > 0) {
-                    send(String.format("-gdb-set _sc_=%d", current), this);
+                    send(String.format("-gdb-set $s_c=%d", current), this);
                 } else {
                     callback.call(res);
                 }
             }
         };
-        send(String.format("-gdb-set _sc_=%d", levels), syncCallback);
+        send(String.format("-gdb-set $s_c=%d", levels), syncCallback);
     }
 
     private static class Command {
