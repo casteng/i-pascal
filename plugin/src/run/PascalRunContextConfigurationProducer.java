@@ -43,7 +43,7 @@ public class PascalRunContextConfigurationProducer extends RunConfigurationProdu
     public boolean isConfigurationFromContext(PascalRunConfiguration configuration, ConfigurationContext context) {
         return (configuration.getConfigurationModule().getModule() == context.getModule()) &&
                 (context.getPsiLocation() != null) &&
-                (configuration.getProgramFileName().equals(getProgramFileName(context)));
+                (configuration.getProgramFileName() == null || (configuration.getProgramFileName().equals(getProgramFileName(context))));
     }
 
     private String getProgramFileName(@NotNull ConfigurationContext context) {
