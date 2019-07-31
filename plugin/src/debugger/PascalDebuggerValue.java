@@ -6,6 +6,7 @@ import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalIcons;
+import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import org.jetbrains.annotations.NotNull;
@@ -18,15 +19,15 @@ import javax.swing.*;
  */
 public class PascalDebuggerValue extends XValue {
 
-    private final PascalXDebugProcess debugProcess;
+    private final GdbStackFrame frame;
     private final String name;
     private final String type;
     private final String value;
     private final Integer childrenCount;
     private final PasField.FieldType fieldType;
 
-    public PascalDebuggerValue(PascalXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount, PasField.FieldType fieldType) {
-        this.debugProcess = debugProcess;
+    public PascalDebuggerValue(GdbStackFrame frame, String name, String type, String value, Integer childrenCount, PasField.FieldType fieldType) {
+        this.frame = frame;
         this.name = name;
         this.type = type;
         this.value = value;
@@ -34,8 +35,8 @@ public class PascalDebuggerValue extends XValue {
         this.fieldType = fieldType != null ? fieldType : PasField.FieldType.VARIABLE;
     }
 
-    public PascalDebuggerValue(PascalXDebugProcess debugProcess, String name, String type, String value, Integer childrenCount) {
-        this(debugProcess, name, type, value, childrenCount, PasField.FieldType.VARIABLE);
+    public PascalDebuggerValue(GdbStackFrame frame, String name, String type, String value, Integer childrenCount) {
+        this(frame, name, type, value, childrenCount, PasField.FieldType.VARIABLE);
     }
 
     @Override
@@ -64,8 +65,8 @@ public class PascalDebuggerValue extends XValue {
 
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
-        if (debugProcess.getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS)) {
-            debugProcess.getVariableManager().computeValueChildren(name, node);
+        if (frame.getProcess().getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS)) {
+            frame.getProcess().getVariableManager().computeValueChildren(name, node);
         } else {
             node.setErrorMessage(PascalBundle.message("debug.error.subfields.disabled"));
         }

@@ -422,7 +422,12 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     public final class Options {
         public boolean supportsBulkDelete;
+        public boolean supportsSummary;
+
         public boolean showNonPrintable = true;
+        public boolean refineStrings = true;
+        public boolean refineDynamicArrays = true;
+        public boolean refineOpenArrays = true;
         public int limitChars = 10;
         public int limitElements = 10;
         public int limitChilds = 10;

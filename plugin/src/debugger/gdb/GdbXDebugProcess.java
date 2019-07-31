@@ -35,6 +35,7 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
     @Override
     protected void init() {
         options.supportsBulkDelete = false;
+        options.supportsSummary = false;
         try {
             createGdbProcess();
         } catch (ExecutionException e) {

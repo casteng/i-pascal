@@ -11,14 +11,16 @@ import org.jetbrains.annotations.Nullable;
  * Date: 04/04/2017
  */
 public class GdbEvaluator extends XDebuggerEvaluator {
+    private final GdbStackFrame frame;
     private final VariableManager variableManager;
 
-    GdbEvaluator(VariableManager variableManager) {
+    GdbEvaluator(GdbStackFrame frame, VariableManager variableManager) {
+        this.frame = frame;
         this.variableManager = variableManager;
     }
 
     @Override
     public void evaluate(@NotNull String expression, @NotNull XEvaluationCallback callback, @Nullable XSourcePosition expressionPosition) {
-        variableManager.evaluate(expression, callback, expressionPosition);
+        variableManager.evaluate(frame, expression, callback, expressionPosition);
     }
 }

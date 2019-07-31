@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.debugger.gdb;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -10,6 +11,9 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
+import com.intellij.xdebugger.frame.XValueChildrenList;
+import com.intellij.xdebugger.impl.ui.tree.nodes.XValueContainerNode;
+import com.siberika.idea.pascal.debugger.PascalDebuggerValue;
 import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
 import com.siberika.idea.pascal.debugger.VariableManager;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
@@ -24,6 +28,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Author: George Bakhtadze
@@ -31,12 +37,16 @@ import java.io.File;
  */
 public class GdbStackFrame extends XStackFrame {
 
+    private static final Logger LOG = Logger.getInstance(GdbStackFrame.class);
+
     private final PascalXDebugProcess process;
     private final GdbExecutionStack executionStack;
     private final GdbMiResults frame;
     private final int level;
     private final VariableManager variableManager;
     private XSourcePosition sourcePosition;
+    private AtomicReference<XCompositeNode> nodeRef = new AtomicReference<>();
+    private Collection<GdbVariableObject> variableObjects;
 
     public GdbStackFrame(GdbExecutionStack executionStack, GdbMiResults frame) {
         this.process = executionStack.getProcess();
@@ -109,7 +119,7 @@ public class GdbStackFrame extends XStackFrame {
     @Nullable
     @Override
     public XDebuggerEvaluator getEvaluator() {
-        return new GdbEvaluator(variableManager);
+        return new GdbEvaluator(this, variableManager);
     }
 
     @Nullable
@@ -120,7 +130,12 @@ public class GdbStackFrame extends XStackFrame {
 
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
-        variableManager.startVarRefresh(node);
+        this.nodeRef.set(node);
+        refreshVarTree(node, variableObjects);
+    }
+
+    public PascalXDebugProcess getProcess() {
+        return process;
     }
 
     public int getLevel() {
@@ -128,7 +143,41 @@ public class GdbStackFrame extends XStackFrame {
     }
 
     public void queryVariables() {
-        variableManager.queryVariables(level, executionStack);
+        variableManager.queryVariables(level, executionStack, this);
+    }
+
+    public void refreshVarTree(Collection<GdbVariableObject> variableObjects) {
+        this.variableObjects = variableObjects;
+        if (refreshVarTree(nodeRef.get(), variableObjects)) {
+//            this.variableObjects = null;
+        }
+    }
+
+    public boolean refreshVarTree(XCompositeNode node, Collection<GdbVariableObject> variableObjects) {
+        if (null == node || node.isObsolete()) {
+            LOG.info("DBG Warn: variables node is not ready");
+            return false;
+        }
+
+        if (node instanceof XValueContainerNode) {
+            try {
+                if ((variableObjects == null) || variableObjects.isEmpty()) {
+                    node.addChildren(XValueChildrenList.EMPTY, true);
+                    return false;
+                }
+                XValueChildrenList childrenList = new XValueChildrenList(variableObjects.size());
+                for (GdbVariableObject var : variableObjects) {
+                    if (var.isVisible() && !var.isWatched()) {
+                        childrenList.add(var.getExpression().substring(var.getExpression().lastIndexOf('.') + 1),
+                                new PascalDebuggerValue(this, var.getKey(), var.getType(), var.getPresentation(), var.getChildrenCount(), var.getFieldType()));
+                    }
+                }
+                node.addChildren(childrenList, true);
+            } catch (Exception e) {
+                LOG.error("DBG Error: exception while adding children", e);
+            }
+        }
+        return true;
     }
 
 }

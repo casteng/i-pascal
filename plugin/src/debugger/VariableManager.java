@@ -10,8 +10,6 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
-import com.intellij.xdebugger.frame.XValueChildrenList;
-import com.intellij.xdebugger.impl.ui.tree.nodes.XValueContainerNode;
 import com.siberika.idea.pascal.debugger.gdb.GdbExecutionStack;
 import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
 import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
@@ -72,11 +70,7 @@ public class VariableManager {
         this.variableObjectMap = new LinkedHashMap<>();
     }
 
-    public void startVarRefresh(XCompositeNode node) {
-        lastQueriedVariablesCompositeNode = node;
-    }
-
-    public void queryVariables(int level, GdbExecutionStack executionStack) {
+    public void queryVariables(int level, GdbExecutionStack executionStack, GdbStackFrame frame) {
         process.sendCommand("-stack-select-frame " + level);
         if (process.options.supportsBulkDelete) {
             process.sendCommand("-var-delete *");
@@ -87,17 +81,17 @@ public class VariableManager {
                     @Override
                     public void call(GdbMiLine res) {
                         if (res.getResults().getValue("variables") != null) {
-                            handleVariablesResponse(res.getResults().getList("variables"));
+                            handleVariablesResponse(frame, res.getResults().getList("variables"));
                         } else {
                             LOG.info(String.format("DBG Error: Invalid debugger response for variables: %s", res.toString()));
                         }
                     }
                 });
-        process.syncCalls(4, res -> refreshVarTree(lastQueriedVariablesCompositeNode, variableObjectMap.values()));
+        process.syncCalls(4, res -> frame.refreshVarTree(variableObjectMap.values()));
     }
 
     // handling of -stack-list-variables command
-    private void handleVariablesResponse(List<Object> variables) {
+    private void handleVariablesResponse(GdbStackFrame frame, List<Object> variables) {
         for (Object o : variables) {
             if (o instanceof GdbMiResults) {
                 GdbMiResults res = (GdbMiResults) o;
@@ -107,7 +101,7 @@ public class VariableManager {
                     process.sendCommand("-var-delete " + varKey);
                 }
                 process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, process.getVarFrame(), varName, process.getVarNameQuoteChar()));
-                GdbVariableObject var = new GdbVariableObject(varKey, varName, varName, null, res);
+                GdbVariableObject var = new GdbVariableObject(frame, varKey, varName, varName, null, res);
                 variableObjectMap.put(varKey, var);
                 resolveVariable(var);
             } else {
@@ -139,7 +133,7 @@ public class VariableManager {
                 if (var != null) {
                     LOG.info("=== DBG Error: child var already exists: " + varName);
                 } else {
-                    var = new GdbVariableObject(varKey, id, parent.getExpression() + "." + id, null);
+                    var = new GdbVariableObject((GdbStackFrame) frame, varKey, id, parent.getExpression() + "." + id, null);
                     parent.getChildren().add(var);
                 }
             } else {
@@ -147,7 +141,7 @@ public class VariableManager {
             }
             if (var != null) {
                 var.updateFromResult(res);
-                handleOpenArray(var, res);
+                refineOpenArray(var, res);
                 handleDynamicArray(var, res);
                 handleString(var, res);
                 updateVariableObjectUI(var);
@@ -198,7 +192,7 @@ public class VariableManager {
                 @Override
                 public void call(GdbMiLine res) {
                     if ("0".equals(res.getResults().getString("numchild"))) {
-                        refreshVarTree(node, Collections.emptyList());
+                        tempParent.getFrame().refreshVarTree(node, Collections.emptyList());
                         return;
                     }
                     final List<Object> children = res.getResults() != null ? res.getResults().getList("children") : null;
@@ -216,7 +210,7 @@ public class VariableManager {
                         process.syncCalls(3, new CommandSender.FinishCallback() {
                             @Override
                             public void call(GdbMiLine res) {
-                                refreshVarTree(node, tempParent.getChildren());
+                                tempParent.getFrame().refreshVarTree(node, tempParent.getChildren());
                             }
                         });
                     }
@@ -399,39 +393,13 @@ public class VariableManager {
         return fields;
     }
 
-    private void refreshVarTree(XCompositeNode node, Collection<GdbVariableObject> variableObjects) {
-        if (null == node || node.isObsolete()) {
-            LOG.info("DBG Error: variables node is not ready");
-            return;
-        }
-
-        if (node instanceof XValueContainerNode) {
-            try {
-                if (variableObjects.isEmpty()) {
-                    node.addChildren(XValueChildrenList.EMPTY, true);
-                    return;
-                }
-                XValueChildrenList childrenList = new XValueChildrenList(variableObjects.size());
-                for (GdbVariableObject var : variableObjects) {
-                    if (var.isVisible() && !var.isWatched()) {
-                        childrenList.add(var.getExpression().substring(var.getExpression().lastIndexOf('.') + 1),
-                                new PascalDebuggerValue(process, var.getKey(), var.getType(), var.getPresentation(), var.getChildrenCount(), var.getFieldType()));
-                    }
-                }
-                node.addChildren(childrenList, true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void evaluate(String expression, XDebuggerEvaluator.XEvaluationCallback callback, XSourcePosition expressionPosition) {
+    public void evaluate(GdbStackFrame frame, String expression, XDebuggerEvaluator.XEvaluationCallback callback, XSourcePosition expressionPosition) {
         String key = getVarKey(expression, false, VAR_PREFIX_WATCHES);
         GdbVariableObject var = variableObjectMap.get(key);
         if (var != null) {
             process.sendCommand("-var-delete " + key);
         }
-        variableObjectMap.put(key, new GdbVariableObject(key, expression.toUpperCase(), expression, callback));
+        variableObjectMap.put(key, new GdbVariableObject(frame, key, expression.toUpperCase(), expression, callback));
         process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, process.getVarFrame(), expression.toUpperCase(), process.getVarNameQuoteChar()));
     }
 
@@ -538,7 +506,7 @@ public class VariableManager {
 
     private void updateVariableObjectUI(GdbVariableObject var) {
         if (var.getCallback() != null) {
-            var.getCallback().evaluated(new PascalDebuggerValue(process, var.getKey(), var.getType(), var.getPresentation(), var.getChildrenCount()));
+            var.getCallback().evaluated(new PascalDebuggerValue(var.getFrame(), var.getKey(), var.getType(), var.getPresentation(), var.getChildrenCount()));
         }
     }
 

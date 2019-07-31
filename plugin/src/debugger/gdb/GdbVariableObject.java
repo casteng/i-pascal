@@ -12,6 +12,7 @@ import java.util.List;
  * Date: 04/04/2017
  */
 public class GdbVariableObject {
+    private final GdbStackFrame frame;
     private final String key;
     // name in debugger
     private final String name;
@@ -24,22 +25,27 @@ public class GdbVariableObject {
     private String value;
     private String valueRefined;
     private Integer childrenCount;
-    private int length;
+    private long length;
     private PasField.FieldType fieldType;
     private boolean visible = true;
 
     private List<GdbVariableObject> children;
 
-    public GdbVariableObject(String key, String name, String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
+    public GdbVariableObject(GdbStackFrame frame, String key, String name, String expression, XDebuggerEvaluator.XEvaluationCallback callback) {
+        this.frame = frame;
         this.key = key;
         this.name = name;
         this.expression = expression;
         this.callback = callback;
     }
 
-    public GdbVariableObject(String key, String name, String expression, XDebuggerEvaluator.XEvaluationCallback callback, GdbMiResults res) {
-        this(key, name, expression, callback);
+    public GdbVariableObject(GdbStackFrame frame, String key, String name, String expression, XDebuggerEvaluator.XEvaluationCallback callback, GdbMiResults res) {
+        this(frame, key, name, expression, callback);
         updateFromResult(res);
+    }
+
+    public GdbStackFrame getFrame() {
+        return frame;
     }
 
     public String getKey() {
@@ -94,11 +100,15 @@ public class GdbVariableObject {
         return childrenCount;
     }
 
-    public void setLength(int length) {
+    public void setChildrenCount(Integer childrenCount) {
+        this.childrenCount = childrenCount;
+    }
+
+    public void setLength(long length) {
         this.length = length;
     }
 
-    public int getLength() {
+    public long getLength() {
         return length;
     }
 
