@@ -63,8 +63,6 @@ public class VariableManager {
     private Map<String, GdbVariableObject> variableObjectMap;
     private final Map<String, Collection<PasField>> fieldsMap = new ConcurrentHashMap<>();
 
-    private XCompositeNode lastQueriedVariablesCompositeNode;
-
     VariableManager(PascalXDebugProcess process) {
         this.process = process;
         this.variableObjectMap = new LinkedHashMap<>();
@@ -142,8 +140,8 @@ public class VariableManager {
             if (var != null) {
                 var.updateFromResult(res);
                 refineOpenArray(var, res);
-                handleDynamicArray(var, res);
-                handleString(var, res);
+                refineDynamicArray(var, res);
+                refineString(var, res);
                 updateVariableObjectUI(var);
             } else {
                 LOG.info("DBG Error: variable not found: " + varKey);
@@ -235,16 +233,23 @@ public class VariableManager {
         return res;
     }
 
-    private void handleOpenArray(GdbVariableObject highBoundVar, GdbMiResults res) {
+    private void refineOpenArray(GdbVariableObject highBoundVar, GdbMiResults res) {
+        if (!process.options.refineOpenArrays) {
+            return;
+        }
         if (highBoundVar.getName().startsWith(OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX)) {
-            Integer value = res.getInteger("value");
-            if (value != null) {
+            Integer highIndex = res.getInteger("value");
+            if (highIndex != null) {
                 final String openArrayName = highBoundVar.getName().substring(4);
                 GdbVariableObject openArrayVar = variableObjectMap.get(getVarKey(openArrayName, false, VAR_PREFIX_LOCAL));
                 if (openArrayVar != null) {
-                    openArrayVar.setLength(value + 1);
-                    process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", openArrayVar.getKey(), value, openArrayVar.getKey()));
-                    process.sendCommand(String.format("fr v %s --summary %s", openArrayName, openArrayVar.getKey()));
+                    openArrayVar.setChildrenCount(0);
+                    openArrayVar.setLength(highIndex + 1);
+                    if (process.options.supportsSummary) {
+                        long displayLength = Math.min(openArrayVar.getLength(), process.options.limitElements);
+                        process.sendCommand(String.format("type summary add -s \"%s\\$%d| ${var[0-%d]}\" -n %s", openArrayVar.getKey(), openArrayVar.getLength(), displayLength-1, openArrayVar.getKey()));
+                        process.sendCommand(String.format("fr v %s --summary %s", openArrayName, openArrayVar.getKey()));
+                    }
                 } else {
                     LOG.info(String.format("DBG Error: no array variable found for bound param %s", highBoundVar.getName()));
                 }
@@ -252,7 +257,10 @@ public class VariableManager {
         }
     }
 
-    private void handleDynamicArray(GdbVariableObject var, GdbMiResults res) {
+    private void refineDynamicArray(GdbVariableObject var, GdbMiResults res) {
+        if (!process.options.refineDynamicArrays) {
+            return;
+        }
         String type = res.getString("type");
         if (isDynamicArray(type)) {
             String addressStr = res.getString("value");
@@ -269,8 +277,10 @@ public class VariableManager {
                         String content = tuple != null ? tuple.getString("contents") : null;
                         if ((content != null) && (content.length() == (size * 2 * 2))) {
                             long refCount = parseHex(content.substring(0, size * 2));
-                            long length = parseHex(content.substring(size * 2));
-                            process.sendCommand(String.format("type summary add -s \"%s\\$(%d@%d)${var[0-%d]}\" -n %s", var.getKey(), length + 1, refCount, length, var.getKey()));
+                            long length = parseHex(content.substring(size * 2)) + 1;
+                            long displayLength = Math.min(length, process.options.limitElements);
+                            var.setLength(length);
+                            process.sendCommand(String.format("type summary add -s \"%s\\$%d@%d| ${var[0-%d]}\" -n %s", var.getKey(), var.getLength(), refCount, displayLength-1, var.getKey()));
                             process.sendCommand(String.format("fr v %s[0] --summary %s", var.getName(), var.getKey()));
                         } else {
                             LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
@@ -281,7 +291,10 @@ public class VariableManager {
         }
     }
 
-    private void handleString(GdbVariableObject var, GdbMiResults res) {
+    private void refineString(GdbVariableObject var, GdbMiResults res) {
+        if (!process.options.refineStrings) {
+            return;
+        }
         String type = res.getString("type");
         if (isString(type)) {
             String addressStr = parseAddress(res.getString("value"));
@@ -311,14 +324,15 @@ public class VariableManager {
                             }
                             Long refCountFinal = refCount;
                             long length = parseHex(content.substring(base, base + size * 2));
+                            long displayLength = Math.min(length, process.options.limitChars);
                             int charSize = getCharSize(elemSize, type);
-                            long dataSize = isSizeInBytes(type) ? length : length * charSize;
+                            long dataSize = isSizeInBytes(type) ? displayLength : displayLength * charSize;
                             process.sendCommand(String.format("-data-read-memory-bytes %s %d", addressStr, dataSize), new CommandSender.FinishCallback() {
                                         @Override
                                         public void call(GdbMiLine res) {
                                             String content = parseReadMemory(res);
                                             if (content != null) {
-                                                var.setValueRefined(parseString(content, length, charSize, codepageFinal, refCountFinal));
+                                                var.setValueRefined(parseString(content, length, displayLength, charSize, codepageFinal, refCountFinal));
                                                 updateVariableObjectUI(var);
                                             } else {
                                                 LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
@@ -408,7 +422,7 @@ public class VariableManager {
         return valuePos < 0 ? value : value.substring(0, valuePos);
     }
 
-    private String parseString(String content, long length, int charSize, Long codepage, Long refCount) {
+    private String parseString(String content, long length, long displayLength, int charSize, Long codepage, Long refCount) {
         try {
             String str = null;
             byte[] data = Hex.decodeHex(content.toCharArray());
@@ -431,7 +445,8 @@ public class VariableManager {
                 });
                 str = sb.toString();
             }
-            return String.format("%d%s%s| '%s'", length, refCount != null ? "," + refCount.toString() : "", printCodepage(codepage), str);
+            String termStr = displayLength == length ? "'" : "...";
+            return String.format("%d%s%s| '%s%s", length, refCount != null ? "," + refCount.toString() : "", printCodepage(codepage), str, termStr);
         } catch (DecoderException e) {
             return null;
         }

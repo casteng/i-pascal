@@ -45,6 +45,12 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
+    protected void applyLimits() {
+        super.applyLimits();
+        sendCommand("set set target.max-children-count " + options.limitElements);
+    }
+
+    @Override
     public void sessionInitialized() {
         super.sessionInitialized();
 
