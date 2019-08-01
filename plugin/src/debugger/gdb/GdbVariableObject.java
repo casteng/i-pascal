@@ -18,6 +18,8 @@ public class GdbVariableObject {
     private final String name;
     // expression entered by user or resolved name
     private String expression;
+    private String additional;
+    private String error;
 
     private XDebuggerEvaluator.XEvaluationCallback callback;
 
@@ -26,7 +28,7 @@ public class GdbVariableObject {
     private String valueRefined;
     private Integer childrenCount;
     private long length;
-    private PasField.FieldType fieldType;
+    private PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
     private boolean visible = true;
 
     private List<GdbVariableObject> children;
@@ -62,6 +64,22 @@ public class GdbVariableObject {
 
     public void setExpression(String expression) {
         this.expression = expression;
+    }
+
+    public String getAdditional() {
+        return additional;
+    }
+
+    public void setAdditional(String additional) {
+        this.additional = additional;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     public XDebuggerEvaluator.XEvaluationCallback getCallback() {

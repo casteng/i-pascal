@@ -338,6 +338,10 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         return sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
     }
 
+    public Project getProject() {
+        return environment.getProject();
+    }
+
     public CommandSender.FinishCallback findCallback(GdbMiLine res) {
         return sender.findCallback(res.getToken());
     }

@@ -44,6 +44,7 @@ public class VariableManager {
     private static final String OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX = "high";
     private static final List<String> TYPES_STRING = Arrays.asList("ANSISTRING", "WIDESTRING", "UNICODESTRING", "UTF8STRING", "RAWBYTESTRING");
     private static final Map<Long, String> CODEPAGE_MAP = createCodePageMap();
+    private static final CommandSender.FinishCallback SILENT = res -> {};
 
     private static Map<Long, String> createCodePageMap() {
         HashMap<Long, String> res = new HashMap<>();
@@ -96,7 +97,7 @@ public class VariableManager {
                 String varName = res.getString("name");
                 final String varKey = getVarKey(varName, false, VAR_PREFIX_LOCAL);
                 if (!process.options.supportsBulkDelete) {
-                    process.sendCommand("-var-delete " + varKey);
+                    process.sendCommand("-var-delete " + varKey, SILENT);
                 }
                 process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, process.getVarFrame(), varName, process.getVarNameQuoteChar()));
                 GdbVariableObject var = new GdbVariableObject(frame, varKey, varName, varName, null, res);
@@ -247,7 +248,8 @@ public class VariableManager {
                     openArrayVar.setLength(highIndex + 1);
                     if (process.options.supportsSummary) {
                         long displayLength = Math.min(openArrayVar.getLength(), process.options.limitElements);
-                        process.sendCommand(String.format("type summary add -s \"%s\\$%d| ${var[0-%d]}\" -n %s", openArrayVar.getKey(), openArrayVar.getLength(), displayLength-1, openArrayVar.getKey()));
+                        openArrayVar.setAdditional(Long.toString(openArrayVar.getLength()));
+                        process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", openArrayVar.getKey(), displayLength-1, openArrayVar.getKey()));
                         process.sendCommand(String.format("fr v %s --summary %s", openArrayName, openArrayVar.getKey()));
                     }
                 } else {
@@ -280,7 +282,8 @@ public class VariableManager {
                             long length = parseHex(content.substring(size * 2)) + 1;
                             long displayLength = Math.min(length, process.options.limitElements);
                             var.setLength(length);
-                            process.sendCommand(String.format("type summary add -s \"%s\\$%d@%d| ${var[0-%d]}\" -n %s", var.getKey(), var.getLength(), refCount, displayLength-1, var.getKey()));
+                            var.setAdditional(var.getLength() + "#" + refCount);
+                            process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", var.getKey(), displayLength-1, var.getKey()));
                             process.sendCommand(String.format("fr v %s[0] --summary %s", var.getName(), var.getKey()));
                         } else {
                             LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
@@ -297,6 +300,7 @@ public class VariableManager {
         }
         String type = res.getString("type");
         if (isString(type)) {
+            var.setChildrenCount(0);
             String addressStr = parseAddress(res.getString("value"));
             if (isValidAddress(addressStr)) {
                 int size = addressStr.length() > 8 ? 8 : 4;
@@ -332,7 +336,8 @@ public class VariableManager {
                                         public void call(GdbMiLine res) {
                                             String content = parseReadMemory(res);
                                             if (content != null) {
-                                                var.setValueRefined(parseString(content, length, displayLength, charSize, codepageFinal, refCountFinal));
+                                                var.setValueRefined(parseString(content, length, displayLength, charSize));
+                                                var.setAdditional(length + (refCountFinal != null ? "#" + refCountFinal.toString() : "") + printCodepage(codepageFinal));
                                                 updateVariableObjectUI(var);
                                             } else {
                                                 LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
@@ -409,12 +414,21 @@ public class VariableManager {
 
     public void evaluate(GdbStackFrame frame, String expression, XDebuggerEvaluator.XEvaluationCallback callback, XSourcePosition expressionPosition) {
         String key = getVarKey(expression, false, VAR_PREFIX_WATCHES);
-        GdbVariableObject var = variableObjectMap.get(key);
-        if (var != null) {
-            process.sendCommand("-var-delete " + key);
-        }
-        variableObjectMap.put(key, new GdbVariableObject(frame, key, expression.toUpperCase(), expression, callback));
-        process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, process.getVarFrame(), expression.toUpperCase(), process.getVarNameQuoteChar()));
+        final GdbVariableObject var = new GdbVariableObject(frame, key, expression.toUpperCase(), expression, callback);
+        variableObjectMap.put(key, var);
+        process.sendCommand("-var-delete " + key, SILENT);
+        process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, process.getVarFrame(), expression.toUpperCase(), process.getVarNameQuoteChar()),
+                new CommandSender.FinishCallback() {
+                    @Override
+                    public void call(GdbMiLine res) {
+                        if ((res.getType() == GdbMiLine.Type.RESULT_RECORD) && ("error".equals(res.getRecClass()))) {
+                            var.setError(res.getResults().getString("msg"));
+                            callback.evaluated(new PascalDebuggerValue(var));
+                        } else {
+                            handleVarResult(res.getResults());
+                        }
+                    }
+                });
     }
 
     private String parseAddress(String value) {
@@ -422,7 +436,7 @@ public class VariableManager {
         return valuePos < 0 ? value : value.substring(0, valuePos);
     }
 
-    private String parseString(String content, long length, long displayLength, int charSize, Long codepage, Long refCount) {
+    private String parseString(String content, long length, long displayLength, int charSize) {
         try {
             String str = null;
             byte[] data = Hex.decodeHex(content.toCharArray());
@@ -446,7 +460,7 @@ public class VariableManager {
                 str = sb.toString();
             }
             String termStr = displayLength == length ? "'" : "...";
-            return String.format("%d%s%s| '%s%s", length, refCount != null ? "," + refCount.toString() : "", printCodepage(codepage), str, termStr);
+            return String.format("'%s%s", str, termStr);
         } catch (DecoderException e) {
             return null;
         }
@@ -521,7 +535,7 @@ public class VariableManager {
 
     private void updateVariableObjectUI(GdbVariableObject var) {
         if (var.getCallback() != null) {
-            var.getCallback().evaluated(new PascalDebuggerValue(var.getFrame(), var.getKey(), var.getType(), var.getPresentation(), var.getChildrenCount()));
+            var.getCallback().evaluated(new PascalDebuggerValue(var));
         }
     }
 

@@ -248,4 +248,21 @@ public class DocUtil {
         PsiElement startEl = file.findElementAt(start);
         return (startEl instanceof PsiWhiteSpace) && (startEl == file.findElementAt(end));
     }
+
+    public static String getWholeLineAt(Document doc, int offset) {
+        return getWholeLine(doc, doc.getLineNumber(offset));
+    }
+
+    public static String getWholeLine(Document doc, int line) {
+        int st = doc.getLineStartOffset(line);
+        int end = doc.getLineEndOffset(line);
+        return doc.getText(TextRange.create(st, end));
+    }
+
+    public static String getLocation(Document doc, PsiElement element) {
+        int line = doc.getLineNumber(element.getTextRange().getStartOffset());
+        PsiFile file = element.getContainingFile();
+        String name = file != null ? file.getName() : "-";
+        return String.format("%s:%d", name, line + 1);
+    }
 }

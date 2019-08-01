@@ -1,17 +1,26 @@
 package com.siberika.idea.pascal.debugger;
 
+import com.intellij.debugger.impl.DebuggerUtilsEx;
+import com.intellij.openapi.editor.Document;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiFile;
+import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.frame.XCompositeNode;
+import com.intellij.xdebugger.frame.XNavigatable;
 import com.intellij.xdebugger.frame.XValue;
 import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
+import com.intellij.xdebugger.frame.presentation.XErrorValuePresentation;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalIcons;
-import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
+import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
-import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import com.siberika.idea.pascal.util.DocUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Author: George Bakhtadze
@@ -19,30 +28,20 @@ import javax.swing.*;
  */
 public class PascalDebuggerValue extends XValue {
 
-    private final GdbStackFrame frame;
-    private final String name;
-    private final String type;
-    private final String value;
-    private final Integer childrenCount;
-    private final PasField.FieldType fieldType;
+    private GdbVariableObject variableObject;
 
-    public PascalDebuggerValue(GdbStackFrame frame, String name, String type, String value, Integer childrenCount, PasField.FieldType fieldType) {
-        this.frame = frame;
-        this.name = name;
-        this.type = type;
-        this.value = value;
-        this.childrenCount = childrenCount;
-        this.fieldType = fieldType != null ? fieldType : PasField.FieldType.VARIABLE;
-    }
-
-    public PascalDebuggerValue(GdbStackFrame frame, String name, String type, String value, Integer childrenCount) {
-        this(frame, name, type, value, childrenCount, PasField.FieldType.VARIABLE);
+    public PascalDebuggerValue(GdbVariableObject variableObject) {
+        this.variableObject = variableObject;
     }
 
     @Override
     public void computePresentation(@NotNull XValueNode node, @NotNull XValuePlace place) {
+        if (variableObject.getError() != null) {
+            node.setPresentation(null, new XErrorValuePresentation(variableObject.getError()), false);
+            return;
+        }
         Icon icon = PascalIcons.VARIABLE;
-        switch (fieldType) {
+        switch (variableObject.getFieldType()) {
             case ROUTINE: {
                 icon = PascalIcons.ROUTINE;
                 break;
@@ -60,16 +59,37 @@ public class PascalDebuggerValue extends XValue {
                 break;
             }
         }
-        node.setPresentation(icon, type != null ? type : "??", value != null ? value : "??", childrenCount != null && childrenCount > 0);
+        node.setPresentation(icon, (variableObject.getType() != null ? variableObject.getType() : "??") + "| " + variableObject.getAdditional(),
+                variableObject.getPresentation() != null ? variableObject.getPresentation() : "??",
+                variableObject.getChildrenCount() != null && variableObject.getChildrenCount() > 0);
     }
 
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
-        if (frame.getProcess().getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS)) {
-            frame.getProcess().getVariableManager().computeValueChildren(name, node);
+        if (variableObject.getFrame().getProcess().getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS)) {
+            variableObject.getFrame().getProcess().getVariableManager().computeValueChildren(variableObject.getKey(), node);
         } else {
             node.setErrorMessage(PascalBundle.message("debug.error.subfields.disabled"));
         }
     }
 
+    @Override
+    public boolean canNavigateToSource() {
+        return true;
+    }
+
+    @Override
+    public void computeSourcePosition(@NotNull XNavigatable navigatable) {
+        XSourcePosition sp = variableObject.getFrame().getSourcePosition();
+        PsiFile file = sp != null ? DebuggerUtilsEx.getPsiFile(sp, variableObject.getFrame().getProcess().getProject()) : null;
+        Document doc = file != null ? PsiDocumentManager.getInstance(variableObject.getFrame().getProcess().getProject()).getDocument(file) : null;
+        String line = doc != null ? DocUtil.getWholeLineAt(doc, sp.getOffset()) : null;
+        Pattern pattern = Pattern.compile("(?i)\\b" + variableObject.getName() + "\\b");
+        if (line != null) {
+            Matcher m = pattern.matcher(line);
+            if (m.find()) {
+                navigatable.setSourcePosition(variableObject.getFrame().getSourcePosition());
+            }
+        }
+    }
 }

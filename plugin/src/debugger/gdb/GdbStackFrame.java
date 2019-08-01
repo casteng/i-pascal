@@ -168,8 +168,7 @@ public class GdbStackFrame extends XStackFrame {
                 XValueChildrenList childrenList = new XValueChildrenList(variableObjects.size());
                 for (GdbVariableObject var : variableObjects) {
                     if (var.isVisible() && !var.isWatched()) {
-                        childrenList.add(var.getExpression().substring(var.getExpression().lastIndexOf('.') + 1),
-                                new PascalDebuggerValue(this, var.getKey(), var.getType(), var.getPresentation(), var.getChildrenCount(), var.getFieldType()));
+                        childrenList.add(var.getExpression().substring(var.getExpression().lastIndexOf('.') + 1), new PascalDebuggerValue(var));
                     }
                 }
                 node.addChildren(childrenList, true);
