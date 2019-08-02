@@ -163,10 +163,23 @@ public class GdbVariableObject {
 
     public GdbVariableObject findChild(String id) {
         if (children != null) {
-            for (GdbVariableObject child : children) {
-                if (id.equals(child.name)) {
-                    return child;
+            int lastDotIndex = id.indexOf('.');
+            if (lastDotIndex > 0) {
+                GdbVariableObject res = doFindChild(id.substring(0, lastDotIndex));
+                if (res != null) {
+                    return res.findChild(id.substring(lastDotIndex + 1));
                 }
+            } else {
+                return doFindChild(id);
+            }
+        }
+        return null;
+    }
+
+    private GdbVariableObject doFindChild(String id) {
+        for (GdbVariableObject child : children) {
+            if (id.equals(child.name)) {
+                return child;
             }
         }
         return null;

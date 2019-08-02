@@ -56,6 +56,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -291,8 +292,6 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                 if (res.getResults().getValue("stack") != null) {                   // -stack-list-frames result
                     addStackFramesToContainer(res.getResults().getList("stack"));
                     queryVariables();
-                } else if (res.getResults().getValue("bkpt") != null) {
-                    getBreakpointHandler().handleBreakpointResult(res.getResults().getTuple("bkpt"));
                 } else if (isCreateVarResult(res.getResults())) {
                     variableManager.handleVarResult(res.getResults());
                 } else if (res.getResults().getValue("changelist") != null) {
@@ -352,7 +351,8 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
             variableManager.removeVariable(matcher.group(1));
             return true;
         }
-        return false;
+        List<String> ignoredErrors = Arrays.asList("error: Unable to determine byte size.");
+        return ignoredErrors.contains(msg);
     }
 
     private boolean isCreateVarResult(GdbMiResults results) {
@@ -450,8 +450,5 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
             return getData().getString(PascalSdkData.Keys.DEBUGGER_ASM_FORMAT);
         }
 
-        public boolean needPosition() {
-            return resolveNames() || callGetters();
-        }
     }
 }

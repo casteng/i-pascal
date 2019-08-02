@@ -219,17 +219,16 @@ public class VariableManager {
     }
 
     private GdbVariableObject findVarObject(String name) {
-        GdbVariableObject res = null;
-        String[] nameList = name.split("\\.", 100);
-        for (String level : nameList) {
-            if (res != null) {
-                res = res.findChild(level);
-            } else {
-                res = variableObjectMap.get(level);
+        GdbVariableObject res = variableObjectMap.get(name);
+        int prevI = name.length();
+        int index = name.substring(0, prevI).lastIndexOf('.');
+        while ((null == res) && (index > 0)) {
+            GdbVariableObject parent = variableObjectMap.get(name.substring(0, index));
+            if (parent != null) {
+                res = parent.findChild(name.substring(index + 1));
             }
-            if (null == res) {
-                LOG.info(String.format("DBG Error: variable level %s not found in hierarchy %s", level, name));
-            }
+            prevI = index;
+            index = name.substring(0, prevI).lastIndexOf('.');
         }
         return res;
     }
