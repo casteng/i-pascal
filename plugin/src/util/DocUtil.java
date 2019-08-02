@@ -265,4 +265,10 @@ public class DocUtil {
         String name = file != null ? file.getName() : "-";
         return String.format("%s:%d", name, line + 1);
     }
+
+    public static Integer getElementLine(PsiElement element) {
+        PsiFile file = element.getContainingFile();
+        Document doc = file != null ? PsiDocumentManager.getInstance(element.getProject()).getDocument(file) : null;
+        return doc != null ? doc.getLineNumber(element.getTextRange().getStartOffset()) : null;
+    }
 }

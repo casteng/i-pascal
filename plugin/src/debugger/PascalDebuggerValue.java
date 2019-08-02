@@ -1,9 +1,11 @@
 package com.siberika.idea.pascal.debugger;
 
 import com.intellij.debugger.impl.DebuggerUtilsEx;
+import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.Document;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XNavigatable;
@@ -11,6 +13,7 @@ import com.intellij.xdebugger.frame.XValue;
 import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
 import com.intellij.xdebugger.frame.presentation.XErrorValuePresentation;
+import com.intellij.xdebugger.frame.presentation.XValuePresentation;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
@@ -19,7 +22,6 @@ import com.siberika.idea.pascal.util.DocUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -59,9 +61,28 @@ public class PascalDebuggerValue extends XValue {
                 break;
             }
         }
-        node.setPresentation(icon, (variableObject.getType() != null ? variableObject.getType() : "??") + "| " + variableObject.getAdditional(),
-                variableObject.getPresentation() != null ? variableObject.getPresentation() : "??",
-                variableObject.getChildrenCount() != null && variableObject.getChildrenCount() > 0);
+        node.setPresentation(icon, new XValuePresentation() {
+
+            @NotNull
+            @Override
+            public String getSeparator() {
+                return ": ";
+            }
+
+            @Override
+            public void renderValue(@NotNull XValueTextRenderer renderer) {
+                if (variableObject.getAdditional() != null) {
+                    renderer.renderComment("(" + variableObject.getAdditional() + ") ");
+                }
+                String value = variableObject.getPresentation();
+                if ((value != null) && (value.startsWith("'") || value.startsWith("#"))) {
+                    renderer.renderValue(value, DefaultLanguageHighlighterColors.STRING);
+                } else {
+                    renderer.renderValue(value != null ? value : "??");
+                }
+            }
+
+        }, variableObject.getChildrenCount() != null && variableObject.getChildrenCount() > 0);
     }
 
     @Override
@@ -83,12 +104,16 @@ public class PascalDebuggerValue extends XValue {
         XSourcePosition sp = variableObject.getFrame().getSourcePosition();
         PsiFile file = sp != null ? DebuggerUtilsEx.getPsiFile(sp, variableObject.getFrame().getProcess().getProject()) : null;
         Document doc = file != null ? PsiDocumentManager.getInstance(variableObject.getFrame().getProcess().getProject()).getDocument(file) : null;
-        String line = doc != null ? DocUtil.getWholeLineAt(doc, sp.getOffset()) : null;
-        Pattern pattern = Pattern.compile("(?i)\\b" + variableObject.getName() + "\\b");
-        if (line != null) {
-            Matcher m = pattern.matcher(line);
-            if (m.find()) {
-                navigatable.setSourcePosition(variableObject.getFrame().getSourcePosition());
+        if (doc != null) {
+            int lineNum = sp.getLine();
+            while (lineNum >= variableObject.getFrame().getBlockInfo().getStartLine()) {
+                String line = DocUtil.getWholeLine(doc, lineNum);
+                Pattern pattern = Pattern.compile("(?i)\\b" + variableObject.getName() + "\\b");
+                if (pattern.matcher(line).find()) {
+                    navigatable.setSourcePosition(XDebuggerUtil.getInstance().createPosition(file.getVirtualFile(), lineNum));
+                    return;
+                }
+                lineNum--;
             }
         }
     }

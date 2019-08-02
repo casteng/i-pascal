@@ -1,6 +1,8 @@
 package com.siberika.idea.pascal.debugger.gdb;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -21,6 +23,7 @@ import com.siberika.idea.pascal.jps.util.FileUtil;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalModule;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
+import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.lang.StringUtils;
@@ -44,8 +47,10 @@ public class GdbStackFrame extends XStackFrame {
     private final GdbMiResults frame;
     private final int level;
     private final VariableManager variableManager;
-    private XSourcePosition sourcePosition;
-    private AtomicReference<XCompositeNode> nodeRef = new AtomicReference<>();
+    private final XSourcePosition sourcePosition;
+    private final AtomicReference<XCompositeNode> nodeRef = new AtomicReference<>();
+    private final BlockInfo blockInfo;
+    private final Integer line;
     private Collection<GdbVariableObject> variableObjects;
 
     public GdbStackFrame(GdbExecutionStack executionStack, GdbMiResults frame) {
@@ -53,37 +58,29 @@ public class GdbStackFrame extends XStackFrame {
         this.variableManager = process.getVariableManager();
         this.executionStack = executionStack;
         this.frame = frame;
-        level = (frame != null) && (frame.getValue("level") != null) ? StrUtil.strToIntDef(frame.getString("level"), 0) : 0;
-        if (process.options.needPosition()) {
-            sourcePosition = getSourcePosition();
+        if (frame != null) {
+            this.level = frame.getValue("level") != null ? StrUtil.strToIntDef(frame.getString("level"), 0) : 0;
+            this.line = frame.getInteger("line");
+        } else {
+            this.level = 0;
+            this.line = null;
         }
+        this.sourcePosition = getSourcePosition();
+        this.blockInfo = initBlockInfo();
     }
 
     @Override
     public XSourcePosition getSourcePosition() {
-        if (sourcePosition != null) {
-            return sourcePosition;
-        }
         if (null == frame) {
             return null;
         }
-        Integer line = frame.getInteger("line");
         String filename = frame.getString("fullname");
         if ((null == filename) || (null == line)) {
             return null;
         }
-
         String path = filename.replace(File.separatorChar, '/');
         VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(path);
-        if (null == virtualFile) {
-            return null;
-        }
-
-        if (null == sourcePosition) {
-            sourcePosition = XDebuggerUtil.getInstance().createPosition(virtualFile, line - 1);
-        }
-
-        return sourcePosition;
+        return virtualFile != null ? XDebuggerUtil.getInstance().createPosition(virtualFile, line - 1) : null;
     }
 
     @Override
@@ -93,27 +90,32 @@ public class GdbStackFrame extends XStackFrame {
         }
         String filename = frame.getString("fullname");
         filename = filename != null ? FileUtil.getFilename(filename) : "-";
-        String line = frame.getString("line");
-        component.append(formatRoutine(frame), SimpleTextAttributes.REGULAR_ATTRIBUTES);
+        component.append(blockInfo.getName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
         component.append(String.format(" (%s:%s)", filename, line != null ? line : "-"), SimpleTextAttributes.GRAYED_ATTRIBUTES);
     }
 
-    private String formatRoutine(GdbMiResults frame) {
-        String name = frame.getString("func");
-        if (process.options.resolveNames() && (sourcePosition != null)) {
-            PsiElement el = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), process.getSession().getProject(), false);
-            PasEntityScope scope = el != null ? PsiUtil.getNearestAffectingScope(el) : null;
-            if (scope instanceof PascalRoutine) {
-                name = scope.getName();
-            } else if (scope instanceof PascalModule) {
-                name = String.format("%s(%s)", name, scope.getName());
+    private BlockInfo initBlockInfo() {
+        return ApplicationManager.getApplication().runReadAction(new Computable<BlockInfo>() {
+            @Override
+            public BlockInfo compute() {
+                String name = frame.getString("func");
+                PasEntityScope scope = null;
+                if (sourcePosition != null) {
+                    PsiElement el = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), process.getSession().getProject(), false);
+                    scope = el != null ? PsiUtil.getNearestAffectingScope(el) : null;
+                    if (scope instanceof PascalRoutine) {
+                        name = scope.getName();
+                    } else if (scope instanceof PascalModule) {
+                        name = String.format("%s(%s)", name, scope.getName());
+                    }
+                }
+                if (StringUtils.isEmpty(name) || "??".equals(name)) {
+                    String addr = frame.getString("addr");
+                    name = String.format("?? (%s)", addr != null ? addr : "-");
+                }
+                return new BlockInfo(scope, name);
             }
-        }
-        if (StringUtils.isEmpty(name) || "??".equals(name)) {
-            String addr = frame.getString("addr");
-            name = String.format("?? (%s)", addr != null ? addr : "-");
-        }
-        return name + "()";
+        });
     }
 
     @Nullable
@@ -140,6 +142,14 @@ public class GdbStackFrame extends XStackFrame {
 
     public int getLevel() {
         return level;
+    }
+
+    public BlockInfo getBlockInfo() {
+        return blockInfo;
+    }
+
+    public Integer getLine() {
+        return line;
     }
 
     public void queryVariables() {
@@ -179,4 +189,27 @@ public class GdbStackFrame extends XStackFrame {
         return true;
     }
 
+    public static class BlockInfo {
+        private final PasEntityScope scope;
+        private final String name;
+        private final Integer startLine;
+
+        public BlockInfo(PasEntityScope scope, String name) {
+            this.scope = scope;
+            this.name = name;
+            this.startLine = scope != null ? DocUtil.getElementLine(scope) : null;
+        }
+
+        public PasEntityScope getScope() {
+            return scope;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Integer getStartLine() {
+            return startLine;
+        }
+    }
 }
