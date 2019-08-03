@@ -71,6 +71,11 @@ public class PascalDebuggerValue extends XValue {
 
             @Override
             public void renderValue(@NotNull XValueTextRenderer renderer) {
+                if (variableObject.getType() != null) {
+                    renderer.renderComment(variableObject.getType());
+                    renderer.renderSpecialSymbol(" = ");
+                }
+
                 if (variableObject.getAdditional() != null) {
                     renderer.renderComment("(" + variableObject.getAdditional() + ") ");
                 }

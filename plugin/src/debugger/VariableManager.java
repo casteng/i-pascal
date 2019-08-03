@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntConsumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class VariableManager {
 
@@ -44,7 +46,8 @@ public class VariableManager {
     private static final String OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX = "high";
     private static final List<String> TYPES_STRING = Arrays.asList("ANSISTRING", "WIDESTRING", "UNICODESTRING", "UTF8STRING", "RAWBYTESTRING");
     private static final Map<Long, String> CODEPAGE_MAP = createCodePageMap();
-    private static final CommandSender.FinishCallback SILENT = res -> {};
+    public static final CommandSender.FinishCallback SILENT = res -> {};
+    private static final Pattern PATTERN_STRING_VALUE = Pattern.compile("(0x[0-9a-f]+)(\\s((\\\\\")|').*)?");
 
     private static Map<Long, String> createCodePageMap() {
         HashMap<Long, String> res = new HashMap<>();
@@ -245,11 +248,15 @@ public class VariableManager {
                 if (openArrayVar != null) {
                     openArrayVar.setChildrenCount(0);
                     openArrayVar.setLength(highIndex + 1);
-                    if (process.options.supportsSummary) {
-                        long displayLength = Math.min(openArrayVar.getLength(), process.options.limitElements);
-                        openArrayVar.setAdditional(Long.toString(openArrayVar.getLength()));
-                        process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", openArrayVar.getKey(), displayLength-1, openArrayVar.getKey()));
-                        process.sendCommand(String.format("fr v %s --summary %s", openArrayName, openArrayVar.getKey()));
+                    if (openArrayVar.getLength() != 0) {
+                        if (process.options.supportsSummary) {
+                            long displayLength = Math.min(openArrayVar.getLength(), process.options.limitElements);
+                            openArrayVar.setAdditional(Long.toString(openArrayVar.getLength()));
+                            process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", openArrayVar.getKey(), displayLength - 1, openArrayVar.getKey()));
+                            process.sendCommand(String.format("fr v %s --summary %s", openArrayName, openArrayVar.getKey()));
+                        }
+                    } else {
+                        openArrayVar.setValueRefined("[]");
                     }
                 } else {
                     LOG.info(String.format("DBG Error: no array variable found for bound param %s", highBoundVar.getName()));
@@ -270,7 +277,7 @@ public class VariableManager {
                     return;
                 }
                 int size = addressStr.length() > 8 ? 8 : 4;
-                process.sendCommand(String.format("-data-read-memory-bytes %s-%d %d", addressStr, size * 2, size * 2), new CommandSender.FinishCallback() {
+                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", size * 2, var.getName(), size * 2), new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
                         List<Object> memory = res.getResults().getValue("memory") != null ? res.getResults().getList("memory") : null;
@@ -282,7 +289,7 @@ public class VariableManager {
                             long displayLength = Math.min(length, process.options.limitElements);
                             var.setLength(length);
                             var.setAdditional(var.getLength() + "#" + refCount);
-                            process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", var.getKey(), displayLength-1, var.getKey()));
+                            process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", var.getKey(), displayLength - 1, var.getKey()));
                             process.sendCommand(String.format("fr v %s[0] --summary %s", var.getName(), var.getKey()));
                         } else {
                             LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
@@ -298,15 +305,14 @@ public class VariableManager {
             return;
         }
         String type = res.getString("type");
-        if (isString(type)) {
+        String addressStr = parseStringAddress(type, res.getString("value"));
+        if (addressStr != null) {
             var.setChildrenCount(0);
-            String addressStr = parseAddress(res.getString("value"));
             if (isValidAddress(addressStr)) {
-                int size = addressStr.length() > 8 ? 8 : 4;
                 boolean hasCP = hasCodepageInfo(type);
                 boolean hasRefcount = hasRefcountInfo(type);
-                int headSize = size * (1 + (hasRefcount ? 1 : 0) + (hasCP ? 1 : 0));
-                process.sendCommand(String.format("-data-read-memory-bytes %s-%d %d", addressStr, headSize, headSize), new CommandSender.FinishCallback() {
+                int headSize = process.options.pointerSize * (1 + (hasRefcount ? 1 : 0) + (hasCP ? 1 : 0));
+                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", headSize, var.getName(), headSize), new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
                         String content = parseReadMemory(res);
@@ -317,20 +323,20 @@ public class VariableManager {
                             if (hasCP) {
                                 codepage = (int) parseHex(content.substring(0, 4));
                                 elemSize = (int) parseHex(content.substring(4, 8));
-                                base = size * 2;
+                                base = process.options.pointerSize * 2;
                             }
                             Long codepageFinal = codepage != null ? codepage.longValue() : null;
                             Long refCount = null;
                             if (hasRefcount) {
-                                refCount = parseHex(content.substring(base, base + size * 2));
-                                base = base + size * 2;
+                                refCount = parseHex(content.substring(base, base + process.options.pointerSize * 2));
+                                base = base + process.options.pointerSize * 2;
                             }
                             Long refCountFinal = refCount;
-                            long length = parseHex(content.substring(base, base + size * 2));
+                            long length = parseHex(content.substring(base, base + process.options.pointerSize * 2));
                             long displayLength = Math.min(length, process.options.limitChars);
                             int charSize = getCharSize(elemSize, type);
                             long dataSize = isSizeInBytes(type) ? displayLength : displayLength * charSize;
-                            process.sendCommand(String.format("-data-read-memory-bytes %s %d", addressStr, dataSize), new CommandSender.FinishCallback() {
+                            process.sendCommand(String.format("-data-read-memory-bytes %s %d", var.getName(), dataSize), new CommandSender.FinishCallback() {
                                         @Override
                                         public void call(GdbMiLine res) {
                                             String content = parseReadMemory(res);
@@ -430,9 +436,13 @@ public class VariableManager {
                 });
     }
 
-    private String parseAddress(String value) {
-        int valuePos = value != null ? value.indexOf(" \\\"") : -1;
-        return valuePos < 0 ? value : value.substring(0, valuePos);
+    private String parseStringAddress(String type, String value) {
+        Matcher m = value != null ? PATTERN_STRING_VALUE.matcher(value) : null;
+        if ((m != null) && m.matches()) {
+            return ((m.group(2) != null) || isString(type)) ? m.group(1) : null;
+        } else {
+            return null;
+        }
     }
 
     private String parseString(String content, long length, long displayLength, int charSize) {
@@ -506,7 +516,7 @@ public class VariableManager {
     }
 
     private boolean hasRefcountInfo(String type) {
-        return !"WIDESTRING".equalsIgnoreCase(type);
+        return TYPES_STRING.contains(type) && !"WIDESTRING".equalsIgnoreCase(type);
     }
 
     private boolean isValidAddress(String addressStr) {
