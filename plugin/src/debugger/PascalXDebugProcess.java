@@ -86,10 +86,10 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     public abstract String getVarFrame();
     public abstract String getVarNameQuoteChar();
+    protected abstract String getPointerSizeCommand();
+    protected abstract void init();
 
     private CommandSender sender;
-
-    protected abstract void init();
 
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
@@ -104,7 +104,22 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         } catch (Exception e) {
             LOG.warn("Error launching debug process", e);
         }
+        sendCommand("-list-target-features", VariableManager.SILENT);
+        sendCommand("-list-features");
         applyLimits();
+    }
+
+    @Override
+    public void sessionInitialized() {
+        super.sessionInitialized();
+        sendCommand(getPointerSizeCommand(), new CommandSender.FinishCallback() {
+            @Override
+            public void call(GdbMiLine res) {
+                if (res.getType() == GdbMiLine.Type.RESULT_RECORD && "done".equals(res.getRecClass())) {
+                    options.pointerSize = res.getResults().getInteger("value");
+                }
+            }
+        });
     }
 
     protected void applyLimits() {
@@ -439,6 +454,8 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         public int limitChars = 1000;
         public int limitElements = 1000;
         public int limitChilds = 100;
+
+        public int pointerSize;
 
         public boolean resolveNames() {
             return getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES);

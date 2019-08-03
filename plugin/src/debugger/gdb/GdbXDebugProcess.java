@@ -33,6 +33,11 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
+    protected String getPointerSizeCommand() {
+        return "-data-evaluate-expression --language c \"sizeof (void*)\"";
+    }
+
+    @Override
     protected void init() {
         options.supportsBulkDelete = false;
         options.supportsSummary = false;
@@ -53,7 +58,6 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
 
     @Override
     public void sessionInitialized() {
-        super.sessionInitialized();
         getProcessHandler().addProcessListener(new GdbProcessAdapter(this));
         sendCommand("-gdb-set target-async on");
         if (getData().getBoolean(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE)) {
@@ -65,6 +69,7 @@ public class GdbXDebugProcess extends PascalXDebugProcess {
         } 
         sendCommand("-exec-run");
         getSession().setPauseActionSupported(true);
+        super.sessionInitialized();
     }
 
 }

@@ -33,6 +33,11 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
     }
 
     @Override
+    protected String getPointerSizeCommand() {
+        return "-data-evaluate-expression \"sizeof (void*)\" --language c";
+    }
+
+    @Override
     protected void init() {
         options.supportsBulkDelete = true;
         options.supportsSummary = true;
@@ -52,8 +57,6 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
 
     @Override
     public void sessionInitialized() {
-        super.sessionInitialized();
-
         getProcessHandler().addProcessListener(new GdbProcessAdapter(this));
         sendCommand("-gdb-set target-async on");
         String runCommand = "-exec-run";
@@ -66,6 +69,21 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
         }
         sendCommand(runCommand);
         getSession().setPauseActionSupported(true);
+        setupFormatters();
+        super.sessionInitialized();
+    }
+
+    private void setupFormatters() {
+        setupSummary("BYTE", "${var%u}");
+        setupSummary("SHORTINT", "${var%d}");
+        setupSummary("WIDECHAR", "${var%U}");
+        setupSummary("UNICODECHAR", "${var%U}");
+        sendCommand("type category enable Pascal");
+    }
+
+    private void setupSummary(String type, String summary) {
+        String cmd = "type summary add -s \"" + summary + "\" " + type + " -p -w Pascal";
+        sendCommand(cmd);
     }
 
 }
