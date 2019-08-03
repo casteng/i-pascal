@@ -1,21 +1,29 @@
 package com.siberika.idea.pascal.debugger;
 
+import com.intellij.util.xmlb.annotations.OptionTag;
+import com.intellij.util.xmlb.annotations.Transient;
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
  * Author: George Bakhtadze
  * Date: 26/03/2017
  */
 public class PascalLineBreakpointProperties extends XBreakpointProperties<PascalLineBreakpointProperties> {
+    @OptionTag("filename")
     private String filename;
-    private int line;
+    @OptionTag("line")
+    private Integer line;
+    @Transient
     private boolean moving;
 
     public PascalLineBreakpointProperties() {
     }
 
-    public PascalLineBreakpointProperties(String filename, int line) {
+    public PascalLineBreakpointProperties(String filename, Integer line) {
         this.filename = filename;
         this.line = line;
         this.moving = false;
@@ -28,14 +36,17 @@ public class PascalLineBreakpointProperties extends XBreakpointProperties<Pascal
     }
 
     @Override
-    public void loadState(PascalLineBreakpointProperties state) {
+    public void loadState(@NotNull PascalLineBreakpointProperties state) {
+        filename = state.filename;
+        line = state.line;
+        moving = state.moving;
     }
 
     public String getFilename() {
         return filename;
     }
 
-    public int getLine() {
+    public Integer getLine() {
         return line;
     }
 
@@ -51,17 +62,13 @@ public class PascalLineBreakpointProperties extends XBreakpointProperties<Pascal
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         PascalLineBreakpointProperties that = (PascalLineBreakpointProperties) o;
-
-        if (line != that.line) return false;
-        return filename != null ? filename.equals(that.filename) : that.filename == null;
+        return Objects.equals(filename, that.filename) &&
+                Objects.equals(line, that.line);
     }
 
     @Override
     public int hashCode() {
-        int result = filename != null ? filename.hashCode() : 0;
-        result = 31 * result + line;
-        return result;
+        return Objects.hash(filename, line);
     }
 }

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  * Date: 26/03/2017
  */
 public class PascalLineBreakpointType extends XLineBreakpointType<PascalLineBreakpointProperties> {
-    static final String ID = "PascalLineBreakpoint";
+    private static final String ID = "PascalLineBreakpoint";
     private static final String NAME = "Line breakpoint";
 
     protected PascalLineBreakpointType() {
@@ -29,5 +29,11 @@ public class PascalLineBreakpointType extends XLineBreakpointType<PascalLineBrea
     @Override
     public PascalLineBreakpointProperties createBreakpointProperties(@NotNull VirtualFile file, int line) {
         return new PascalLineBreakpointProperties(file.getCanonicalPath(), line+1);
+    }
+
+    @Nullable
+    @Override
+    public PascalLineBreakpointProperties createProperties() {
+        return new PascalLineBreakpointProperties();
     }
 }
