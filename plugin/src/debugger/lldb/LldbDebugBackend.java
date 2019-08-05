@@ -9,11 +9,11 @@ import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 
-public class LldbXDebugProcess extends DebugBackend {
+public class LldbDebugBackend extends DebugBackend {
 
-    private static final Logger LOG = Logger.getInstance(LldbXDebugProcess.class);
+    private static final Logger LOG = Logger.getInstance(LldbDebugBackend.class);
 
-    public LldbXDebugProcess(PascalXDebugProcess process) {
+    public LldbDebugBackend(PascalXDebugProcess process) {
         super(process);
     }
 

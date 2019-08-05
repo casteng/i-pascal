@@ -43,7 +43,7 @@ import com.siberika.idea.pascal.debugger.gdb.GdbSuspendContext;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbStopReason;
-import com.siberika.idea.pascal.debugger.lldb.LldbXDebugProcess;
+import com.siberika.idea.pascal.debugger.lldb.LldbDebugBackend;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import org.jetbrains.annotations.NotNull;
@@ -85,7 +85,7 @@ public class PascalXDebugProcess extends XDebugProcess {
         this.variableManager = new VariableManager(this);
         this.environment = environment;
         this.sender = new CommandSender(this);
-        this.backend = DebugUtil.isLldb(DebugUtil.retrieveSdk(environment)) ? new LldbXDebugProcess(this) : new GdbDebugBackend(this);
+        this.backend = DebugUtil.isLldb(DebugUtil.retrieveSdk(environment)) ? new LldbDebugBackend(this) : new GdbDebugBackend(this);
         this.executionResult = executionResult;
         this.sender.start();
         backend.init();
