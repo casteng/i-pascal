@@ -5,7 +5,7 @@ import com.intellij.execution.process.ProcessEvent;
 import com.intellij.openapi.util.Key;
 
 public abstract class PascalConsoleProcessAdapter extends ProcessAdapter {
-    private StringBuilder sb = new StringBuilder();
+    private StringBuffer sb = new StringBuffer();
 
     abstract protected boolean onLine(String text);
 
@@ -28,7 +28,7 @@ public abstract class PascalConsoleProcessAdapter extends ProcessAdapter {
 
     private void doProcessLine() {
         onLine(sb.toString());
-        sb = new StringBuilder();
+        sb = new StringBuffer();
     }
 
 }
