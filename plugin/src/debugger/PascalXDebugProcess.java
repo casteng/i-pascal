@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.debugger;
 
 import com.intellij.diagnostic.logging.LogConsoleImpl;
 import com.intellij.execution.ExecutionResult;
-import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
@@ -17,11 +16,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.psi.PsiElement;
@@ -40,16 +35,17 @@ import com.intellij.xdebugger.frame.XSuspendContext;
 import com.intellij.xdebugger.ui.XDebugTabLayouter;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
+import com.siberika.idea.pascal.debugger.gdb.GdbDebugBackend;
 import com.siberika.idea.pascal.debugger.gdb.GdbExecutionStack;
+import com.siberika.idea.pascal.debugger.gdb.GdbProcessAdapter;
 import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
 import com.siberika.idea.pascal.debugger.gdb.GdbSuspendContext;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbStopReason;
+import com.siberika.idea.pascal.debugger.lldb.LldbXDebugProcess;
 import com.siberika.idea.pascal.editor.ContextAwareVirtualFile;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
-import com.siberika.idea.pascal.run.PascalRunConfiguration;
-import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,22 +57,19 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class PascalXDebugProcess extends XDebugProcess {
+public class PascalXDebugProcess extends XDebugProcess {
 
     private static final Logger LOG = Logger.getInstance(PascalXDebugProcess.class);
 
     private static final Pattern PATTERN_VAR_UPDATE_FAILED = Pattern.compile("\\w+ 'var-update'\\. Variable '(.+)' does not exist");
     private static final AnAction[] EMPTY_ACTIONS = new AnAction[0];
 
-    public final Options options = new Options();
-
-    protected final ExecutionResult executionResult;
+    private final ExecutionResult executionResult;
 
     protected ConsoleView console;
     private LogConsoleImpl outputConsole;
-    protected File outputFile;
+    private File outputFile;
     ExecutionEnvironment environment;
-    protected Sdk sdk;
 
     private final XBreakpointHandler<?>[] MY_BREAKPOINT_HANDLERS = new XBreakpointHandler[] {new PascalLineBreakpointHandler(this)};
 
@@ -84,45 +77,41 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
     private GdbSuspendContext suspendContext;
     private final VariableManager variableManager;
 
-    public abstract String getVarFrame();
-    public abstract String getVarNameQuoteChar();
-    protected abstract String getPointerSizeCommand();
-    protected abstract void init();
-
     private CommandSender sender;
+    DebugBackend backend;
 
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
         this.variableManager = new VariableManager(this);
         this.environment = environment;
-        this.sdk = retrieveSdk(environment);
-        this.executionResult = executionResult;
         this.sender = new CommandSender(this);
+        this.backend = DebugUtil.isLldb(DebugUtil.retrieveSdk(environment)) ? new LldbXDebugProcess(this) : new GdbDebugBackend(this);
+        this.executionResult = executionResult;
         this.sender.start();
+        backend.init();
         try {
-            init();
+            if (isOutputConsoleNeeded()) {
+                createOutputConsole();
+            }
+            console = (ConsoleView) executionResult.getExecutionConsole();
         } catch (Exception e) {
-            LOG.warn("Error launching debug process", e);
+            LOG.warn("Error launching debugger process", e);
         }
         sendCommand("-list-target-features", VariableManager.SILENT);
         sendCommand("-list-features");
-        applyLimits();
     }
 
     @Override
     public void sessionInitialized() {
         super.sessionInitialized();
-        sendCommand(getPointerSizeCommand(), new CommandSender.FinishCallback() {
-            @Override
-            public void call(GdbMiLine res) {
-                if (res.getType() == GdbMiLine.Type.RESULT_RECORD && "done".equals(res.getRecClass())) {
-                    options.pointerSize = res.getResults().getInteger("value");
-                }
-            }
-        });
-    }
-
-    protected void applyLimits() {
+        getProcessHandler().addProcessListener(new GdbProcessAdapter(this));
+        sendCommand("-gdb-set target-async on");
+        // Wait for breakpoints set etc
+        syncCalls(2, res -> {
+            backend.onSessionInit();
+            getSession().setPauseActionSupported(true);
+        }
+        );
     }
 
     @Override
@@ -143,19 +132,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         }
     }
 
-    static Sdk retrieveSdk(ExecutionEnvironment environment) {
-        Sdk sdk = null;
-        RunProfile conf = environment.getRunProfile();
-        if (conf instanceof PascalRunConfiguration) {
-            Module module = ((PascalRunConfiguration) conf).getConfigurationModule().getModule();
-            sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
-        } else {
-            LOG.warn("Invalid run configuration class: " + (conf != null ? conf.getClass().getName() : "<null>"));
-        }
-        return sdk != null ? sdk : ProjectRootManager.getInstance(environment.getProject()).getProjectSdk();
-    }
-
-    protected void createOutputConsole() {
+    private void createOutputConsole() {
         try {
             outputFile = File.createTempFile("ipas_run_out_", ".tmp");
             outputConsole = new LogConsoleImpl(environment.getProject(), outputFile, Charset.forName("utf-8"), 0,
@@ -171,8 +148,12 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         }
     }
 
-    protected boolean isOutputConsoleNeeded() {
-        return !SystemInfo.isWindows && getData().getBoolean(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE);
+    private boolean isOutputConsoleNeeded() {
+        return !SystemInfo.isWindows && backend.getData().getBoolean(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE);
+    }
+
+    public File getOutputFile() {
+        return outputFile;
     }
 
     @Nullable
@@ -220,14 +201,14 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
 
     @Override
     public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-        sendCommand(String.format("-exec-until \"%s:%d\"", position.getFile().getCanonicalPath(), position.getLine()));
+        sendCommand(String.format("-exec-until \"%s:%d\"", position.getFile().getCanonicalPath(), position.getLine() + 1));
     }
 
     public void sendCommand(String command) {
         sender.send(command, null);
     }
 
-    void sendCommand(String command, CommandSender.FinishCallback callback) {
+    public void sendCommand(String command, CommandSender.FinishCallback callback) {
         sender.send(command, callback);
     }
 
@@ -344,14 +325,6 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         this.inferiorRunning = inferiorRunning;
     }
 
-    public PascalSdkData getData() {
-        return getData(sdk);
-    }
-
-    public static PascalSdkData getData(Sdk sdk) {
-        return sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
-    }
-
     public Project getProject() {
         return environment.getProject();
     }
@@ -389,6 +362,7 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
                     break;
                 }
                 case BREAKPOINT_HIT:
+                    getBreakpointHandler().handleBreakpointHit(res, suspendContext);
                 case WATCHPOINT_TRIGGER:
                 case READ_WATCHPOINT_TRIGGER:
                 case ACCESS_WATCHPOINT_TRIGGER:
@@ -443,29 +417,4 @@ public abstract class PascalXDebugProcess extends XDebugProcess {
         sender.syncCalls(levels, callback);
     }
 
-    public final class Options {
-        public boolean supportsBulkDelete;
-        public boolean supportsSummary;
-
-        public boolean showNonPrintable = true;
-        public boolean refineStrings = true;
-        public boolean refineDynamicArrays = true;
-        public boolean refineOpenArrays = true;
-        public int limitChars = 1000;
-        public int limitElements = 1000;
-        public int limitChilds = 100;
-
-        public int pointerSize;
-
-        public boolean resolveNames() {
-            return getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RESOLVE_NAMES);
-        }
-        public boolean callGetters() {
-            return false;
-        }
-        public String asmFormat() {
-            return getData().getString(PascalSdkData.Keys.DEBUGGER_ASM_FORMAT);
-        }
-
-    }
 }

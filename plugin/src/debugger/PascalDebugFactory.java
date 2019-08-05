@@ -6,24 +6,18 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
-import com.siberika.idea.pascal.debugger.gdb.GdbXDebugProcess;
-import com.siberika.idea.pascal.debugger.lldb.LldbXDebugProcess;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 
 public class PascalDebugFactory {
 
-    public static XDebugProcess createXDebugProcess(Sdk sdk, XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
-        if (isLldb(sdk)) {
-            return new LldbXDebugProcess(session, environment, executionResult);
-        } else {
-            return new GdbXDebugProcess(session, environment, executionResult);
-        }
+    static XDebugProcess createXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
+        return new PascalXDebugProcess(session, environment, executionResult);
     }
 
     public static void adjustCommand(Sdk sdk, GeneralCommandLine commandLine, String executable) {
         PascalSdkData data = sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
-        if (isLldb(sdk)) {
+        if (DebugUtil.isLldb(sdk)) {
             adjustCommandLldb(sdk, data, commandLine, executable);
         } else {
             adjustCommandGdb(sdk, data, commandLine, executable);
@@ -55,8 +49,4 @@ public class PascalDebugFactory {
         commandLine.addParameters(executable);
     }
 
-    private static boolean isLldb(Sdk sdk) {
-        PascalSdkData data = sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : PascalSdkData.EMPTY;
-        return data.isLldbBackend();
-    }
 }

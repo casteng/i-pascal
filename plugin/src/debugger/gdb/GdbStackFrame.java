@@ -95,7 +95,7 @@ public class GdbStackFrame extends XStackFrame {
     }
 
     private BlockInfo initBlockInfo() {
-        return ApplicationManager.getApplication().runReadAction(new Computable<BlockInfo>() {
+        return frame != null ? ApplicationManager.getApplication().runReadAction(new Computable<BlockInfo>() {
             @Override
             public BlockInfo compute() {
                 String name = frame.getString("func");
@@ -115,7 +115,7 @@ public class GdbStackFrame extends XStackFrame {
                 }
                 return new BlockInfo(scope, name);
             }
-        });
+        }) : null;
     }
 
     @Nullable

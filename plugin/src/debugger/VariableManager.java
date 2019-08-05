@@ -10,6 +10,7 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
+import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.debugger.gdb.GdbExecutionStack;
 import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
 import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
@@ -46,7 +47,7 @@ public class VariableManager {
     private static final String OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX = "high";
     private static final List<String> TYPES_STRING = Arrays.asList("ANSISTRING", "WIDESTRING", "UNICODESTRING", "UTF8STRING", "RAWBYTESTRING");
     private static final Map<Long, String> CODEPAGE_MAP = createCodePageMap();
-    public static final CommandSender.FinishCallback SILENT = res -> {};
+    static final CommandSender.FinishCallback SILENT = res -> {};
     private static final Pattern PATTERN_STRING_VALUE = Pattern.compile("(0x[0-9a-f]+)(\\s((\\\\\")|').*)?");
 
     private static Map<Long, String> createCodePageMap() {
@@ -74,7 +75,7 @@ public class VariableManager {
 
     public void queryVariables(int level, GdbExecutionStack executionStack, GdbStackFrame frame) {
         process.sendCommand("-stack-select-frame " + level);
-        if (process.options.supportsBulkDelete) {
+        if (process.backend.options.supportsBulkDelete) {
             process.sendCommand("-var-delete *");
         }
         variableObjectMap.clear();
@@ -89,7 +90,7 @@ public class VariableManager {
                         }
                     }
                 });
-        process.syncCalls(4, res -> frame.refreshVarTree(variableObjectMap.values()));
+        process.syncCalls(5, res -> frame.refreshVarTree(variableObjectMap.values()));
     }
 
     // handling of -stack-list-variables command
@@ -99,10 +100,10 @@ public class VariableManager {
                 GdbMiResults res = (GdbMiResults) o;
                 String varName = res.getString("name");
                 final String varKey = getVarKey(varName, false, VAR_PREFIX_LOCAL);
-                if (!process.options.supportsBulkDelete) {
+                if (!process.backend.options.supportsBulkDelete) {
                     process.sendCommand("-var-delete " + varKey, SILENT);
                 }
-                process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", varKey, process.getVarFrame(), varName, process.getVarNameQuoteChar()));
+                process.backend.createVar(varKey, varName, null);
                 GdbVariableObject var = new GdbVariableObject(frame, varKey, varName, varName, null, res);
                 variableObjectMap.put(varKey, var);
                 resolveVariable(var);
@@ -143,6 +144,7 @@ public class VariableManager {
             }
             if (var != null) {
                 var.updateFromResult(res);
+                refineStructured(var, res);
                 refineOpenArray(var, res);
                 refineDynamicArray(var, res);
                 refineString(var, res);
@@ -190,7 +192,7 @@ public class VariableManager {
     void computeValueChildren(String name, XCompositeNode node) {
         GdbVariableObject tempParent = findVarObject(name);
         if (tempParent != null) {
-            process.sendCommand("-var-list-children --all-values " + name + " 0 " + process.options.limitChilds, new CommandSender.FinishCallback() {
+            process.sendCommand("-var-list-children --all-values " + name + " 0 " + process.backend.options.limitChilds, new CommandSender.FinishCallback() {
                 @Override
                 public void call(GdbMiLine res) {
                     if ("0".equals(res.getResults().getString("numchild"))) {
@@ -209,7 +211,7 @@ public class VariableManager {
                                 }
                             }
                         }
-                        process.syncCalls(3, new CommandSender.FinishCallback() {
+                        process.syncCalls(4, new CommandSender.FinishCallback() {
                             @Override
                             public void call(GdbMiLine res) {
                                 tempParent.getFrame().refreshVarTree(node, tempParent.getChildren());
@@ -237,7 +239,7 @@ public class VariableManager {
     }
 
     private void refineOpenArray(GdbVariableObject highBoundVar, GdbMiResults res) {
-        if (!process.options.refineOpenArrays) {
+        if (!process.backend.options.refineOpenArrays) {
             return;
         }
         if (highBoundVar.getName().startsWith(OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX)) {
@@ -249,12 +251,9 @@ public class VariableManager {
                     openArrayVar.setChildrenCount(0);
                     openArrayVar.setLength(highIndex + 1);
                     if (openArrayVar.getLength() != 0) {
-                        if (process.options.supportsSummary) {
-                            long displayLength = Math.min(openArrayVar.getLength(), process.options.limitElements);
-                            openArrayVar.setAdditional(Long.toString(openArrayVar.getLength()));
-                            process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", openArrayVar.getKey(), displayLength - 1, openArrayVar.getKey()));
-                            process.sendCommand(String.format("fr v %s --summary %s", openArrayName, openArrayVar.getKey()));
-                        }
+                        long displayLength = Math.min(openArrayVar.getLength(), process.backend.options.limitElements);
+                        openArrayVar.setAdditional(Long.toString(openArrayVar.getLength()));
+                        process.backend.queryArrayValue(openArrayVar, 0, displayLength);
                     } else {
                         openArrayVar.setValueRefined("[]");
                     }
@@ -266,7 +265,7 @@ public class VariableManager {
     }
 
     private void refineDynamicArray(GdbVariableObject var, GdbMiResults res) {
-        if (!process.options.refineDynamicArrays) {
+        if (!process.backend.options.refineDynamicArrays) {
             return;
         }
         String type = res.getString("type");
@@ -284,15 +283,15 @@ public class VariableManager {
                         GdbMiResults tuple = ((memory != null) && (memory.size() > 0)) ? (GdbMiResults) memory.get(0) : null;
                         String content = tuple != null ? tuple.getString("contents") : null;
                         if ((content != null) && (content.length() == (size * 2 * 2))) {
-                            long refCount = parseHex(content.substring(0, size * 2));
-                            long length = parseHex(content.substring(size * 2)) + 1;
-                            long displayLength = Math.min(length, process.options.limitElements);
+                            long refCount = DebugUtil.parseHex(content.substring(0, size * 2));
+                            long length = DebugUtil.parseHex(content.substring(size * 2)) + 1;
+                            long displayLength = Math.min(length, process.backend.options.limitElements);
                             var.setLength(length);
                             var.setAdditional(var.getLength() + "#" + refCount);
-                            process.sendCommand(String.format("type summary add -s \"%s\\$${var[0-%d]}\" -n %s", var.getKey(), displayLength - 1, var.getKey()));
-                            process.sendCommand(String.format("fr v %s[0] --summary %s", var.getName(), var.getKey()));
+                            process.backend.queryArrayValue(var, 0, displayLength);
                         } else {
                             LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
+                            var.setError(PascalBundle.message("debug.error.memory.read", var.getName()));
                         }
                     }
                 });
@@ -301,7 +300,7 @@ public class VariableManager {
     }
 
     private void refineString(GdbVariableObject var, GdbMiResults res) {
-        if (!process.options.refineStrings) {
+        if (!process.backend.options.refineStrings) {
             return;
         }
         String type = res.getString("type");
@@ -311,7 +310,7 @@ public class VariableManager {
             if (isValidAddress(addressStr)) {
                 boolean hasCP = hasCodepageInfo(type);
                 boolean hasRefcount = hasRefcountInfo(type);
-                int headSize = process.options.pointerSize * (1 + (hasRefcount ? 1 : 0) + (hasCP ? 1 : 0));
+                int headSize = process.backend.options.pointerSize * (1 + (hasRefcount ? 1 : 0) + (hasCP ? 1 : 0));
                 process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", headSize, var.getName(), headSize), new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
@@ -321,19 +320,19 @@ public class VariableManager {
                             Integer elemSize = null;
                             Integer codepage = null;
                             if (hasCP) {
-                                codepage = (int) parseHex(content.substring(0, 4));
-                                elemSize = (int) parseHex(content.substring(4, 8));
-                                base = process.options.pointerSize * 2;
+                                codepage = (int) DebugUtil.parseHex(content.substring(0, 4));
+                                elemSize = (int) DebugUtil.parseHex(content.substring(4, 8));
+                                base = process.backend.options.pointerSize * 2;
                             }
                             Long codepageFinal = codepage != null ? codepage.longValue() : null;
                             Long refCount = null;
                             if (hasRefcount) {
-                                refCount = parseHex(content.substring(base, base + process.options.pointerSize * 2));
-                                base = base + process.options.pointerSize * 2;
+                                refCount = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
+                                base = base + process.backend.options.pointerSize * 2;
                             }
                             Long refCountFinal = refCount;
-                            long length = parseHex(content.substring(base, base + process.options.pointerSize * 2));
-                            long displayLength = Math.min(length, process.options.limitChars);
+                            long length = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
+                            long displayLength = Math.min(length, process.backend.options.limitChars);
                             int charSize = getCharSize(elemSize, type);
                             long dataSize = isSizeInBytes(type) ? displayLength : displayLength * charSize;
                             process.sendCommand(String.format("-data-read-memory-bytes %s %d", var.getName(), dataSize), new CommandSender.FinishCallback() {
@@ -370,7 +369,7 @@ public class VariableManager {
     }
 
     private PasField resolveIdentifierName(XSourcePosition sourcePosition, final String name, final Set<PasField.FieldType> types) {
-        if (!process.options.resolveNames() || (null == sourcePosition)) {
+        if (!process.backend.options.resolveNames() || (null == sourcePosition)) {
             return null;
         }
         if (DumbService.isDumb(process.getSession().getProject())) {
@@ -422,7 +421,7 @@ public class VariableManager {
         final GdbVariableObject var = new GdbVariableObject(frame, key, expression.toUpperCase(), expression, callback);
         variableObjectMap.put(key, var);
         process.sendCommand("-var-delete " + key, SILENT);
-        process.sendCommand(String.format("-var-create %4$s%s%4$s %s \"%s\"", key, process.getVarFrame(), expression.toUpperCase(), process.getVarNameQuoteChar()),
+        process.backend.createVar(key, expression.toUpperCase(),
                 new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
@@ -454,7 +453,7 @@ public class VariableManager {
             } else if (charSize == 2) {
                 str = new String(data, StandardCharsets.UTF_16LE);
             }
-            if ((str != null) && process.options.showNonPrintable) {
+            if ((str != null) && process.backend.options.showNonPrintable) {
                 StringBuilder sb = new StringBuilder(str.length() + str.length() / 4);
                 str.chars().forEachOrdered(new IntConsumer() {
                     @Override
@@ -484,6 +483,10 @@ public class VariableManager {
         List<Object> memory = res.getResults().getValue("memory") != null ? res.getResults().getList("memory") : null;
         GdbMiResults tuple = ((memory != null) && (memory.size() > 0)) ? (GdbMiResults) memory.get(0) : null;
         return tuple != null ? tuple.getString("contents") : null;
+    }
+
+    private boolean isStructured(GdbVariableObject var) {
+        return "{...}".equals(var.getValue());
     }
 
     private static boolean isDynamicArray(String type) {
@@ -530,16 +533,6 @@ public class VariableManager {
         } catch (NumberFormatException e) {
             return defaultValue;
         }
-    }
-
-    private static long parseHex(String s) {
-        int len = s.length();
-        long data = 0;
-        for (int i = 0; i < len; i += 2) {
-            data = data * 256 + ((Character.digit(s.charAt(len - 2 - i), 16) << 4)
-                    + Character.digit(s.charAt(len - 1 - i), 16));
-        }
-        return data;
     }
 
     private void updateVariableObjectUI(GdbVariableObject var) {

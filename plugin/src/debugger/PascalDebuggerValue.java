@@ -92,7 +92,7 @@ public class PascalDebuggerValue extends XValue {
 
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
-        if (variableObject.getFrame().getProcess().getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS)) {
+        if (variableObject.getFrame().getProcess().backend.getData().getBoolean(PascalSdkData.Keys.DEBUGGER_RETRIEVE_CHILDS)) {
             variableObject.getFrame().getProcess().getVariableManager().computeValueChildren(variableObject.getKey(), node);
         } else {
             node.setErrorMessage(PascalBundle.message("debug.error.subfields.disabled"));

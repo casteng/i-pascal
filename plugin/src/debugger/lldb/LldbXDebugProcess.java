@@ -1,76 +1,62 @@
 package com.siberika.idea.pascal.debugger.lldb;
 
-import com.intellij.execution.ExecutionResult;
-import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.SystemInfo;
-import com.intellij.xdebugger.XDebugSession;
+import com.siberika.idea.pascal.debugger.CommandSender;
+import com.siberika.idea.pascal.debugger.DebugBackend;
 import com.siberika.idea.pascal.debugger.PascalXDebugProcess;
-import com.siberika.idea.pascal.debugger.gdb.GdbProcessAdapter;
+import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
+import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 
-/**
- * Author: George Bakhtadze
- * Date: 26/03/2017
- */
-public class LldbXDebugProcess extends PascalXDebugProcess {
+public class LldbXDebugProcess extends DebugBackend {
 
     private static final Logger LOG = Logger.getInstance(LldbXDebugProcess.class);
 
-    public LldbXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
-        super(session, environment, executionResult);
+    public LldbXDebugProcess(PascalXDebugProcess process) {
+        super(process);
     }
 
     @Override
-    public String getVarFrame() {
-        return "*";
-    }
-
-    @Override
-    public String getVarNameQuoteChar() {
-        return "";
-    }
-
-    @Override
-    protected String getPointerSizeCommand() {
-        return "-data-evaluate-expression \"sizeof (void*)\" --language c";
-    }
-
-    @Override
-    protected void init() {
+    public void init() {
         options.supportsBulkDelete = true;
-        options.supportsSummary = true;
-        if (isOutputConsoleNeeded()) {
-            createOutputConsole();
-        }
-        console = (ConsoleView) executionResult.getExecutionConsole();
-
-        sendCommand("-interpreter-exec console \"br delete\"");
+        options.useFullnameForBreakpoints = false;  // LLDB doesn't support full names in breakpoints
+        process.sendCommand("-interpreter-exec console \"br delete\"");
+        process.sendCommand("set set target.max-children-count " + options.limitElements);
     }
 
     @Override
-    protected void applyLimits() {
-        super.applyLimits();
-        sendCommand("set set target.max-children-count " + options.limitElements);
-    }
-
-    @Override
-    public void sessionInitialized() {
-        getProcessHandler().addProcessListener(new GdbProcessAdapter(this));
-        sendCommand("-gdb-set target-async on");
+    public void onSessionInit() {
         String runCommand = "-exec-run";
         if (getData().getBoolean(PascalSdkData.Keys.DEBUGGER_REDIRECT_CONSOLE)) {
             if (SystemInfo.isWindows) {
-                sendCommand("-gdb-set new-console on");
+                process.sendCommand("-gdb-set new-console on");
             } else {
-                runCommand = String.format("-interpreter-exec console \"process launch --stdout %1$s --stderr %1$s\"", outputFile.getAbsolutePath());
+                runCommand = String.format("-interpreter-exec console \"process launch --stdout %1$s --stderr %1$s\"", process.getOutputFile().getAbsolutePath());
             }
         }
-        sendCommand(runCommand);
-        getSession().setPauseActionSupported(true);
+        process.sendCommand(runCommand);
         setupFormatters();
-        super.sessionInitialized();
+        initPointerSize();
+    }
+
+    @Override
+    public void createVar(String key, String expression, CommandSender.FinishCallback finishCallback) {
+        process.sendCommand(String.format("-var-create %s * \"%s\"", key, expression), finishCallback);
+    }
+
+    @Override
+    public void queryArrayValue(GdbVariableObject var, int start, long end) {
+        process.sendCommand(String.format("type summary add -s \"%s\\$${var[%d-%d]}\" -n %s", var.getKey(), start, end - 1, var.getKey()));
+        process.sendCommand(String.format("fr v %s[0] --summary %s", var.getName(), var.getKey()));
+    }
+
+    private void initPointerSize() {
+        process.sendCommand("-data-evaluate-expression \"sizeof (void*)\" --language c", res -> {
+            if (res.getType() == GdbMiLine.Type.RESULT_RECORD && "done".equals(res.getRecClass())) {
+                options.pointerSize = res.getResults().getInteger("value");
+            }
+        });
     }
 
     private void setupFormatters() {
@@ -78,12 +64,12 @@ public class LldbXDebugProcess extends PascalXDebugProcess {
         setupSummary("SHORTINT", "${var%d}");
         setupSummary("WIDECHAR", "${var%U}");
         setupSummary("UNICODECHAR", "${var%U}");
-        sendCommand("type category enable Pascal");
+        process.sendCommand("type category enable Pascal");
     }
 
     private void setupSummary(String type, String summary) {
         String cmd = "type summary add -s \"" + summary + "\" " + type + " -p -w Pascal";
-        sendCommand(cmd);
+        process.sendCommand(cmd);
     }
 
 }

@@ -40,7 +40,7 @@ public class PascalDebugRunner extends GenericProgramRunner {
             @NotNull
             @Override
             public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-                return PascalDebugFactory.createXDebugProcess(conf.getSdk(), session, environment, executionResult);
+                return PascalDebugFactory.createXDebugProcess(session, environment, executionResult);
             }
         }).getRunContentDescriptor();
     }
