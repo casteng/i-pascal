@@ -1,31 +1,30 @@
 package com.siberika.idea.pascal.debugger;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.xdebugger.XDebuggerManager;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
-import com.intellij.xdebugger.breakpoints.XBreakpointManager;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
-import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.debugger.gdb.GdbSuspendContext;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
-import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Author: George Bakhtadze
  * Date: 26/03/2017
  */
 public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<PascalLineBreakpointProperties>> {
+
+    private static final Logger LOG = Logger.getInstance(PascalLineBreakpointHandler.class);
+
     private final PascalXDebugProcess debugProcess;
     private final Map<PascalLineBreakpointProperties, Integer> breakIndexMap = new HashMap<>();
-    private final Set<PascalLineBreakpointProperties> registered = new HashSet<>();
+    private final Map<Integer, XLineBreakpoint<PascalLineBreakpointProperties>> indexBreakMap = new HashMap<>();
 
     public PascalLineBreakpointHandler(PascalXDebugProcess debugProcess) {
         super(PascalLineBreakpointType.class);
@@ -35,22 +34,21 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
     @Override
     public void registerBreakpoint(@NotNull XLineBreakpoint<PascalLineBreakpointProperties> breakpoint) {
         PascalLineBreakpointProperties props = breakpoint.getProperties();
-        int line = breakpoint.getLine() + 1;
-        String filename = breakpoint.getPresentableFilePath();
-        if (props != null && props.getLine() != null) {
-            if (props.isMoving()) {
-                return;
-            }
-            line = props.getLine();
-            filename = props.getFilename();
+        Integer reqLine = props.getRequestedLine();
+        if (null == reqLine) {
+            props.setRequestedLine(breakpoint.getLine() + 1);
+        } else if (reqLine != breakpoint.getLine() + 1) {                // Moving breakpoints due to source code move
+            ApplicationManager.getApplication().invokeLater(() ->
+                    ApplicationManager.getApplication().runWriteAction(() ->
+                            XDebuggerManager.getInstance(debugProcess.getProject()).getBreakpointManager().removeBreakpoint(breakpoint))
+            );
+            return;
         }
-        PascalLineBreakpointProperties properties = new PascalLineBreakpointProperties(filename, line);
-        registered.add(properties);
-        PascalSdkData data = debugProcess.getData();
-        if (data.isLldbBackend() || !data.getBoolean(PascalSdkData.Keys.DEBUGGER_BREAK_FULL_NAME)) {  // LLDB doesn't support full names in breakpoints
+        String filename = breakpoint.getPresentableFilePath();
+        if (!debugProcess.backend.options.useFullnameForBreakpoints) {
             filename = FileUtil.getFilename(filename);
         }
-        debugProcess.sendCommand(String.format("-break-insert %s -f \"%s:%d\"", debugProcess.isInferiorRunning() ? "-h" : "", filename, line),
+        debugProcess.sendCommand(String.format("-break-insert %s -f \"%s:%d\"", debugProcess.isInferiorRunning() ? "-h" : "", filename, props.getRequestedLine()),
                 new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
@@ -64,16 +62,14 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
     @Override
     public void unregisterBreakpoint(@NotNull XLineBreakpoint<PascalLineBreakpointProperties> breakpoint, boolean temporary) {
         PascalLineBreakpointProperties props = breakpoint.getProperties();
-        props = props != null ? props : new PascalLineBreakpointProperties(breakpoint.getPresentableFilePath(), breakpoint.getLine() + 1);
-        if (props.isMoving()) {
-            return;
-        }
-        registered.remove(props);
+        props = props != null ? props : new PascalLineBreakpointProperties(breakpoint.getLine() + 1);
         Integer ind = breakIndexMap.get(props);
         if (ind != null) {
             debugProcess.sendCommand(String.format("-break-delete %d", ind));
+            breakIndexMap.remove(props);
+            indexBreakMap.remove(ind);
         } else {
-            debugProcess.getSession().reportMessage(PascalBundle.message("debug.breakpoint.notFound"), MessageType.ERROR);
+            LOG.info(String.format("DBG Warn: breakpoint not found at: %s:%d", breakpoint.getShortFilePath(), breakpoint.getLine()));
         }
     }
 
@@ -82,43 +78,30 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
         final String fullname = fname != null ? fname.replace("//", "/") : null;
         final Integer line = bp.getInteger("line");
         boolean bpValid = (fullname != null) && !"??".equals(fullname) && (line != null) && (line > 0);
-        breakIndexMap.put(breakpoint.getProperties(), bp.getInteger("number"));
-        if (!bpValid) {
-            breakpoint.setEnabled(false);
-            return;
-        }
-        Integer requestedLine = breakpoint.getLine() + 1;
-        if (!line.equals(requestedLine)) {              // breakpoint location moved by debugger
-            moveBreakpoint(breakpoint, fullname, line);
-        }
-    }
-
-    private void moveBreakpoint(XLineBreakpoint<PascalLineBreakpointProperties> breakpoint, String fullname, Integer line) {
-        final XBreakpointManager manager = XDebuggerManager.getInstance(debugProcess.environment.getProject()).getBreakpointManager();
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        PascalLineBreakpointProperties oldProps = breakpoint.getProperties();
-                        final PascalLineBreakpointProperties props = new PascalLineBreakpointProperties(fullname, line);
-                        oldProps.setMoving(true);
-                        props.setMoving(true);
-                        try {
-                            manager.removeBreakpoint(breakpoint);
-                            if (!registered.contains(props)) {
-                                manager.addLineBreakpoint(breakpoint.getType(), breakpoint.getFileUrl(), line - 1, props);
-                                registered.add(props);
-                            }
-                        } finally {
-                            oldProps.setMoving(false);
-                            props.setMoving(false);
-                        }
-                    }
-                });
+        final Integer number = bp.getInteger("number");
+        if (number != null) {
+            breakIndexMap.put(breakpoint.getProperties(), number);
+            indexBreakMap.put(number, breakpoint);
+            if (!bpValid) {
+                debugProcess.getSession().setBreakpointInvalid(breakpoint, "No code");
+                return;
             }
-        });
+            Integer requestedLine = breakpoint.getLine() + 1;
+            if (!line.equals(requestedLine)) {              // breakpoint location moved by debugger
+                debugProcess.getSession().setBreakpointInvalid(breakpoint, "No code");
+                debugProcess.sendCommand(String.format("-break-delete %d", number));
+            }
+        }
     }
 
+    public void handleBreakpointHit(GdbMiLine res, GdbSuspendContext suspendContext) {
+        Integer breakId = res.getResults().getInteger("bkptno");
+        if (null == breakId) {
+            LOG.info("DBG Error: invalid breakpoint ID: " + res);
+        }
+        XLineBreakpoint<PascalLineBreakpointProperties> breakpoint = indexBreakMap.get(breakId);
+            if (breakpoint != null) {
+                debugProcess.getSession().breakpointReached(breakpoint, null, suspendContext);
+            }
+    }
 }

@@ -1,7 +1,5 @@
 package com.siberika.idea.pascal.debugger;
 
-import com.intellij.util.xmlb.annotations.OptionTag;
-import com.intellij.util.xmlb.annotations.Transient;
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,20 +11,14 @@ import java.util.Objects;
  * Date: 26/03/2017
  */
 public class PascalLineBreakpointProperties extends XBreakpointProperties<PascalLineBreakpointProperties> {
-    @OptionTag("filename")
-    private String filename;
-    @OptionTag("line")
-    private Integer line;
-    @Transient
-    private boolean moving;
+    private Integer requestedLine;
 
     public PascalLineBreakpointProperties() {
+        this(null);
     }
 
-    public PascalLineBreakpointProperties(String filename, Integer line) {
-        this.filename = filename;
-        this.line = line;
-        this.moving = false;
+    public PascalLineBreakpointProperties(Integer requestedLine) {
+        this.requestedLine = requestedLine;
     }
 
     @Nullable
@@ -37,25 +29,14 @@ public class PascalLineBreakpointProperties extends XBreakpointProperties<Pascal
 
     @Override
     public void loadState(@NotNull PascalLineBreakpointProperties state) {
-        filename = state.filename;
-        line = state.line;
-        moving = state.moving;
     }
 
-    public String getFilename() {
-        return filename;
+    public Integer getRequestedLine() {
+        return requestedLine;
     }
 
-    public Integer getLine() {
-        return line;
-    }
-
-    public boolean isMoving() {
-        return moving;
-    }
-
-    public void setMoving(boolean moving) {
-        this.moving = moving;
+    public void setRequestedLine(Integer requestedLine) {
+        this.requestedLine = requestedLine;
     }
 
     @Override
@@ -63,12 +44,11 @@ public class PascalLineBreakpointProperties extends XBreakpointProperties<Pascal
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PascalLineBreakpointProperties that = (PascalLineBreakpointProperties) o;
-        return Objects.equals(filename, that.filename) &&
-                Objects.equals(line, that.line);
+        return Objects.equals(getRequestedLine(), that.getRequestedLine());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(filename, line);
+        return Objects.hash(getRequestedLine());
     }
 }
