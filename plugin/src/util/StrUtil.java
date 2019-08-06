@@ -10,6 +10,7 @@ import com.siberika.idea.pascal.lang.lexer.PascalFlexLexer;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,10 @@ public class StrUtil {
     private static final int MAX_SHORT_TEXT_LENGTH = 32;
 
     public enum ElementType {VAR, CONST, TYPE, FIELD, PROPERTY, ACTUAL_PARAMETER}
+
+    public static boolean startsWith(String s, String prefix) {
+        return (s != null) && s.startsWith(prefix);
+    }
 
     public static boolean hasLowerCaseChar(String s) {
         for (char c : s.toCharArray()) {
@@ -109,6 +114,14 @@ public class StrUtil {
     public static Integer strToIntDef(String value, Integer def) {
         try {
             return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return def;
+        }
+    }
+
+    public static BigInteger strToBigIntDef(String value, BigInteger def) {
+        try {
+            return new BigInteger(value);
         } catch (NumberFormatException e) {
             return def;
         }

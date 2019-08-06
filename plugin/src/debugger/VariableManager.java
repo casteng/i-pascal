@@ -20,10 +20,12 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -148,6 +150,7 @@ public class VariableManager {
                 refineOpenArray(var, res);
                 refineDynamicArray(var, res);
                 refineString(var, res);
+                refineSet(var);
                 updateVariableObjectUI(var);
             } else {
                 LOG.info("DBG Error: variable not found: " + varKey);
@@ -236,6 +239,37 @@ public class VariableManager {
             index = name.substring(0, prevI).lastIndexOf('.');
         }
         return res;
+    }
+
+    private void refineStructured(GdbVariableObject var, GdbMiResults res) {
+        if (!process.backend.options.refineStructured) {
+            return;
+        }
+        if (isStructured(var)) {
+            process.sendCommand(String.format("-data-evaluate-expression %s", var.getName()), new CommandSender.FinishCallback() {
+                @Override
+                public void call(GdbMiLine res) {
+                    String value = DebugUtil.retrieveResultValue(res);
+                    if (value != null) {
+                        Pattern PATTERN_VTYPE = Pattern.compile("VTYPE = (\\d{1,3})");
+                        Matcher matcher = PATTERN_VTYPE.matcher(value);
+                        if (matcher.find()) {
+                            int vType = Integer.parseInt(matcher.group(1));
+                            if (vType == 0) {
+                                Pattern PATTERN_VALUE = Pattern.compile("VINTEGER = (\\d+)");
+                                Matcher m = PATTERN_VALUE.matcher(value);
+                                if (m.find()) {
+                                    value = m.group(1);
+                                }
+                            }
+                        }
+                        var.setValueRefined(value);
+                    } else {
+                        var.setError(PascalBundle.message("debug.expression.no.result"));
+                    }
+                }
+            });
+        }
     }
 
     private void refineOpenArray(GdbVariableObject highBoundVar, GdbMiResults res) {
@@ -352,6 +386,44 @@ public class VariableManager {
                         }
                     }
                 });
+            }
+        }
+    }
+
+    private void refineSet(GdbVariableObject var) {
+        if (isSet(var)) {
+            process.sendCommand("-data-evaluate-expression \"sizeof " + var.getName() + "\"", res -> {
+                Integer size = DebugUtil.retrieveResultValueInt(res);
+                if (size != null) {
+                    var.setAdditional(size + "b");
+                }
+            });
+            String value = var.getValue();
+            BigInteger valInt = StrUtil.strToBigIntDef(value, null);
+            StringBuilder sb = new StringBuilder("[");
+            if (valInt != null) {
+                addSetBits(sb, valInt, 0);
+            } else {
+                if (StrUtil.startsWith(value, "0x")) {
+                    value = value.substring(2);
+                    for (int i = value.length() - 1; i >= 0; i--) {
+                        addSetBits(sb, BigInteger.valueOf(Integer.parseInt(String.valueOf(value.charAt(i)), 16)), (value.length() - i - 1) * 4);
+                    }
+                }
+            }
+            sb.append("]");
+            var.setValueRefined(sb.toString());
+        }
+    }
+
+    private void addSetBits(StringBuilder sb, BigInteger bits, int startBit) {
+        int lastIndex = bits.bitLength();
+        for (int i = 0; i < lastIndex; i++) {
+            if (bits.testBit(i)) {
+                if (sb.length() > 1) {
+                    sb.append(", ");
+                }
+                sb.append(startBit + i);
             }
         }
     }
@@ -487,6 +559,10 @@ public class VariableManager {
 
     private boolean isStructured(GdbVariableObject var) {
         return "{...}".equals(var.getValue());
+    }
+
+    private boolean isSet(GdbVariableObject var) {
+        return StrUtil.startsWith(var.getType(), "<invalid type code");
     }
 
     private static boolean isDynamicArray(String type) {

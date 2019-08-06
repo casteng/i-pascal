@@ -16,14 +16,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class CommandSender extends Thread {
     private static final Logger LOG = Logger.getInstance(CommandSender.class);
-    public static final long TOKEN_UNREACHABLE = 1000000000000000000L;
 
     private final PascalXDebugProcess process;
 
     private final BlockingQueue<Command> queue = new ArrayBlockingQueue<>(200);
     private final Map<Long, FinishCallback> callbackMap = new ConcurrentHashMap<>();
 
-    private static final AtomicLong TOKEN_COUNTER = new AtomicLong();
+    private final AtomicLong TOKEN_COUNTER = new AtomicLong();
 
     CommandSender(PascalXDebugProcess pascalXDebugProcess) {
         process = pascalXDebugProcess;
@@ -64,7 +63,7 @@ public class CommandSender extends Thread {
         }
     }
 
-    private static long nextToken() {
+    private long nextToken() {
         return TOKEN_COUNTER.getAndIncrement();
     }
 
