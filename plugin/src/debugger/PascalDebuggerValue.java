@@ -110,8 +110,9 @@ public class PascalDebuggerValue extends XValue {
         PsiFile file = sp != null ? DebuggerUtilsEx.getPsiFile(sp, variableObject.getFrame().getProcess().getProject()) : null;
         Document doc = file != null ? PsiDocumentManager.getInstance(variableObject.getFrame().getProcess().getProject()).getDocument(file) : null;
         if (doc != null) {
-            int lineNum = sp.getLine();
-            while (lineNum >= variableObject.getFrame().getBlockInfo().getStartLine()) {
+            int lineNum = sp.getLine() - 1;
+            final Integer startLine = variableObject.getFrame().getBlockInfo().getStartLine();
+            while (lineNum >= startLine) {
                 String line = DocUtil.getWholeLine(doc, lineNum);
                 Pattern pattern = Pattern.compile("(?i)\\b" + variableObject.getName() + "\\b");
                 if (pattern.matcher(line).find()) {

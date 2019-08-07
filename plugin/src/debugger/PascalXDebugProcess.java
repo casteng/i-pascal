@@ -201,7 +201,7 @@ public class PascalXDebugProcess extends XDebugProcess {
 
     @Override
     public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-        sendCommand(String.format("-exec-until \"%s:%d\"", position.getFile().getCanonicalPath(), position.getLine() + 1));
+        getBreakpointHandler().registerRunToCursorBreakpoint(position.getFile(), position.getLine());
     }
 
     public void sendCommand(String command) {
@@ -317,7 +317,7 @@ public class PascalXDebugProcess extends XDebugProcess {
         return session != null ? session.getCurrentStackFrame() : null;
     }
 
-    boolean isInferiorRunning() {
+    public boolean isInferiorRunning() {
         return inferiorRunning;
     }
 

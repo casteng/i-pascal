@@ -52,6 +52,11 @@ public class LldbDebugBackend extends DebugBackend {
         process.sendCommand(String.format("fr v %s%s --summary %s", var.getName(), deref, var.getKey()));
     }
 
+    @Override
+    public void addLineBreakpoint(String filename, int line, CommandSender.FinishCallback callback) {
+        process.sendCommand(String.format("-break-insert %s -t -f \"%s:%d\"", process.isInferiorRunning() ? "-h " : "", getFileName(filename), line), callback);
+    }
+
     private void initPointerSize() {
         process.sendCommand("-data-evaluate-expression \"sizeof (void*)\" --language c", res -> {
             if (res.getType() == GdbMiLine.Type.RESULT_RECORD && "done".equals(res.getRecClass())) {

@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.debugger;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
+import com.siberika.idea.pascal.jps.util.FileUtil;
 
 public abstract class DebugBackend {
     protected final PascalXDebugProcess process;
@@ -25,6 +26,12 @@ public abstract class DebugBackend {
     public abstract void createVar(String key, String expression, CommandSender.FinishCallback finishCallback);
 
     public abstract void queryArrayValue(GdbVariableObject var, int start, long end);
+
+    public abstract void addLineBreakpoint(String filename, int line, CommandSender.FinishCallback callback);
+
+    protected String getFileName(String fullPath) {
+        return options.useFullnameForBreakpoints ? fullPath : FileUtil.getFilename(fullPath);
+    }
 
     public static final class Options {
         private final Sdk sdk;
