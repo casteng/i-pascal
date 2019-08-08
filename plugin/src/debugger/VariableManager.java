@@ -51,6 +51,8 @@ public class VariableManager {
     private static final Map<Long, String> CODEPAGE_MAP = createCodePageMap();
     static final CommandSender.FinishCallback SILENT = res -> {};
     private static final Pattern PATTERN_STRING_VALUE = Pattern.compile("(0x[0-9a-f]+)(\\s((\\\\\")|').*)?");
+    private final PascalCExpresionTranslator expressionTranslator = new PascalCExpresionTranslator();
+    private static final List<String> SYNTHETIC_CHILDS = Arrays.asList("private", "protected", "public", "published");
 
     private static Map<Long, String> createCodePageMap() {
         HashMap<Long, String> res = new HashMap<>();
@@ -173,7 +175,9 @@ public class VariableManager {
         String varNameResolved = var.getName();
         PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
         boolean hidden = isHidden(var.getName());
-        if (!hidden) {
+        if ("this".equalsIgnoreCase(var.getName())) {
+            varNameResolved = "Self";
+        } else if (!hidden) {
             PasField field = resolveIdentifierName(process.getCurrentFrame().getSourcePosition(), var.getName(), PasField.TYPES_LOCAL);
             if (field != null) {
                 varNameResolved = formatVariableName(field);
@@ -193,7 +197,7 @@ public class VariableManager {
     }
 
     void computeValueChildren(String name, XCompositeNode node) {
-        GdbVariableObject tempParent = findVarObject(name);
+        GdbVariableObject tempParent = findVarObject(removeSyntheticLevels(name));
         if (tempParent != null) {
             process.sendCommand("-var-list-children --all-values " + name + " 0 " + process.backend.options.limitChilds, new CommandSender.FinishCallback() {
                 @Override
@@ -208,13 +212,21 @@ public class VariableManager {
                             if (variable instanceof GdbMiResults) {
                                 final GdbMiResults child = ((GdbMiResults) variable).getTuple("child");
                                 if (child != null) {
-                                    handleVarData(tempParent, child);
+                                    String childName = child.getString("name");
+                                    if (isChildFiltered(childName)) {
+                                        continue;
+                                    }
+                                    if (isChildSynthetic(childName)) {
+                                        process.sendCommand("-var-list-children --all-values " + childName + " 0 " + process.backend.options.limitChilds, this);
+                                    } else {
+                                        handleVarData(tempParent, child);
+                                    }
                                 } else {
                                     LOG.info("DBG Error: invalid chldren entry: " + res);
                                 }
                             }
                         }
-                        process.syncCalls(4, new CommandSender.FinishCallback() {
+                        process.syncCalls(5, new CommandSender.FinishCallback() {
                             @Override
                             public void call(GdbMiLine res) {
                                 tempParent.getFrame().refreshVarTree(node, tempParent.getChildren());
@@ -223,7 +235,24 @@ public class VariableManager {
                     }
                 }
             });
+        } else {
+            LOG.info("DBG Error: child not found: " + name);
         }
+    }
+
+    private String removeSyntheticLevels(String name) {
+        for (String syntheticChild : SYNTHETIC_CHILDS) {
+            name = name.replaceAll("." + syntheticChild, "");
+        }
+        return name;
+    }
+
+    private boolean isChildSynthetic(String childName) {
+        return SYNTHETIC_CHILDS.stream().anyMatch(childName::endsWith);
+    }
+
+    private boolean isChildFiltered(String childName) {
+        return childName.endsWith("vmt");
     }
 
     private GdbVariableObject findVarObject(String name) {
@@ -231,7 +260,8 @@ public class VariableManager {
         int prevI = name.length();
         int index = name.substring(0, prevI).lastIndexOf('.');
         while ((null == res) && (index > 0)) {
-            GdbVariableObject parent = variableObjectMap.get(name.substring(0, index));
+            String levelName = name.substring(0, index);
+            GdbVariableObject parent = variableObjectMap.get(levelName);
             if (parent != null) {
                 res = parent.findChild(name.substring(index + 1));
             }
@@ -490,10 +520,10 @@ public class VariableManager {
 
     public void evaluate(GdbStackFrame frame, String expression, XDebuggerEvaluator.XEvaluationCallback callback, XSourcePosition expressionPosition) {
         String key = getVarKey(expression, false, VAR_PREFIX_WATCHES);
-        final GdbVariableObject var = new GdbVariableObject(frame, key, expression.toUpperCase(), expression, callback);
+        final GdbVariableObject var = new GdbVariableObject(frame, key, expressionTranslator.translate(expression), expression, callback);
         variableObjectMap.put(key, var);
         process.sendCommand("-var-delete " + key, SILENT);
-        process.backend.createVar(key, expression.toUpperCase(),
+        process.backend.createVar(key, var.getName(),
                 new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
