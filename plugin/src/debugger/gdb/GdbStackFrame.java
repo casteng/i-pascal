@@ -133,7 +133,7 @@ public class GdbStackFrame extends XStackFrame {
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
         this.nodeRef.set(node);
-        refreshVarTree(node, variableObjects);
+        queryVariables();
     }
 
     public PascalXDebugProcess getProcess() {
@@ -164,6 +164,7 @@ public class GdbStackFrame extends XStackFrame {
     }
 
     public boolean refreshVarTree(XCompositeNode node, Collection<GdbVariableObject> variableObjects) {
+//        System.out.println("=== Refreshing tree: " + (variableObjects != null ? variableObjects.size() : "<null>"));
         if (null == node || node.isObsolete()) {
             LOG.info("DBG Warn: variables node is not ready");
             return false;

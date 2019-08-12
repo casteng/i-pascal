@@ -76,6 +76,7 @@ public class GdbDebugBackend extends DebugBackend {
                                                 } else {
                                                     LOG.info(String.format("DBG Error: Invalid debugger response for expression eval: %s", res.toString()));
                                                     var.setError(PascalBundle.message("debug.expression.no.result"));
+                                                    var.setChildrenCount(1);        // TODO: resolve as type first
                                                 }
                                             }
                                         }

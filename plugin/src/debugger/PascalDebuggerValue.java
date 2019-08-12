@@ -39,7 +39,7 @@ public class PascalDebuggerValue extends XValue {
     @Override
     public void computePresentation(@NotNull XValueNode node, @NotNull XValuePlace place) {
         if (variableObject.getError() != null) {
-            node.setPresentation(null, new XErrorValuePresentation(variableObject.getError()), false);
+            node.setPresentation(null, new XErrorValuePresentation(variableObject.getError()), hasChildren());
             return;
         }
         Icon icon = PascalIcons.VARIABLE;
@@ -87,7 +87,7 @@ public class PascalDebuggerValue extends XValue {
                 }
             }
 
-        }, variableObject.getChildrenCount() != null && variableObject.getChildrenCount() > 0);
+        }, hasChildren());
     }
 
     @Override
@@ -122,5 +122,9 @@ public class PascalDebuggerValue extends XValue {
                 lineNum--;
             }
         }
+    }
+
+    private boolean hasChildren() {
+        return (variableObject.getChildrenCount() != null) && (variableObject.getChildrenCount() > 0);
     }
 }

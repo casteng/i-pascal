@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,11 +49,13 @@ public class VariableManager {
     private static final String VAR_PREFIX_WATCHES = "w%";
     private static final String OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX = "high";
     private static final List<String> TYPES_STRING = Arrays.asList("ANSISTRING", "WIDESTRING", "UNICODESTRING", "UTF8STRING", "RAWBYTESTRING");
+    private static final List<String> TYPES_PCHAR = Arrays.asList("PCHAR", "PWIDECHAR", "PUNICODECHAR");
     private static final Map<Long, String> CODEPAGE_MAP = createCodePageMap();
     static final CommandSender.FinishCallback SILENT = res -> {};
     private static final Pattern PATTERN_STRING_VALUE = Pattern.compile("(0x[0-9a-f]+)(\\s((\\\\\")|').*)?");
     private final PascalCExpresionTranslator expressionTranslator = new PascalCExpresionTranslator();
     private static final List<String> SYNTHETIC_CHILDS = Arrays.asList("private", "protected", "public", "published");
+    private static final AtomicInteger queryCounter = new AtomicInteger();
 
     private static Map<Long, String> createCodePageMap() {
         HashMap<Long, String> res = new HashMap<>();
@@ -83,18 +86,21 @@ public class VariableManager {
             process.sendCommand("-var-delete *");
         }
         variableObjectMap.clear();
+        int qc = queryCounter.incrementAndGet();
+        // TODO: resolve and add global variables
         process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", executionStack.getThreadId(), level),
-                new CommandSender.FinishCallback() {
-                    @Override
-                    public void call(GdbMiLine res) {
-                        if (res.getResults().getValue("variables") != null) {
-                            handleVariablesResponse(frame, res.getResults().getList("variables"));
-                        } else {
-                            LOG.info(String.format("DBG Error: Invalid debugger response for variables: %s", res.toString()));
-                        }
+                res -> {
+                    if (res.getResults().getValue("variables") != null) {
+                        handleVariablesResponse(frame, res.getResults().getList("variables"));
+                    } else {
+                        LOG.info(String.format("DBG Error: Invalid debugger response for variables: %s", res.toString()));
                     }
                 });
-        process.syncCalls(5, res -> frame.refreshVarTree(variableObjectMap.values()));
+        process.syncCalls(5, res -> {
+            if (queryCounter.get() == qc) {
+                frame.refreshVarTree(variableObjectMap.values());
+            }
+        });
     }
 
     // handling of -stack-list-variables command
@@ -125,7 +131,7 @@ public class VariableManager {
     private void handleVarData(GdbVariableObject parent, GdbMiResults res) {
         XStackFrame frame = process.getCurrentFrame();
         if (frame instanceof GdbStackFrame) {
-            String varName = res.getString("name");
+            String varName = removeSyntheticLevels(res.getString("name"));
             String varKey;
             if (varName.startsWith(VAR_PREFIX_LOCAL) || varName.startsWith(VAR_PREFIX_WATCHES)) {
                 varKey = varName;
@@ -135,13 +141,14 @@ public class VariableManager {
             }
             GdbVariableObject var;
             if (parent != null) {
-                String id = varName.substring(varName.lastIndexOf('.') + 1);
+                String id = varName.substring(varName.lastIndexOf('%') + 1);
                 var = parent.findChild(id);
                 if (var != null) {
                     LOG.info("=== DBG Error: child var already exists: " + varName);
                 } else {
                     var = new GdbVariableObject((GdbStackFrame) frame, varKey, id, parent.getExpression() + "." + id, null);
                     parent.getChildren().add(var);
+                    variableObjectMap.put(varKey, var);
                 }
             } else {
                 var = variableObjectMap.get(varKey);
@@ -197,7 +204,7 @@ public class VariableManager {
     }
 
     void computeValueChildren(String name, XCompositeNode node) {
-        GdbVariableObject tempParent = findVarObject(removeSyntheticLevels(name));
+        GdbVariableObject tempParent = findVarObject(name);
         if (tempParent != null) {
             process.sendCommand("-var-list-children --all-values " + name + " 0 " + process.backend.options.limitChilds, new CommandSender.FinishCallback() {
                 @Override
@@ -242,7 +249,7 @@ public class VariableManager {
 
     private String removeSyntheticLevels(String name) {
         for (String syntheticChild : SYNTHETIC_CHILDS) {
-            name = name.replaceAll("." + syntheticChild, "");
+            name = name.replaceAll("\\." + syntheticChild, "");
         }
         return name;
     }
@@ -257,17 +264,17 @@ public class VariableManager {
 
     private GdbVariableObject findVarObject(String name) {
         GdbVariableObject res = variableObjectMap.get(name);
-        int prevI = name.length();
+        /*int prevI = name.length();
         int index = name.substring(0, prevI).lastIndexOf('.');
         while ((null == res) && (index > 0)) {
             String levelName = name.substring(0, index);
             GdbVariableObject parent = variableObjectMap.get(levelName);
             if (parent != null) {
-                res = parent.findChild(name.substring(index + 1));
+                res = parent.findChild(name);
             }
             prevI = index;
             index = name.substring(0, prevI).lastIndexOf('.');
-        }
+        }*/
         return res;
     }
 
@@ -368,6 +375,9 @@ public class VariableManager {
             return;
         }
         String type = res.getString("type");
+        if (isPChar(type)) {
+            return;
+        }
         String addressStr = parseStringAddress(type, res.getString("value"));
         if (addressStr != null) {
             var.setChildrenCount(0);
@@ -601,6 +611,10 @@ public class VariableManager {
 
     private static boolean isString(String type) {
         return (type != null) && TYPES_STRING.contains(type.toUpperCase());
+    }
+
+    private boolean isPChar(String type) {
+        return (type != null) && TYPES_PCHAR.contains(type.toUpperCase());
     }
 
     private boolean isSizeInBytes(String type) {
