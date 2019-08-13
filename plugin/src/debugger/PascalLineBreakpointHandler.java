@@ -44,11 +44,11 @@ public class PascalLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
             );
             return;
         }
-        debugProcess.backend.addLineBreakpoint(breakpoint.getPresentableFilePath(), props.getRequestedLine(), res -> handleBreakpointResult(res, breakpoint));
+        debugProcess.backend.addLineBreakpoint(breakpoint.getPresentableFilePath(), props.getRequestedLine(), false, res -> handleBreakpointResult(res, breakpoint));
     }
 
     public void registerRunToCursorBreakpoint(VirtualFile file, int line) {
-        debugProcess.backend.addLineBreakpoint(file.getPath(), line + 1, res -> PascalLineBreakpointHandler.this.handleBreakpointResult(res, null));
+        debugProcess.backend.addLineBreakpoint(file.getPath(), line + 1, true, res -> PascalLineBreakpointHandler.this.handleBreakpointResult(res, null));
         debugProcess.sendCommand("-exec-continue --all");
     }
 

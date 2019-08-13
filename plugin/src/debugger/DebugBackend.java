@@ -27,7 +27,7 @@ public abstract class DebugBackend {
 
     public abstract void queryArrayValue(GdbVariableObject var, int start, long end);
 
-    public abstract void addLineBreakpoint(String filename, int line, CommandSender.FinishCallback callback);
+    public abstract void addLineBreakpoint(String filename, int line, boolean temporary ,CommandSender.FinishCallback callback);
 
     protected String getFileName(String fullPath) {
         return options.useFullnameForBreakpoints ? fullPath : FileUtil.getFilename(fullPath);
