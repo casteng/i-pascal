@@ -29,7 +29,6 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -131,7 +130,7 @@ public class VariableManager {
     private void handleVarData(GdbVariableObject parent, GdbMiResults res) {
         XStackFrame frame = process.getCurrentFrame();
         if (frame instanceof GdbStackFrame) {
-            String varName = removeSyntheticLevels(res.getString("name"));
+            String varName = res.getString("name");
             String varKey;
             if (varName.startsWith(VAR_PREFIX_LOCAL) || varName.startsWith(VAR_PREFIX_WATCHES)) {
                 varKey = varName;
@@ -141,15 +140,10 @@ public class VariableManager {
             }
             GdbVariableObject var;
             if (parent != null) {
-                String id = varName.substring(varName.lastIndexOf('%') + 1);
-                var = parent.findChild(id);
-                if (var != null) {
-                    LOG.info("=== DBG Error: child var already exists: " + varName);
-                } else {
-                    var = new GdbVariableObject((GdbStackFrame) frame, varKey, id, parent.getExpression() + "." + id, null);
-                    parent.getChildren().add(var);
-                    variableObjectMap.put(varKey, var);
-                }
+                String id = removeSyntheticLevels(varName);
+                var = new GdbVariableObject((GdbStackFrame) frame, varKey, varName, parent.getExpression() + "." + id, null);
+                parent.getChildren().add(var);
+                variableObjectMap.put(varKey, var);
             } else {
                 var = variableObjectMap.get(varKey);
             }
@@ -209,10 +203,10 @@ public class VariableManager {
             process.sendCommand("-var-list-children --all-values " + name + " 0 " + process.backend.options.limitChilds, new CommandSender.FinishCallback() {
                 @Override
                 public void call(GdbMiLine res) {
-                    if ("0".equals(res.getResults().getString("numchild"))) {
+                    /*if ("0".equals(res.getResults().getString("numchild"))) {
                         tempParent.getFrame().refreshVarTree(node, Collections.emptyList());
                         return;
-                    }
+                    }*/
                     final List<Object> children = res.getResults() != null ? res.getResults().getList("children") : null;
                     if (children != null) {
                         for (Object variable : children) {
@@ -233,13 +227,13 @@ public class VariableManager {
                                 }
                             }
                         }
-                        process.syncCalls(5, new CommandSender.FinishCallback() {
-                            @Override
-                            public void call(GdbMiLine res) {
-                                tempParent.getFrame().refreshVarTree(node, tempParent.getChildren());
-                            }
-                        });
                     }
+                }
+            });
+            process.syncCalls(6, new CommandSender.FinishCallback() {
+                @Override
+                public void call(GdbMiLine res) {
+                    tempParent.getFrame().refreshVarTree(node, tempParent.getChildren());
                 }
             });
         } else {
@@ -248,6 +242,7 @@ public class VariableManager {
     }
 
     private String removeSyntheticLevels(String name) {
+        name = name.substring(name.lastIndexOf('%') + 1);
         for (String syntheticChild : SYNTHETIC_CHILDS) {
             name = name.replaceAll("\\." + syntheticChild, "");
         }
@@ -283,7 +278,7 @@ public class VariableManager {
             return;
         }
         if (isStructured(var)) {
-            process.sendCommand(String.format("-data-evaluate-expression %s", var.getName()), new CommandSender.FinishCallback() {
+            process.sendCommand(String.format("-data-evaluate-expression %s", removeSyntheticLevels(var.getName())), new CommandSender.FinishCallback() {
                 @Override
                 public void call(GdbMiLine res) {
                     String value = DebugUtil.retrieveResultValue(res);
@@ -347,7 +342,7 @@ public class VariableManager {
                     return;
                 }
                 int size = addressStr.length() > 8 ? 8 : 4;
-                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", size * 2, var.getName(), size * 2), new CommandSender.FinishCallback() {
+                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", size * 2, removeSyntheticLevels(var.getName()), size * 2), new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
                         List<Object> memory = res.getResults().getValue("memory") != null ? res.getResults().getList("memory") : null;
@@ -385,7 +380,7 @@ public class VariableManager {
                 boolean hasCP = hasCodepageInfo(type);
                 boolean hasRefcount = hasRefcountInfo(type);
                 int headSize = process.backend.options.pointerSize * (1 + (hasRefcount ? 1 : 0) + (hasCP ? 1 : 0));
-                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", headSize, var.getName(), headSize), new CommandSender.FinishCallback() {
+                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", headSize, removeSyntheticLevels(var.getName()), headSize), new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
                         String content = parseReadMemory(res);
@@ -409,7 +404,7 @@ public class VariableManager {
                             long displayLength = Math.min(length, process.backend.options.limitChars);
                             int charSize = getCharSize(elemSize, type);
                             long dataSize = isSizeInBytes(type) ? displayLength : displayLength * charSize;
-                            process.sendCommand(String.format("-data-read-memory-bytes %s %d", var.getName(), dataSize), new CommandSender.FinishCallback() {
+                            process.sendCommand(String.format("-data-read-memory-bytes %s %d", removeSyntheticLevels(var.getName()), dataSize), new CommandSender.FinishCallback() {
                                         @Override
                                         public void call(GdbMiLine res) {
                                             String content = parseReadMemory(res);
@@ -432,7 +427,7 @@ public class VariableManager {
 
     private void refineSet(GdbVariableObject var) {
         if (isSet(var)) {
-            process.sendCommand("-data-evaluate-expression \"sizeof " + var.getName() + "\"", res -> {
+            process.sendCommand("-data-evaluate-expression \"sizeof " + removeSyntheticLevels(var.getName()) + "\"", res -> {
                 Integer size = DebugUtil.retrieveResultValueInt(res);
                 if (size != null) {
                     var.setAdditional(size + "b");
@@ -529,8 +524,9 @@ public class VariableManager {
     }
 
     public void evaluate(GdbStackFrame frame, String expression, XDebuggerEvaluator.XEvaluationCallback callback, XSourcePosition expressionPosition) {
-        String key = getVarKey(expression, false, VAR_PREFIX_WATCHES);
-        final GdbVariableObject var = new GdbVariableObject(frame, key, expressionTranslator.translate(expression), expression, callback);
+        String debuggerExpression = expressionTranslator.translate(expression);
+        String key = getVarKey(debuggerExpression, false, VAR_PREFIX_WATCHES);
+        final GdbVariableObject var = new GdbVariableObject(frame, key, debuggerExpression, expression, callback);
         variableObjectMap.put(key, var);
         process.sendCommand("-var-delete " + key, SILENT);
         process.backend.createVar(key, var.getName(),
