@@ -20,6 +20,7 @@ public class PascalSdkUtil {
     public static final String FPC_PARAMS_VERSION_GET = "-iV";
     public static final String FPC_PARAMS_TARGET_GET = "-iTPTO";
     public static final String DELPHI_PARAMS_VERSION_GET = "--version";
+    public static final String DELPHI_RTL_PATH_CONST = File.separatorChar + "SOURCE" + File.separatorChar + "RTL" + File.separatorChar;
 
     public static final Pattern FPC_VERSION_PATTERN = Pattern.compile("\\d+\\.\\d+\\.\\d+");
     public static final String[] DEFAULT_BIN_UNIX = {"/usr/bin", "/usr/local/bin"};
