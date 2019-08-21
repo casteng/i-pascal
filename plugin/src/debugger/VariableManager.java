@@ -183,6 +183,9 @@ public class VariableManager {
             if (field != null) {
                 varNameResolved = formatVariableName(field);
                 fieldType = field.fieldType;
+                if (fieldType == PasField.FieldType.ROUTINE) {
+                    hidden = true;
+                }
             }
         }
         var.setExpression(varNameResolved);

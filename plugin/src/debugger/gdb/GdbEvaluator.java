@@ -7,11 +7,20 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.siberika.idea.pascal.debugger.VariableManager;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
+import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
+import com.siberika.idea.pascal.lang.psi.PasSubIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypes;
-import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,17 +52,11 @@ public class GdbEvaluator extends XDebuggerEvaluator {
                 if (!PsiUtil.isElementUsable(element)) {
                     return null;
                 }
-                PsiElement el = element;
-                if ((el.getNode().getElementType() == PasTypes.NAME) || PsiUtil.isEntityName(el)) {
-                    if (!(el instanceof PascalNamedElement)) {
-                        el = el.getParent();
-                    }
-                    while (el instanceof PascalNamedElement) {
-                        if (!(el.getParent() instanceof PascalNamedElement)) {
-                            return TextRange.create(el.getTextRange().getStartOffset(), Math.min(el.getTextRange().getEndOffset(), element.getTextRange().getEndOffset()));
-                        }
-                        el = el.getParent();
-                    }
+                if ((element.getNode().getElementType() == PasTypes.NAME) || PsiUtil.isEntityName(element)) {
+                    PsiElement expr = PsiTreeUtil.skipParentsOfType(element,
+                            PasFullyQualifiedIdent.class, PasSubIdent.class, PasRefNamedIdent.class, PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class,
+                            PsiWhiteSpace.class, PsiErrorElement.class);
+                    return expr instanceof PascalExpression ? TextRange.create(expr.getTextRange().getStartOffset(), Math.min(expr.getTextRange().getEndOffset(), element.getTextRange().getEndOffset())) : null;
                 }
             } catch (IndexNotReadyException ignored) {}
             return null;

@@ -224,6 +224,19 @@ public class PsiUtil {
         return (element instanceof PasNamedIdent) || (element instanceof PasClassQualifiedIdent);
     }
 
+    private static PsiElement getNamedIdent(PsiElement element) {
+        if (!(element instanceof PascalNamedElement)) {
+            element = element.getParent();
+        }
+        while (element instanceof PascalNamedElement) {
+            if (!(element.getParent() instanceof PascalNamedElement)) {
+                return element;
+            }
+            element = element.getParent();
+        }
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     private static PascalPsiElement getParentDeclRoot(PsiElement element) {   // TODO: remove blocks?
         return PsiTreeUtil.getParentOfType(element,

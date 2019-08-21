@@ -161,6 +161,8 @@ const
     procedure GetDir(sDrive: Byte; var sDir: string);
     // GetMem allocates a memory block.
     function GetMem(Size: Integer): Pointer;
+    // GetMem allocates a memory block.
+    function GetMem(var Result: Pointer; Size: Integer): Pointer;
     // Initiates abnormal termination of a program.
     procedure Halt(Code: Integer); overload;
     // Initiates abnormal termination of a program.
