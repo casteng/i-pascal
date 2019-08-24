@@ -11,11 +11,15 @@
     <change-notes><![CDATA[
         <p>2.40</p>
         <ul>
-            <li>add intention actions for create field/property from parameter, goto super/descending, add/remove compound statement</li>
+            <li>Debugger improvement (arrays, strings, sets)</li>
+            <li>Intention actions for create field/property from parameter, goto super/descending, add/remove compound statement</li>
+            <li>Do not pass to Delphi compiler RTL path (Issues #43, 91)</li>
+            <li>Allow running of nameless programs (Issue #38, 95)</li>
+            <li>Disable full paths in breakpoints for LLDB (Issue #40)</li>
         </ul>
         <p>2.31</p>
         <ul>
-            <li>Introduce variable refactoring</li>
+            <li>Added "Introduce variable" refactoring</li>
             <li>Create field/property for parameter quickfix</li>
             <li>Default formal parameters support in resolving</li>
             <li>Add/remove compound statement quickfix for structured operators</li>

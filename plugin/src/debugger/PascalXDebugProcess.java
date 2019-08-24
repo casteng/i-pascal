@@ -287,7 +287,6 @@ public class PascalXDebugProcess extends XDebugProcess {
             if ("done".equals(res.getRecClass())) {
                 if (res.getResults().getValue("stack") != null) {                   // -stack-list-frames result
                     addStackFramesToContainer(res.getResults().getList("stack"));
-                    queryVariables();
                 } else if (isCreateVarResult(res.getResults())) {
                     variableManager.handleVarResult(res.getResults());
                 } else if (res.getResults().getValue("changelist") != null) {
