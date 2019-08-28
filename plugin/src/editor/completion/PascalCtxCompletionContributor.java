@@ -348,12 +348,15 @@ public class PascalCtxCompletionContributor extends CompletionContributor {
     private static boolean isContextAwareVirtualFile(CompletionResultSet result, EntityCompletionContext completionContext) {
         Context ctx = completionContext.context;
         PsiFile file = ctx.getFile();
-        if ((ctx.getPrimary() == UNKNOWN) && (file != null) && (file.getVirtualFile() instanceof ContextAwareVirtualFile) && (ctx.getDummyIdent() != null)) {
-            NamespaceRec namespace = NamespaceRec.fromFQN(ctx.getDummyIdent(), ctx.getDummyIdent().getText().replace(PasField.DUMMY_IDENTIFIER, "")); // TODO: refactor
+        if ((file != null) && (file.getVirtualFile() instanceof ContextAwareVirtualFile) && (ctx.getDummyIdent() != null)) {
+            PsiElement parent = PsiUtil.skipToExpression(ctx.getDummyIdent());
+            parent = parent != null ? parent : ctx.getDummyIdent();
+            NamespaceRec namespace = NamespaceRec.fromFQN(parent, parent.getText().replace(PasField.DUMMY_IDENTIFIER, "")); // TODO: refactor
             namespace.setIgnoreVisibility(true);
             namespace.clearTarget();
-            ResolveContext resolveContext = new ResolveContext(PsiUtil.getNearestAffectingScope(((ContextAwareVirtualFile) file.getVirtualFile()).getContextElement()),
-                    PasField.TYPES_ALL, false, null, null);
+            PsiElement contextElement = ((ContextAwareVirtualFile) file.getVirtualFile()).getContextElement();
+            PasEntityScope contextScope = contextElement instanceof PasEntityScope ? (PasEntityScope) contextElement : PsiUtil.getNearestAffectingScope(contextElement);
+            ResolveContext resolveContext = new ResolveContext(contextScope, PasField.TYPES_ALL, false, null, null);
             resolveContext.options.add(ResolveOptions.IGNORE_NAME);
             Resolve.resolveExpr(namespace, resolveContext, new FieldCollectProcessor(result, completionContext));
             result.stopHere();

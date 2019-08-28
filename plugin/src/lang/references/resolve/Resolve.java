@@ -64,6 +64,17 @@ public class Resolve {
         return null;
     }
 
+    public static boolean resolveFQN(NamespaceRec fqn, ResolveContext context, ResolveProcessor processor) {
+        final FQNResolver resolver = new FQNResolver(null, fqn, context) {
+            @Override
+            boolean processField(PasEntityScope scope, PasField field) {
+                return processor.process(scope, scope, field, field.fieldType);
+            }
+        };
+        context.options.add(ResolveOptions.LAST_PART);
+        return resolver.resolve(true);
+    }
+
     public static PasField resolveFQN(String fqn, PsiElement context) {
         AtomicReference<PasField> result = new AtomicReference<>();
         resolveExpr(NamespaceRec.fromFQN(context, fqn), new ResolveContext(PasField.TYPES_ALL, true), new ResolveProcessor() {

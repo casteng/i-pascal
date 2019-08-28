@@ -3,7 +3,7 @@ package com.siberika.idea.pascal.debugger;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PascalCExpresionTranslator {
+public class PascalCExpressionTranslator {
 
     private static final Map<String, String> TRANSLATION_MAP = getTMap();
 

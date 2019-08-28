@@ -41,7 +41,7 @@ class ExpressionProcessor implements PsiElementProcessor<PasReferenceExpr> {
             this.context.unitNamespaces = ModuleUtil.retrieveUnitNamespaces(fqn.getParentIdent());
         }
         this.processor = processor;
-        this.currentScope = null;
+        this.currentScope = context.scope;
     }
 
     @Override

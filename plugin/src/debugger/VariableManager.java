@@ -17,9 +17,11 @@ import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
+import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
-import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
+import com.siberika.idea.pascal.lang.references.resolve.Resolve;
+import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -28,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ public class VariableManager {
     private static final Map<Long, String> CODEPAGE_MAP = createCodePageMap();
     static final CommandSender.FinishCallback SILENT = res -> {};
     private static final Pattern PATTERN_STRING_VALUE = Pattern.compile("(0x[0-9a-f]+)(\\s((\\\\\")|').*)?");
-    private final PascalCExpresionTranslator expressionTranslator = new PascalCExpresionTranslator();
+    private final PascalCExpressionTranslator expressionTranslator = new PascalCExpressionTranslator();
     private static final List<String> SYNTHETIC_CHILDS = Arrays.asList("private", "protected", "public", "published");
     private static final AtomicInteger queryCounter = new AtomicInteger();
 
@@ -72,7 +73,7 @@ public class VariableManager {
     private final PascalXDebugProcess process;
 
     private Map<String, GdbVariableObject> variableObjectMap;
-    private final Map<String, Collection<PasField>> fieldsMap = new ConcurrentHashMap<>();
+    private final Map<String, PasField> fieldsMap = new ConcurrentHashMap<>();
 
     VariableManager(PascalXDebugProcess process) {
         this.process = process;
@@ -84,7 +85,7 @@ public class VariableManager {
         if (process.backend.options.supportsBulkDelete) {
             process.sendCommand("-var-delete *");
         }
-        variableObjectMap.clear();
+        variableObjectMap.values().removeIf(v -> !v.isWatched());
         int qc = queryCounter.incrementAndGet();
         // TODO: resolve and add global variables
         process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", executionStack.getThreadId(), level),
@@ -141,9 +142,10 @@ public class VariableManager {
             GdbVariableObject var;
             if (parent != null) {
                 String id = removeSyntheticLevels(varName);
-                var = new GdbVariableObject((GdbStackFrame) frame, varKey, varName, parent.getExpression() + "." + id, null);
+                var = new GdbVariableObject((GdbStackFrame) frame, varKey, varName, id, null);
                 parent.getChildren().add(var);
                 variableObjectMap.put(varKey, var);
+                resolveVariable(var);
             } else {
                 var = variableObjectMap.get(varKey);
             }
@@ -173,13 +175,13 @@ public class VariableManager {
     }
 
     private void resolveVariable(GdbVariableObject var) {
-        String varNameResolved = var.getName();
+        String varNameResolved = var.getExpression();
         PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
         boolean hidden = isHidden(var.getName());
         if ("this".equalsIgnoreCase(var.getName())) {
             varNameResolved = "Self";
         } else if (!hidden) {
-            PasField field = resolveIdentifierName(process.getCurrentFrame().getSourcePosition(), var.getName(), PasField.TYPES_LOCAL);
+            PasField field = resolveIdentifierName(process.getCurrentFrame().getSourcePosition(), var.getExpression(), PasField.TYPES_LOCAL);
             if (field != null) {
                 varNameResolved = formatVariableName(field);
                 fieldType = field.fieldType;
@@ -490,13 +492,7 @@ public class VariableManager {
                 public PasField compute() {
                     PsiElement el = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), process.getSession().getProject(), false);
                     if (el != null) {
-                        Collection<PasField> fields = getFields(el, name);
-                        String id = name.substring(name.lastIndexOf('.') + 1);
-                        for (PasField field : fields) {
-                            if (types.contains(field.fieldType) && id.equalsIgnoreCase(field.name)) {
-                                return field;
-                            }
-                        }
+                        return getFields(el, name, types);
                     }
                     return null;
                 }
@@ -504,10 +500,10 @@ public class VariableManager {
         }
     }
 
-    private Collection<PasField> getFields(@NotNull PsiElement el, String name) {
-        Collection<PasField> fields = fieldsMap.get(name);
-        if (fields != null) {
-            return fields;
+    private PasField getFields(@NotNull PsiElement el, String name, Set<PasField.FieldType> types) {
+        PasField field = fieldsMap.get(name);
+        if (field != null) {
+            return field;
         }
         NamespaceRec namespace;
         int dotIndex = name.lastIndexOf('.');
@@ -521,9 +517,17 @@ public class VariableManager {
             namespace = NamespaceRec.fromFQN(el, name);
         }
         namespace.setIgnoreVisibility(true);
-        fields = PasReferenceUtil.resolveExpr(namespace, new ResolveContext(PasField.TYPES_LOCAL, true), 0);
-        fieldsMap.put(name, fields);
-        return fields;
+        Resolve.resolveFQN(namespace, new ResolveContext(PasField.TYPES_LOCAL, true), new ResolveProcessor() {
+                    @Override
+                    public boolean process(PasEntityScope originalScope, PasEntityScope scope, PasField field, PasField.FieldType type) {
+                        if (types.contains(field.fieldType)) {
+                            fieldsMap.put(name, field);
+                            return false;
+                        }
+                        return true;
+                    }
+                });
+        return fieldsMap.get(name);
     }
 
     public void evaluate(GdbStackFrame frame, String expression, XDebuggerEvaluator.XEvaluationCallback callback, XSourcePosition expressionPosition) {
