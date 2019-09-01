@@ -450,7 +450,7 @@
         <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
 
         <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.lang.search.GotoSuper"/>
-        <superMethodsSearch implementation="com.siberika.idea.pascal.lang.search.PascalSuperMethodSearch"/>
+        <!--<superMethodsSearch implementation="com.siberika.idea.pascal.lang.search.PascalSuperMethodSearch"/>-->
         <definitionsScopedSearch implementation="com.siberika.idea.pascal.lang.search.PascalDefinitionsSearch"/>
         <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
 
