@@ -473,7 +473,7 @@ public class VariableManager {
     }
 
     private static String getVarKey(String varName, boolean children, String prefix) {
-        return (children ? "" : prefix) + varName.replace(' ', '_');
+        return (children ? "" : prefix) + varName.replace(' ', '_').replace('"', '_');
     }
 
     private static boolean isHidden(String varName) {
@@ -517,23 +517,26 @@ public class VariableManager {
             namespace = NamespaceRec.fromFQN(el, name);
         }
         namespace.setIgnoreVisibility(true);
-        Resolve.resolveFQN(namespace, new ResolveContext(PasField.TYPES_LOCAL, true), new ResolveProcessor() {
+        Resolve.resolveFQN(namespace, new ResolveContext(types, true), new ResolveProcessor() {
                     @Override
                     public boolean process(PasEntityScope originalScope, PasEntityScope scope, PasField field, PasField.FieldType type) {
-                        if (types.contains(field.fieldType)) {
-                            fieldsMap.put(name, field);
-                            return false;
-                        }
-                        return true;
+                        fieldsMap.put(name, field);
+                        return false;
                     }
                 });
         return fieldsMap.get(name);
     }
 
     public void evaluate(GdbStackFrame frame, String expression, XDebuggerEvaluator.XEvaluationCallback callback, XSourcePosition expressionPosition) {
-        String debuggerExpression = expressionTranslator.translate(expression);
-        String key = getVarKey(debuggerExpression, false, VAR_PREFIX_WATCHES);
-        final GdbVariableObject var = new GdbVariableObject(frame, key, debuggerExpression, expression, callback);
+        TranslatedExpression dExpr = expressionTranslator.translate(expression, process.getProject());
+        if (dExpr.isError()) {
+            final GdbVariableObject var = new GdbVariableObject(frame, null, null, expression, callback);
+            var.setError(dExpr.getError());
+            callback.evaluated(new PascalDebuggerValue(var));
+            return;
+        }
+        String key = getVarKey(dExpr.getExpression(), false, VAR_PREFIX_WATCHES);
+        final GdbVariableObject var = new GdbVariableObject(frame, key, dExpr.getExpression(), expression, callback);
         variableObjectMap.put(key, var);
         process.sendCommand("-var-delete " + key, SILENT);
         process.backend.createVar(key, var.getName(),
@@ -545,9 +548,16 @@ public class VariableManager {
                             callback.evaluated(new PascalDebuggerValue(var));
                         } else {
                             handleVarResult(res.getResults());
+                            if (dExpr.isArray()) {
+                                process.backend.queryArrayValue(var, toInt(dExpr.getArrayLow()), toInt(dExpr.getArrayHigh()));
+                            }
                         }
                     }
                 });
+    }
+
+    private int toInt(String value) {
+        return Integer.valueOf(value.substring(1, value.length()-1));
     }
 
     private String parseStringAddress(String type, String value) {

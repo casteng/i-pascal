@@ -46,13 +46,13 @@ public class GdbDebugBackend extends DebugBackend {
 
     @Override
     public void createVar(String key, String expression, CommandSender.FinishCallback finishCallback) {
-        process.sendCommand(String.format("-var-create \"%s\" @ \"%s\"", key, expression), finishCallback);
+        process.sendCommand(String.format("-var-create \"%s\" @ \"%s\"", key, expression.replace("\"", "\\\"")), finishCallback);
     }
 
     @Override
     public void queryArrayValue(GdbVariableObject var, int start, long end) {
         String deref = var.getType().contains("(*)") ? "*" : "";
-        process.sendCommand(String.format("-data-evaluate-expression sizeof(%s%s)[0]", deref, var.getName()), new CommandSender.FinishCallback() {
+        process.sendCommand(String.format("-data-evaluate-expression sizeof(%s%s[0])", deref, var.getName()), new CommandSender.FinishCallback() {
                     @Override
                     public void call(GdbMiLine res) {
                         Integer elSize = DebugUtil.retrieveResultValueInt(res);

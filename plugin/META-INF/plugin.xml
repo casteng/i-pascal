@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.40</version>
+    <version>2.49</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>2.50</p>
+        <ul>
+            <li>Pascal to C expression converter based on AST, array values formatting in watches</li>
+        </ul>
         <p>2.40</p>
         <ul>
             <li>Debugger improvement (arrays, strings, sets)</li>
