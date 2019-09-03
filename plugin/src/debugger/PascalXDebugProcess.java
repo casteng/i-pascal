@@ -39,7 +39,6 @@ import com.intellij.xdebugger.ui.XDebugTabLayouter;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.debugger.gdb.GdbDebugBackend;
-import com.siberika.idea.pascal.debugger.gdb.GdbExecutionStack;
 import com.siberika.idea.pascal.debugger.gdb.GdbProcessAdapter;
 import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
 import com.siberika.idea.pascal.debugger.gdb.GdbSuspendContext;
@@ -54,7 +53,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -81,7 +79,7 @@ public class PascalXDebugProcess extends XDebugProcess {
     private final VariableManager variableManager;
 
     private CommandSender sender;
-    DebugBackend backend;
+    public DebugBackend backend;
 
     public PascalXDebugProcess(XDebugSession session, ExecutionEnvironment environment, ExecutionResult executionResult) {
         super(session);
@@ -291,9 +289,7 @@ public class PascalXDebugProcess extends XDebugProcess {
             }
         } else if (GdbMiLine.Type.RESULT_RECORD.equals(res.getType())) {
             if ("done".equals(res.getRecClass())) {
-                if (res.getResults().getValue("stack") != null) {                   // -stack-list-frames result
-                    addStackFramesToContainer(res.getResults().getList("stack"));
-                } else if (isCreateVarResult(res.getResults())) {
+                if (isCreateVarResult(res.getResults())) {
                     variableManager.handleVarResult(res.getResults());
                 } else if (res.getResults().getValue("changelist") != null) {
                     variableManager.handleVarUpdate(res.getResults());
@@ -352,22 +348,19 @@ public class PascalXDebugProcess extends XDebugProcess {
         return (results.getValue("name") != null) && (results.getValue("value") != null);
     }
 
-    private void handleStop(GdbMiLine res) {
-        suspendContext = new GdbSuspendContext(this, res);
+    private void handleStop(GdbMiLine stopContext) {
         setInferiorRunning(false);
-        getSession().positionReached(suspendContext);
-        GdbStopReason reason = GdbStopReason.fromUid(res.getResults().getString("reason"));
+        GdbStopReason reason = GdbStopReason.fromUid(stopContext.getResults().getString("reason"));
         String msg = null;
         MessageType messageType = MessageType.INFO;
         if (reason != null) {
             switch (reason) {
                 case SIGNAL_RECEIVED: {
-                    String detail = res.getResults().getString("signal-name");
-                    msg = detail != null ? String.format(", %s (%s)", res.getResults().getValue("signal-name"), res.getResults().getValue("signal-meaning")) : "";
+                    String detail = stopContext.getResults().getString("signal-name");
+                    msg = detail != null ? String.format(", %s (%s)", stopContext.getResults().getValue("signal-name"), stopContext.getResults().getValue("signal-meaning")) : "";
                     break;
                 }
                 case BREAKPOINT_HIT:
-                    getBreakpointHandler().handleBreakpointHit(res, suspendContext);
                 case WATCHPOINT_TRIGGER:
                 case READ_WATCHPOINT_TRIGGER:
                 case ACCESS_WATCHPOINT_TRIGGER:
@@ -385,7 +378,7 @@ public class PascalXDebugProcess extends XDebugProcess {
                     break;
                 }
                 case EXCEPTION: {
-                    msg = reason.getUid() + ": " + res.getResults().getString("exception");
+                    msg = reason.getUid() + ": " + stopContext.getResults().getString("exception");
                     messageType = MessageType.ERROR;
                     break;
                 }
@@ -394,24 +387,19 @@ public class PascalXDebugProcess extends XDebugProcess {
                 getSession().reportMessage(PascalBundle.message("debug.notify.stopped", msg), messageType);
             }
         }
-    }
-
-    private void addStackFramesToContainer(List<Object> stack) {
-        List<XStackFrame> frames = new ArrayList<>();
-        for (Object o : stack) {
-            if (o instanceof GdbMiResults) {
-                GdbMiResults res = (GdbMiResults) o;
-                frames.add(new GdbStackFrame((GdbExecutionStack) suspendContext.getActiveExecutionStack(), res.getTuple("frame")));
-            } else {
-                reportError("Invalid stack frames list entry");
-                return;
-            }
-        }
-        ((GdbExecutionStack) suspendContext.getActiveExecutionStack()).addStackFrames(frames);
-    }
-
-    private void reportError(String msg) {
-        LOG.warn("ERROR: " + msg);
+        sendCommand("-thread-info",
+                new CommandSender.FinishCallback() {
+                    @Override
+                    public void call(GdbMiLine threadsLine) {
+                        List<DebugThread> threads = DebugThread.parseThreads(PascalXDebugProcess.this, threadsLine);
+                        suspendContext = new GdbSuspendContext(PascalXDebugProcess.this, threads, stopContext);
+                        getSession().positionReached(suspendContext);
+                        if (reason == GdbStopReason.BREAKPOINT_HIT) {
+                            getBreakpointHandler().handleBreakpointHit(threadsLine, suspendContext);
+                        }
+                    }
+                }
+        );
     }
 
     public VariableManager getVariableManager() {

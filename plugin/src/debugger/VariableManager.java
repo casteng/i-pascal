@@ -11,7 +11,6 @@ import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
 import com.siberika.idea.pascal.PascalBundle;
-import com.siberika.idea.pascal.debugger.gdb.GdbExecutionStack;
 import com.siberika.idea.pascal.debugger.gdb.GdbStackFrame;
 import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
@@ -80,15 +79,14 @@ public class VariableManager {
         this.variableObjectMap = new LinkedHashMap<>();
     }
 
-    public void queryVariables(int level, GdbExecutionStack executionStack, GdbStackFrame frame) {
-        process.sendCommand("-stack-select-frame " + level);
+    public void queryVariables(int level, GdbStackFrame frame) {
         if (process.backend.options.supportsBulkDelete) {
             process.sendCommand("-var-delete *");
         }
         variableObjectMap.values().removeIf(v -> !v.isWatched());
         int qc = queryCounter.incrementAndGet();
         // TODO: resolve and add global variables
-        process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", executionStack.getThreadId(), level),
+        process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", frame.getThreadId(), level),
                 res -> {
                     if (res.getResults().getValue("variables") != null) {
                         handleVariablesResponse(frame, res.getResults().getList("variables"));
@@ -528,6 +526,7 @@ public class VariableManager {
     }
 
     public void evaluate(GdbStackFrame frame, String expression, XDebuggerEvaluator.XEvaluationCallback callback, XSourcePosition expressionPosition) {
+        process.sendCommand("-stack-select-frame " + frame.getLevel());
         TranslatedExpression dExpr = expressionTranslator.translate(expression, process.getProject());
         if (dExpr.isError()) {
             final GdbVariableObject var = new GdbVariableObject(frame, null, null, expression, callback);

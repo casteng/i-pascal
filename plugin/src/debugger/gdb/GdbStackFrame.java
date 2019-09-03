@@ -43,7 +43,6 @@ public class GdbStackFrame extends XStackFrame {
     private static final Logger LOG = Logger.getInstance(GdbStackFrame.class);
 
     private final PascalXDebugProcess process;
-    private final GdbExecutionStack executionStack;
     private final GdbMiResults frame;
     private final int level;
     private final VariableManager variableManager;
@@ -51,12 +50,11 @@ public class GdbStackFrame extends XStackFrame {
     private final AtomicReference<XCompositeNode> nodeRef = new AtomicReference<>();
     private final BlockInfo blockInfo;
     private final Integer line;
-    private Collection<GdbVariableObject> variableObjects;
+    private final Integer threadId;
 
-    public GdbStackFrame(GdbExecutionStack executionStack, GdbMiResults frame) {
-        this.process = executionStack.getProcess();
+    public GdbStackFrame(PascalXDebugProcess process, GdbMiResults frame, Integer threadId) {
+        this.process = process;
         this.variableManager = process.getVariableManager();
-        this.executionStack = executionStack;
         this.frame = frame;
         if (frame != null) {
             this.level = frame.getValue("level") != null ? StrUtil.strToIntDef(frame.getString("level"), 0) : 0;
@@ -67,6 +65,7 @@ public class GdbStackFrame extends XStackFrame {
         }
         this.sourcePosition = getSourcePosition();
         this.blockInfo = initBlockInfo();
+        this.threadId = threadId;
     }
 
     @Override
@@ -152,12 +151,15 @@ public class GdbStackFrame extends XStackFrame {
         return line;
     }
 
+    public Integer getThreadId() {
+        return threadId;
+    }
+
     public void queryVariables() {
-        variableManager.queryVariables(level, executionStack, this);
+        variableManager.queryVariables(level, this);
     }
 
     public void refreshVarTree(Collection<GdbVariableObject> variableObjects) {
-        this.variableObjects = variableObjects;
         if (refreshVarTree(nodeRef.get(), variableObjects)) {
 //            this.variableObjects = null;
         }

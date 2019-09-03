@@ -49,6 +49,7 @@ public abstract class DebugBackend {
         public int limitValueSize = 2 * 1024 * 1024;
 
         public int pointerSize;
+        public int maxFrames = 1000;
 
         public Options(Sdk sdk) {
             this.sdk = sdk;
