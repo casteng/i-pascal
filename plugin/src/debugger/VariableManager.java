@@ -149,11 +149,13 @@ public class VariableManager {
             }
             if (var != null) {
                 var.updateFromResult(res);
-                refineStructured(var, res);
-                refineOpenArray(var, res);
-                refineDynamicArray(var, res);
-                refineString(var, res);
-                refineSet(var);
+                if (var.isRefinable()) {
+                    refineStructured(var, res);
+                    refineOpenArray(var, res);
+                    refineDynamicArray(var, res);
+                    refineString(var, res);
+                    refineSet(var);
+                }
                 updateVariableObjectUI(var);
             } else {
                 LOG.info("DBG Error: variable not found: " + varKey);
@@ -536,6 +538,7 @@ public class VariableManager {
         }
         String key = getVarKey(dExpr.getExpression(), false, VAR_PREFIX_WATCHES);
         final GdbVariableObject var = new GdbVariableObject(frame, key, dExpr.getExpression(), expression, callback);
+        var.setRefinable(!dExpr.isArray());
         variableObjectMap.put(key, var);
         process.sendCommand("-var-delete " + key, SILENT);
         process.backend.createVar(key, var.getName(),

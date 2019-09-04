@@ -30,6 +30,7 @@ public class GdbVariableObject {
     private long length;
     private PasField.FieldType fieldType = PasField.FieldType.VARIABLE;
     private boolean visible = true;
+    private boolean refinable = true;
 
     private List<GdbVariableObject> children;
 
@@ -144,6 +145,14 @@ public class GdbVariableObject {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    public boolean isRefinable() {
+        return refinable;
+    }
+
+    public void setRefinable(boolean refinable) {
+        this.refinable = refinable;
     }
 
     public boolean isWatched() {
