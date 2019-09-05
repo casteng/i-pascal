@@ -47,7 +47,7 @@ public class GdbExecutionStack extends XExecutionStack {
 
     @Override
     public void computeStackFrames(int firstFrameIndex, XStackFrameContainer container) {
-        context.getProcess().sendCommand("-thread-select " + threadId);
+        context.getProcess().backend.threadSelect(String.valueOf(threadId));
         context.getProcess().sendCommand("-stack-list-frames " + firstFrameIndex + " " + getProcess().backend.options.maxFrames, new CommandSender.FinishCallback() {
             @Override
             public void call(GdbMiLine res) {

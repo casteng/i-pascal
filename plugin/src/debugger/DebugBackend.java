@@ -29,6 +29,12 @@ public abstract class DebugBackend {
 
     public abstract void addLineBreakpoint(String filename, int line, boolean temporary ,CommandSender.FinishCallback callback);
 
+    public abstract void threadSelect(String id);
+
+    public void evaluate(String expression, CommandSender.FinishCallback finishCallback) {
+        process.sendCommand("-data-evaluate-expression \"" + expression + "\"", finishCallback);
+    }
+
     protected String getFileName(String fullPath) {
         return options.useFullnameForBreakpoints ? fullPath : FileUtil.getFilename(fullPath);
     }

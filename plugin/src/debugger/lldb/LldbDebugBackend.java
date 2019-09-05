@@ -59,8 +59,13 @@ public class LldbDebugBackend extends DebugBackend {
                 getFileName(filename), line), callback);
     }
 
+    @Override
+    public void threadSelect(String id) {
+        process.sendCommand("thread select " + id);
+    }
+
     private void initPointerSize() {
-        process.sendCommand("-data-evaluate-expression \"sizeof (void*)\" --language c", res -> {
+        evaluate("sizeof (void*)", res -> {
             if (res.getType() == GdbMiLine.Type.RESULT_RECORD && "done".equals(res.getRecClass())) {
                 options.pointerSize = res.getResults().getInteger("value");
             }

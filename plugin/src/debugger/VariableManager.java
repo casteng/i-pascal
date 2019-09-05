@@ -16,11 +16,9 @@ import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiLine;
 import com.siberika.idea.pascal.debugger.gdb.parser.GdbMiResults;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
-import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.resolve.Resolve;
-import com.siberika.idea.pascal.lang.references.resolve.ResolveProcessor;
 import com.siberika.idea.pascal.util.StrUtil;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -36,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -235,12 +232,7 @@ public class VariableManager {
                     }
                 }
             });
-            process.syncCalls(6, new CommandSender.FinishCallback() {
-                @Override
-                public void call(GdbMiLine res) {
-                    tempParent.getFrame().refreshVarTree(node, tempParent.getChildren());
-                }
-            });
+            process.syncCalls(6, res -> tempParent.getFrame().refreshVarTree(node, tempParent.getChildren()));
         } else {
             LOG.info("DBG Error: child not found: " + name);
         }
@@ -283,27 +275,24 @@ public class VariableManager {
             return;
         }
         if (isStructured(var)) {
-            process.sendCommand(String.format("-data-evaluate-expression %s", removeSyntheticLevels(var.getName())), new CommandSender.FinishCallback() {
-                @Override
-                public void call(GdbMiLine res) {
-                    String value = DebugUtil.retrieveResultValue(res);
-                    if (value != null) {
-                        Pattern PATTERN_VTYPE = Pattern.compile("VTYPE = (\\d{1,3})");
-                        Matcher matcher = PATTERN_VTYPE.matcher(value);
-                        if (matcher.find()) {
-                            int vType = Integer.parseInt(matcher.group(1));
-                            if (vType == 0) {
-                                Pattern PATTERN_VALUE = Pattern.compile("VINTEGER = (\\d+)");
-                                Matcher m = PATTERN_VALUE.matcher(value);
-                                if (m.find()) {
-                                    value = m.group(1);
-                                }
+            process.backend.evaluate(removeSyntheticLevels(var.getName()), res1 -> {
+                String value = DebugUtil.retrieveResultValue(res1);
+                if (value != null) {
+                    Pattern PATTERN_VTYPE = Pattern.compile("VTYPE = (\\d{1,3})");
+                    Matcher matcher = PATTERN_VTYPE.matcher(value);
+                    if (matcher.find()) {
+                        int vType = Integer.parseInt(matcher.group(1));
+                        if (vType == 0) {
+                            Pattern PATTERN_VALUE = Pattern.compile("VINTEGER = (\\d+)");
+                            Matcher m = PATTERN_VALUE.matcher(value);
+                            if (m.find()) {
+                                value = m.group(1);
                             }
                         }
-                        var.setValueRefined(value);
-                    } else {
-                        var.setError(PascalBundle.message("debug.expression.no.result"));
                     }
+                    var.setValueRefined(value);
+                } else {
+                    var.setError(PascalBundle.message("debug.expression.no.result"));
                 }
             });
         }
@@ -347,23 +336,20 @@ public class VariableManager {
                     return;
                 }
                 int size = addressStr.length() > 8 ? 8 : 4;
-                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", size * 2, removeSyntheticLevels(var.getName()), size * 2), new CommandSender.FinishCallback() {
-                    @Override
-                    public void call(GdbMiLine res) {
-                        List<Object> memory = res.getResults().getValue("memory") != null ? res.getResults().getList("memory") : null;
-                        GdbMiResults tuple = ((memory != null) && (memory.size() > 0)) ? (GdbMiResults) memory.get(0) : null;
-                        String content = tuple != null ? tuple.getString("contents") : null;
-                        if ((content != null) && (content.length() == (size * 2 * 2))) {
-                            long refCount = DebugUtil.parseHex(content.substring(0, size * 2));
-                            long length = DebugUtil.parseHex(content.substring(size * 2)) + 1;
-                            long displayLength = Math.min(length, process.backend.options.limitElements);
-                            var.setLength(length);
-                            var.setAdditional(var.getLength() + "#" + refCount);
-                            process.backend.queryArrayValue(var, 0, displayLength);
-                        } else {
-                            LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
-                            var.setError(PascalBundle.message("debug.error.memory.read", var.getName()));
-                        }
+                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", size * 2, removeSyntheticLevels(var.getName()), size * 2), res1 -> {
+                    List<Object> memory = res1.getResults().getValue("memory") != null ? res1.getResults().getList("memory") : null;
+                    GdbMiResults tuple = ((memory != null) && (memory.size() > 0)) ? (GdbMiResults) memory.get(0) : null;
+                    String content = tuple != null ? tuple.getString("contents") : null;
+                    if ((content != null) && (content.length() == (size * 2 * 2))) {
+                        long refCount = DebugUtil.parseHex(content.substring(0, size * 2));
+                        long length = DebugUtil.parseHex(content.substring(size * 2)) + 1;
+                        long displayLength = Math.min(length, process.backend.options.limitElements);
+                        var.setLength(length);
+                        var.setAdditional(var.getLength() + "#" + refCount);
+                        process.backend.queryArrayValue(var, 0, displayLength);
+                    } else {
+                        LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res1.toString()));
+                        var.setError(PascalBundle.message("debug.error.memory.read", var.getName()));
                     }
                 });
             }
@@ -385,45 +371,39 @@ public class VariableManager {
                 boolean hasCP = hasCodepageInfo(type);
                 boolean hasRefcount = hasRefcountInfo(type);
                 int headSize = process.backend.options.pointerSize * (1 + (hasRefcount ? 1 : 0) + (hasCP ? 1 : 0));
-                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", headSize, removeSyntheticLevels(var.getName()), headSize), new CommandSender.FinishCallback() {
-                    @Override
-                    public void call(GdbMiLine res) {
-                        String content = parseReadMemory(res);
-                        if ((content != null) && (content.length() == (headSize * 2))) {
-                            int base = 0;
-                            Integer elemSize = null;
-                            Integer codepage = null;
-                            if (hasCP) {
-                                codepage = (int) DebugUtil.parseHex(content.substring(0, 4));
-                                elemSize = (int) DebugUtil.parseHex(content.substring(4, 8));
-                                base = process.backend.options.pointerSize * 2;
-                            }
-                            Long codepageFinal = codepage != null ? codepage.longValue() : null;
-                            Long refCount = null;
-                            if (hasRefcount) {
-                                refCount = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
-                                base = base + process.backend.options.pointerSize * 2;
-                            }
-                            Long refCountFinal = refCount;
-                            long length = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
-                            long displayLength = Math.min(length, process.backend.options.limitChars);
-                            int charSize = getCharSize(elemSize, type);
-                            long dataSize = isSizeInBytes(type) ? displayLength : displayLength * charSize;
-                            process.sendCommand(String.format("-data-read-memory-bytes %s %d", removeSyntheticLevels(var.getName()), dataSize), new CommandSender.FinishCallback() {
-                                        @Override
-                                        public void call(GdbMiLine res) {
-                                            String content = parseReadMemory(res);
-                                            if (content != null) {
-                                                var.setValueRefined(parseString(content, length, displayLength, charSize));
-                                                var.setAdditional(length + (refCountFinal != null ? "#" + refCountFinal.toString() : "") + printCodepage(codepageFinal));
-                                                updateVariableObjectUI(var);
-                                            } else {
-                                                LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res.toString()));
-                                            }
-                                        }
-                                    }
-                            );
+                process.sendCommand(String.format("-data-read-memory-bytes -o -%d %s %d", headSize, removeSyntheticLevels(var.getName()), headSize), res12 -> {
+                    String content = parseReadMemory(res12);
+                    if ((content != null) && (content.length() == (headSize * 2))) {
+                        int base = 0;
+                        Integer elemSize = null;
+                        Integer codepage = null;
+                        if (hasCP) {
+                            codepage = (int) DebugUtil.parseHex(content.substring(0, 4));
+                            elemSize = (int) DebugUtil.parseHex(content.substring(4, 8));
+                            base = process.backend.options.pointerSize * 2;
                         }
+                        Long codepageFinal = codepage != null ? codepage.longValue() : null;
+                        Long refCount = null;
+                        if (hasRefcount) {
+                            refCount = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
+                            base = base + process.backend.options.pointerSize * 2;
+                        }
+                        Long refCountFinal = refCount;
+                        long length = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
+                        long displayLength = Math.min(length, process.backend.options.limitChars);
+                        int charSize = getCharSize(elemSize, type);
+                        long dataSize = isSizeInBytes(type) ? displayLength : displayLength * charSize;
+                        process.sendCommand(String.format("-data-read-memory-bytes %s %d", removeSyntheticLevels(var.getName()), dataSize), res1 -> {
+                            String content1 = parseReadMemory(res1);
+                            if (content1 != null) {
+                                var.setValueRefined(parseString(content1, length, displayLength, charSize));
+                                var.setAdditional(length + (refCountFinal != null ? "#" + refCountFinal.toString() : "") + printCodepage(codepageFinal));
+                                updateVariableObjectUI(var);
+                            } else {
+                                LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res1.toString()));
+                            }
+                        }
+                        );
                     }
                 });
             }
@@ -432,7 +412,7 @@ public class VariableManager {
 
     private void refineSet(GdbVariableObject var) {
         if (isSet(var)) {
-            process.sendCommand("-data-evaluate-expression \"sizeof " + removeSyntheticLevels(var.getName()) + "\"", res -> {
+            process.backend.evaluate("sizeof " + removeSyntheticLevels(var.getName()), res -> {
                 Integer size = DebugUtil.retrieveResultValueInt(res);
                 if (size != null) {
                     var.setAdditional(size + "b");
@@ -473,7 +453,7 @@ public class VariableManager {
     }
 
     private static String getVarKey(String varName, boolean children, String prefix) {
-        return (children ? "" : prefix) + varName.replace(' ', '_').replace('"', '_');
+        return (children ? "" : prefix) + varName.replaceAll("[ \"/]", "_");
     }
 
     private static boolean isHidden(String varName) {
@@ -487,15 +467,12 @@ public class VariableManager {
         if (DumbService.isDumb(process.getSession().getProject())) {
             return null;
         } else {
-            return ApplicationManager.getApplication().runReadAction(new Computable<PasField>() {
-                @Override
-                public PasField compute() {
-                    PsiElement el = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), process.getSession().getProject(), false);
-                    if (el != null) {
-                        return getFields(el, name, types);
-                    }
-                    return null;
+            return ApplicationManager.getApplication().runReadAction((Computable<PasField>) () -> {
+                PsiElement el = XDebuggerUtil.getInstance().findContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), process.getSession().getProject(), false);
+                if (el != null) {
+                    return getFields(el, name, types);
                 }
+                return null;
             });
         }
     }
@@ -517,13 +494,10 @@ public class VariableManager {
             namespace = NamespaceRec.fromFQN(el, name);
         }
         namespace.setIgnoreVisibility(true);
-        Resolve.resolveFQN(namespace, new ResolveContext(types, true), new ResolveProcessor() {
-                    @Override
-                    public boolean process(PasEntityScope originalScope, PasEntityScope scope, PasField field, PasField.FieldType type) {
-                        fieldsMap.put(name, field);
-                        return false;
-                    }
-                });
+        Resolve.resolveFQN(namespace, new ResolveContext(types, true), (originalScope, scope, field1, type) -> {
+            fieldsMap.put(name, field1);
+            return false;
+        });
         return fieldsMap.get(name);
     }
 
@@ -541,25 +515,47 @@ public class VariableManager {
         var.setRefinable(!dExpr.isArray());
         variableObjectMap.put(key, var);
         process.sendCommand("-var-delete " + key, SILENT);
-        process.backend.createVar(key, var.getName(),
-                new CommandSender.FinishCallback() {
-                    @Override
-                    public void call(GdbMiLine res) {
-                        if ((res.getType() == GdbMiLine.Type.RESULT_RECORD) && ("error".equals(res.getRecClass()))) {
-                            var.setError(res.getResults().getString("msg"));
-                            callback.evaluated(new PascalDebuggerValue(var));
+        if (dExpr.isArray()) {
+            process.backend.evaluate(dExpr.getArrayLow(), res -> {
+                Integer value = DebugUtil.retrieveResultValueInt(res);
+                if (value != null) {
+                    dExpr.setArrayLow(value.toString());
+                    process.backend.evaluate(dExpr.getArrayHigh(), res1 -> {
+                        Integer value1 = DebugUtil.retrieveResultValueInt(res1);
+                        if (value1 != null) {
+                            dExpr.setArrayHigh(value1.toString());
                         } else {
-                            handleVarResult(res.getResults());
-                            if (dExpr.isArray()) {
-                                process.backend.queryArrayValue(var, toInt(dExpr.getArrayLow()), toInt(dExpr.getArrayHigh()));
-                            }
+                            var.setError(PascalBundle.message("debug.expression.array.upper.invalid", dExpr.getArrayHigh()));
+                        }
+                        doCreateVar(key, var, dExpr, callback);
+                    });
+                } else {
+                    var.setError(PascalBundle.message("debug.expression.array.lower.invalid", dExpr.getArrayLow()));
+                    doCreateVar(key, var, dExpr, callback);
+                }
+            });
+        } else {
+            doCreateVar(key, var, dExpr, callback);
+        }
+    }
+
+    private void doCreateVar(String key, GdbVariableObject var, TranslatedExpression dExpr, XDebuggerEvaluator.XEvaluationCallback callback) {
+        process.backend.createVar(key, var.getName(),
+                res -> {
+                    if ((res.getType() == GdbMiLine.Type.RESULT_RECORD) && ("error".equals(res.getRecClass()))) {
+                        var.setError(res.getResults().getString("msg"));
+                        callback.evaluated(new PascalDebuggerValue(var));
+                    } else {
+                        handleVarResult(res.getResults());
+                        if (dExpr.isArray()) {
+                            process.backend.queryArrayValue(var, toInt(dExpr.getArrayLow()), toInt(dExpr.getArrayHigh()));
                         }
                     }
                 });
     }
 
     private int toInt(String value) {
-        return Integer.valueOf(value.substring(1, value.length()-1));
+        return Integer.valueOf(value);
     }
 
     private String parseStringAddress(String type, String value) {
@@ -582,14 +578,11 @@ public class VariableManager {
             }
             if ((str != null) && process.backend.options.showNonPrintable) {
                 StringBuilder sb = new StringBuilder(str.length() + str.length() / 4);
-                str.chars().forEachOrdered(new IntConsumer() {
-                    @Override
-                    public void accept(int value) {
-                        if (value >= 32) {
-                            sb.append((char) value);
-                        } else {
-                            sb.append("'#").append(value).append('\'');
-                        }
+                str.chars().forEachOrdered(value -> {
+                    if (value >= 32) {
+                        sb.append((char) value);
+                    } else {
+                        sb.append("'#").append(value).append('\'');
                     }
                 });
                 str = sb.toString();
