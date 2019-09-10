@@ -202,7 +202,7 @@ public class VariableManager {
     void computeValueChildren(String name, XCompositeNode node) {
         GdbVariableObject tempParent = findVarObject(name);
         if (tempParent != null) {
-            process.sendCommand("-var-list-children --all-values " + name + " 0 " + process.backend.options.limitChilds, new CommandSender.FinishCallback() {
+            process.sendCommand("-var-list-children --all-values " + name + " 0 " + process.backend.options.view.limitChilds, new CommandSender.FinishCallback() {
                 @Override
                 public void call(GdbMiLine res) {
                     /*if ("0".equals(res.getResults().getString("numchild"))) {
@@ -220,7 +220,7 @@ public class VariableManager {
                                         continue;
                                     }
                                     if (isChildSynthetic(childName)) {
-                                        process.sendCommand("-var-list-children --all-values " + childName + " 0 " + process.backend.options.limitChilds, this);
+                                        process.sendCommand("-var-list-children --all-values " + childName + " 0 " + process.backend.options.view.limitChilds, this);
                                     } else {
                                         handleVarData(tempParent, child);
                                     }
@@ -271,7 +271,7 @@ public class VariableManager {
     }
 
     private void refineStructured(GdbVariableObject var, GdbMiResults res) {
-        if (!process.backend.options.refineStructured) {
+        if (!process.backend.options.view.refineStructured) {
             return;
         }
         if (isStructured(var)) {
@@ -299,7 +299,7 @@ public class VariableManager {
     }
 
     private void refineOpenArray(GdbVariableObject highBoundVar, GdbMiResults res) {
-        if (!process.backend.options.refineOpenArrays) {
+        if (!process.backend.options.view.refineOpenArrays) {
             return;
         }
         if (highBoundVar.getName().startsWith(OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX)) {
@@ -311,7 +311,7 @@ public class VariableManager {
                     openArrayVar.setChildrenCount(0);
                     openArrayVar.setLength(highIndex + 1);
                     if (openArrayVar.getLength() != 0) {
-                        long displayLength = Math.min(openArrayVar.getLength(), process.backend.options.limitElements);
+                        long displayLength = Math.min(openArrayVar.getLength(), process.backend.options.view.limitElements);
                         openArrayVar.setAdditional(Long.toString(openArrayVar.getLength()));
                         process.backend.queryArrayValue(openArrayVar, 0, displayLength);
                     } else {
@@ -325,7 +325,7 @@ public class VariableManager {
     }
 
     private void refineDynamicArray(GdbVariableObject var, GdbMiResults res) {
-        if (!process.backend.options.refineDynamicArrays) {
+        if (!process.backend.options.view.refineDynamicArrays) {
             return;
         }
         String type = res.getString("type");
@@ -343,7 +343,7 @@ public class VariableManager {
                     if ((content != null) && (content.length() == (size * 2 * 2))) {
                         long refCount = DebugUtil.parseHex(content.substring(0, size * 2));
                         long length = DebugUtil.parseHex(content.substring(size * 2)) + 1;
-                        long displayLength = Math.min(length, process.backend.options.limitElements);
+                        long displayLength = Math.min(length, process.backend.options.view.limitElements);
                         var.setLength(length);
                         var.setAdditional(var.getLength() + "#" + refCount);
                         process.backend.queryArrayValue(var, 0, displayLength);
@@ -357,7 +357,7 @@ public class VariableManager {
     }
 
     private void refineString(GdbVariableObject var, GdbMiResults res) {
-        if (!process.backend.options.refineStrings) {
+        if (!process.backend.options.view.refineStrings) {
             return;
         }
         String type = res.getString("type");
@@ -390,7 +390,7 @@ public class VariableManager {
                         }
                         Long refCountFinal = refCount;
                         long length = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
-                        long displayLength = Math.min(length, process.backend.options.limitChars);
+                        long displayLength = Math.min(length, process.backend.options.view.limitChars);
                         int charSize = getCharSize(elemSize, type);
                         long dataSize = isSizeInBytes(type) ? displayLength : displayLength * charSize;
                         process.sendCommand(String.format("-data-read-memory-bytes %s %d", removeSyntheticLevels(var.getName()), dataSize), res1 -> {
@@ -576,7 +576,7 @@ public class VariableManager {
             } else if (charSize == 2) {
                 str = new String(data, StandardCharsets.UTF_16LE);
             }
-            if ((str != null) && process.backend.options.showNonPrintable) {
+            if ((str != null) && process.backend.options.view.showNonPrintable) {
                 StringBuilder sb = new StringBuilder(str.length() + str.length() / 4);
                 str.chars().forEachOrdered(value -> {
                     if (value >= 32) {

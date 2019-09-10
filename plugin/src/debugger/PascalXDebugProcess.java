@@ -90,6 +90,7 @@ public class PascalXDebugProcess extends XDebugProcess {
         this.executionResult = executionResult;
         this.sender.start();
         backend.init();
+        backend.applySettings();
         try {
             if (isOutputConsoleNeeded()) {
                 createOutputConsole();

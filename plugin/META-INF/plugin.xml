@@ -503,6 +503,11 @@
         <programRunner implementation="com.siberika.idea.pascal.debugger.PascalDebugRunner"/>
         <xdebugger.breakpointType implementation="com.siberika.idea.pascal.debugger.PascalLineBreakpointType"/>
 
+        <xdebugger.settings implementation="com.siberika.idea.pascal.debugger.settings.PascalDebuggerSettings"/>
+
+        <applicationService serviceImplementation="com.siberika.idea.pascal.debugger.settings.PascalDebuggerViewSettings"/>
+        <applicationService serviceImplementation="com.siberika.idea.pascal.debugger.settings.PascalTypeRenderers"/>
+
         <stepsBeforeRunProvider implementation="com.siberika.idea.pascal.run.PascalBeforeRunProvider" order="first"/>
 
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>

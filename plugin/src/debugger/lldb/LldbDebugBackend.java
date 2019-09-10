@@ -22,7 +22,11 @@ public class LldbDebugBackend extends DebugBackend {
         options.supportsBulkDelete = true;
         options.useFullnameForBreakpoints = false;  // LLDB doesn't support full names in breakpoints
         process.sendCommand("-interpreter-exec console \"br delete\"");
-        process.sendCommand("set set target.max-children-count " + options.limitElements);
+    }
+
+    @Override
+    public void applySettings() {
+        process.sendCommand("set set target.max-children-count " + options.view.limitElements);
     }
 
     @Override

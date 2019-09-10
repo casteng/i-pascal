@@ -27,8 +27,12 @@ public class GdbDebugBackend extends DebugBackend {
         options.useFullnameForBreakpoints = getData().getBoolean(PascalSdkData.Keys.DEBUGGER_BREAK_FULL_NAME);
         process.sendCommand("set print repeats unlimited");
         process.sendCommand("-break-delete");
-        process.sendCommand("set print elements " + options.limitElements);
-        process.sendCommand("set max-value-size " + options.limitValueSize);
+    }
+
+    @Override
+    public void applySettings() {
+        process.sendCommand("set print elements " + options.view.limitElements);
+        process.sendCommand("set max-value-size " + options.view.limitValueSize);
     }
 
     @Override

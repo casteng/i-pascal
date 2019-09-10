@@ -2,6 +2,9 @@ package com.siberika.idea.pascal.debugger;
 
 import com.intellij.openapi.projectRoots.Sdk;
 import com.siberika.idea.pascal.debugger.gdb.GdbVariableObject;
+import com.siberika.idea.pascal.debugger.settings.PascalDebuggerViewSettings;
+import com.siberika.idea.pascal.debugger.settings.PascalTypeRenderers;
+import com.siberika.idea.pascal.debugger.settings.TypeRenderer;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.FileUtil;
 
@@ -11,6 +14,7 @@ public abstract class DebugBackend {
     public final DebugBackend.Options options;
 
     public abstract void init();
+    public abstract void applySettings();
     public abstract void onSessionInit();
 
     public DebugBackend(PascalXDebugProcess process) {
@@ -44,21 +48,16 @@ public abstract class DebugBackend {
         public boolean supportsBulkDelete;
 
         public boolean useFullnameForBreakpoints;
-        public boolean showNonPrintable = true;
-        public boolean refineStrings = true;
-        public boolean refineDynamicArrays = true;
-        public boolean refineOpenArrays = true;
-        public boolean refineStructured = true;
-        public int limitChars = 1000;
-        public int limitElements = 1000;
-        public int limitChilds = 100;
-        public int limitValueSize = 2 * 1024 * 1024;
+        public PascalDebuggerViewSettings view;
+        public final PascalTypeRenderers typeRenderers;
 
         public int pointerSize;
         public int maxFrames = 1000;
 
         public Options(Sdk sdk) {
             this.sdk = sdk;
+            this.view = PascalDebuggerViewSettings.getInstance();
+            this.typeRenderers = PascalTypeRenderers.getInstance();
         }
 
         public boolean resolveNames() {
@@ -71,5 +70,13 @@ public abstract class DebugBackend {
             return DebugUtil.getData(sdk).getString(PascalSdkData.Keys.DEBUGGER_ASM_FORMAT);
         }
 
+        public String getTypeRenderer(String type) {
+            for (TypeRenderer typeRenderer : typeRenderers.typeRenderers) {
+                if (typeRenderer.type.equalsIgnoreCase(type)) {
+                    return typeRenderer.value;
+                }
+            }
+            return null;
+        }
     }
 }
