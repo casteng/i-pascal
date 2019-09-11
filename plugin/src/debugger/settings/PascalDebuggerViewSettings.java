@@ -7,6 +7,8 @@ import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 @State(
         name = "PascalDebuggerViewsSettings",
         storages = @Storage("pascal.debugger.xml")
@@ -37,9 +39,24 @@ public class PascalDebuggerViewSettings implements PersistentStateComponent<Pasc
         return this;
     }
 
-    public boolean equals(Object object) {
-        if (!(object instanceof PascalDebuggerViewSettings)) return false;
-        PascalDebuggerViewSettings generalSettings = ((PascalDebuggerViewSettings)object);
-        return showNonPrintable == generalSettings.showNonPrintable;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PascalDebuggerViewSettings that = (PascalDebuggerViewSettings) o;
+        return showNonPrintable == that.showNonPrintable &&
+                refineStrings == that.refineStrings &&
+                refineDynamicArrays == that.refineDynamicArrays &&
+                refineOpenArrays == that.refineOpenArrays &&
+                refineStructured == that.refineStructured &&
+                limitChars == that.limitChars &&
+                limitElements == that.limitElements &&
+                limitChilds == that.limitChilds &&
+                limitValueSize == that.limitValueSize;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(showNonPrintable, refineStrings, refineDynamicArrays, refineOpenArrays, refineStructured, limitChars, limitElements, limitChilds, limitValueSize);
     }
 }

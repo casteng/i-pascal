@@ -10,8 +10,16 @@ public class UIUtils {
         if (control instanceof TextFieldWithBrowseButton) {
             return ((TextFieldWithBrowseButton) control).getText();
         } else if (control instanceof JTextField) {
-            if (fieldType == AbstractConfigurable.Type.INTEGER) {
+            if (fieldType == AbstractConfigurable.Type.BYTE) {
+                return Byte.valueOf(((JTextField) control).getText());
+            } else if (fieldType == AbstractConfigurable.Type.INTEGER) {
                 return Integer.valueOf(((JTextField) control).getText());
+            } else if (fieldType == AbstractConfigurable.Type.LONG) {
+                return Long.valueOf(((JTextField) control).getText());
+            } else if (fieldType == AbstractConfigurable.Type.SINGLE) {
+                return Float.valueOf(((JTextField) control).getText());
+            } else if (fieldType == AbstractConfigurable.Type.DOUBLE) {
+                return Double.valueOf(((JTextField) control).getText());
             } else {
                 return ((JTextField) control).getText();
             }
@@ -28,11 +36,7 @@ public class UIUtils {
         if (control instanceof TextFieldWithBrowseButton) {
             ((TextFieldWithBrowseButton) control).setText((String) value);
         } else if (control instanceof JTextField) {
-            if (fieldType == AbstractConfigurable.Type.INTEGER) {
-                ((JTextField) control).setText(String.valueOf(value));
-            } else {
-                ((JTextField) control).setText((String) value);
-            }
+            ((JTextField) control).setText(String.valueOf(value));
         } else if (control instanceof JCheckBox) {
             ((JCheckBox) control).setSelected(Boolean.TRUE.equals(value));
         } else if (control instanceof ComboBox) {
@@ -40,6 +44,14 @@ public class UIUtils {
         } else {
             throw new IllegalStateException("setValue: Invalid control: " + ((control != null) ? control.getClass() : "null"));
         }
+    }
+
+    public static boolean isInteger(AbstractConfigurable.Type fieldType) {
+        return (fieldType == AbstractConfigurable.Type.BYTE) || (fieldType == AbstractConfigurable.Type.INTEGER) || (fieldType == AbstractConfigurable.Type.LONG);
+    }
+
+    public static boolean isFloat(AbstractConfigurable.Type fieldType) {
+        return (fieldType == AbstractConfigurable.Type.SINGLE) || (fieldType == AbstractConfigurable.Type.DOUBLE);
     }
 
 }

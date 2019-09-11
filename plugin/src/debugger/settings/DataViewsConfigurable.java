@@ -33,7 +33,11 @@ public class DataViewsConfigurable extends AbstractConfigurable<PascalDebuggerVi
 
     @Override
     public boolean isModified() {
-        return !PascalDebuggerViewSettings.getInstance().equals(doApply(new PascalDebuggerViewSettings()));
+        try {
+            return !PascalDebuggerViewSettings.getInstance().equals(doApply(new PascalDebuggerViewSettings()));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @SuppressWarnings("SpellCheckingInspection")

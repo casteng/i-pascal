@@ -24,7 +24,7 @@ public abstract class AbstractConfigurable<T> implements SearchableConfigurable 
         this.bundlePrefix = bundlePrefix;
     }
 
-    public enum Type {BOOLEAN, INTEGER, STRING}
+    public enum Type {BOOLEAN, BYTE, INTEGER, LONG, STRING, SINGLE, DOUBLE}
 
     protected Map<String, Control> controlMap;
 
@@ -67,15 +67,20 @@ public abstract class AbstractConfigurable<T> implements SearchableConfigurable 
     }
 
     private void createComponent(JPanel panel, Control control, int row) {
-        if (control.fieldType == Type.BOOLEAN) {
+        if (control.isBoolean()) {
             JCheckBox checkBox = new JCheckBox();
             checkBox.setText(PascalBundle.message(bundlePrefix + control.fieldName));
             control.component = checkBox;
             addLabel(panel, "", row);
         } else {
             addLabel(panel, PascalBundle.message(bundlePrefix + control.fieldName), row);
-            JTextField edit = new JTextField();
-            control.component = edit;
+            if (UIUtils.isInteger(control.fieldType)) {
+                control.component = new IPJFormattedTextField(new RegexpFormat("\\d{1,15}"));
+            } else if (UIUtils.isFloat(control.fieldType)) {
+                control.component = new IPJFormattedTextField(new RegexpFormat("\\d{1,15}(\\.\\d{1,15})?"));
+            } else {
+                control.component = new JTextField();
+            }
         }
         panel.add(control.component, new GridConstraints(row, 1, 1, 1,
                 GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
@@ -104,23 +109,25 @@ public abstract class AbstractConfigurable<T> implements SearchableConfigurable 
         }
 
         private Type convertType(Class<?> type) {
-            if (isInteger(type)) {
+            if (Byte.class.equals(type) || "byte".equals(type.getName())) {
+                return Type.BYTE;
+            } else if (Integer.class.equals(type) || "int".equals(type.getName())) {
                 return Type.INTEGER;
-            } else if (isBoolean(type)) {
+            } else if (Long.class.equals(type) || "long".equals(type.getName())) {
+                return Type.LONG;
+            } else if (Boolean.class.equals(type) || "boolean".equals(type.getName())) {
                 return Type.BOOLEAN;
+            } else if (Float.class.equals(type) || "float".equals(type.getName())) {
+                return Type.SINGLE;
+            } else if (Double.class.equals(type) || "double".equals(type.getName())) {
+                return Type.DOUBLE;
             } else {
                 return Type.STRING;
             }
         }
 
-        private boolean isInteger(Class<?> type) {
-            return Integer.class.equals(type) || "int".equals(type.getName())
-                    || Long.class.equals(type) || "long".equals(type.getName())
-                    || Byte.class.equals(type) || "byte".equals(type.getName());
-        }
-
-        private boolean isBoolean(Class<?> type) {
-            return Boolean.class.equals(type) || "boolean".equals(type.getName());
+        private boolean isBoolean() {
+            return fieldType == Type.BOOLEAN;
         }
     }
 }
