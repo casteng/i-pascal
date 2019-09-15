@@ -24,10 +24,10 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,25 +46,11 @@ public class VariableManager {
     private static final String OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX = "high";
     private static final List<String> TYPES_STRING = Arrays.asList("ANSISTRING", "WIDESTRING", "UNICODESTRING", "UTF8STRING", "RAWBYTESTRING");
     private static final List<String> TYPES_PCHAR = Arrays.asList("PCHAR", "PWIDECHAR", "PUNICODECHAR");
-    private static final Map<Long, String> CODEPAGE_MAP = createCodePageMap();
     static final CommandSender.FinishCallback SILENT = res -> {};
     private static final Pattern PATTERN_STRING_VALUE = Pattern.compile("(0x[0-9a-f]+)(\\s((\\\\\")|').*)?");
     private final PascalCExpressionTranslator expressionTranslator = new PascalCExpressionTranslator();
     private static final List<String> SYNTHETIC_CHILDS = Arrays.asList("private", "protected", "public", "published");
     private static final AtomicInteger queryCounter = new AtomicInteger();
-
-    private static Map<Long, String> createCodePageMap() {
-        HashMap<Long, String> res = new HashMap<>();
-        res.put(0L, "ACP");
-        res.put(1L, "OEMCP");
-        res.put(1200L, "UTF16");
-        res.put(1201L, "UTF16BE");
-        res.put(65000L, "UTF7");
-        res.put(65001L, "UTF8");
-        res.put(20127L, "ASCII");
-        res.put(65535L, "NONE");
-        return res;
-    }
 
     private final PascalXDebugProcess process;
 
@@ -383,6 +369,7 @@ public class VariableManager {
                             base = process.backend.options.pointerSize * 2;
                         }
                         Long codepageFinal = codepage != null ? codepage.longValue() : null;
+                        CodePage codePageEnum = CodePage.byId(codepageFinal);
                         Long refCount = null;
                         if (hasRefcount) {
                             refCount = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
@@ -396,7 +383,7 @@ public class VariableManager {
                         process.sendCommand(String.format("-data-read-memory-bytes %s %d", removeSyntheticLevels(var.getName()), dataSize), res1 -> {
                             String content1 = parseReadMemory(res1);
                             if (content1 != null) {
-                                var.setValueRefined(parseString(content1, length, displayLength, charSize));
+                                var.setValueRefined(parseString(content1, length, displayLength, charSize, codePageEnum));
                                 var.setAdditional(length + (refCountFinal != null ? "#" + refCountFinal.toString() : "") + printCodepage(codepageFinal));
                                 updateVariableObjectUI(var);
                             } else {
@@ -567,16 +554,11 @@ public class VariableManager {
         }
     }
 
-    private String parseString(String content, long length, long displayLength, int charSize) {
+    private String parseString(String content, long length, long displayLength, int charSize, CodePage codepage) {
         try {
-            String str = null;
             byte[] data = Hex.decodeHex(content.toCharArray());
-            if (charSize == 1) {
-                str = new String(data, StandardCharsets.UTF_8);
-            } else if (charSize == 2) {
-                str = new String(data, StandardCharsets.UTF_16LE);
-            }
-            if ((str != null) && process.backend.options.view.showNonPrintable) {
+            String str = createString(data, codepage);
+            if (process.backend.options.view.showNonPrintable) {
                 StringBuilder sb = new StringBuilder(str.length() + str.length() / 4);
                 str.chars().forEachOrdered(value -> {
                     if (value >= 32) {
@@ -594,9 +576,25 @@ public class VariableManager {
         }
     }
 
+    private String createString(byte[] data, CodePage codepage) {
+        String javaCp = codepage.getJavaName();
+        try {
+            if (javaCp != null) {
+                return new String(data, javaCp);
+            } else if (codepage == CodePage.ACP) {
+                return new String(data);                // Use system default codepage
+            } else {                                    // No codepage (CodePage.NONE) case
+                return new String(data, StandardCharsets.UTF_8);
+            }
+        } catch (UnsupportedEncodingException e) {
+            LOG.info(String.format("DBG Error: unsupported encoding: %s (%d)", javaCp, codepage.getId()));
+            return new String(data, StandardCharsets.UTF_8);
+        }
+    }
+
     private String printCodepage(Long codepage) {
-        String mapped = CODEPAGE_MAP.get(codepage);
-        return codepage != null ? ",cp" + (mapped != null ? mapped : codepage) : "";
+        CodePage mapped = CodePage.byId(codepage);
+        return codepage != null ? ",cp" + (mapped != null ? mapped.name() : codepage) : "";
     }
 
     private String parseReadMemory(GdbMiLine res) {
