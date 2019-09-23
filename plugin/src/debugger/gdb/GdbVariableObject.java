@@ -92,7 +92,8 @@ public class GdbVariableObject {
     }
 
     public void updateFromResult(GdbMiResults res) {
-        type = res.getString("type");
+        String newType = res.getString("type");
+        this.type = newType != null ? newType : this.type;
         value = res.getString("value");
         childrenCount = res.getValue("numchild") != null ? res.getInteger("numchild") : 1;
     }

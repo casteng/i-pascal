@@ -5,6 +5,7 @@ public class TranslatedExpression {
     private String error;
     private String arrayLow;
     private String arrayHigh;
+    private String arrayType;
 
     public TranslatedExpression() {
     }
@@ -43,6 +44,14 @@ public class TranslatedExpression {
 
     public void setArrayHigh(String arrayHigh) {
         this.arrayHigh = arrayHigh;
+    }
+
+    public String getArrayType() {
+        return arrayType;
+    }
+
+    public void setArrayType(String arrayType) {
+        this.arrayType = arrayType;
     }
 
     public boolean isError() {

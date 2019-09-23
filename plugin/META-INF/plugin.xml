@@ -11,8 +11,11 @@
     <change-notes><![CDATA[
         <p>2.50</p>
         <ul>
-            <li>Pascal to C expression converter based on AST, array values formatting in watches</li>
+            <li>Pascal to C expression converter based on AST</li>
+            <li>Array values formatting in watches</li>
             <li>Threads support in debugger</li>
+            <li>Correctly display strings in any codepage while debugging</li>
+            <li>Fix invalid class cast error (GitHub #96)</li>
         </ul>
         <p>2.40</p>
         <ul>

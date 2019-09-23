@@ -54,9 +54,10 @@ public class GdbDebugBackend extends DebugBackend {
     }
 
     @Override
-    public void queryArrayValue(GdbVariableObject var, int start, long end) {
-        String deref = var.getType().contains("(*)") ? "*" : "";
-        evaluate(String.format("sizeof(%s%s[0])", deref, var.getName()), res -> {
+    public void queryArrayValue(GdbVariableObject var, int start, long end, String arrayType) {
+        String deref = isPointer(var) ? "*" : "";
+        String name = arrayType != null ? String.format("((%s)%s)", arrayType, var.getName()) : var.getName();
+        evaluate(String.format("sizeof(%s%s[0])", deref, name), res -> {
             Integer elSize = DebugUtil.retrieveResultValueInt(res);
             if (null == elSize) {
                 var.setError(PascalBundle.message("debug.expression.array.size.error"));

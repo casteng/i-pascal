@@ -133,11 +133,35 @@ public class VariableManager {
             if (var != null) {
                 var.updateFromResult(res);
                 if (var.isRefinable()) {
-                    refineStructured(var, res);
-                    refineOpenArray(var, res);
-                    refineDynamicArray(var, res);
-                    refineString(var, res);
-                    refineSet(var);
+                    String expr = process.backend.options.getTypeRenderer(var.getType());
+                    if (expr != null) {
+                        expr = expr.toUpperCase();
+                        if (parent != null) {
+                            expr = expr.replace(PascalCExpressionTranslator.PLACEHOLDER_PARENT, parent.getExpression().toUpperCase());
+                        } else if (expr.contains(PascalCExpressionTranslator.PLACEHOLDER_PARENT)) {
+                            var.setError(PascalBundle.message("debug.expression.no.parent"));
+                        }
+                        expr = expr.replace(PascalCExpressionTranslator.PLACEHOLDER_VAR, var.getExpression().toUpperCase());
+                        TranslatedExpression dExpr = expressionTranslator.translate(expr, process.getProject());
+                        doEvaluate(var, dExpr, () -> {
+                            process.backend.evaluate(dExpr.getExpression(), evalRes -> {
+                                if (evalRes.getType() == GdbMiLine.Type.RESULT_RECORD && "done".equals(evalRes.getRecClass())) {
+                                    var.updateFromResult(evalRes.getResults());
+                                    if (dExpr.isArray()) {
+                                        process.backend.queryArrayValue(var, toInt(dExpr.getArrayLow()), toInt(dExpr.getArrayHigh()), dExpr.getArrayType());
+                                    }
+                                } else {
+                                    var.setError(PascalBundle.message("debug.expression.no.result"));
+                                }
+                            });
+                        });
+                    } else {
+                        refineStructured(var, res);
+                        refineOpenArray(var, res);
+                        refineDynamicArray(var, res);
+                        refineString(var, res);
+                        refineSet(var);
+                    }
                 }
                 updateVariableObjectUI(var);
             } else {
@@ -299,7 +323,7 @@ public class VariableManager {
                     if (openArrayVar.getLength() != 0) {
                         long displayLength = Math.min(openArrayVar.getLength(), process.backend.options.view.limitElements);
                         openArrayVar.setAdditional(Long.toString(openArrayVar.getLength()));
-                        process.backend.queryArrayValue(openArrayVar, 0, displayLength);
+                        process.backend.queryArrayValue(openArrayVar, 0, displayLength, null);
                     } else {
                         openArrayVar.setValueRefined("[]");
                     }
@@ -332,7 +356,7 @@ public class VariableManager {
                         long displayLength = Math.min(length, process.backend.options.view.limitElements);
                         var.setLength(length);
                         var.setAdditional(var.getLength() + "#" + refCount);
-                        process.backend.queryArrayValue(var, 0, displayLength);
+                        process.backend.queryArrayValue(var, 0, displayLength, null);
                     } else {
                         LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res1.toString()));
                         var.setError(PascalBundle.message("debug.error.memory.read", var.getName()));
@@ -502,6 +526,10 @@ public class VariableManager {
         var.setRefinable(!dExpr.isArray());
         variableObjectMap.put(key, var);
         process.sendCommand("-var-delete " + key, SILENT);
+        doEvaluate(var, dExpr, () -> doCreateVar(key, var, dExpr, callback));
+    }
+
+    private void doEvaluate(GdbVariableObject var, TranslatedExpression dExpr, Runnable handler) {
         if (dExpr.isArray()) {
             process.backend.evaluate(dExpr.getArrayLow(), res -> {
                 Integer value = DebugUtil.retrieveResultValueInt(res);
@@ -514,15 +542,15 @@ public class VariableManager {
                         } else {
                             var.setError(PascalBundle.message("debug.expression.array.upper.invalid", dExpr.getArrayHigh()));
                         }
-                        doCreateVar(key, var, dExpr, callback);
+                        handler.run();
                     });
                 } else {
                     var.setError(PascalBundle.message("debug.expression.array.lower.invalid", dExpr.getArrayLow()));
-                    doCreateVar(key, var, dExpr, callback);
+                    handler.run();
                 }
             });
         } else {
-            doCreateVar(key, var, dExpr, callback);
+            handler.run();
         }
     }
 
@@ -535,7 +563,7 @@ public class VariableManager {
                     } else {
                         handleVarResult(res.getResults());
                         if (dExpr.isArray()) {
-                            process.backend.queryArrayValue(var, toInt(dExpr.getArrayLow()), toInt(dExpr.getArrayHigh()));
+                            process.backend.queryArrayValue(var, toInt(dExpr.getArrayLow()), toInt(dExpr.getArrayHigh()), dExpr.getArrayType());
                         }
                     }
                 });

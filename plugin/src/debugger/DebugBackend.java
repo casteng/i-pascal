@@ -29,7 +29,7 @@ public abstract class DebugBackend {
 
     public abstract void createVar(String key, String expression, CommandSender.FinishCallback finishCallback);
 
-    public abstract void queryArrayValue(GdbVariableObject var, int start, long end);
+    public abstract void queryArrayValue(GdbVariableObject var, int start, long end, String arrayType);
 
     public abstract void addLineBreakpoint(String filename, int line, boolean temporary ,CommandSender.FinishCallback callback);
 
@@ -79,4 +79,9 @@ public abstract class DebugBackend {
             return null;
         }
     }
+
+    protected static boolean isPointer(GdbVariableObject var) {
+        return var.getType().startsWith("P") || var.getType().contains("(*)");     // TODO: implement more correct check
+    }
+
 }

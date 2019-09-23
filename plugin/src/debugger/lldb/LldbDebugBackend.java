@@ -50,7 +50,7 @@ public class LldbDebugBackend extends DebugBackend {
     }
 
     @Override
-    public void queryArrayValue(GdbVariableObject var, int start, long end) {
+    public void queryArrayValue(GdbVariableObject var, int start, long end, String arrayType) {
         String deref = var.getType().contains("(*)") ? "[0]" : "";
         process.sendCommand(String.format("type summary add -s \"%s\\$${var[%d-%d]}\" -n %s", var.getKey(), start, end - 1, var.getKey()));
         process.sendCommand(String.format("fr v %s%s --summary %s", var.getName(), deref, var.getKey()));

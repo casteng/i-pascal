@@ -1,7 +1,9 @@
 package com.siberika.idea.pascal.debugger;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -25,6 +27,7 @@ import com.siberika.idea.pascal.lang.psi.PasRelationalExpr;
 import com.siberika.idea.pascal.lang.psi.PasSumExpr;
 import com.siberika.idea.pascal.lang.psi.PasUnaryExpr;
 import com.siberika.idea.pascal.lang.psi.impl.PasExpressionImpl;
+import com.siberika.idea.pascal.lang.psi.impl.PascalExpression;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +39,8 @@ public class PascalCExpressionTranslator {
     private static final Map<String, String> OP_SUM_MAP = getSumOpMap();
     private static final Map<String, String> OP_REL_MAP = getRelOpMap();
     private static final Map<String, String> OP_MUL_MAP = getMulOpMap();
+    static final String PLACEHOLDER_PARENT = "$TEST.$PARENT";
+    static final String PLACEHOLDER_VAR = "$TEST";
 
     private static Map<String, String> getSumOpMap() {
         Map<String, String> res = new HashMap<>();
@@ -79,20 +84,22 @@ public class PascalCExpressionTranslator {
         int rangeInd = str.indexOf("..");
         str = rangeInd > 0 ? fixupRange(str, rangeInd) : str;
         VirtualFile vFile = new LightVirtualFile("test.pas", PascalFileType.INSTANCE, "begin " + str + " ;end.");
-        PsiFile file = PsiManager.getInstance(project).findFile(vFile);
-        PasExpressionImpl expr = PsiTreeUtil.findChildOfType(file, PasExpressionImpl.class);
-        if (expr != null) {
-            TranslatedExpression res = new TranslatedExpression();
-            try {
-                res.setExpression(doTranslate(res, expr.getExpr()));
-                return res;
-            } catch (RuntimeException e) {
-                LOG.info("Debug error: ", e);
-                return new TranslatedExpression(e.getMessage());
+        return ApplicationManager.getApplication().runReadAction((Computable<TranslatedExpression>) () -> {
+            PsiFile file = PsiManager.getInstance(project).findFile(vFile);
+            PasExpressionImpl expr = PsiTreeUtil.findChildOfType(file, PasExpressionImpl.class);
+            if (expr != null) {
+                TranslatedExpression res = new TranslatedExpression();
+                try {
+                    res.setExpression(doTranslate(res, expr.getExpr()));
+                    return res;
+                } catch (RuntimeException e) {
+                    LOG.info("Debug error: ", e);
+                    return new TranslatedExpression(e.getMessage());
+                }
+            } else {
+                return new TranslatedExpression(PascalBundle.message("debug.expression.parsing.error"));
             }
-        } else {
-            return new TranslatedExpression(PascalBundle.message("debug.expression.parsing.error"));
-        }
+        });
     }
 
     private String fixupRange(String str, int rangeInd) {
@@ -157,7 +164,7 @@ public class PascalCExpressionTranslator {
             return (refExpr.getExpr() != null ? doTranslate(res, refExpr.getExpr()) + "." : "" ) + fqi;
         } else if (expression instanceof PasIndexExpr) {
             PasIndexExpr indExpr = (PasIndexExpr) expression;
-            return doTranslate(res, indExpr.getExpr()) + translateIndexes(res, indExpr.getIndexList());
+            return doTranslate(res, indExpr.getExpr()) + translateIndexes(res, indExpr.getExpr(), indExpr.getIndexList());
         } else if (expression instanceof PasCallExpr) {
             PasCallExpr callExpr = (PasCallExpr) expression;
             return doTranslate(res, callExpr.getExpr()) + translateArgs(res, callExpr.getArgumentList());
@@ -189,7 +196,7 @@ public class PascalCExpressionTranslator {
         return sb.toString();
     }
 
-    private String translateIndexes(TranslatedExpression res, PasIndexList indexList) {
+    private String translateIndexes(TranslatedExpression res, PasExpr arrayExpr, PasIndexList indexList) {
         final String text = indexList.getText();
         int rangeInd = text.indexOf("--");
         if (rangeInd > 0) {
@@ -203,6 +210,7 @@ public class PascalCExpressionTranslator {
                 }
                 res.setArrayLow(doTranslate(res, leftExpr));
                 res.setArrayHigh(doTranslate(res, rightExpr));
+                res.setArrayType(PascalExpression.inferType(arrayExpr));
                 return "";
             } else {
                 return unsupported(PascalBundle.message("debug.expression.range"), indexList.getText());
