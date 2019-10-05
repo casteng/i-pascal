@@ -185,7 +185,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             if (!PsiUtil.checkeElement(this)) {
                 invalidateCache(false);
             }
-            Collection<PasField> result = new LinkedHashSet<PasField>();
+            Collection<PasField> result = new LinkedHashSet<>();
             result.addAll(getPublicFields());
             result.addAll(getPrivateFields());
             return result;
@@ -279,7 +279,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             if (e.getCause() instanceof ProcessCanceledException) {
                 throw (ProcessCanceledException) e.getCause();
             } else {
-                LOG.warn("Error occured during building idents for: " + this, e.getCause());
+                LOG.warn("Error occurred during building idents for: " + this, e.getCause());
             }
             invalidateCache(false);
             return EMPTY_IDENTS;
@@ -289,8 +289,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     public Pair<List<PascalNamedElement>, List<PascalNamedElement>> getIdentsFrom(@Nullable String module, boolean includeInterface, List<String> unitPrefixes) {
         Idents idents = getIdents(identCache, IDENTS_BUILDER);
-        Pair<List<PascalNamedElement>, List<PascalNamedElement>> res = new Pair<List<PascalNamedElement>, List<PascalNamedElement>>(
-                new SmartList<PascalNamedElement>(), new SmartList<PascalNamedElement>());
+        Pair<List<PascalNamedElement>, List<PascalNamedElement>> res = new Pair<List<PascalNamedElement>, List<PascalNamedElement>>(new SmartList<>(), new SmartList<>());
         if (includeInterface) {
             collectElements(module, idents.identsIntf, res.first, unitPrefixes);
         }
@@ -323,9 +322,6 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     private static boolean nameMatch(@Nullable String moduleName, String fieldName, List<String> unitPrefixes) {
         if ((null == moduleName) || moduleName.equalsIgnoreCase(fieldName)) {
             return true;
-        }
-        if (moduleName.indexOf('.') >= 0) {
-            return false;
         }
         moduleName = moduleName.toUpperCase();
         fieldName = fieldName.toUpperCase();
@@ -369,7 +365,6 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         if (stub != null) {
             return stub.getUsedUnitsPrivate();
         }
-        List<String> result = null;
         if (SyncUtil.lockOrCancel(unitsLock)) {
             try {
                 if (null == usedUnitsPrivate) {
@@ -381,9 +376,10 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             } finally {
                 unitsLock.unlock();
             }
-            result = usedUnitsPrivate;
+            return usedUnitsPrivate;
+        } else {
+            return Collections.emptyList();
         }
-        return result;
     }
 
     @Nullable
@@ -399,13 +395,13 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     }
 
     private static class Idents extends PascalHelperScope.Cached {
-        Map<PascalNamedElement, PasField> identsIntf = new HashMap<PascalNamedElement, PasField>();
-        Map<PascalNamedElement, PasField> identsImpl = new HashMap<PascalNamedElement, PasField>();
+        Map<PascalNamedElement, PasField> identsIntf = new HashMap<>();
+        Map<PascalNamedElement, PasField> identsImpl = new HashMap<>();
     }
 
     private class IdentsBuilder implements Callable<Idents> {
         @Override
-        public Idents call() throws Exception {
+        public Idents call() {
             Idents res = new Idents();
             final PsiElement intf = PsiUtil.getModuleInterfaceSection(PascalModuleImpl.this);
             if (intf != null) {
@@ -437,7 +433,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     private class PrivateBuilder implements Callable<PascalHelperScope.UnitMembers> {
         @Override
-        public PascalHelperScope.UnitMembers call() throws Exception {
+        public PascalHelperScope.UnitMembers call() {
             PsiElement section = PsiUtil.getModuleImplementationSection(PascalModuleImpl.this);
             PascalHelperScope.UnitMembers res = new PascalHelperScope.UnitMembers();
             if (!PsiUtil.checkeElement(section)) {
@@ -455,7 +451,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
 
     private class PublicBuilder implements Callable<PascalHelperScope.UnitMembers> {
         @Override
-        public PascalHelperScope.UnitMembers call() throws Exception {
+        public PascalHelperScope.UnitMembers call() {
             PascalHelperScope.UnitMembers res = new PascalHelperScope.UnitMembers();
             res.all.put(getName().toUpperCase(), new PasField(PascalModuleImpl.this, PascalModuleImpl.this, getName(), PasField.FieldType.UNIT, PasField.Visibility.PRIVATE));
             res.stamp = getStamp(getContainingFile());

@@ -194,6 +194,7 @@ public class ModuleUtil {
         return retrieveUnitNamespaces(com.intellij.openapi.module.ModuleUtil.findModuleForPsiElement(parentIdent), parentIdent.getProject());
     }
 
+    // TODO: cache at SDK
     public static List<String> retrieveUnitNamespaces(@Nullable Module module, Project project) {
         Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : ProjectRootManager.getInstance(project).getProjectSdk();
         if (sdk != null) {

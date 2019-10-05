@@ -78,7 +78,8 @@ public class ResolveUtil {
     private static final Logger LOG = Logger.getInstance(ResolveUtil.class);
 
     public static final String STRUCT_SUFFIX = "#";
-    public static final Pattern PATTERN_TYPE_PARAM = Pattern.compile("(\\w+)(<.*?>)");
+
+    private static final Pattern PATTERN_TYPE_PARAM = Pattern.compile("(\\w+)(<.*?>)");
 
     private static final Set<PasField.Kind> KINDS_FOLLOW_TYPE = EnumSet.of(PasField.Kind.TYPEALIAS, PasField.Kind.ARRAY, PasField.Kind.POINTER, PasField.Kind.CLASSREF, PasField.Kind.PROCEDURE);
     private static final Set<PasField.Kind> KINDS_TYPE_REF = EnumSet.of(PasField.Kind.TYPEALIAS, PasField.Kind.TYPEREF);
@@ -93,12 +94,10 @@ public class ResolveUtil {
         final GlobalSearchScope scope = module != null ? GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false) : ProjectScope.getAllScope(project);
         if (key != null) {
             modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, key.toUpperCase(), project, scope, PascalModule.class));
-            if (key.indexOf('.') < 0) {
                 String dotKey = "." + key.toUpperCase();
                 for (String namespace : ModuleUtil.retrieveUnitNamespaces(module, project)) {
                     modules.addAll(StubIndex.getElements(PascalModuleIndex.KEY, namespace.toUpperCase() + dotKey, project, scope, PascalModule.class));
                 }
-            }
         } else {
             Processor<String> processor = new Processor<String>() {
                 @Override
@@ -326,8 +325,8 @@ public class ResolveUtil {
         }
 
         // First entry in FQN
-        List<PasEntityScope> namespaces = new SmartList<PasEntityScope>();
-        Collection<PasField> result = new HashSet<PasField>();
+        List<PasEntityScope> namespaces = new SmartList<>();
+        Collection<PasField> result = new HashSet<>();
 
         Set<PasField.FieldType> fieldTypes = EnumSet.copyOf(context.fieldTypes);
 
