@@ -83,8 +83,12 @@ public abstract class PascalBackendCompiler {
     protected static void addLibPathToCmdLine(final ArrayList<String> commandLine, File sourceRoot,
                                               final String compilerSettingSrcpath, final String compilerSettingIncpath) {
         if (sourceRoot.isDirectory()) {
-            commandLine.add(compilerSettingSrcpath + sourceRoot.getAbsolutePath());
-            commandLine.add(compilerSettingIncpath + sourceRoot.getAbsolutePath());
+            if (compilerSettingSrcpath != null) {
+                commandLine.add(compilerSettingSrcpath + sourceRoot.getAbsolutePath());
+            }
+            if (compilerSettingIncpath != null) {
+                commandLine.add(compilerSettingIncpath + sourceRoot.getAbsolutePath());
+            }
         }
     }
 

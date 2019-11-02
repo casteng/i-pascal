@@ -37,6 +37,8 @@ public class PascalSdkData implements SdkAdditionalData {
         COMPILER_NAMESPACES("compilerNamespaces"),
         COMPILER_OPTIONS("compilerOptions"),
         COMPILER_OPTIONS_DEBUG("compilerOptionsDebug"),
+        COMPILER_IMPLICIT_UNITS_DIR("implicitUnitsDir"),
+        COMPILER_IMPLICIT_UNITS("implicitUnits"),
         DECOMPILER_CACHE("decompilerCache"),
         DECOMPILER_COMMAND("decompilerCommand"),
 

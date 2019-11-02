@@ -27,6 +27,7 @@ public class FPCBackendCompiler extends PascalBackendCompiler {
     private static final String COMPILER_SETTING_SRCPATH = "-Fu";
     private static final String COMPILER_SETTING_INCPATH = "-Fi";
     private static final String COMPILER_SETTING_BUILDALL = "-B";
+    private static final String COMPILER_SETTING_IMPLICIT_UNITS = "-Fa";
     private static final String NAME = "FPC";
 
     public FPCBackendCompiler(CompilerMessager compilerMessager) {
@@ -83,6 +84,11 @@ public class FPCBackendCompiler extends PascalBackendCompiler {
                 String debugOpts = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS_DEBUG.getKey());
                 if (StringUtil.isNotEmpty(debugOpts)) {
                     Collections.addAll(commandLine, debugOpts.split("\\s+"));
+                }
+                String implicitUnits = pascalSdkData.get(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS.getKey());
+                if (StringUtil.isNotEmpty(implicitUnits)) {
+                    commandLine.add(COMPILER_SETTING_IMPLICIT_UNITS + implicitUnits);
+                    addLibPathToCmdLine(commandLine, new File(pascalSdkData.get(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS_DIR.getKey())), COMPILER_SETTING_SRCPATH, null);
                 }
             } else {
                 String compilerOptions = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS.getKey());

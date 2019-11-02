@@ -1,5 +1,6 @@
 package com.siberika.idea.pascal.sdk;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.projectRoots.AdditionalDataConfigurable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -10,6 +11,7 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.siberika.idea.pascal.PascalAppService;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
@@ -187,6 +189,15 @@ public class FPCSdkType extends BasePascalSdkType {
     @Override
     public AdditionalDataConfigurable createAdditionalDataConfigurable(@NotNull final SdkModel sdkModel, @NotNull final SdkModificator sdkModificator) {
         return new PascalSdkConfigUI();
+    }
+
+    public static void applyDebugUnitFile(Sdk sdk) {
+        if ((sdk != null) && (sdk.getSdkType() instanceof FPCSdkType)) {
+            PascalSdkData data = BasePascalSdkType.getAdditionalData(sdk);
+            PascalAppService appService = ApplicationManager.getApplication().getComponent(PascalAppService.class);
+            data.setValue(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS_DIR.getKey(), appService.getDebugUnitDir().getAbsolutePath());
+            data.setValue(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS.getKey(), appService.getDebugUnitName());
+        }
     }
 
 }
