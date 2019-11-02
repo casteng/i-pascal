@@ -549,7 +549,7 @@ private typeDeclsRest       ::= "," TypeDecl {pin=1}
 
 TypeID                      ::=	SPECIALIZE? FullyQualifiedIdent [GenericPostfix]
 
-TypeDecl	                ::=	complexType | PointerType | ProcedureType | StringType | simpleType | [TYPE] TypeID
+TypeDecl	                ::=	complexType | PointerType | ProcedureType | [TYPE] StringType | simpleType | [TYPE] TypeID
 
 private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS | OBJC_PROTOCOL) //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
 
