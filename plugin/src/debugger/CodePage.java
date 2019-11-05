@@ -132,9 +132,11 @@ public enum CodePage {
     }
 
     public static CodePage byId(Long codepage) {
-        for (CodePage value : values()) {
-            if (value.id == codepage) {
-                return value;
+        if (codepage != null) {
+            for (CodePage value : values()) {
+                if (value.id == codepage) {
+                    return value;
+                }
             }
         }
         return null;

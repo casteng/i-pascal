@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiComment;
@@ -870,6 +871,8 @@ public class PsiUtil {
     public static <T extends PsiElement> SmartPsiElementPointer<T> createSmartPointer(T element) {
         try {
             return SmartPointerManager.getInstance(element.getProject()).createSmartPsiElementPointer(element);
+        } catch (ProcessCanceledException e) {
+            throw e;
         } catch (Throwable e) {
             LOG.info(e.getMessage(), e);
             return null;
