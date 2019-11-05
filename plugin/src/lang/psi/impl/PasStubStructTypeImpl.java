@@ -46,6 +46,7 @@ import com.siberika.idea.pascal.lang.stub.struct.PasStructStub;
 import com.siberika.idea.pascal.module.ModuleService;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -348,6 +349,12 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
     private List<SmartPsiElementPointer<PasEntityScope>> calcParentScopes() {
         List<SmartPsiElementPointer<PasEntityScope>> res = calcParentScopesStub();
         if (res != null) {
+            // ===*** debug validation
+            for (SmartPsiElementPointer<PasEntityScope> scopePtr : res) {
+                if (null == scopePtr) {
+                    LOG.info("ERROR: parent is null for " + StrUtil.toDebugString(this));
+                }
+            }
             return res;
         }
         res = new SmartList<>();

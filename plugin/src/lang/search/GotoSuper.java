@@ -143,8 +143,6 @@ public class GotoSuper implements LanguageCodeInsightActionHandler {
                     }
                 }
             }
-        } else {
-            LOG.info("Invalid scope pointer resolved while extracting methods for: " + routine);
         }
         return true;
     }
