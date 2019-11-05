@@ -18,6 +18,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.CommonProcessors;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.indexing.FileBasedIndex;
@@ -92,19 +93,19 @@ public class ModuleUtil {
         return null;
     }
 
-    public static Collection<VirtualFile> getCompiledByNameNoCase(final Module module, String unitName, final FileType fileType) {
+    public static VirtualFile getCompiledByNameNoCase(final Module module, String unitName, final FileType fileType) {
         final String fullName = unitName + "." + fileType.getDefaultExtension();
-        return ApplicationManager.getApplication().runReadAction(new Computable<Collection<VirtualFile>>() {
+        return ApplicationManager.getApplication().runReadAction(new Computable<VirtualFile>() {
             @Override
-            public Collection<VirtualFile> compute() {
-                Collection<VirtualFile> res = new SmartList<VirtualFile>();
-                for (VirtualFile file : FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, fileType,
-                        GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module))) {
-                    if (fullName.equalsIgnoreCase(file.getName())) {
-                        res.add(file);
+            public VirtualFile compute() {
+                final CommonProcessors.FindProcessor<VirtualFile> processor = new CommonProcessors.FindProcessor<VirtualFile>() {
+                    @Override
+                    protected boolean accept(VirtualFile virtualFile) {
+                        return fullName.equalsIgnoreCase(virtualFile.getName());
                     }
-                }
-                return res;
+                };
+                FileTypeIndex.processFiles(fileType, processor, GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module));
+                return processor.getFoundValue();
             }
         });
     }

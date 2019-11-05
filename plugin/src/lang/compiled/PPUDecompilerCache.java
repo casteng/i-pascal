@@ -28,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -108,11 +107,12 @@ public class PPUDecompilerCache {
 
     String retrieveXml(String key, File ppuDump) throws IOException, PascalException {
         Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
-        Collection<VirtualFile> files = ModuleUtil.getCompiledByNameNoCase(module, key, PPUFileType.INSTANCE);
-        if (files.isEmpty()) {
+        VirtualFile file = ModuleUtil.getCompiledByNameNoCase(module, key, PPUFileType.INSTANCE);
+        if (file != null) {
+            return SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), SysUtils.LONG_TIMEOUT, PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, file.getPath());
+        } else {
             throw new PascalRTException(PascalBundle.message("decompile.file.notfound", key));
         }
-        return SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), SysUtils.LONG_TIMEOUT, PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, files.iterator().next().getPath());
     }
 
     File retrievePpuDump(String key) throws IOException {
@@ -182,9 +182,9 @@ public class PPUDecompilerCache {
     }
 
     VirtualFile retrieveFile(Module module, String unitName) {
-        Collection<VirtualFile> files = ModuleUtil.getCompiledByNameNoCase(module, unitName, PPUFileType.INSTANCE);
-        if (!files.isEmpty()) {
-            return files.iterator().next();
+        VirtualFile file = ModuleUtil.getCompiledByNameNoCase(module, unitName, PPUFileType.INSTANCE);
+        if (file != null) {
+            return file;
         }
         return null;
     }

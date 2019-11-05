@@ -509,7 +509,7 @@ public class PPUDumpParser {
             if (section != null) {
                 return appendLocalReference(sec, pos, id, symid, prefix + unitName + ".", "", def, section.idNameMap, section.symidNameMap);
             } else {
-                return sec.insertText(pos, unitName + "." + def);
+                return sec.insertText(pos, prefix + unitName + "." + def);
             }
         }
 
@@ -520,7 +520,7 @@ public class PPUDumpParser {
             return "";
         }
 
-        private String retrieveReference(Object unit, Object id, Object symid, String defalut) {
+        private String retrieveReference(Object unit, Object id, Object symid, String def) {
             String res = "";
             if (unit != null) {
                 int ind = Integer.parseInt((String) unit);
@@ -538,7 +538,7 @@ public class PPUDumpParser {
                     @SuppressWarnings("SuspiciousMethodCalls")
                     String ref = nameMap.get(id);
                     if (StringUtil.isEmpty(ref) || (ref.startsWith("$"))) {
-                        res = defalut;
+                        res = def;
                     } else {
                         res = res + ref;
                     }
