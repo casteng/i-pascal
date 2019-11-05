@@ -348,7 +348,7 @@ abstract class FQNResolver {
         res = tryUnit(fqn, sortedUnits);
         if (res != null) {
             return processScope(res, res.getName());
-        } else if (fqn.isTarget()) {            // don't check with prefixes if fqn has more than one level
+        } else {
             NamespaceRec oldFqn = new NamespaceRec(fqn);
             for (String prefix : context.unitNamespaces) {
                 fqn.addPrefix(oldFqn, prefix);
