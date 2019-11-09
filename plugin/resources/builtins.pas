@@ -68,6 +68,9 @@ type
     PChar = ^Char;
     PShortString = ^ShortString;
     TextFile = TextFile;
+    TArray<T> = class
+      public property __ArrData[Index: Integer]: T; default;
+    end;
 
 const
     PI: Extended = 3.1415926535897932385;

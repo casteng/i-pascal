@@ -731,7 +731,7 @@ private designatorsRest     ::= "," Expression {}
 RaiseStatement              ::= RAISE [Expression] ["at" Expression] {pin=1}
 
 private flowStatement       ::= ExitStatement | BreakStatement | ContinueStatement | GotoStatement
-ExitStatement               ::= EXIT [ "(" Expression ")" ]
+ExitStatement               ::= EXIT [ "(" [Expression] ")" ]
 BreakStatement              ::= BREAK
 ContinueStatement           ::= CONTINUE
 GotoStatement               ::= GOTO LabelId
