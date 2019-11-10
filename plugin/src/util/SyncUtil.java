@@ -3,6 +3,7 @@ package com.siberika.idea.pascal.util;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressManager;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -45,6 +46,21 @@ public class SyncUtil {
             } finally {
                 nameLock.unlock();
             }
+        }
+    }
+
+    public static <T> T doWithLock(ReentrantLock nameLock, Callable<T> runnable) {
+        if (SyncUtil.lockOrCancel(nameLock)) {
+            try {
+                return runnable.call();
+            } catch (Exception e) {
+                LOG.warn("ERROR: doWithLock: ", e);
+                return null;
+            } finally {
+                nameLock.unlock();
+            }
+        } else {
+            return null;
         }
     }
 }

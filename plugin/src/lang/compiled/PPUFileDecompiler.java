@@ -7,6 +7,7 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalBundle;
+import com.siberika.idea.pascal.module.ModuleService;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,6 +24,7 @@ public class PPUFileDecompiler implements BinaryFileDecompiler {
         final Project[] projects = ProjectManager.getInstance().getOpenProjects();
         if (projects.length == 0) return "";
         final Project project = projects[0];
+        ModuleService.ensureNameFileCache(file, project, false);     // Do not check TTL to avoid reentrant indexing errors
         return decompileText(project, file);
     }
 

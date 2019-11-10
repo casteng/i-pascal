@@ -8,8 +8,10 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.compiled.ClsStubBuilder;
 import com.intellij.psi.stubs.PsiFileStub;
 import com.intellij.util.indexing.FileContent;
+import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalLanguage;
 import com.siberika.idea.pascal.lang.parser.PascalFileElementType;
+import com.siberika.idea.pascal.module.ModuleService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +29,9 @@ public class PascalCompiledStubBuilder extends ClsStubBuilder {
     @Nullable
     @Override
     public PsiFileStub<?> buildFileStub(@NotNull FileContent fileContent) {
+        if (fileContent.getFileType() == PPUFileType.INSTANCE) {
+            ModuleService.ensureNameFileCache(fileContent.getFile(), fileContent.getProject(), true);
+        }
         PsiManager manager = PsiManager.getInstance(fileContent.getProject());
         FileViewProvider vp = manager.findViewProvider(fileContent.getFile());
         PsiFile file = vp != null ? vp.getPsi(PascalLanguage.INSTANCE) : null;

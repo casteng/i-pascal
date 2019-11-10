@@ -137,4 +137,9 @@ public abstract class CompiledFileImpl extends PsiFileBase implements PsiFileEx,
         }
     }
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ":" + getName();
+    }
+
 }

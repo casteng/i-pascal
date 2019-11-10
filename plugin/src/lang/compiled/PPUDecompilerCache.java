@@ -10,16 +10,15 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
+import com.siberika.idea.pascal.module.ModuleService;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import com.siberika.idea.pascal.util.DocUtil;
-import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.StrUtil;
 import com.siberika.idea.pascal.util.SysUtils;
 import org.jetbrains.annotations.NotNull;
@@ -52,7 +51,9 @@ public class PPUDecompilerCache {
 
     public static String decompile(Module module, String filename, @Nullable VirtualFile file) {
         Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
-        if (null == sdk) { return PascalBundle.message("decompile.wrong.sdk"); }
+        if (null == sdk) {
+            return PascalBundle.message("decompile.wrong.sdk");
+        }
         PPUDecompilerCache decompilerCache;
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (sdk) {
@@ -107,7 +108,8 @@ public class PPUDecompilerCache {
 
     String retrieveXml(String key, File ppuDump) throws IOException, PascalException {
         Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
-        VirtualFile file = ModuleUtil.getCompiledByNameNoCase(module, key, PPUFileType.INSTANCE);
+        ModuleService.getInstance(module).ensureCache(module, false);
+        VirtualFile file = module.getComponent(ModuleService.class).getFileByUnitName(key);
         if (file != null) {
             return SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), SysUtils.LONG_TIMEOUT, PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, file.getPath());
         } else {
@@ -182,11 +184,7 @@ public class PPUDecompilerCache {
     }
 
     VirtualFile retrieveFile(Module module, String unitName) {
-        VirtualFile file = ModuleUtil.getCompiledByNameNoCase(module, unitName, PPUFileType.INSTANCE);
-        if (file != null) {
-            return file;
-        }
-        return null;
+        return module.getComponent(ModuleService.class).getFileByUnitName(unitName);
     }
 
     private String getKey(String unitName) {
