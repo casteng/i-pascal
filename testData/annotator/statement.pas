@@ -13,4 +13,5 @@ begin
     begin
        ;
     end;
+    for i in test do;
 end.

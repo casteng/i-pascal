@@ -75,7 +75,7 @@ public class PascalAppService implements ApplicationComponent {
         }
         Sdk[] sdks = ProjectJdkTable.getInstance().getAllJdks();
         for (Sdk sdk : sdks) {
-            FPCSdkType.applyDebugUnitFile(sdk);
+            FPCSdkType.applyDebugUnitFile(sdk, debugUnitDir.getAbsolutePath(), getDebugUnitName());
         }
     }
 }

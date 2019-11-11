@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.sdk;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.projectRoots.AdditionalDataConfigurable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -9,9 +8,10 @@ import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.SdkType;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.siberika.idea.pascal.PascalAppService;
+import com.intellij.util.containers.SmartHashSet;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
@@ -29,6 +29,7 @@ import javax.swing.*;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Author: George Bakhtadze
@@ -191,12 +192,22 @@ public class FPCSdkType extends BasePascalSdkType {
         return new PascalSdkConfigUI();
     }
 
-    public static void applyDebugUnitFile(Sdk sdk) {
+    public static void applyDebugUnitFile(Sdk sdk, String debugUnitDir, String debugUnitName) {
         if ((sdk != null) && (sdk.getSdkType() instanceof FPCSdkType)) {
             PascalSdkData data = BasePascalSdkType.getAdditionalData(sdk);
-            PascalAppService appService = ApplicationManager.getApplication().getComponent(PascalAppService.class);
-            data.setValue(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS_DIR.getKey(), appService.getDebugUnitDir().getAbsolutePath());
-            data.setValue(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS.getKey(), appService.getDebugUnitName());
+            addString(data, PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS_DIR, debugUnitDir, ";");
+            addString(data, PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS, debugUnitName, ";");
+        }
+    }
+
+    private static void addString(PascalSdkData data, PascalSdkData.Keys key, String str, String delimiter) {
+        String value = (String) data.getValue(key.getKey());
+        if (StringUtil.isEmpty(value)) {
+            data.setValue(key.getKey(), str);
+        } else {
+            Set<String> valueSet = new SmartHashSet<>(Arrays.asList(value.split(delimiter)));
+            valueSet.add(str);
+            data.setValue(key.getKey(), String.join(delimiter, valueSet));
         }
     }
 
