@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.50</version>
+    <version>2.51</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -15,7 +15,9 @@
             <li>Array values formatting in watches</li>
             <li>Threads support in debugger</li>
             <li>Correctly display strings in any codepage while debugging</li>
-            <li>Fix invalid class cast error (GitHub #96)</li>
+            <li>Fix reentrant indexing error (GitHub #44, BitBucket #97)</li>
+            <li>Fix invalid class cast error (GitHub #46, BitBucket #96)</li>
+            <li>Fix unit namespaces (GitHub #45)</li>
         </ul>
         <p>2.40</p>
         <ul>
