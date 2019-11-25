@@ -300,6 +300,16 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
                 }
                 child = PsiTreeUtil.skipSiblingsForward(child, PsiWhiteSpace.class, PsiComment.class);
             }
+            // Add type parameters to this structured type scope
+            PsiElement nameIdent = getNameIdentifier();
+            if (nameIdent instanceof PasGenericTypeIdent) {
+                PasGenericDefinition pgd = PsiTreeUtil.getChildOfType(nameIdent, PasGenericDefinition.class);
+                if (pgd != null) {
+                    for (PasNamedIdent typeParamIdent : PsiTreeUtil.getChildrenOfTypeAsList(pgd, PasNamedIdent.class)) {
+                        addField(res, typeParamIdent, PasField.FieldType.TYPE, PasField.Visibility.STRICT_PRIVATE);
+                    }
+                }
+            }
             res.stamp = getStamp(getContainingFile());
             LOG.debug(getName() + ": buildMembers: " + res.all.size() + " members");
             return res;

@@ -338,7 +338,12 @@ abstract class FQNResolver {
                 stub = stub != null ? stub.getParentStub() : null;
                 context.scope = stub != null ? (PasEntityScope) stub.getPsi() : null;
             } else {
-                context.scope = PsiUtil.getNearestAffectingScope(fqn.getParentIdent());
+                PsiElement fqnIdent = fqn.getParentIdent();
+                context.scope = PsiUtil.getNearestAffectingScope(fqnIdent);
+                if (PsiUtil.isTypeSpecialization(fqnIdent)) {      // Search for type parameters in structured type being declared if any
+                    PsiElement scopeCandidate = PsiUtil.getNearestAffectingDeclarationsRoot(fqn.getParentIdent());
+                    context.scope = scopeCandidate instanceof PasEntityScope ? (PasEntityScope) scopeCandidate : context.scope;
+                }
             }
         }
     }

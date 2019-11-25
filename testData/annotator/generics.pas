@@ -19,6 +19,7 @@ implementation
 
 var
     List: TList<Integer>;
+    Undecl: <error descr="Undeclared identifier">P</error>;
 
 constructor TList<T, P>.Create();
 begin

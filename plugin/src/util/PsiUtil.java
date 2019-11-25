@@ -298,6 +298,14 @@ public class PsiUtil {
         return (element instanceof PasNamespaceIdent) && (element.getParent() instanceof PasUsesClause);
     }
 
+    public static boolean isTypeParameter(PascalNamedElement element) {
+        return (element instanceof PasNamedIdent) && (element.getParent() instanceof PasGenericDefinition);
+    }
+
+    public static boolean isTypeSpecialization(PsiElement element) {
+        return (element instanceof PasFullyQualifiedIdent) && (element.getParent().getParent().getParent() instanceof PasGenericPostfix);
+    }
+
     /**
      * @param element element
      * @return true if the element is a pointer type declaration. I.e. "TType = ^element".

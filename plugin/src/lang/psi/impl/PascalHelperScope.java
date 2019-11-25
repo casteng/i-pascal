@@ -77,7 +77,7 @@ class PascalHelperScope extends PascalHelperNamed {
         }
         for (PascalNamedElement namedElement : PsiUtil.findChildrenOfAnyType(section, PasNamedIdent.class, PasNamedIdentDeclImpl.class, PasGenericTypeIdent.class, PasNamespaceIdent.class, PasClassQualifiedIdent.class)) {
             if (PsiUtil.isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
-                if (!PsiUtil.isFormalParameterName(namedElement) && !PsiUtil.isUsedUnitName(namedElement)) {
+                if (!PsiUtil.isFormalParameterName(namedElement) && !PsiUtil.isUsedUnitName(namedElement) && !PsiUtil.isTypeParameter(namedElement)) {
                     if (PsiUtil.isRoutineName(namedElement)) {
                         namedElement = (PascalNamedElement) namedElement.getParent();
                     }

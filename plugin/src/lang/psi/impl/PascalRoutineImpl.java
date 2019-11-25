@@ -6,6 +6,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.HasTypeParameters;
@@ -13,7 +14,9 @@ import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
+import com.siberika.idea.pascal.lang.psi.PasGenericDefinition;
 import com.siberika.idea.pascal.lang.psi.PasGenericPostfix;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
@@ -180,7 +183,7 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
                 PascalHelperScope.collectFields(PascalRoutineImpl.this, PascalRoutineImpl.this, PasField.Visibility.STRICT_PRIVATE, res.all, res.redeclared);
 
                 addSelf(res);
-
+                addTypeParameters(res);
                 LOG.debug(PsiUtil.getFieldName(PascalRoutineImpl.this) + ": buildMembers: " + res.all.size() + " members");
 //                    System.out.println(PsiUtil.getFieldName(PascalRoutineImpl.this) + ": buildMembers: " + res.all.size() + " members");
                 return res;
@@ -291,6 +294,17 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
             PasTypeDecl typeDecl = (PasTypeDecl) scope.getParent();
             field.setValueType(new PasField.ValueType(field, PasField.Kind.STRUCT, null, typeDecl));
             res.all.put(BUILTIN_SELF_UPPER, field);
+        }
+    }
+
+    private void addTypeParameters(PascalHelperScope.Members res) {
+        PsiElement nameIdent = getNameIdentifier();
+        nameIdent = nameIdent instanceof LeafPsiElement ? nameIdent.getParent() : null;
+        PsiElement pgd = nameIdent != null ? nameIdent.getNextSibling() : null;
+        if (pgd instanceof PasGenericDefinition) {
+            for (PasNamedIdent typeParamIdent : PsiTreeUtil.getChildrenOfTypeAsList(pgd, PasNamedIdent.class)) {
+                addField(res, typeParamIdent, PasField.FieldType.TYPE);
+            }
         }
     }
 
