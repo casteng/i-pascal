@@ -45,8 +45,8 @@ public class PPUDumpParserTest {
     private static class PPUDecompilerCacheTest extends PPUDecompilerCache {
         private final Map<String, File> files;
 
-        public PPUDecompilerCacheTest(Module module, Map<String, File> files) {
-            super(module);
+        PPUDecompilerCacheTest(Module module, Map<String, File> files) {
+            super(module, null);
             this.files = files;
         }
 
