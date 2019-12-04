@@ -78,7 +78,7 @@ public class PascalSdkData implements SdkAdditionalData {
     @Override
     public Object clone() throws CloneNotSupportedException {
         return new PascalSdkData(data);
-    };
+    }
 
     public Object getValue(final String key) {
         Object res = data.get(key);

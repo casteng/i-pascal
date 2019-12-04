@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.52</version>
+    <version>2.53</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -11,6 +11,7 @@
     <change-notes><![CDATA[
         <p>2.60</p>
         <ul>
+            <li>Errors, warning and hints highlighting using compiler syntax check</li>
             <li>Fix type parameters scope</li>
         </ul>
         <p>2.50</p>
@@ -490,6 +491,7 @@
                             serviceImplementation="com.siberika.idea.pascal.lang.folding.PascalCodeFoldingSettingsImpl"/>
 
         <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
+        <externalAnnotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalExternalAnnotator"/>
         <localInspection language="Pascal" displayName="Unused units detection" enabledByDefault="true" groupName="Pascal"
                          implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection"/>
         <localInspection language="Pascal" displayName="Unused local identifiers detection" enabledByDefault="true" groupName="Pascal"

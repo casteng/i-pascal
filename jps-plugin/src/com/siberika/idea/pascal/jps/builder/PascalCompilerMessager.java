@@ -17,7 +17,7 @@ class PascalCompilerMessager implements CompilerMessager {
     private final CompileContext context;
     private final String name;
 
-    public PascalCompilerMessager(String name, CompileContext context) {
+    PascalCompilerMessager(String name, CompileContext context) {
         this.name = name;
         this.context = context;
     }
@@ -25,6 +25,7 @@ class PascalCompilerMessager implements CompilerMessager {
     static void createMessage(CompilerMessageCategory category, String line, Matcher matcher, CompilerMessager messager) {
         int lineNum = -1;
         int colNum = -1;
+        String msgId = null;
         String message = null;
         String url = "";
         if (null != matcher) {
@@ -39,31 +40,39 @@ class PascalCompilerMessager implements CompilerMessager {
                     colNum = Integer.parseInt(matcher.group(5));
                 } catch (NumberFormatException ignore) {}
             }
+            msgId = matcher.group(groupCount - 1);
             message = matcher.group(groupCount);
         }
         if (null == message) message = line;
 
         if (CompilerMessageCategory.ERROR.equals(category)) {
-            messager.error(message, url, lineNum, colNum);
+            messager.error(msgId, message, url, lineNum, colNum);
         } else if (CompilerMessageCategory.WARNING.equals(category)) {
-            messager.warning(message, url, lineNum, colNum);
+            messager.warning(msgId, message, url, lineNum, colNum);
+        } else if (CompilerMessageCategory.HINT.equals(category)) {
+            messager.hint(msgId, message, url, lineNum, colNum);
         } else {
-            messager.info(message, url, lineNum, colNum);
+            messager.info(msgId, message, url, lineNum, colNum);
         }
     }
 
     @Override
-    public void info(String msg, String path, long line, long column) {
-        context.processMessage(new CompilerMessage(name, BuildMessage.Kind.INFO, msg, path, -1l, -1l, -1l, line, column));
+    public void hint(String msgId, String msg, String path, long line, long column) {
+        context.processMessage(new CompilerMessage(name, BuildMessage.Kind.INFO, msg, path, -1L, -1L, -1L, line, column));
     }
 
     @Override
-    public void warning(String msg, String path, long line, long column) {
-        context.processMessage(new CompilerMessage(name, BuildMessage.Kind.WARNING, msg, path, -1l, -1l, -1l, line, column));
+    public void info(String msgId, String msg, String path, long line, long column) {
+        context.processMessage(new CompilerMessage(name, BuildMessage.Kind.OTHER, msg, path, -1L, -1L, -1L, line, column));
     }
 
     @Override
-    public void error(String msg, String path, long line, long column) {
-        context.processMessage(new CompilerMessage(name, BuildMessage.Kind.ERROR, msg, path, -1l, -1l, -1l, line, column));
+    public void warning(String msgId, String msg, String path, long line, long column) {
+        context.processMessage(new CompilerMessage(name, BuildMessage.Kind.WARNING, msg, path, -1L, -1L, -1L, line, column));
+    }
+
+    @Override
+    public void error(String msgId, String msg, String path, long line, long column) {
+        context.processMessage(new CompilerMessage(name, BuildMessage.Kind.ERROR, msg, path, -1L, -1L, -1L, line, column));
     }
 }

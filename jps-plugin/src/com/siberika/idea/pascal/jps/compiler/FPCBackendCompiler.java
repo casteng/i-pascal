@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.jps.builder.FPCCompilerProcessAdapter;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
@@ -23,7 +24,7 @@ public class FPCBackendCompiler extends PascalBackendCompiler {
 
     private static final String COMPILER_SETTING_OPATH_EXE = "-FE";
     private static final String COMPILER_SETTING_OPATH_UNIT = "-FU";
-    private static final String COMPILER_SETTING_COMMON = "-viewnb";
+    private static final String COMPILER_SETTING_COMMON = "-viewhnbq";
     private static final String COMPILER_SETTING_SRCPATH = "-Fu";
     private static final String COMPILER_SETTING_INCPATH = "-Fi";
     private static final String COMPILER_SETTING_BUILDALL = "-B";
@@ -96,6 +97,31 @@ public class FPCBackendCompiler extends PascalBackendCompiler {
                     Collections.addAll(commandLine, compilerOptions.split("\\s+"));
             }
         }
+        return true;
+    }
+
+    @Override
+    public boolean createSyntaxCheckCommandImpl(String sdkHomePath, String modulePath, PascalSdkData pascalSdkData,
+                                                VirtualFile[] sourcePaths, ArrayList<String> commandLine, String tempDir) {
+        String compilerCommand = pascalSdkData != null ? pascalSdkData.getString(PascalSdkData.Keys.COMPILER_COMMAND) : null;
+        File executable = checkCompilerExe(sdkHomePath, modulePath, compilerMessager, PascalSdkUtil.getFPCExecutable(sdkHomePath), compilerCommand);
+        if (null == executable) return false;
+        commandLine.add(executable.getPath());
+
+        commandLine.add(COMPILER_SETTING_COMMON);
+        commandLine.add("-Cn");
+        commandLine.add("-n");
+        commandLine.add("-Se100");
+
+        commandLine.add(COMPILER_SETTING_OPATH_EXE + tempDir);
+        commandLine.add(COMPILER_SETTING_OPATH_UNIT + tempDir);
+
+        for (File sdkPath : FileUtil.retrievePaths(sourcePaths)) {
+            addLibPathToCmdLine(commandLine, sdkPath, COMPILER_SETTING_SRCPATH, COMPILER_SETTING_INCPATH);
+        }
+
+        commandLine.add(modulePath);
+        
         return true;
     }
 

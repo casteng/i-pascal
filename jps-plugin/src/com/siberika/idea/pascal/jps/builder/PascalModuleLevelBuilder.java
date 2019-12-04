@@ -82,14 +82,14 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
             if (sdk != null) {
                 PascalBackendCompiler compiler = getCompiler(sdk, messager);
                 if (compiler != null) {
-                    messager.info("Compiler family:" + compiler.getId(), "", -1l, -1);
+                    messager.info(null, "Compiler family:" + compiler.getId(), "", -1L, -1);
                     List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
                     sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
                     File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
 
                     for (File file : files.get(target)) {
                         File compiled = new File(outputDir, FileUtil.getNameWithoutExtension(file) + compiler.getCompiledUnitExt());
-                        messager.info(String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1l, -1l);
+                        messager.info(null, String.format("Map: %s => %s ", file.getCanonicalPath(), compiled.getCanonicalPath()), null, -1L, -1L);
                         outputConsumer.registerOutputFile(chunk.representativeTarget(), compiled, Collections.singleton(file.getCanonicalPath()));
                     }
 
@@ -101,14 +101,14 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
                     if (cmdLine != null) {
                         int exitCode = launchCompiler(compiler, messager, cmdLine);
                         if (exitCode != 0) {
-                            messager.error("Error. Compiler exit code: " + exitCode, null, -1l, -1l);
+                            messager.error(null, "Error. Compiler exit code: " + exitCode, null, -1L, -1L);
                             return ExitCode.ABORT;
                         }
                     } else {
                         return ExitCode.ABORT;
                     }
                 } else {
-                    messager.error("Can't determine compiler family", "", -1l, -1l);
+                    messager.error(null, "Can't determine compiler family", "", -1L, -1L);
                     return ExitCode.ABORT;
                 }
             } else {
@@ -133,9 +133,9 @@ public class PascalModuleLevelBuilder extends ModuleLevelBuilder {
     }
 
     private int launchCompiler(PascalBackendCompiler compiler, CompilerMessager messager, String[] cmdLine) throws IOException {
-        messager.info("Command line: ", null, -1l, -1l);
+        messager.info(null, "Command line: ", null, -1L, -1L);
         for (String s : cmdLine) {
-            messager.info(s, null, -1l, -1l);
+            messager.info(null, s, null, -1L, -1L);
         }
         Process process = Runtime.getRuntime().exec(cmdLine);
         BaseOSProcessHandler handler = new BaseOSProcessHandler(process, "", Charset.defaultCharset());

@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * Author: George Bakhtadze
@@ -83,5 +84,15 @@ public class SysUtils {
             LOG.warn("Error closing resource", e);
         }
     }
-    
+
+    public static File createTempDir(String prefix) {
+        try {
+            final File file = Files.createTempDirectory(prefix).toFile();
+            file.deleteOnExit();
+            return file;
+        } catch (IOException e) {
+            LOG.error("Error creating temp dir: " + prefix);
+            return null;
+        }
+    }
 }

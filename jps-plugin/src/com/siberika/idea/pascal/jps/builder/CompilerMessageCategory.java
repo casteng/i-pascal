@@ -5,5 +5,5 @@ package com.siberika.idea.pascal.jps.builder;
  * Date: 09/10/2016
  */
 public enum CompilerMessageCategory {
-    ERROR, WARNING, INFO
+    ERROR, WARNING, INFO, HINT
 }

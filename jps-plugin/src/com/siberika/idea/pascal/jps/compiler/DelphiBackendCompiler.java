@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import com.siberika.idea.pascal.jps.builder.DelphiCompilerProcessAdapter;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
@@ -92,12 +93,18 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
 
         for (File sdkPath : FileUtil.retrievePaths(sdkFiles)) {
             if (isFromRTL(sdkHomePath, sdkPath)) {
-                compilerMessager.info(JpsPascalBundle.message("compile.skipRTL") + " " + sdkPath.getPath(), null, -1, -1);
+                compilerMessager.info(null, JpsPascalBundle.message("compile.skipRTL") + " " + sdkPath.getPath(), null, -1, -1);
             } else {
                 addLibPathToCmdLine(commandLine, sdkPath, COMPILER_SETTING_SRCPATH, COMPILER_SETTING_INCPATH);
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean createSyntaxCheckCommandImpl(String sdkHomePath, String moduleName, PascalSdkData pascalSdkData,
+                                                VirtualFile[] sourcePaths, ArrayList<String> commandLine, String tempDir) {
+        return false;
     }
 
     private boolean isFromRTL(String sdkHomePath, File file) {

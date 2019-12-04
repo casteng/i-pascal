@@ -16,9 +16,11 @@ import com.intellij.util.Processor;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.util.PsiUtil;
 import com.siberika.idea.pascal.util.SyncUtil;
+import com.siberika.idea.pascal.util.SysUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +39,12 @@ public class ModuleService implements ModuleComponent {
     private final ReentrantLock cacheNameFileLock = new ReentrantLock();
     private final Map<String, VirtualFile> cacheNameFileMap = new ConcurrentHashMap<>();
     private long lastClearTimeNameFile = 0;
+    private File syntaxCheckTempDir;
+
+    @Override
+    public void initComponent() {
+        syntaxCheckTempDir = SysUtils.createTempDir("ipassynck");
+    }
 
     public static ModuleService getInstance(@Nullable Module module) {
         if (module != null) {
@@ -119,4 +127,7 @@ public class ModuleService implements ModuleComponent {
         });
     }
 
+    public File getSyntaxCheckTempDir() {
+        return syntaxCheckTempDir;
+    }
 }

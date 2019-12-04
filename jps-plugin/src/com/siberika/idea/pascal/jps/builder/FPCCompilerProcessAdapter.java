@@ -13,10 +13,10 @@ import java.util.regex.Pattern;
 public class FPCCompilerProcessAdapter extends PascalCompilerProcessAdapter {
 
     @NonNls private static final String PATTERN_COMMON = "((.*)\\((\\d+)(,(\\d+))?\\))?\\s*";
-    @NonNls private static final String PATTERN_MESSAGE = "\\s*(.*)$";
+    @NonNls private static final String PATTERN_MESSAGE = "\\s*\\((\\d+)\\) (.*)$";
     @NonNls private static final Pattern PATTERN_ERROR = Pattern.compile("((.*)\\((\\d+)(,(\\d+))?\\))?\\s*(Error|Fatal):" + PATTERN_MESSAGE);
     @NonNls private static final Pattern PATTERN_WARNING = Pattern.compile(PATTERN_COMMON + "(Error|Fatal|Warning|warning):" + PATTERN_MESSAGE);
-    @NonNls private static final Pattern PATTERN_INFO = Pattern.compile(PATTERN_COMMON + PATTERN_MESSAGE);
+    @NonNls private static final Pattern PATTERN_INFO = Pattern.compile(PATTERN_COMMON + "(Note|Hint|)?:?" + PATTERN_MESSAGE);
 
     public FPCCompilerProcessAdapter(CompilerMessager messager) {
         super(messager);
@@ -37,7 +37,7 @@ public class FPCCompilerProcessAdapter extends PascalCompilerProcessAdapter {
             } else {
                 matcher = PATTERN_INFO.matcher(line);
                 if (matcher.find()) {
-                    PascalCompilerMessager.createMessage(CompilerMessageCategory.INFO, line, matcher, messager);
+                    PascalCompilerMessager.createMessage(CompilerMessageCategory.HINT, line, matcher, messager);
                 } else {
                     PascalCompilerMessager.createMessage(CompilerMessageCategory.INFO, line, null, messager);
                 }

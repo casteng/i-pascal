@@ -1,14 +1,10 @@
 package com.siberika.idea.pascal.jps.builder;
 
-import com.intellij.execution.process.BaseOSProcessHandler;
-import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
-import com.siberika.idea.pascal.jps.compiler.DelphiBackendCompiler;
-import com.siberika.idea.pascal.jps.compiler.FPCBackendCompiler;
 import com.siberika.idea.pascal.jps.compiler.PascalBackendCompiler;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
 import com.siberika.idea.pascal.jps.model.JpsPascalSdkType;
@@ -16,7 +12,6 @@ import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.ParamMap;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
 import org.jetbrains.jps.builders.BuildTarget;
 import org.jetbrains.jps.builders.BuildTargetIndex;
@@ -42,7 +37,6 @@ import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -109,9 +103,9 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
 
         JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
         if (sdk != null) {
-            PascalBackendCompiler compiler = getCompiler(sdk, messager);
+            PascalBackendCompiler compiler = PascalBackendCompiler.getCompiler(getCompilerFamily(sdk), messager);
             if (compiler != null) {
-                messager.info("Compiler family:" + compiler.getId(), "", -1L, -1);
+                messager.info(null, "Compiler family:" + compiler.getId(), "", -1L, -1);
                 List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
                 sdkFiles.addAll(sdk.getParent().getFiles(JpsOrderRootType.SOURCES));
                 File outputDir = getBuildOutputDirectory(module, target.isTests(), context);
@@ -132,15 +126,15 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                 if (cmdLine != null) {
                     // For Delphi workingDirectory should be null otherwise file paths in compiler messages will be relative
                     File workingDirectory = PascalCompilerFamily.DELPHI.equals(getCompilerFamily(sdk)) ? null : new File(FileUtil.expandUserHome("~/"));
-                    int exitCode = launchCompiler(compiler, messager, cmdLine, workingDirectory);
+                    int exitCode = compiler.launch(messager, cmdLine, workingDirectory);
                     if (exitCode != 0) {
-                        messager.warning("Error. Compiler exit code: " + exitCode, null, -1L, -1L);
+                        messager.warning(null, "Error. Compiler exit code: " + exitCode, null, -1L, -1L);
                     }
                 } else {
-                    messager.warning("Error. Can't launch compiler", null, -1L, -1L);
+                    messager.warning(null, "Error. Can't launch compiler", null, -1L, -1L);
                 }
             } else {
-                messager.error("Can't determine compiler family", "", -1L, -1L);
+                messager.error(null, "Can't determine compiler family", "", -1L, -1L);
             }
         } else {
             log(context, "Pascal SDK is not defined for module " + module.getName());
@@ -171,36 +165,10 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
         return false;
     }
 
-    @Nullable
-    private PascalBackendCompiler getCompiler(@NotNull JpsSdk<?> sdk, CompilerMessager messager) {
-        PascalCompilerFamily family = getCompilerFamily(sdk);
-        if (PascalCompilerFamily.FPC.equals(family)) {
-            return new FPCBackendCompiler(messager);
-        } else if (PascalCompilerFamily.DELPHI.equals(family)) {
-            return new DelphiBackendCompiler(messager);
-        }
-        return null;
-    }
-
     private PascalCompilerFamily getCompilerFamily(JpsSdk<?> sdk) {
         ParamMap params = ParamMap.getJpsParams(sdk.getSdkProperties());
         String family = params != null ? params.get(PascalSdkData.Keys.COMPILER_FAMILY.getKey()) : null;
-        for (PascalCompilerFamily compilerFamily : PascalCompilerFamily.values()) {
-            if (compilerFamily.name().equals(family)) {
-                return compilerFamily;
-            }
-        }
-        return null;
-    }
-
-    private int launchCompiler(PascalBackendCompiler compiler, CompilerMessager messager, String[] cmdLine, File workingDir) throws IOException {
-        Process process = Runtime.getRuntime().exec(cmdLine, null, workingDir);
-        BaseOSProcessHandler handler = new BaseOSProcessHandler(process, cmdLine[0], Charset.defaultCharset());
-        ProcessAdapter adapter = compiler.getCompilerProcessAdapter(messager);
-        handler.addProcessListener(adapter);
-        handler.startNotify();
-        handler.waitFor();
-        return process.exitValue();
+        return PascalCompilerFamily.of(family);
     }
 
     private static void log(CompileContext context, String text) {

@@ -1,9 +1,13 @@
 package com.siberika.idea.pascal.jps.compiler;
 
+import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import com.siberika.idea.pascal.jps.model.JpsPascalModuleType;
+import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
+import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.util.ParamMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,6 +15,7 @@ import org.jetbrains.annotations.PropertyKey;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,8 +32,30 @@ public abstract class PascalBackendCompiler {
     }
 
     abstract protected boolean createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
-                                          List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild, boolean isDebug,
-                                          @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine);
+                                                        List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild, boolean isDebug,
+                                                        @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine);
+
+    abstract public boolean createSyntaxCheckCommandImpl(String sdkHomePath, String modulePath, PascalSdkData pascalSdkData, VirtualFile[] sourcePaths, ArrayList<String> commandLine, String tempDir);
+
+    @Nullable
+    public static PascalBackendCompiler getCompiler(PascalCompilerFamily family, CompilerMessager messager) {
+        if (PascalCompilerFamily.FPC.equals(family)) {
+            return new FPCBackendCompiler(messager);
+        } else if (PascalCompilerFamily.DELPHI.equals(family)) {
+            return new DelphiBackendCompiler(messager);
+        }
+        return null;
+    }
+
+    public int launch(CompilerMessager messager, String[] cmdLine, File workingDir) throws IOException {
+        Process process = Runtime.getRuntime().exec(cmdLine, null, workingDir);
+        BaseOSProcessHandler handler = new BaseOSProcessHandler(process, cmdLine[0], Charset.defaultCharset());
+        ProcessAdapter adapter = getCompilerProcessAdapter(messager);
+        handler.addProcessListener(adapter);
+        handler.startNotify();
+        handler.waitFor();
+        return process.exitValue();
+    }
     @NotNull
     public abstract String getId();
 
@@ -54,21 +81,21 @@ public abstract class PascalBackendCompiler {
             if (mainFile != null) {
                 commandLine.add(mainFile.getAbsolutePath());
             } else {
-                compilerMessager.error(getMessage(moduleName, "compile.noSource"), null, -1, -1);
+                compilerMessager.error(null, getMessage(moduleName, "compile.noSource"), null, -1, -1);
             }
 
             StringBuilder sb = new StringBuilder();
             for (String cmd : commandLine) {
                 sb.append(" ").append(cmd);
             }
-            compilerMessager.info(getMessage(moduleName, "compile.commandLine", sb.toString()), null, -1, -1);
+            compilerMessager.info(null, getMessage(moduleName, "compile.commandLine", sb.toString()), null, -1, -1);
         } else {
-            compilerMessager.error(getMessage(moduleName, "compile.noOutputDir"), null, -1, -1);
+            compilerMessager.error(null, getMessage(moduleName, "compile.noOutputDir"), null, -1, -1);
         }
         if (commandLine.size() == 0) {
             throw new IllegalArgumentException(getMessage(null, "compile.errorCall"));
         }
-        return commandLine.toArray(new String[commandLine.size()]);
+        return commandLine.toArray(new String[0]);
     }
 
     public static File getMainFile(ParamMap moduleData) {
@@ -92,7 +119,7 @@ public abstract class PascalBackendCompiler {
         }
     }
 
-    protected static String getMessage(String moduleName, @PropertyKey(resourceBundle = JpsPascalBundle.JPSBUNDLE)String msgId, Object...args) {
+    protected static String getMessage(String moduleName, @PropertyKey(resourceBundle = JpsPascalBundle.JPSBUNDLE) String msgId, Object... args) {
         return JpsPascalBundle.message(msgId, args) + (moduleName != null ? " (" + JpsPascalBundle.message("general.module", moduleName) + ")" : "");
     }
 
@@ -103,7 +130,7 @@ public abstract class PascalBackendCompiler {
         if (sdkHomePath != null) {
             return checkExecutable(compilerMessager, moduleName, executable);
         } else {
-            compilerMessager.error(getMessage(moduleName, "compile.noSdkHomePath"), null, -1, -1);
+            compilerMessager.error(null, getMessage(moduleName, "compile.noSdkHomePath"), null, -1, -1);
             return null;
         }
     }
@@ -112,7 +139,7 @@ public abstract class PascalBackendCompiler {
         if (executable.exists() && executable.canExecute()) {
             return executable;
         } else {
-            compilerMessager.error(getMessage(moduleName, "compile.noCompiler", executable.getPath()), null, -1, -1);
+            compilerMessager.error(null, getMessage(moduleName, "compile.noCompiler", executable.getPath()), null, -1, -1);
             return null;
         }
     }

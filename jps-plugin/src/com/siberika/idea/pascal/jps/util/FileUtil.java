@@ -77,7 +77,7 @@ public class FileUtil {
         Set<File> result = new HashSet<File>();
         if (files != null) {
             for (VirtualFile virtualFile : files) {
-                File file = virtualFile.getCanonicalPath() != null ? new File(virtualFile.getCanonicalPath()) : null;
+                File file = new File(virtualFile.getPath());
                 collectFile(result, file);
             }
         }
