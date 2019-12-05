@@ -60,6 +60,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private JTextField compilerOptionsDebugEdit;
     private TextFieldWithBrowseButton decompilerCommandEdit;
     private TextFieldWithBrowseButton gdbCommandEdit;
+    private ComboBox syntaxCheckModeCBox;
     private ComboBox debugBackendCBox;
     private JTextField gdbOptionsEdit;
     private JCheckBox gdbResolveNames;
@@ -84,6 +85,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         keyComponentMap.put(PascalSdkData.Keys.COMPILER_OPTIONS.getKey(), compilerOptionsEdit);
         keyComponentMap.put(PascalSdkData.Keys.COMPILER_OPTIONS_DEBUG.getKey(), compilerOptionsDebugEdit);
         keyComponentMap.put(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey(), decompilerCommandEdit);
+        keyComponentMap.put(PascalSdkData.Keys.SYNTAX_CHECK_MODE.getKey(), syntaxCheckModeCBox);
 
         keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_BACKEND.getKey(), debugBackendCBox);
         keyComponentMap.put(PascalSdkData.Keys.DEBUGGER_COMMAND.getKey(), gdbCommandEdit);
@@ -100,7 +102,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private JPanel createGeneralOptionsPanel() {
         JPanel panel = new JPanel();
         panel.setBorder(new LineBorder(JBColor.border()));
-        panel.setLayout(new GridLayoutManager(6, 2, JBUI.emptyInsets(), -1, -1));
+        panel.setLayout(new GridLayoutManager(7, 2, JBUI.emptyInsets(), -1, -1));
 
         int row = 0;
         addLabel(panel, PascalBundle.message("ui.sdkSettings.compiler.command"), row);
@@ -122,6 +124,10 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
 
         addLabel(panel, PascalBundle.message("ui.sdkSettings.decompiler.command"), row);
         decompilerCommandEdit = addFileFieldWithBrowse(panel, row++);
+
+        addLabel(panel, PascalBundle.message("ui.sdkSettings.syntax.check.mode"), row);
+        syntaxCheckModeCBox = new ComboBox(PascalSdkData.SYNTAX_CHECK_MODES);
+        panel.add(syntaxCheckModeCBox, new GridConstraints(row++, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 
         JLabel statusLabel = new JLabel();
         panel.add(statusLabel, new GridConstraints(row, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL,

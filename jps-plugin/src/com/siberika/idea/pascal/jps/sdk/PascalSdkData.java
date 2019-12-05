@@ -15,9 +15,11 @@ public class PascalSdkData implements SdkAdditionalData {
 
     public static final PascalSdkData EMPTY = new PascalSdkData();
     public static final String[] DEBUGGER_BACKENDS = {"GDB", "LLDB"};
+    public static final String[] SYNTAX_CHECK_MODES = {"NONE", "NO_ERRORS", "ALWAYS"};
     public static final String SDK_DATA_TRUE = "1";
 
     private static final Map<String, Object> DEFAULTS_MAP = new ImmutableMap.Builder<String, Object>()
+            .put(Keys.SYNTAX_CHECK_MODE.getKey(), SYNTAX_CHECK_MODES[1])
             .put(Keys.DEBUGGER_BACKEND.getKey(), DEBUGGER_BACKENDS[SystemInfo.isMac ? 1 : 0])
             .put(Keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), "1")
             .put(Keys.DEBUGGER_BREAK_FULL_NAME.getKey(), "1")
@@ -41,6 +43,7 @@ public class PascalSdkData implements SdkAdditionalData {
         COMPILER_IMPLICIT_UNITS("implicitUnits"),
         DECOMPILER_CACHE("decompilerCache"),
         DECOMPILER_COMMAND("decompilerCommand"),
+        SYNTAX_CHECK_MODE("syntaxCheckMode"),
 
         DEBUGGER_BACKEND("debuggerBackend"),
         DEBUGGER_COMMAND("debuggerCommand"),
@@ -93,6 +96,10 @@ public class PascalSdkData implements SdkAdditionalData {
 
     public boolean isLldbBackend() {
         return DEBUGGER_BACKENDS[1].equals(getString(Keys.DEBUGGER_BACKEND));
+    }
+
+    public boolean isSyntaxCheckEnabled(boolean hasErrors) {
+        return SYNTAX_CHECK_MODES[2].equals(getString(Keys.SYNTAX_CHECK_MODE)) || (!hasErrors && SYNTAX_CHECK_MODES[1].equals(getString(Keys.SYNTAX_CHECK_MODE)));
     }
 
     public void setValue(final String key, final Object value) {

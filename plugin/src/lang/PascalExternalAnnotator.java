@@ -42,7 +42,13 @@ public class PascalExternalAnnotator extends ExternalAnnotator<PascalAnnotatorIn
     @Nullable
     @Override
     public PascalAnnotatorInfo collectInformation(@NotNull PsiFile file, @NotNull Editor editor, boolean hasErrors) {
-        return hasErrors ? null : new PascalAnnotatorInfo(file, editor.getDocument().getLineCount());
+        Module module = ModuleUtilCore.findModuleForFile(file);
+        Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
+        final PascalSdkData sdkData = sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : null;
+        if (null == sdkData) {
+            return null;
+        }
+        return sdkData.isSyntaxCheckEnabled(hasErrors) ? new PascalAnnotatorInfo(file, editor.getDocument().getLineCount()) : null;
     }
 
     @Nullable

@@ -12,12 +12,14 @@ import java.util.List;
  * Date: 04/12/2019
  */
 class PascalSyntaxCheckResult implements CompilerMessager {
-
     public static final Logger LOG = Logger.getInstance(PascalSyntaxCheckResult.class.getName());
+
+    private static final List<String> MSG_ID_FILTERED = Arrays.asList("2013", "10022");
+    
     private final int lineCount;
     private final String path;
 
-    public PascalSyntaxCheckResult(PascalAnnotatorInfo annotatorInfo) {
+    PascalSyntaxCheckResult(PascalAnnotatorInfo annotatorInfo) {
         this.lineCount = annotatorInfo.getLineCount();
         this.path = annotatorInfo.getFile().getVirtualFile().getPath();
     }
@@ -61,8 +63,7 @@ class PascalSyntaxCheckResult implements CompilerMessager {
     }
 
     private boolean isFiltered(String msgId) {
-        List<String> filtered = Arrays.asList("2013", "10022");
-        return filtered.contains(msgId);
+        return MSG_ID_FILTERED.contains(msgId);
     }
 
     class AnnotationItem {
