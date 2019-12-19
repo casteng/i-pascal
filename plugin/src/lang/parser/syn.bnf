@@ -368,7 +368,7 @@ private moduleUnit          ::= UnitModuleHead UnitInterface UnitImplementation 
 private prolog              ::= {recoverWhile=rec_module_start}
 UnitModuleHead              ::= UNIT NamespaceIdent hintingDirective* ";" {pin=1 recoverWhile=rec_module}
 private intUsesClause       ::= UsesClause
-UsesClause                  ::= USES namespaceNameList ";" {pin=1 recoverWhile=rec_block_local_end}
+UsesClause                  ::= USES namespaceNameList ";" {pin=1 recoverWhile=rec_uses}
 
 private moduleLibrary       ::= LibraryModuleHead [intUsesClause] libBlockGlobal "." {pin=1}
 private libBlockGlobal      ::= ImplDeclSection END | BlockGlobal
@@ -386,6 +386,7 @@ private rec_sectionKey      ::= !(USES) & rec_section
 private rec_programHead     ::= !(USES) & rec_section
 private rec_block_global_end ::= !(".")
 private rec_block_local_end  ::= !(END | ";") & rec_section
+private rec_uses            ::= !(END) & rec_section
 private rec_module_start    ::= !(UNIT | LIBRARY | PROGRAM | PACKAGE | USES | END) & rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
 private rec_interface       ::= !(IMPLEMENTATION) & rec_implementation
