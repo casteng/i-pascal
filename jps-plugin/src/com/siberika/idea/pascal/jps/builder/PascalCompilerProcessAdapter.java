@@ -17,7 +17,7 @@ public abstract class PascalCompilerProcessAdapter extends PascalConsoleProcessA
     abstract protected boolean processLine(CompilerMessager messager, String text);
 
     @Override
-    protected boolean onLine(String text) {
+    public boolean onLine(String text) {
         return processLine(messager, text);
     }
 }

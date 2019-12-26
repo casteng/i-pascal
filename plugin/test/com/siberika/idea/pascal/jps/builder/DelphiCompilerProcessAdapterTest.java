@@ -36,7 +36,7 @@ public class DelphiCompilerProcessAdapterTest {
         ArgumentCaptor<CompilerMessage> argument = ArgumentCaptor.forClass(CompilerMessage.class);
         verify(context).processMessage(argument.capture());
         assertEquals(BuildMessage.Kind.ERROR, argument.getValue().getKind());
-        assertEquals("E2003 Undeclared identifier", argument.getValue().getMessageText());
+        assertEquals("Undeclared identifier", argument.getValue().getMessageText());
         assertEquals(15, argument.getValue().getLine());
         assertEquals(-1, argument.getValue().getColumn());
         assertEquals("c:\\srv\\test.pas", argument.getValue().getSourcePath());

@@ -14,12 +14,12 @@ import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalException;
 import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
+import com.siberika.idea.pascal.jps.util.SysUtils;
 import com.siberika.idea.pascal.module.ModuleService;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.FPCSdkType;
 import com.siberika.idea.pascal.util.DocUtil;
 import com.siberika.idea.pascal.util.StrUtil;
-import com.siberika.idea.pascal.util.SysUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

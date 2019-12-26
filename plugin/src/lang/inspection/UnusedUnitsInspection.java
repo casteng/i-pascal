@@ -35,7 +35,7 @@ public class UnusedUnitsInspection extends PascalLocalInspectionBase {
             }
             case USED_IN_IMPL: {
                 return holder.createProblemDescriptor(usedUnitName, message("inspection.warn.unused.unit.interface"),
-                        true, ProblemHighlightType.LIKE_UNUSED_SYMBOL, isOnTheFly,
+                        true, ProblemHighlightType.WEAK_WARNING, isOnTheFly,
                         new UsesQuickFixes.MoveUnitAction(), new UsesQuickFixes.RemoveUnitAction(), new UsesQuickFixes.ExcludeUnitAction(), new UsesQuickFixes.OptimizeUsesAction());
             }
         }

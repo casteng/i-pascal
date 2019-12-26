@@ -27,7 +27,7 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
     private static final String COMPILER_SETTING_OPATH_EXE = "-E";
     private static final String COMPILER_SETTING_OPATH_UNIT = "-N";
     private static final String COMPILER_SETTING_OPATH_UNIT_D2007 = "-N0";
-    private static final String COMPILER_SETTING_COMMON = "";
+    private static final String COMPILER_SETTING_COMMON = "-H";
     private static final String COMPILER_SETTING_SRCPATH = "-U";
     private static final String COMPILER_SETTING_INCPATH = "-I";
     private static final String COMPILER_SETTING_BUILDALL = "-B";
@@ -54,22 +54,27 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
         return ".dcu";
     }
 
+    private boolean addCompilerCommand(String sdkHomePath, String moduleName, String compilerCommand, ArrayList<String> commandLine) {
+        File executable = checkCompilerExe(sdkHomePath, moduleName, compilerMessager, PascalSdkUtil.getDCC32Executable(sdkHomePath), compilerCommand);
+        if (null == executable) {
+            return false;
+        }
+        commandLine.add(executable.getPath());
+        return true;
+    }
+
     @Override
     protected boolean createStartupCommandImpl(String sdkHomePath, String moduleName, String outputDirExe, String outputDirUnit,
                                           List<File> sdkFiles, List<File> moduleLibFiles, boolean isRebuild, boolean isDebug,
                                           @Nullable ParamMap pascalSdkData, ArrayList<String> commandLine) {
-        String compilerCommand = pascalSdkData != null ? pascalSdkData.get(PascalSdkData.Keys.COMPILER_COMMAND.getKey()) : null;
-        File executable = checkCompilerExe(sdkHomePath, moduleName, compilerMessager, PascalSdkUtil.getDCC32Executable(sdkHomePath), compilerCommand);
-        if (null == executable) return false;
-        commandLine.add(executable.getPath());
+        if (!addCompilerCommand(sdkHomePath, moduleName, pascalSdkData != null ? pascalSdkData.get(PascalSdkData.Keys.COMPILER_COMMAND.getKey()) : null, commandLine)) {
+            return false;
+        }
 
         if (pascalSdkData != null) {
             String[] compilerOptions = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS.getKey()).split("\\s+");
             Collections.addAll(commandLine, compilerOptions);
-            String namespaces = pascalSdkData.get(PascalSdkData.Keys.COMPILER_NAMESPACES.getKey());
-            if (StringUtil.isNotEmpty(namespaces)) {
-                commandLine.add(COMPILER_SETTING_NAMESPACE + namespaces);
-            }
+            addNamespaces(pascalSdkData.get(PascalSdkData.Keys.COMPILER_NAMESPACES.getKey()), commandLine);
         }
         commandLine.add(COMPILER_SETTING_COMMON);
 
@@ -102,9 +107,39 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
     }
 
     @Override
-    public boolean createSyntaxCheckCommandImpl(String sdkHomePath, String moduleName, PascalSdkData pascalSdkData,
+    public boolean createSyntaxCheckCommandImpl(String sdkHomePath, String modulePath, PascalSdkData pascalSdkData,
                                                 VirtualFile[] sourcePaths, ArrayList<String> commandLine, String tempDir) {
-        return false;
+        if (!addCompilerCommand(sdkHomePath, modulePath, pascalSdkData != null ? pascalSdkData.getString(PascalSdkData.Keys.COMPILER_COMMAND) : null, commandLine)) {
+            return false;
+        }
+        addNamespaces(pascalSdkData != null ? pascalSdkData.getString(PascalSdkData.Keys.COMPILER_NAMESPACES) : null, commandLine);
+
+        commandLine.add(COMPILER_SETTING_COMMON);
+        commandLine.add("-W");
+        commandLine.add("--no-config");
+
+        commandLine.add(COMPILER_SETTING_OPATH_EXE + tempDir);
+        commandLine.add(COMPILER_SETTING_OPATH_UNIT + tempDir);
+
+        for (File sdkPath : FileUtil.retrievePaths(sourcePaths)) {
+            if (isFromRTL(sdkHomePath, sdkPath)) {
+                compilerMessager.info(null, JpsPascalBundle.message("compile.skipRTL") + " " + sdkPath.getPath(), null, -1, -1);
+            } else {
+                addLibPathToCmdLine(commandLine, sdkPath, COMPILER_SETTING_SRCPATH, COMPILER_SETTING_INCPATH);
+            }
+        }
+
+        commandLine.add(modulePath);
+
+        return true;
+    }
+
+    private void addNamespaces(String namespaces, ArrayList<String> commandLine) {
+        if (StringUtil.isNotEmpty(namespaces)) {
+            for (String namespace : namespaces.split("[;,]")) {
+                commandLine.add(COMPILER_SETTING_NAMESPACE + namespace);
+            }
+        }
     }
 
     private boolean isFromRTL(String sdkHomePath, File file) {

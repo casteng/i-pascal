@@ -1,12 +1,12 @@
-package com.siberika.idea.pascal.util;
+package com.siberika.idea.pascal.jps.util;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessOutput;
 import com.intellij.openapi.diagnostic.Logger;
-import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalException;
+import com.siberika.idea.pascal.jps.JpsPascalBundle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -69,9 +69,11 @@ public class SysUtils {
             LOG.info(String.format("WARNING: Error running %s. Code: %d", exePath, exitCode));
             LOG.info(String.format("Output: %s", stdout));
             LOG.info(String.format("Error: %s", stderr));
-            throw new PascalException(PascalBundle.message("error.exit.code", exePath, exitCode, stderr));
+            throw new PascalException(JpsPascalBundle.message("error.exit.code", exePath, exitCode, stderr));
         }
-        if (stdout.isEmpty()) return null;
+        if (stdout.isEmpty()) {
+            return null;
+        }
         return stdout;
     }
 

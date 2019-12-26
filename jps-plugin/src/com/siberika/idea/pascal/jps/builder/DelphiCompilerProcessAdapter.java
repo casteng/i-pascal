@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class DelphiCompilerProcessAdapter extends PascalCompilerProcessAdapter {
 
     @NonNls private static final String PATTERN_COMMON = "((.*)\\((\\d+)\\))?\\s*";
-    @NonNls private static final String PATTERN_MESSAGE = "\\s*(.*)$";
+    @NonNls private static final String PATTERN_MESSAGE = "\\s*(\\w\\d+) (.*)$";
     @NonNls private static final Pattern PATTERN_ERROR = Pattern.compile("((.*)\\((\\d+)\\))?\\s*(Error|Fatal):" + PATTERN_MESSAGE);
     @NonNls private static final Pattern PATTERN_WARNING = Pattern.compile(PATTERN_COMMON + "(Error|Fatal|Warning|warning):" + PATTERN_MESSAGE);
     @NonNls private static final Pattern PATTERN_INFO = Pattern.compile(PATTERN_COMMON + "(Hint:)" + PATTERN_MESSAGE);

@@ -126,10 +126,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                 if (cmdLine != null) {
                     // For Delphi workingDirectory should be null otherwise file paths in compiler messages will be relative
                     File workingDirectory = PascalCompilerFamily.DELPHI.equals(getCompilerFamily(sdk)) ? null : new File(FileUtil.expandUserHome("~/"));
-                    int exitCode = compiler.launch(messager, cmdLine, workingDirectory);
-                    if (exitCode != 0) {
-                        messager.warning(null, "Error. Compiler exit code: " + exitCode, null, -1L, -1L);
-                    }
+                    compiler.launch(messager, cmdLine, workingDirectory);
                 } else {
                     messager.warning(null, "Error. Can't launch compiler", null, -1L, -1L);
                 }

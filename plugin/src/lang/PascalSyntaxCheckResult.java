@@ -4,6 +4,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.SmartList;
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,11 +19,11 @@ class PascalSyntaxCheckResult implements CompilerMessager {
     private static final List<String> MSG_ID_FILTERED = Arrays.asList("2013", "10022");
     
     private final int lineCount;
-    private final String path;
+    private final Path path;
 
     PascalSyntaxCheckResult(PascalAnnotatorInfo annotatorInfo) {
         this.lineCount = annotatorInfo.getLineCount();
-        this.path = annotatorInfo.getFile().getVirtualFile().getPath();
+        this.path = new File(annotatorInfo.getFile().getVirtualFile().getPath()).toPath();
     }
 
     enum SEVERITY {ERROR, WARNING, INFO, HINT}
@@ -49,17 +51,20 @@ class PascalSyntaxCheckResult implements CompilerMessager {
     }
 
     private void addItem(SEVERITY severity, String msgId, String msg, String path, long line, long column) {
-        if (!this.path.equals(path) || isFiltered(msgId)) {
+        if (!isSameFilename(path) || isFiltered(msgId)) {
+            LOG.debug(String.format("Filtered compiler output. msgId: %s, path: %s", msgId, path));
             return;
         }
-        if ((line < 0) || (line >= lineCount)) {
-            LOG.info("Compiler output: " + msg);
-        } else {
+        if ((line >= 0) && (line < lineCount)) {
             if (null == results) {
                 results = new SmartList<>();
             }
-            results.add(new AnnotationItem(severity, msg, line-1, column-1));
+            results.add(new AnnotationItem(severity, msg, line-1, column > 0 ? column-1 : 0));
         }
+    }
+
+    private boolean isSameFilename(String path) {
+        return (path != null) && this.path.equals(new File(path).toPath());
     }
 
     private boolean isFiltered(String msgId) {

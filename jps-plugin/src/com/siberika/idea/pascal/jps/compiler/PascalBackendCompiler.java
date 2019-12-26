@@ -2,6 +2,7 @@ package com.siberika.idea.pascal.jps.compiler;
 
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.jps.JpsPascalBundle;
@@ -25,9 +26,11 @@ import java.util.List;
  */
 public abstract class PascalBackendCompiler {
 
-    protected final CompilerMessager compilerMessager;
+    public static final Logger LOG = Logger.getInstance(PascalBackendCompiler.class.getName());
 
-    public PascalBackendCompiler(CompilerMessager compilerMessager) {
+    final CompilerMessager compilerMessager;
+
+    PascalBackendCompiler(CompilerMessager compilerMessager) {
         this.compilerMessager = compilerMessager;
     }
 
@@ -47,15 +50,24 @@ public abstract class PascalBackendCompiler {
         return null;
     }
 
-    public int launch(CompilerMessager messager, String[] cmdLine, File workingDir) throws IOException {
+    public void launch(CompilerMessager messager, String[] cmdLine, File workingDir) throws IOException {
+        BaseOSProcessHandler handler = launchNoWait(messager, cmdLine, workingDir);
+        handler.waitFor();
+        int exitCode = handler.getProcess().exitValue();
+        if (exitCode != 0) {
+            messager.warning(null, JpsPascalBundle.message("compiler.exit.code", exitCode), null, -1L, -1L);
+        }
+    }
+
+    public BaseOSProcessHandler launchNoWait(CompilerMessager messager, String[] cmdLine, File workingDir) throws IOException {
         Process process = Runtime.getRuntime().exec(cmdLine, null, workingDir);
         BaseOSProcessHandler handler = new BaseOSProcessHandler(process, cmdLine[0], Charset.defaultCharset());
         ProcessAdapter adapter = getCompilerProcessAdapter(messager);
         handler.addProcessListener(adapter);
         handler.startNotify();
-        handler.waitFor();
-        return process.exitValue();
+        return handler;
     }
+
     @NotNull
     public abstract String getId();
 

@@ -17,7 +17,7 @@ import com.siberika.idea.pascal.jps.model.JpsPascalModelSerializerExtension;
 import com.siberika.idea.pascal.jps.sdk.PascalCompilerFamily;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkUtil;
-import com.siberika.idea.pascal.util.SysUtils;
+import com.siberika.idea.pascal.jps.util.SysUtils;
 import org.apache.commons.lang.text.StrBuilder;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;

@@ -11,9 +11,9 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.PascalException;
+import com.siberika.idea.pascal.jps.util.SysUtils;
 import com.siberika.idea.pascal.sdk.BasePascalSdkType;
 import com.siberika.idea.pascal.sdk.DelphiSdkType;
-import com.siberika.idea.pascal.util.SysUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
