@@ -46,9 +46,9 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
     private final DaemonCodeAnalyzerSettings myDaemonSettings;
     private final EditorColorsManager myColorsManager;
 
-    public PascalLineMarkerProvider(DaemonCodeAnalyzerSettings daemonSettings, EditorColorsManager colorsManager) {
-        myDaemonSettings = daemonSettings;
-        myColorsManager = colorsManager;
+    public PascalLineMarkerProvider() {
+        myDaemonSettings = DaemonCodeAnalyzerSettings.getInstance();
+        myColorsManager = EditorColorsManager.getInstance();
     }
 
     private void collectNavigationMarkers(@NotNull PsiElement element, Collection<? super LineMarkerInfo> result) {

@@ -195,8 +195,8 @@ public class FPCSdkType extends BasePascalSdkType {
     public static void applyDebugUnitFile(Sdk sdk, String debugUnitDir, String debugUnitName) {
         if ((sdk != null) && (sdk.getSdkType() instanceof FPCSdkType)) {
             PascalSdkData data = BasePascalSdkType.getAdditionalData(sdk);
-            addString(data, PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS_DIR, debugUnitDir, ";");
-            addString(data, PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS, debugUnitName, ";");
+            data.setValue(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS_DIR.getKey(), debugUnitDir);
+            data.setValue(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS.getKey(), debugUnitName);
         }
     }
 

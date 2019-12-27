@@ -87,9 +87,10 @@ public class FPCBackendCompiler extends PascalBackendCompiler {
                     Collections.addAll(commandLine, debugOpts.split("\\s+"));
                 }
                 String implicitUnits = pascalSdkData.get(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS.getKey());
-                if (StringUtil.isNotEmpty(implicitUnits)) {
+                String implicitUnitsDir = pascalSdkData.get(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS_DIR.getKey());
+                if (StringUtil.isNotEmpty(implicitUnits) && StringUtil.isNotEmpty(implicitUnitsDir)) {
                     commandLine.add(COMPILER_SETTING_IMPLICIT_UNITS + implicitUnits);
-                    addLibPathToCmdLine(commandLine, new File(pascalSdkData.get(PascalSdkData.Keys.COMPILER_IMPLICIT_UNITS_DIR.getKey())), COMPILER_SETTING_SRCPATH, null);
+                    addLibPathToCmdLine(commandLine, new File(implicitUnitsDir), COMPILER_SETTING_SRCPATH, null);
                 }
             } else {
                 String compilerOptions = pascalSdkData.get(PascalSdkData.Keys.COMPILER_OPTIONS.getKey());
