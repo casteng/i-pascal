@@ -13,6 +13,7 @@
         <ul>
             <li>Errors, warning and hints highlighting using compiler syntax check</li>
             <li>Fix type parameters scope</li>
+            <li>Breakpoint ignore count</li>
         </ul>
         <p>2.50</p>
         <ul>

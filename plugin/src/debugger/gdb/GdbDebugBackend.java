@@ -108,9 +108,10 @@ public class GdbDebugBackend extends DebugBackend {
     }
 
     @Override
-    public void addLineBreakpoint(String filename, int line, boolean temporary ,CommandSender.FinishCallback callback) {
-        process.sendCommand(String.format("-break-insert %s %s \"%s:%d\"",
+    public void addLineBreakpoint(String filename, int line, int ignoreCount, boolean temporary ,CommandSender.FinishCallback callback) {
+        process.sendCommand(String.format("-break-insert %s %s %s \"%s:%d\"",
                 process.isInferiorRunning() ? "-h " : "", temporary ? "-t" : "",
+                ignoreCount > 0 ? "-i " + ignoreCount : "",
                 getFileName(filename), line), callback);
     }
 

@@ -54,6 +54,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -242,6 +243,14 @@ public class PascalXDebugProcess extends XDebugProcess {
                 }
                 return FileDocumentManager.getInstance().getDocument(file);
             }
+
+            @NotNull
+            @Override
+            public XExpression createExpression(@NotNull Project project, @NotNull Document document, @Nullable Language language, @NotNull EvaluationMode mode) {
+                String text = document.getText();
+                text = text.replace("begin", "").replace("end.", "");
+                return XDebuggerUtil.getInstance().createExpression(text, language, null, mode);
+            }
         };
     }
 
@@ -393,7 +402,7 @@ public class PascalXDebugProcess extends XDebugProcess {
                     @Override
                     public void call(GdbMiLine threadsLine) {
                         List<DebugThread> threads = DebugThread.parseThreads(PascalXDebugProcess.this, threadsLine);
-                        suspendContext = new GdbSuspendContext(PascalXDebugProcess.this, threads, stopContext);
+                        suspendContext = new GdbSuspendContext(PascalXDebugProcess.this, threads != null ? threads : Collections.emptyList(), stopContext);
                         getSession().positionReached(suspendContext);
                         if (reason == GdbStopReason.BREAKPOINT_HIT) {
                             getBreakpointHandler().handleBreakpointHit(threadsLine, suspendContext);

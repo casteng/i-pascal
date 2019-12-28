@@ -12,6 +12,8 @@ import java.util.Objects;
  */
 public class PascalLineBreakpointProperties extends XBreakpointProperties<PascalLineBreakpointProperties> {
     private Integer requestedLine;
+    private boolean ignoreCountEnabled;
+    private int ignoreCount;
 
     public PascalLineBreakpointProperties() {
         this(null);
@@ -29,6 +31,8 @@ public class PascalLineBreakpointProperties extends XBreakpointProperties<Pascal
 
     @Override
     public void loadState(@NotNull PascalLineBreakpointProperties state) {
+        ignoreCountEnabled = state.ignoreCountEnabled;
+        ignoreCount = state.ignoreCount;
     }
 
     public Integer getRequestedLine() {
@@ -50,5 +54,25 @@ public class PascalLineBreakpointProperties extends XBreakpointProperties<Pascal
     @Override
     public int hashCode() {
         return Objects.hash(getRequestedLine());
+    }
+
+    public boolean isIgnoreCountEnabled() {
+        return ignoreCountEnabled;
+    }
+
+    public boolean setIgnoreCountEnabled(boolean ignoreCountEnabled) {
+        boolean res = this.ignoreCountEnabled != ignoreCountEnabled;
+        this.ignoreCountEnabled = ignoreCountEnabled;
+        return res;
+    }
+
+    public int getIgnoreCount() {
+        return ignoreCount;
+    }
+
+    public boolean setIgnoreCount(int ignoreCount) {
+        boolean res = this.ignoreCount != ignoreCount;
+        this.ignoreCount = ignoreCount;
+        return res;
     }
 }

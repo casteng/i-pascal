@@ -31,7 +31,7 @@ public abstract class DebugBackend {
 
     public abstract void queryArrayValue(GdbVariableObject var, int start, long end, String arrayType);
 
-    public abstract void addLineBreakpoint(String filename, int line, boolean temporary ,CommandSender.FinishCallback callback);
+    public abstract void addLineBreakpoint(String filename, int line, int ignoreCount, boolean temporary ,CommandSender.FinishCallback callback);
 
     public abstract void threadSelect(String id);
 
