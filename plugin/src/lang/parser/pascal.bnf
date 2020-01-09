@@ -373,6 +373,7 @@ private rec_sectionKey      ::= !(USES) & rec_section
 private rec_programHead     ::= !(USES) & rec_section
 private rec_block_global_end ::= !(".")
 private rec_block_local_end  ::= !(END | ";") & rec_section
+private rec_decl_section    ::= !(END) & rec_section
 private rec_uses            ::= !(END) & rec_section
 private rec_module_start    ::= !(UNIT | LIBRARY | PROGRAM | PACKAGE | USES | END) & rec_section
 private rec_module          ::= !(INTERFACE) & rec_interface
@@ -445,9 +446,9 @@ private structTypeDecl      ::= ClassHelperDecl | ClassTypeDecl | InterfaceTypeD
 private routineDecl         ::= ClassMethodResolution | ExportedRoutine
 private commonDecl          ::= [CLASS] VarSection | ClassProperty | ConstSection | TypeSection
 private structItem          ::= commonDecl | routineDecl | classFieldSemi | Visibility {recoverWhile=rec_struct_field}
-private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute {recoverWhile=rec_block_local_end}
-private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclSection {recoverWhile=rec_block_local_end}
-private declSectionNested1  ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_block_local_end}
+private declSection	        ::=	RoutineImplDecl | commonDecl | LabelDeclSection | ExportsSection | assemblyAttribute {recoverWhile=rec_decl_section}
+private declSectionNested   ::= RoutineImplDeclNested1 | commonDecl | LabelDeclSection {recoverWhile=rec_decl_section}
+private declSectionNested1  ::= RoutineImplDeclWoNested | commonDecl | LabelDeclSection {recoverWhile=rec_decl_section}
 private declSectionWONested ::= commonDecl | LabelDeclSection {recoverWhile=rec_section_nested}
 
 UnitImplementation          ::= unitImplementationKey [intUsesClause] ImplDeclSection unitBlock {pin=1 recoverWhile=rec_implementation_dot name="implementation section"}
@@ -501,13 +502,13 @@ private identListDecl       ::= identListDeclItem identListDeclRest*
 private identListDeclRest   ::= "," identListDeclItem {pin=1}
 private identListDeclItem   ::= NamedIdentDecl
 
-VarSection	                ::=	varKey varDeclarations [";"] {pin=1 name="var section" recoverWhile=rec_block_local_end}
+VarSection	                ::=	varKey varDeclarations [";"] {pin=1 name="var section" recoverWhile=rec_decl_section}
 private varDeclarations     ::= VarDeclaration+ {recoverWhile=rec_block_local_end}
 private varKey	            ::=	VAR | THREADVAR
 VarDeclaration	            ::=	customAttributes* identListDecl ":" TypeDecl [VarValueSpec] hintingDirective* ";" {pin=2 recoverWhile=rec_name}
 VarValueSpec	            ::=	ABSOLUTE FullyQualifiedIdent | ABSOLUTE ConstExpressionOrd | EQ ConstExpression {recoverWhile=rec_semi}
 
-ConstSection                ::= constKey constDeclarations [";"] {pin=1 name="const section" recoverWhile=rec_block_local_end}
+ConstSection                ::= constKey constDeclarations [";"] {pin=1 name="const section" recoverWhile=rec_decl_section}
 private constDeclarations   ::= ConstDeclaration+ {recoverWhile=rec_block_local_end}
 private constKey            ::= CONST |	RESOURCESTRING
 ConstDeclaration            ::= customAttributes* NamedIdentDecl [":" TypeDecl] "=" ConstExpression hintingDirective* ";" {pin=2 recoverWhile=rec_name}
@@ -517,7 +518,7 @@ NamedIdentDecl              ::= identifier {extends="com.siberika.idea.pascal.la
                                             elementTypeClass="com.siberika.idea.pascal.lang.stub.PasIdentStubElementType"}
 NamedIdent                  ::= identifier
 
-TypeSection                 ::= TYPE typeDeclarations [";"] {pin=1 name="type section" recoverWhile=rec_block_local_end}
+TypeSection                 ::= TYPE typeDeclarations [";"] {pin=1 name="type section" recoverWhile=rec_decl_section}
 private typeDeclarations    ::= TypeDeclaration+ {recoverWhile=rec_block_local_end}
 TypeDeclaration             ::= customAttributes* GenericTypeIdent "=" type {pin=2 recoverWhile=rec_name}
 private type                ::= typeForwardDecl | typeDecl

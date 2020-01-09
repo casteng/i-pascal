@@ -41,6 +41,7 @@ public class DCUCachingDecompiler implements PascalCachingUnitDecompiler {
     private static final Pattern TYPE = Pattern.compile("\\s*\\w+\\.\\w+\\s*=.*");
     private static final Pattern COMMENTED_TYPE = Pattern.compile("\\s*\\{type}\\s*");
     private static final Pattern ROUTINE = Pattern.compile("(\\s*)(procedure|function|operator)(\\s+)(@)(\\w+)");
+    private static final Pattern ROUTINE_INVALID = Pattern.compile("(\\s*)(procedure|function)(\\s+)(.*\\.\\w+;)");
     private static final Pattern INLINE_TYPE = Pattern.compile("\\s*:\\d+\\s+=\\s+.*");
     private static final File NULL_FILE = new File("");
     private static final Pattern WARNING_WITH_UNITHEAD = Pattern.compile("(?i)Warning at 0x[A-F0-9]+.*unit\\s+.+;$");
@@ -160,18 +161,39 @@ public class DCUCachingDecompiler implements PascalCachingUnitDecompiler {
                 res.append(line.replaceFirst(":", "_"));
             } else if (VAR_PREFIXED.matcher(line).matches()) {
                 res.append(line.replaceFirst("@", "_"));
-            } else {
-                Matcher m = ROUTINE.matcher(line);
-                if (m.find()) {
-                    m.appendReplacement(res, "$1$2$3$5");
-                    m.appendTail(res).append("\n");
-                } else if (!line.startsWith("procedure Finalization")) {
-                    res.append(line).append("\n");
-                }
+            } else if (VAR_PREFIXED.matcher(line).matches()) {
+                res.append(line.replaceFirst("@", "_"));
+            } else if (processRoutine(res, line)) {
+                // empty
+            } else if (processRoutineInvalid(res, line)) {
+                // empty
+            } else if (!line.startsWith("procedure Finalization")) {
+                res.append(line).append("\n");
             }
         }
         res.append("implementation\n  {compiled code}\nend.\n");
         return res.toString();
+    }
+
+    private static boolean processRoutine(StringBuffer res, String line) {
+        Matcher m = ROUTINE.matcher(line);
+        if (m.find()) {
+            m.appendReplacement(res, "$1$2$3$5");
+            m.appendTail(res).append("\n");
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean processRoutineInvalid(StringBuffer res, String line) {
+        Matcher m = ROUTINE_INVALID.matcher(line);
+        if (m.find()) {
+            String routine = m.group(0);
+            m.appendReplacement(res, routine.replaceAll("[-.]", "_"));
+            m.appendTail(res).append("\n");
+            return true;
+        }
+        return false;
     }
 
     private static boolean shouldCommentOut(String line) {

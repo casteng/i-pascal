@@ -34,7 +34,7 @@ import java.util.Properties;
 public class CreateModuleAction extends CreateTemplateInPackageAction<PsiFile> {
     private static final String PASCAL_TEMPLATE_PREFIX = "Pascal";
 
-    CreateModuleAction() {
+    public CreateModuleAction() {
         super(PascalBundle.message("action.create.new.module"),
                 PascalBundle.message("action.create.new.module"),
                 PascalIcons.GENERAL,
