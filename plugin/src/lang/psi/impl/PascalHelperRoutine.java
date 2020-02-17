@@ -70,8 +70,8 @@ class PascalHelperRoutine extends PascalHelperScope {
     }
 
     void calcFormalParameters() {
-        ensureCacheActual();
         SyncUtil.doWithLock(calcParamLock, () -> {
+            ensureCacheActual();
             if (null == formalParameterNames) {
                 List<String> parameterNames = new SmartList<>();
                 List<String> parameterTypes = new SmartList<>();

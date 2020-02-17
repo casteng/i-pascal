@@ -453,7 +453,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                     final PsiElement parent = fieldElement != null ? fieldElement.getParent() : null;
                     if (parent instanceof PasClassProperty) {
                         PasTypeID typeId = PasReferenceUtil.resolvePropertyType(type.field, (PasClassProperty) parent);
-                        return typeId.getText();
+                        return typeId != null ? typeId.getText() : null;
                     }
                 }
             }

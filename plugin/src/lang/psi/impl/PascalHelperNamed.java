@@ -14,17 +14,20 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.field.Flag;
 import com.siberika.idea.pascal.util.PsiUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class PascalHelperNamed {
     protected final PascalNamedElement self;
     volatile private long modified;
-    volatile private String cachedName;
-    volatile private PsiElement cachedNameEl;
+    private String cachedName;
+    private PsiElement cachedNameEl;
     volatile private PasField.FieldType cachedType;
     volatile private long flags;
+    private ReentrantLock nameLock = new ReentrantLock();
 
     public PascalHelperNamed(PascalNamedElement self) {
         this.self = self;
@@ -33,37 +36,49 @@ public class PascalHelperNamed {
     void invalidateCache(boolean subtreeChanged) {
         flags = 0;
         modified = self.getContainingFile().getModificationStamp();
-        // TODO: don't invalidate on each file modification
-        cachedName = null;
-        cachedNameEl = null;
+        cachedType = null;
+        SyncUtil.doWithLock(nameLock, () -> {
+                    // TODO: don't invalidate on each file modification
+                    cachedName = null;
+                    cachedNameEl = null;
+                });
         self.invalidateCache(subtreeChanged);
     }
 
     void ensureCacheActual() {
+        if (self.getContainingFile() == null) {
+            return;
+        }
         if (modified != self.getContainingFile().getModificationStamp()) {
             invalidateCache(false);
         }
     }
 
     public String getName() {
-        if (self instanceof PasOperatorSubIdent) {
-            cachedName = self.getText();
-        } else {
-            if (StringUtil.isEmpty(cachedName)) {
-                cachedName = calcName(self.getNameIdentifier());
+        ensureCacheActual();
+        return SyncUtil.doWithLock(nameLock, () -> {
+            if (self instanceof PasOperatorSubIdent) {
+                cachedName = self.getText();
+            } else {
+                if (StringUtil.isEmpty(cachedName)) {
+                    cachedName = calcName(self.getNameIdentifier());
+                }
             }
-        }
-        return cachedName;
+            return cachedName;
+        });
     }
 
     private static String calcName(PsiElement nameElement) {
         if ((nameElement instanceof PascalQualifiedIdent)) {
             Iterator<PasSubIdent> it = ((PascalQualifiedIdent) nameElement).getSubIdentList().iterator();
-            StringBuilder sb = new StringBuilder(it.next().getName());
+            StringBuilder sb = new StringBuilder("");
             while (it.hasNext()) {
                 String name = it.next().getName();
                 name = !name.startsWith("&") ? name : name.replaceFirst("$&+", "");
-                sb.append(".").append(name);
+                if (sb.length() > 0) {
+                    sb.append(".");
+                }
+                sb.append(name);
             }
             return sb.toString();
         } else {

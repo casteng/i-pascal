@@ -221,7 +221,11 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPrivateUnits() {
         if (null == privateUnits) {
-            privateUnits = doCollectUnits(getUsedUnitsPrivate(), privateUnitsLock, getModuleType() != ModuleType.UNIT);
+            List<SmartPsiElementPointer<PasEntityScope>> result = doCollectUnits(getUsedUnitsPrivate(), getModuleType() != ModuleType.UNIT);
+            if (SyncUtil.lockOrCancel(privateUnitsLock)) {
+                privateUnits = result;
+                privateUnitsLock.unlock();
+            }
         }
         return privateUnits;
     }
@@ -229,22 +233,20 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
     @Override
     public List<SmartPsiElementPointer<PasEntityScope>> getPublicUnits() {
         if (null == publicUnits) {
-            publicUnits = doCollectUnits(getUsedUnitsPublic(), publicUnitsLock, true);
+            List<SmartPsiElementPointer<PasEntityScope>> result = doCollectUnits(getUsedUnitsPublic(), true);
+            if (SyncUtil.lockOrCancel(publicUnitsLock)) {
+                publicUnits = result;
+                publicUnitsLock.unlock();
+            }
         }
         return publicUnits;
     }
 
-    private List<SmartPsiElementPointer<PasEntityScope>> doCollectUnits(Collection<String> units, ReentrantLock lock, boolean addExplicit) {
+    private List<SmartPsiElementPointer<PasEntityScope>> doCollectUnits(Collection<String> units, boolean addExplicit) {
         List<SmartPsiElementPointer<PasEntityScope>> result = new ArrayList<>(units.size() + PascalParserUtil.EXPLICIT_UNITS.size());
-        if (SyncUtil.lockOrCancel(lock)) {
-            try {
-                addUnits(result, units);
-                if (addExplicit) {
-                    addUnits(result, PascalParserUtil.EXPLICIT_UNITS);
-                }
-            } finally {
-                lock.unlock();
-            }
+        addUnits(result, units);
+        if (addExplicit) {
+            addUnits(result, PascalParserUtil.EXPLICIT_UNITS);
         }
         return result;
     }
@@ -341,21 +343,17 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         if (stub != null) {
             return stub.getUsedUnitsPublic();
         }
-        List<String> result = null;
-        if (SyncUtil.lockOrCancel(unitsLock)) {
-            try {
-                if (null == usedUnitsPublic) {
-                    usedUnitsPublic = new SmartList<>();
-                    for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceUsesClause(this))) {
-                        usedUnitsPublic.add(ident.getName());
-                    }
-                }
-            } finally {
+        if (null == usedUnitsPublic) {
+            List<String> result = new SmartList<>();
+            for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceUsesClause(this))) {
+                result.add(ident.getName());
+            }
+            if (SyncUtil.lockOrCancel(unitsLock)) {
+                usedUnitsPublic = result;
                 unitsLock.unlock();
             }
-            result = usedUnitsPublic;
         }
-        return result;
+        return usedUnitsPublic;
     }
 
     @NotNull
@@ -365,21 +363,17 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
         if (stub != null) {
             return stub.getUsedUnitsPrivate();
         }
-        if (SyncUtil.lockOrCancel(unitsLock)) {
-            try {
-                if (null == usedUnitsPrivate) {
-                    usedUnitsPrivate = new SmartList<>();
-                    for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationUsesClause(this))) {
-                        usedUnitsPrivate.add(ident.getName());
-                    }
-                }
-            } finally {
+        if (null == usedUnitsPrivate) {
+            List<String> result = new SmartList<>();
+            for (PascalQualifiedIdent ident : PsiUtil.getUsedUnits(PsiUtil.getModuleImplementationUsesClause(this))) {
+                result.add(ident.getName());
+            }
+            if (SyncUtil.lockOrCancel(unitsLock)) {
+                usedUnitsPrivate = result;
                 unitsLock.unlock();
             }
-            return usedUnitsPrivate;
-        } else {
-            return Collections.emptyList();
         }
+        return usedUnitsPrivate;
     }
 
     @Nullable

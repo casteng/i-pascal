@@ -15,6 +15,7 @@ import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.resolve.Types;
 import com.siberika.idea.pascal.util.ModuleUtil;
 import com.siberika.idea.pascal.util.PsiUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -40,6 +41,7 @@ class PascalHelperScope extends PascalHelperNamed {
         containingScope = null;
     }
 
+    @NotNull
     PasEntityScope calcContainingScope() {
         ensureCacheActual();
         if (!PsiUtil.isSmartPointerValid(containingScope)) {
@@ -50,7 +52,7 @@ class PascalHelperScope extends PascalHelperNamed {
                     return scope;
                 }
                 PasField field = scope.getField(PsiUtil.cleanGenericDef(names[0]));
-                scope = updateContainingScope(scope, field);
+                scope = field != null ? updateContainingScope(scope, field) : scope;
                 for (int i = 1; (i < names.length - 1) && (scope != null); i++) {
                     scope = updateContainingScope(scope, scope.getField(PsiUtil.cleanGenericDef(names[i])));
                 }
@@ -61,9 +63,6 @@ class PascalHelperScope extends PascalHelperNamed {
     }
 
     private PasEntityScope updateContainingScope(PasEntityScope scope, PasField field) {
-        if (null == field) {
-            return null;
-        }
         PasEntityScope tempScope = Types.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE,
                 true, null, ModuleUtil.retrieveUnitNamespaces(field.owner)));
         return tempScope != null ? tempScope : scope;

@@ -238,12 +238,10 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @Override
     public PasTypeID getFunctionTypeIdent() {
-        if (SyncUtil.lockOrCancel(typeIdLock)) {
-            try {
-                if (null == typeId) {
-                    typeId = PsiTreeUtil.findChildOfType(findChildByClass(PasTypeDecl.class), PasTypeID.class);
-                }
-            } finally {
+        if (null == typeId) {
+            PasTypeID newTypeId = PsiTreeUtil.findChildOfType(findChildByClass(PasTypeDecl.class), PasTypeID.class);
+            if (SyncUtil.lockOrCancel(typeIdLock)) {
+                typeId = newTypeId;
                 typeIdLock.unlock();
             }
         }

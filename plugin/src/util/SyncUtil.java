@@ -1,7 +1,7 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.ProcessCanceledException;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -28,11 +28,10 @@ public class SyncUtil {
 
     public static boolean lockOrCancel(Lock lock) {
         try {
-            while (!lock.tryLock(LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+/*            while (!lock.tryLock(LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
                 ProgressManager.checkCanceled();
-            }
-//            lock.lockInterruptibly();
-            return true;
+            }*/
+            return lock.tryLock(LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             LOG.warn("Interrupted thread", e);
             return false;
@@ -53,6 +52,8 @@ public class SyncUtil {
         if (SyncUtil.lockOrCancel(nameLock)) {
             try {
                 return runnable.call();
+            } catch (ProcessCanceledException e) {
+                throw e;
             } catch (Exception e) {
                 LOG.warn("ERROR: doWithLock: ", e);
                 return null;
@@ -60,7 +61,7 @@ public class SyncUtil {
                 nameLock.unlock();
             }
         } else {
-            return null;
+            throw new ProcessCanceledException();
         }
     }
 }
