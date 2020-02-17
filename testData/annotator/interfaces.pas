@@ -15,6 +15,14 @@ type
         procedure proc; virtual;
     end;
 
+    IEnum<T> = interface
+        [CustomAttribute('virtual T __fastcall GetCurrentT(void) = 0')]
+        function GetCurrent: T;
+        [CustomAttribute2('__property T Current = {read=GetCurrentT}')]
+        property Current: T read GetCurrent;
+    end;
+
+
     [CustomAttribute, CustomAttribute2('', '', False)]
     TA = class
     private

@@ -622,7 +622,7 @@ private classParentWORec        ::= ClassParent
 ClassParent                     ::= "(" TypeID? classParentRest ")" {pin = 1}
 private classParentRest         ::= ("," TypeID)* //{pin=1 recoverWhile=rec_classparent_rest}
 
-private interfaceGuid       ::= "[" quotedString "]" {pin=1}
+private interfaceGuid       ::= "[" quotedString "]"
 private interfaceKey        ::= INTERFACE | DISPINTERFACE | (OBJC_PROTOCOL [EXTERNAL [externalSpecifier]])
 
 ClassTypeTypeDecl           ::= CLASS OF TypeID {pin(".*")="class of" name="metaclass declaration"}
