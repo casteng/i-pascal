@@ -44,6 +44,9 @@ class PascalCompilerMessager implements CompilerMessager {
             message = matcher.group(groupCount);
         }
         if (null == message) message = line;
+        if ("1018".equals(msgId) || "10026".equals(msgId) || message.endsWith("returned an error exitcode")) {
+            category = CompilerMessageCategory.WARNING;
+        }
 
         if (CompilerMessageCategory.ERROR.equals(category)) {
             messager.error(msgId, message, url, lineNum, colNum);

@@ -97,13 +97,13 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
             return;
         }
 
-        CompilerMessager messager = new PascalCompilerMessager(getPresentableName(), context);
-
         boolean isDebug = isDebugBuild(context);
 
         JpsSdk<?> sdk = module.getSdk(JpsPascalSdkType.INSTANCE);
         if (sdk != null) {
-            PascalBackendCompiler compiler = PascalBackendCompiler.getCompiler(getCompilerFamily(sdk), messager);
+            final PascalCompilerFamily compilerFamily = getCompilerFamily(sdk);
+            CompilerMessager messager = new PascalCompilerMessager(compilerFamily.name(), context);
+            PascalBackendCompiler compiler = PascalBackendCompiler.getCompiler(compilerFamily, messager);
             if (compiler != null) {
                 messager.info(null, "Compiler family:" + compiler.getId(), "", -1L, -1);
                 List<File> sdkFiles = sdk.getParent().getFiles(JpsOrderRootType.COMPILED);
@@ -125,7 +125,7 @@ public class PascalTargetBuilder extends TargetBuilder<PascalSourceRootDescripto
                         ParamMap.getJpsParams(sdk.getSdkProperties()));
                 if (cmdLine != null) {
                     // For Delphi workingDirectory should be null otherwise file paths in compiler messages will be relative
-                    File workingDirectory = PascalCompilerFamily.DELPHI.equals(getCompilerFamily(sdk)) ? null : new File(FileUtil.expandUserHome("~/"));
+                    File workingDirectory = PascalCompilerFamily.DELPHI.equals(compilerFamily) ? null : new File(FileUtil.expandUserHome("~/"));
                     compiler.launch(messager, cmdLine, workingDirectory);
                 } else {
                     messager.warning(null, "Error. Can't launch compiler", null, -1L, -1L);
