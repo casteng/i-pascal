@@ -20,6 +20,7 @@ import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.references.ResolveContext;
 import com.siberika.idea.pascal.lang.references.resolve.Resolve;
 import com.siberika.idea.pascal.util.StrUtil;
+import com.siberika.idea.pascal.util.SyncUtil;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.jetbrains.annotations.NotNull;
@@ -27,17 +28,22 @@ import org.jetbrains.annotations.NotNull;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VariableManager {
+public final class VariableManager {
 
     private static final Logger LOG = Logger.getInstance(VariableManager.class);
 
@@ -54,7 +60,8 @@ public class VariableManager {
 
     private final PascalXDebugProcess process;
 
-    private Map<String, GdbVariableObject> variableObjectMap;
+    private final Map<String, GdbVariableObject> variableObjectMap;
+    private Lock variableLock = new ReentrantLock();
     private final Map<String, PasField> fieldsMap = new ConcurrentHashMap<>();
 
     VariableManager(PascalXDebugProcess process) {
@@ -66,7 +73,10 @@ public class VariableManager {
         if (process.backend.options.supportsBulkDelete) {
             process.sendCommand("-var-delete *");
         }
-        variableObjectMap.values().removeIf(v -> !v.isWatched());
+        SyncUtil.doWithLock(variableLock, () -> {
+            variableObjectMap.values().removeIf(v -> !v.isWatched());
+        });
+
         int qc = queryCounter.incrementAndGet();
         // TODO: resolve and add global variables
         process.sendCommand(String.format("-stack-list-variables --thread %s --frame %d --no-values", frame.getThreadId(), level),
@@ -79,7 +89,9 @@ public class VariableManager {
                 });
         process.syncCalls(5, res -> {
             if (queryCounter.get() == qc) {
-                frame.refreshVarTree(variableObjectMap.values());
+                Collection<GdbVariableObject> varList = SyncUtil.doWithLock(variableLock,
+                        (Callable<Collection<GdbVariableObject>>) () -> new ArrayList<>(variableObjectMap.values()));
+                frame.refreshVarTree(varList);
             }
         });
     }
@@ -96,7 +108,7 @@ public class VariableManager {
                 }
                 process.backend.createVar(varKey, varName, null);
                 GdbVariableObject var = new GdbVariableObject(frame, varKey, varName, varName, null, res);
-                variableObjectMap.put(varKey, var);
+                putVar(varKey, var);
                 resolveVariable(var);
             } else {
                 LOG.error(String.format("DBG Error: Invalid variables list entry: %s", o));
@@ -125,10 +137,10 @@ public class VariableManager {
                 String id = removeSyntheticLevels(varName);
                 var = new GdbVariableObject((GdbStackFrame) frame, varKey, varName, id, null);
                 parent.getChildren().add(var);
-                variableObjectMap.put(varKey, var);
+                putVar(varKey, var);
                 resolveVariable(var);
             } else {
-                var = variableObjectMap.get(varKey);
+                var = getVar(varKey);
             }
             if (var != null) {
                 var.updateFromResult(res);
@@ -205,7 +217,7 @@ public class VariableManager {
     void removeVariable(String varKey) {
         XStackFrame frame = process.getCurrentFrame();
         if (frame instanceof GdbStackFrame) {
-            variableObjectMap.remove(varKey);
+            SyncUtil.doWithLock(variableLock, () -> variableObjectMap.remove(varKey));
         }
     }
 
@@ -265,7 +277,7 @@ public class VariableManager {
     }
 
     private GdbVariableObject findVarObject(String name) {
-        GdbVariableObject res = variableObjectMap.get(name);
+        GdbVariableObject res = getVar(name);
         /*int prevI = name.length();
         int index = name.substring(0, prevI).lastIndexOf('.');
         while ((null == res) && (index > 0)) {
@@ -278,6 +290,14 @@ public class VariableManager {
             index = name.substring(0, prevI).lastIndexOf('.');
         }*/
         return res;
+    }
+
+    private GdbVariableObject getVar(String key) {
+        return SyncUtil.doWithLock(variableLock, () -> variableObjectMap.get(key));
+    }
+
+    private GdbVariableObject putVar(String key, GdbVariableObject var) {
+        return SyncUtil.doWithLock(variableLock, () -> variableObjectMap.put(key, var));
     }
 
     private void refineStructured(GdbVariableObject var, GdbMiResults res) {
@@ -316,7 +336,7 @@ public class VariableManager {
             Integer highIndex = res.getInteger("value");
             if (highIndex != null) {
                 final String openArrayName = highBoundVar.getName().substring(4);
-                GdbVariableObject openArrayVar = variableObjectMap.get(getVarKey(openArrayName, false, VAR_PREFIX_LOCAL));
+                GdbVariableObject openArrayVar = getVar(getVarKey(openArrayName, false, VAR_PREFIX_LOCAL));
                 if (openArrayVar != null) {
                     openArrayVar.setChildrenCount(0);
                     openArrayVar.setLength(highIndex + 1);
@@ -524,7 +544,7 @@ public class VariableManager {
         String key = getVarKey(dExpr.getExpression(), false, VAR_PREFIX_WATCHES);
         final GdbVariableObject var = new GdbVariableObject(frame, key, dExpr.getExpression(), expression, callback);
         var.setRefinable(!dExpr.isArray());
-        variableObjectMap.put(key, var);
+        putVar(key, var);
         process.sendCommand("-var-delete " + key, SILENT);
         doEvaluate(var, dExpr, () -> doCreateVar(key, var, dExpr, callback));
     }

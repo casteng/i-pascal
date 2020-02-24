@@ -6,7 +6,6 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: George Bakhtadze
@@ -38,18 +37,18 @@ public class SyncUtil {
         }
     }
 
-    public static void doWithLock(ReentrantLock nameLock, Runnable runnable) {
-        if (SyncUtil.lockOrCancel(nameLock)) {
+    public static void doWithLock(Lock lock, Runnable runnable) {
+        if (SyncUtil.lockOrCancel(lock)) {
             try {
                 runnable.run();
             } finally {
-                nameLock.unlock();
+                lock.unlock();
             }
         }
     }
 
-    public static <T> T doWithLock(ReentrantLock nameLock, Callable<T> runnable) {
-        if (SyncUtil.lockOrCancel(nameLock)) {
+    public static <T> T doWithLock(Lock lock, Callable<T> runnable) {
+        if (SyncUtil.lockOrCancel(lock)) {
             try {
                 return runnable.call();
             } catch (ProcessCanceledException e) {
@@ -58,7 +57,7 @@ public class SyncUtil {
                 LOG.warn("ERROR: doWithLock: ", e);
                 return null;
             } finally {
-                nameLock.unlock();
+                lock.unlock();
             }
         } else {
             throw new ProcessCanceledException();
