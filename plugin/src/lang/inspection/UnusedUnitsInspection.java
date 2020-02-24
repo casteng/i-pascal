@@ -10,6 +10,7 @@ import com.siberika.idea.pascal.lang.PascalImportOptimizer;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
 import com.siberika.idea.pascal.lang.psi.PasUsesClause;
 import com.siberika.idea.pascal.lang.psi.PascalQualifiedIdent;
+import com.siberika.idea.pascal.util.PsiUtil;
 
 import static com.siberika.idea.pascal.PascalBundle.message;
 
@@ -17,6 +18,9 @@ public class UnusedUnitsInspection extends PascalLocalInspectionBase {
 
     @Override
     public void checkUses(PasUsesClause usesClause, ProblemsHolder holder, boolean isOnTheFly) {
+        if (!PsiUtil.isElementValid(usesClause)) {
+            return;
+        }
         for (PasNamespaceIdent usedUnit : usesClause.getNamespaceIdentList()) {
             ProblemDescriptor res = annotateUnit(holder.getManager(), usedUnit, isOnTheFly);
             if (res != null) {

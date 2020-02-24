@@ -46,7 +46,7 @@ public class PascalHelperNamed {
     }
 
     void ensureCacheActual() {
-        if (self.getContainingFile() == null) {
+        if (!self.isValid() || self.getContainingFile() == null) {
             return;
         }
         if (modified != self.getContainingFile().getModificationStamp()) {

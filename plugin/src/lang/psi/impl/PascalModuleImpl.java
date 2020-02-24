@@ -315,7 +315,7 @@ public abstract class PascalModuleImpl extends PasStubScopeImpl<PasModuleStub> i
             PasField field = entry.getValue();
             if ((field != null) && PasField.isAllowed(field.visibility, PasField.Visibility.PRIVATE)
                     && PasField.TYPES_STRUCTURE.contains(field.fieldType)
-                    && (field.owner instanceof PascalModule) && !this.equals(field.owner) && nameMatch(module, field.owner.getName(), unitPrefixes)) {
+                    && (field.owner instanceof PascalModule) && !this.equals(field.owner) && PsiUtil.isElementValid(field.owner) && nameMatch(module, field.owner.getName(), unitPrefixes)) {
                 result.add(entry.getKey());
             }
         }
