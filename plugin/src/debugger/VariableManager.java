@@ -50,7 +50,8 @@ public final class VariableManager {
     private static final String VAR_PREFIX_LOCAL = "l%";
     private static final String VAR_PREFIX_WATCHES = "w%";
     private static final String OPEN_ARRAY_HIGH_BOUND_VAR_PREFIX = "high";
-    private static final List<String> TYPES_STRING = Arrays.asList("ANSISTRING", "WIDESTRING", "UNICODESTRING", "UTF8STRING", "RAWBYTESTRING");
+    public static final String TYPE_UNICODESTRING = "UNICODESTRING";
+    private static final List<String> TYPES_STRING = Arrays.asList("ANSISTRING", "WIDESTRING", TYPE_UNICODESTRING, "UTF8STRING", "RAWBYTESTRING");
     private static final List<String> TYPES_PCHAR = Arrays.asList("PCHAR", "PWIDECHAR", "PUNICODECHAR");
     static final CommandSender.FinishCallback SILENT = res -> {};
     private static final Pattern PATTERN_STRING_VALUE = Pattern.compile("(0x[0-9a-f]+)(\\s((\\\\\")|').*)?");
@@ -406,14 +407,21 @@ public final class VariableManager {
                     if ((content != null) && (content.length() == (headSize * 2))) {
                         int base = 0;
                         Integer elemSize = null;
-                        Integer codepage = null;
+                        Long codepage;
+                        CodePage codePageEnum;
                         if (hasCP) {
-                            codepage = (int) DebugUtil.parseHex(content.substring(0, 4));
+                            codepage = DebugUtil.parseHex(content.substring(0, 4));
                             elemSize = (int) DebugUtil.parseHex(content.substring(4, 8));
                             base = process.backend.options.pointerSize * 2;
+                            codePageEnum = CodePage.byId(codepage);
+                        } else if (TYPE_UNICODESTRING.equals(type)) {
+                            codepage = null;
+                            elemSize = 2;
+                            codePageEnum = CodePage.UTF16;
+                        } else {
+                            codepage = null;
+                            codePageEnum = null;
                         }
-                        Long codepageFinal = codepage != null ? codepage.longValue() : null;
-                        CodePage codePageEnum = CodePage.byId(codepageFinal);
                         Long refCount = null;
                         if (hasRefcount) {
                             refCount = DebugUtil.parseHex(content.substring(base, base + process.backend.options.pointerSize * 2));
@@ -428,7 +436,7 @@ public final class VariableManager {
                             String content1 = parseReadMemory(res1);
                             if (content1 != null) {
                                 var.setValueRefined(parseString(content1, length, displayLength, charSize, codePageEnum));
-                                var.setAdditional(length + (refCountFinal != null ? "#" + refCountFinal.toString() : "") + printCodepage(codepageFinal));
+                                var.setAdditional(length + (refCountFinal != null ? "#" + refCountFinal.toString() : "") + printCodepage(codepage));
                                 updateVariableObjectUI(var);
                             } else {
                                 LOG.info(String.format("DBG Error: Invalid debugger response for memory: %s", res1.toString()));
@@ -625,7 +633,7 @@ public final class VariableManager {
     }
 
     private String createString(byte[] data, CodePage codepage) {
-        String javaCp = codepage.getJavaName();
+        String javaCp = codepage != null ? codepage.getJavaName() : null;
         try {
             if (javaCp != null) {
                 return new String(data, javaCp);
@@ -677,7 +685,7 @@ public final class VariableManager {
 
     private int getCharSize(Integer elemSize, String type) {
         String typeUC = type.toUpperCase();
-        int charSize = ("UNICODESTRING".equals(typeUC) || "WIDESTRING".equals(typeUC)) ? 2 : 1;
+        int charSize = (TYPE_UNICODESTRING.equals(typeUC) || "WIDESTRING".equals(typeUC)) ? 2 : 1;
         if ((elemSize != null) && (charSize != elemSize)) {
             LOG.info(String.format("DBG Error: character size not match. type: %s (%d), element size from header: %d", type, charSize, elemSize));
         }
