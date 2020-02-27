@@ -19,7 +19,7 @@ public class PascalSdkData implements SdkAdditionalData {
     public static final String SDK_DATA_TRUE = "1";
 
     private static final Map<String, Object> DEFAULTS_MAP = new ImmutableMap.Builder<String, Object>()
-            .put(Keys.SYNTAX_CHECK_MODE.getKey(), SYNTAX_CHECK_MODES[1])
+            .put(Keys.SYNTAX_CHECK_MODE.getKey(), SYNTAX_CHECK_MODES[2])
             .put(Keys.DEBUGGER_BACKEND.getKey(), DEBUGGER_BACKENDS[SystemInfo.isMac ? 1 : 0])
             .put(Keys.DEBUGGER_REDIRECT_CONSOLE.getKey(), "1")
             .put(Keys.DEBUGGER_BREAK_FULL_NAME.getKey(), "1")
