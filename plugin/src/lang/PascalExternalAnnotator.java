@@ -47,7 +47,7 @@ public class PascalExternalAnnotator extends ExternalAnnotator<PascalAnnotatorIn
         }
         Module module = ModuleUtilCore.findModuleForFile(file);
         Sdk sdk = module != null ? ModuleRootManager.getInstance(module).getSdk() : null;
-        final PascalSdkData sdkData = sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : null;
+        final PascalSdkData sdkData = isPascalSdk(sdk) ? BasePascalSdkType.getAdditionalData(sdk) : null;
         if (null == sdkData) {
             return null;
         }
@@ -62,7 +62,7 @@ public class PascalExternalAnnotator extends ExternalAnnotator<PascalAnnotatorIn
             return null;
         }
         Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
-        final PascalSdkData sdkData = sdk != null ? BasePascalSdkType.getAdditionalData(sdk) : null;
+        final PascalSdkData sdkData = isPascalSdk(sdk) ? BasePascalSdkType.getAdditionalData(sdk) : null;
         String family = sdkData != null ? sdkData.getString(PascalSdkData.Keys.COMPILER_FAMILY) : null;
         PascalBackendCompiler compiler = family != null ? PascalBackendCompiler.getCompiler(PascalCompilerFamily.of(family), CompilerMessager.NO_OP_MESSAGER) : null;
         File tempDir = module.getComponent(ModuleService.class).getSyntaxCheckTempDir();
@@ -142,6 +142,10 @@ public class PascalExternalAnnotator extends ExternalAnnotator<PascalAnnotatorIn
             }
         }
         return el != null ? el.getTextRange() : TextRange.create(offset, end);
+    }
+
+    private boolean isPascalSdk(Sdk sdk) {
+        return (sdk != null) && (sdk.getSdkType() instanceof BasePascalSdkType);
     }
 
 }

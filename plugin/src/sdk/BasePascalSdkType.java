@@ -56,9 +56,13 @@ public abstract class BasePascalSdkType extends SdkType {
         SdkAdditionalData params = sdk.getSdkAdditionalData();
         if (!(params instanceof PascalSdkData)) {
             params = new PascalSdkData();
-            SdkModificator sdkModificator = sdk.getSdkModificator();
-            sdkModificator.setSdkAdditionalData(params);
-            sdkModificator.commitChanges();
+            if (sdk.getSdkType() instanceof BasePascalSdkType) {
+                SdkModificator sdkModificator = sdk.getSdkModificator();
+                sdkModificator.setSdkAdditionalData(params);
+                sdkModificator.commitChanges();
+            } else {
+                LOG.warn("Wrong SDK type passed to BasePascalSdkType.getAdditionalData: " + sdk.getSdkType().getClass().getSimpleName());
+            }
         }
         return (PascalSdkData) params;
     }
