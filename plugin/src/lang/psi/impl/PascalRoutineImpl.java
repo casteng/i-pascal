@@ -6,15 +6,14 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.SmartPsiElementPointer;
-import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.psi.HasTypeParameters;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
+import com.siberika.idea.pascal.lang.psi.PasConstrainedTypeParam;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasGenericDefinition;
 import com.siberika.idea.pascal.lang.psi.PasGenericPostfix;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRoutineImplDecl;
@@ -298,11 +297,8 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     private void addTypeParameters(PascalHelperScope.Members res) {
-        PsiElement nameIdent = getNameIdentifier();
-        nameIdent = nameIdent instanceof LeafPsiElement ? nameIdent.getParent() : null;
-        PsiElement pgd = nameIdent != null ? nameIdent.getNextSibling() : null;
-        if (pgd instanceof PasGenericDefinition) {
-            for (PasNamedIdent typeParamIdent : PsiTreeUtil.getChildrenOfTypeAsList(pgd, PasNamedIdent.class)) {
+        for (PasConstrainedTypeParam typeParam : getConstrainedTypeParamList()) {
+            for (PasNamedIdent typeParamIdent : typeParam.getNamedIdentList()) {
                 addField(res, typeParamIdent, PasField.FieldType.TYPE);
             }
         }
@@ -331,6 +327,12 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
 
     private PascalHelperRoutine getHelper() {
         return (PascalHelperRoutine) helper;
+    }
+
+    @NotNull
+    @Override
+    public List<PasConstrainedTypeParam> getConstrainedTypeParamList() {
+        return Collections.emptyList();
     }
 
 }

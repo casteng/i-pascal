@@ -135,7 +135,7 @@ abstract class FQNResolver {
             }
             return true;
         }
-        PasField field = scope.getField(fieldName);
+        PasField field = scope != null ? scope.getField(fieldName) : null;
         if (isFieldSuitable(field)) {
             /*if (field.fieldType == PasField.FieldType.ROUTINE) {
                 PascalNamedElement el = field.getElement();

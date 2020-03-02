@@ -399,7 +399,7 @@ private rec_typeId          ::= !("=" | "." | ";" | DO)
 private rec_formal_param_sec::= !(";" | ":" | ">" | "]" | "," | OF | identifier) & rec_section
 private rec_formal_param    ::= !(";" | ")" | "]") & rec_section
 private rec_propspec        ::= !(READ | WRITE | "add" | "remove" | classPropertyDispInterface | "stored" | SEMI | DEFAULT | IMPLEMENTS)
-private rec_generic_def     ::= !(">" | "," | ":" | ">""=") & rec_section
+private rec_generic_def     ::= !(">" | "," | ":" | ";" | ">""=") & rec_section
 
 private rec_statements      ::= !(END | INITIALIZATION | FINALIZATION)
 private rec_statement       ::= !(SEMI | ELSE | FINALLY | EXCEPT | UNTIL) & rec_statements
@@ -427,8 +427,8 @@ ExportedRoutine             ::= routineDeclaration [ExternalDirective] {implemen
                              elementTypeClass="com.siberika.idea.pascal.lang.stub.PasExportedRoutineStubElementType"}
 
 private routineDeclaration  ::= customAttributes* (exportedProc | exportedFunc | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine_decl}
-private exportedFunc        ::= [GENERIC] [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=3}
-private exportedProc        ::= [GENERIC] [CLASS] methodKey procName [GenericDefinition] [FormalParameterSection] {pin=3}
+private exportedFunc        ::= [GENERIC] [CLASS] FUNCTION procName [genericDefinition] [FormalParameterSection] ":" customAttributes* TypeDecl {pin=3}
+private exportedProc        ::= [GENERIC] [CLASS] methodKey procName [genericDefinition] [FormalParameterSection] {pin=3}
 private operatorDecl        ::= OPERATOR operatorRedef FormalParameterSection [NamedIdent] ":" TypeDecl {pin=1}
 private classOperatorDecl   ::= [CLASS] OPERATOR operatorName FormalParameterSection ":" TypeDecl {pin=2}
 
@@ -436,7 +436,7 @@ RoutineImplDecl             ::= routineImpl ProcBodyBlock {pin=1 name="procedure
 RoutineImplDeclNested1      ::= routineDeclaration (ProcForwardDecl | BlockLocalNested1) [";"] {extends=RoutineImplDecl}
 RoutineImplDeclWoNested     ::= routineDeclaration (ProcForwardDecl | BlockLocalWONested) [";"] {extends=RoutineImplDecl}
 private routineImpl         ::= customAttributes* (exportedProc | exportedFuncImpl | operatorDecl | classOperatorDecl) ";" FunctionDirective* {pin=2 recoverWhile=rec_routine}
-private exportedFuncImpl    ::= [GENERIC] [CLASS] FUNCTION procName [GenericDefinition] [FormalParameterSection] [":" customAttributes* TypeDecl] {pin=3}
+private exportedFuncImpl    ::= [GENERIC] [CLASS] FUNCTION procName [genericDefinition] [FormalParameterSection] [":" customAttributes* TypeDecl] {pin=3}
 
 ClassMethodResolution       ::= [CLASS] procKey GenericTypeIdent "." identifier "=" RefNamedIdent ";"
 
@@ -525,17 +525,21 @@ private type                ::= typeForwardDecl | typeDecl
 private typeDecl            ::= TypeDecl hintingDirective* ";" {pin=1}
 private typeForwardDecl     ::= classForwardDecl ";"
 
-GenericTypeIdent    ::= [GENERIC] NamedIdentDecl [GenericDefinition] {recoverWhile=rec_typeId}
-GenericDefinition   ::= simpleGenericDefinition | constrainedGenericDefinition
-private simpleGenericDefinition ::= "<" NamedIdent identsRest* ">" {}             //TODO use meta rule
-private identsRest          ::= "," NamedIdent {recoverWhile=rec_generic_def}
-private constrainedGenericDefinition ::= "<" constrainedGeneric genericConstraintsRest* ">" {pin=1}
-private constrainedGeneric  ::= (NamedIdent [ ":" GenericConstraint]) | (CONSTRUCTOR | CLASS | RECORD)
-GenericConstraint   ::= NamedIdent | RECORD | CLASS | CONSTRUCTOR
-private genericConstraintsRest ::= ("," | ";") constrainedGeneric {pin=1}
+GenericTypeIdent            ::= [GENERIC] NamedIdentDecl [genericDefinition] {recoverWhile=rec_typeId}
+
+private genericDefinition      ::= "<" typeParamList ">" {pin=1}
+private typeParamList          ::= ConstrainedTypeParam typeParamListRest*
+private typeParamListRest      ::= ";" ConstrainedTypeParam //{pin=1 recoverWhile=rec_generic_def}
+ConstrainedTypeParam           ::= (typeParamIdentList [ ":" genericConstraintList])
+private typeParamIdentList     ::= NamedIdent identsRest*
+private identsRest             ::= "," NamedIdent
+private genericConstraintList  ::= GenericConstraint genericConstraintsRest*
+private genericConstraintsRest ::= "," GenericConstraint
+GenericConstraint              ::= TypeID | RECORD | CLASS | CONSTRUCTOR | INTERFACE | OBJECT //{recoverWhile=rec_test}
+private rec_test ::= !(";" | "=" | ">" | ",") & rec_section
+
 GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"             // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
-
 TypeID                      ::=	SPECIALIZE? FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | [TYPE] StringType | simpleType | [TYPE] TypeID

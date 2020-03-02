@@ -71,7 +71,7 @@ public class PascalFormatter implements FormattingModelBuilder {
         final boolean keepSectionsOneLine = pascalSettings.KEEP_SIMPLE_SECTIONS_IN_ONE_LINE;
 
         return new SpacingBuilder(settings, PascalLanguage.INSTANCE)
-                .afterInside(PasTypes.COMMA, PasTypes.GENERIC_DEFINITION).spacing(spCommaTypeArgA, spCommaTypeArgA, 0, keepBreaks, 0)
+                .afterInside(PasTypes.COMMA, PasTypes.CONSTRAINED_TYPE_PARAM).spacing(spCommaTypeArgA, spCommaTypeArgA, 0, keepBreaks, 0)
                 .after(PasTypes.COMMA).spacing(spCommaA, spCommaA, 0, keepBreaks, 1)
                 .before(PasTypes.COMMA).spacing(spCommaB, spCommaB, 0, keepBreaks, 0)
                 .after(PasTypes.COLON).spacing(spColonA, spColonA, 0, false, 0)

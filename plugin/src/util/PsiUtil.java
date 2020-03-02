@@ -279,7 +279,7 @@ public class PsiUtil {
     }
 
     public static boolean isTypeName(@NotNull PsiElement element) {
-        if (checkClass(element, PasGenericTypeIdentImpl.class) || (element.getParent() instanceof PasGenericDefinition)) {
+        if (checkClass(element, PasGenericTypeIdentImpl.class) || (element.getParent() instanceof PasConstrainedTypeParam)) {
             return true;
         }
         PsiElement el = PsiTreeUtil.skipParentsOfType(element, PasSubIdent.class, PasFullyQualifiedIdent.class, PsiWhiteSpace.class, PsiErrorElement.class);
@@ -299,7 +299,7 @@ public class PsiUtil {
     }
 
     public static boolean isTypeParameter(PascalNamedElement element) {
-        return (element instanceof PasNamedIdent) && (element.getParent() instanceof PasGenericDefinition);
+        return (element instanceof PasNamedIdent) && (element.getParent() instanceof PasConstrainedTypeParam);
     }
 
     public static boolean isTypeSpecialization(PsiElement element) {
@@ -779,7 +779,7 @@ public class PsiUtil {
                 return PsiContext.TYPE_ID;
             } else if (fqn.getParent() instanceof PasClassPropertySpecifier) {
                 return PsiContext.PROPERTY_SPEC;                                    // False positives possible
-            } else if (fqn.getParent() instanceof PasGenericDefinition) {
+            } else if (fqn.getParent() instanceof PasConstrainedTypeParam) {
                 return PsiContext.GENERIC_PARAM;
             } else if (fqn.getParent() instanceof PasForStatement) {
                 return PsiContext.FOR;
@@ -820,9 +820,8 @@ public class PsiUtil {
 
     private static String normalizeGenericName(PasGenericTypeIdent ident) {
         StringBuilder res = new StringBuilder();
-        PasGenericDefinition gen = ident.getGenericDefinition();
-        if (gen != null) {
-            for (PasNamedIdent type : gen.getNamedIdentList()) {
+        for (PasConstrainedTypeParam typeParam : ident.getConstrainedTypeParamList()) {
+            for (PasNamedIdent type : typeParam.getNamedIdentList()) {
                 if (res.length() > 0) {
                     res.append(",");
                 }

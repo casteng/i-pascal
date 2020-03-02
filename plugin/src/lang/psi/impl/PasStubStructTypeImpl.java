@@ -20,10 +20,10 @@ import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
 import com.siberika.idea.pascal.lang.psi.PasClassTypeDecl;
+import com.siberika.idea.pascal.lang.psi.PasConstrainedTypeParam;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
-import com.siberika.idea.pascal.lang.psi.PasGenericDefinition;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
 import com.siberika.idea.pascal.lang.psi.PasInterfaceTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
@@ -119,8 +119,14 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         }
         PsiElement nameElement = getNameIdentifier();
         if (nameElement instanceof PasGenericTypeIdent) {
-            PasGenericDefinition genericDefinition = ((PasGenericTypeIdent) nameElement).getGenericDefinition();
-            return genericDefinition != null ? RoutineUtil.parseTypeParametersStr(genericDefinition.getText()) : Collections.emptyList();
+            List<PasConstrainedTypeParam> typeParams = ((PasGenericTypeIdent) nameElement).getConstrainedTypeParamList();
+            List<String> res = new SmartList<>();
+            for (PasConstrainedTypeParam typeParam : typeParams) {
+                for (PasNamedIdent ident : typeParam.getNamedIdentList()) {
+                    res.add(ident.getName());
+                }
+            }
+            return res;
         } else {
             return Collections.emptyList();
         }
@@ -303,9 +309,9 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
             // Add type parameters to this structured type scope
             PsiElement nameIdent = getNameIdentifier();
             if (nameIdent instanceof PasGenericTypeIdent) {
-                PasGenericDefinition pgd = PsiTreeUtil.getChildOfType(nameIdent, PasGenericDefinition.class);
-                if (pgd != null) {
-                    for (PasNamedIdent typeParamIdent : PsiTreeUtil.getChildrenOfTypeAsList(pgd, PasNamedIdent.class)) {
+                List<PasConstrainedTypeParam> typeParams = ((PasGenericTypeIdent) nameIdent).getConstrainedTypeParamList();
+                for (PasConstrainedTypeParam typeParam : typeParams) {
+                    for (PasNamedIdent typeParamIdent : typeParam.getNamedIdentList()) {
                         addField(res, typeParamIdent, PasField.FieldType.TYPE, PasField.Visibility.STRICT_PRIVATE);
                     }
                 }

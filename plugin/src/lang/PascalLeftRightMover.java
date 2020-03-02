@@ -7,10 +7,10 @@ import com.siberika.idea.pascal.lang.psi.PasCaseItem;
 import com.siberika.idea.pascal.lang.psi.PasClassField;
 import com.siberika.idea.pascal.lang.psi.PasClassParent;
 import com.siberika.idea.pascal.lang.psi.PasCompoundStatement;
+import com.siberika.idea.pascal.lang.psi.PasConstrainedTypeParam;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameter;
 import com.siberika.idea.pascal.lang.psi.PasFormalParameterSection;
-import com.siberika.idea.pascal.lang.psi.PasGenericDefinition;
 import com.siberika.idea.pascal.lang.psi.PasIndexList;
 import com.siberika.idea.pascal.lang.psi.PasProductExpr;
 import com.siberika.idea.pascal.lang.psi.PasRelationalExpr;
@@ -31,8 +31,8 @@ public class PascalLeftRightMover extends MoveElementLeftRightHandler {
             return ((PasArgumentList) element).getExprList().toArray(PsiElement.EMPTY_ARRAY);
         } else if (element instanceof PasEnumType) {
             return ((PasEnumType) element).getNamedIdentDeclList().toArray(PsiElement.EMPTY_ARRAY);
-        } else if (element instanceof PasGenericDefinition) {
-            return ((PasGenericDefinition) element).getNamedIdentList().toArray(PsiElement.EMPTY_ARRAY);
+        } else if (element instanceof PasConstrainedTypeParam) {
+            return ((PasConstrainedTypeParam) element).getNamedIdentList().toArray(PsiElement.EMPTY_ARRAY);
         } else if (element instanceof PasClassParent) {
             return ((PasClassParent) element).getTypeIDList().toArray(PsiElement.EMPTY_ARRAY);
         } else if (element instanceof PasUsesClause) {

@@ -26,6 +26,7 @@ import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.parser.PascalParserUtil;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasClassProperty;
+import com.siberika.idea.pascal.lang.psi.PasConstrainedTypeParam;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
@@ -207,6 +208,14 @@ public class PasReferenceUtil {
             }
         } else if ((element != null) && (element.getParent() instanceof PasHandler)) {          // exception handler case
             typeId = ((PasHandler) element.getParent()).getTypeID();
+        } else if ((element != null) && (element.getParent() instanceof PasConstrainedTypeParam)) {   // type parameter case
+            PasConstrainedTypeParam typeParam = (PasConstrainedTypeParam) element.getParent();
+            if (!typeParam.getGenericConstraintList().isEmpty()) {
+                final PasTypeID typeID = typeParam.getGenericConstraintList().get(0).getTypeID();
+                res = typeID != null ? resolveTypeId(typeID, includeLibrary, recursionCount) : new PasField.ValueType(null, PasField.Kind.TYPEREF, null, null);
+            } else {
+                res = new PasField.ValueType(null, PasField.Kind.TYPEREF, null, null);
+            }
         } else {
             if ((element != null) && PsiUtil.isTypeDeclPointingToSelf(element)) {
                 res = PasField.getValueType(element.getName());

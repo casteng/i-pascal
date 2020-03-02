@@ -136,7 +136,7 @@ public class PascalRoutineActions {
                 return;
             }
             PsiElement element = fixActionDataArray.isEmpty() ? null : fixActionDataArray.get(0).element;
-            if (!(element instanceof PascalRoutine)) {
+            if (!(PsiUtil.isElementUsable(element) && element instanceof PascalRoutine)) {
                 return;
             }
             PascalRoutine routine = (PascalRoutine) element;

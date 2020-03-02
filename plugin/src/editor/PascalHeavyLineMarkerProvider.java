@@ -18,6 +18,7 @@ import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalRoutine;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.search.PascalDefinitionsSearch;
+import com.siberika.idea.pascal.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,7 +44,7 @@ public class PascalHeavyLineMarkerProvider implements LineMarkerProvider {
         List<Computable<List<LineMarkerInfo>>> tasks = new ArrayList<>();
         Processor<? super PasEntityScope> consumer = (Processor<PasEntityScope>) descending -> false;
         for (PsiElement element : elements) {
-            if (element instanceof PasEntityScope) {
+            if (PsiUtil.isElementUsable(element) && element instanceof PasEntityScope) {
                 tasks.add(new Computable<List<LineMarkerInfo>>() {
                     @Override
                     public List<LineMarkerInfo> compute() {

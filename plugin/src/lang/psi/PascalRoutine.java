@@ -1,9 +1,15 @@
 package com.siberika.idea.pascal.lang.psi;
 
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 public interface PascalRoutine extends PascalRoutineEntity, PasEntityScope {
+
+    @NotNull
+    List<PasConstrainedTypeParam> getConstrainedTypeParamList();
 
     PasField.Visibility getVisibility();
 

@@ -174,6 +174,7 @@ public class RoutineUtil {
         return res.toString();
     }
 
+    @Deprecated
     static List<String> parseTypeParametersStr(String typeParamText) {
         List<String> result;
         if (typeParamText != null && typeParamText.length() > 1) {
