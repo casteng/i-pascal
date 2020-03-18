@@ -41,7 +41,7 @@ public class DCUCachingDecompiler implements PascalCachingUnitDecompiler {
     private static final Pattern TYPE = Pattern.compile("\\s*\\w+\\.\\w+\\s*=.*");
     private static final Pattern COMMENTED_TYPE = Pattern.compile("\\s*\\{type}\\s*");
     private static final Pattern ROUTINE = Pattern.compile("(\\s*)(procedure|function|operator)(\\s+)(@)(\\w+)");
-    private static final Pattern ROUTINE_INVALID = Pattern.compile("(\\s*)(procedure|function)(\\s+)(.*\\.\\w+;)");
+    private static final Pattern ROUTINE_INVALID = Pattern.compile("(\\s*)(procedure|function)(\\s+)(.*\\.dll;)");
     private static final Pattern INLINE_TYPE = Pattern.compile("\\s*:\\d+\\s+=\\s+.*");
     private static final File NULL_FILE = new File("");
     private static final Pattern WARNING_WITH_UNITHEAD = Pattern.compile("(?i)Warning at 0x[A-F0-9]+.*unit\\s+.+;$");

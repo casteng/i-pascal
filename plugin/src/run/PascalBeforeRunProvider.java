@@ -17,6 +17,7 @@ import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -119,7 +120,7 @@ public class PascalBeforeRunProvider extends BeforeRunTaskProvider<PascalBeforeR
         CompilerModuleExtension moduleExtension = CompilerModuleExtension.getInstance(module);
         VirtualFile outputPath = moduleExtension != null ? moduleExtension.getCompilerOutputPath() : null;
         String exeOutputPath = module.getOptionValue(JpsPascalModuleType.USERDATA_KEY_EXE_OUTPUT_PATH.toString());
-        exeOutputPath = exeOutputPath != null ? exeOutputPath : (outputPath != null ? outputPath.getPath() : null);
+        exeOutputPath = StringUtil.isEmpty(exeOutputPath) ? (outputPath != null ? outputPath.getPath() : null) : exeOutputPath;
         if (exeOutputPath != null) {
             File exeDir = new File(exeOutputPath);
             for (String ext : EXECUTABLE_EXTENSIONS) {        // Delete executables

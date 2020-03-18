@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.sdk;
 
-import com.intellij.util.containers.HashMap;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -9,6 +8,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 

@@ -52,7 +52,7 @@ class PascalHelperScope extends PascalHelperNamed {
                     return scope;
                 }
                 PasField field = scope.getField(PsiUtil.cleanGenericDef(names[0]));
-                scope = field != null ? updateContainingScope(scope, field) : scope;
+                scope = updateContainingScope(scope, field);
                 for (int i = 1; (i < names.length - 1) && (scope != null); i++) {
                     scope = updateContainingScope(scope, scope.getField(PsiUtil.cleanGenericDef(names[i])));
                 }
@@ -63,8 +63,8 @@ class PascalHelperScope extends PascalHelperNamed {
     }
 
     private PasEntityScope updateContainingScope(PasEntityScope scope, PasField field) {
-        PasEntityScope tempScope = Types.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE,
-                true, null, ModuleUtil.retrieveUnitNamespaces(field.owner)));
+        PasEntityScope tempScope = field != null ? Types.retrieveFieldTypeScope(field, new ResolveContext(field.owner, PasField.TYPES_TYPE,
+                true, null, ModuleUtil.retrieveUnitNamespaces(field.owner))) : null;
         return tempScope != null ? tempScope : scope;
     }
 
