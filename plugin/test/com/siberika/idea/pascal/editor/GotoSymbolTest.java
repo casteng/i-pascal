@@ -2,7 +2,7 @@ package com.siberika.idea.pascal.editor;
 
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.PascalLightCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
+public class GotoSymbolTest extends PascalLightCodeInsightFixtureTestCase {
 
     @Override
     protected String getTestDataPath() {
@@ -45,7 +45,7 @@ public class GotoSymbolTest extends LightPlatformCodeInsightFixtureTestCase {
     public void testAddActions() {
         myFixture.configureByFiles("addActions.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
-                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "addActions");
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), getModule()), "addActions");
 
         Map<String, PascalActionDeclare> fixesMap = getFixesMap();
         int i = 1;

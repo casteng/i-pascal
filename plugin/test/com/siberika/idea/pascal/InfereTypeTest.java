@@ -1,7 +1,6 @@
 package com.siberika.idea.pascal;
 
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.lang.psi.PasCallExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpr;
 import com.siberika.idea.pascal.lang.psi.PasExpression;
@@ -15,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
+public class InfereTypeTest extends PascalLightCodeInsightFixtureTestCase {
     @Override
     protected String getTestDataPath() {
         return "testData/typeInference";
@@ -114,7 +113,7 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
     private List<PasExpr> getStatementExpressions(String unitName) {
         List<PasExpr> res = new ArrayList<PasExpr>();
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
-                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), unitName);
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), getModule()), unitName);
         Collection<PasStatement> stmts = PsiTreeUtil.findChildrenOfType(mod, PasStatement.class);
         for (PasStatement stmt : stmts) {
             if (stmt.getClass() == PasStatementImpl.class) {
@@ -130,7 +129,7 @@ public class InfereTypeTest extends LightPlatformCodeInsightFixtureTestCase {
     private List<PasExpr> getCallExpressions(String unitName) {
         List<PasExpr> res = new ArrayList<PasExpr>();
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
-                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), unitName);
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), getModule()), unitName);
         for (PasCallExpr callExpr : PsiTreeUtil.findChildrenOfType(mod, PasCallExpr.class)) {
             res.addAll(callExpr.getArgumentList().getExprList());
         }

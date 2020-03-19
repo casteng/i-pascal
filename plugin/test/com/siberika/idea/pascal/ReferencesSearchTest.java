@@ -7,7 +7,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.CommonProcessors;
 import com.intellij.util.Query;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -20,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ReferencesSearchTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ReferencesSearchTest extends PascalLightCodeInsightFixtureTestCase {
     @Override
     protected String getTestDataPath() {
         return "testData/reference";
@@ -49,7 +48,7 @@ public class ReferencesSearchTest extends LightPlatformCodeInsightFixtureTestCas
     private List<PasEntityScope> getDeclarations(String unitName) {
         List<PasEntityScope> res = new ArrayList<>();
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
-                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), unitName);
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), getModule()), unitName);
         Collection<PasEntityScope> scopes = PsiTreeUtil.findChildrenOfType(mod, PasEntityScope.class);
         for (PasEntityScope scope : scopes) {
             if ((scope instanceof PascalRoutine)) {

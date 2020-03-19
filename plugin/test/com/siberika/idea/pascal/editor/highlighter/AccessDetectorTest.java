@@ -1,7 +1,7 @@
 package com.siberika.idea.pascal.editor.highlighter;
 
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.PascalLightCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasRefNamedIdent;
@@ -14,7 +14,7 @@ import com.siberika.idea.pascal.lang.references.PasReferenceUtil;
 
 import java.util.Collection;
 
-public class AccessDetectorTest extends LightPlatformCodeInsightFixtureTestCase {
+public class AccessDetectorTest extends PascalLightCodeInsightFixtureTestCase {
     @Override
     protected String getTestDataPath() {
         return "testData/misc";
@@ -23,7 +23,7 @@ public class AccessDetectorTest extends LightPlatformCodeInsightFixtureTestCase 
     public void testAccessDetector() {
         myFixture.configureByFiles("accessDetector.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
-                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "accessDetector");
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), getModule()), "accessDetector");
         doTestRefs(PsiTreeUtil.findChildrenOfAnyType(mod, PasNamedIdent.class, PasSubIdent.class, PasRefNamedIdent.class));
         doTestDecls(PsiTreeUtil.findChildrenOfAnyType(mod, PasVarDeclaration.class, PasConstDeclaration.class));
     }

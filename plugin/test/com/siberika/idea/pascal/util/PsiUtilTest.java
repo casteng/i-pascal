@@ -1,7 +1,7 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.PascalLightCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.lang.context.ContextUtil;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PsiUtilTest extends LightPlatformCodeInsightFixtureTestCase {
+public class PsiUtilTest extends PascalLightCodeInsightFixtureTestCase {
     @Override
     protected String getTestDataPath() {
         return "testData/util";
@@ -31,7 +31,7 @@ public class PsiUtilTest extends LightPlatformCodeInsightFixtureTestCase {
 
     private Map<String, PascalNamedElement> collectNamed(String unitName) {
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
-                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), unitName);
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), getModule()), unitName);
         Collection<PascalNamedElement> named = PsiTreeUtil.findChildrenOfType(mod, PascalNamedElement.class);
         Map<String, PascalNamedElement> res = new HashMap<String, PascalNamedElement>();
         for (PascalNamedElement element : named) {

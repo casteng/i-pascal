@@ -1,7 +1,7 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.siberika.idea.pascal.PascalLightCodeInsightFixtureTestCase;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.lang.psi.impl.PascalModuleImpl;
@@ -15,7 +15,7 @@ import java.util.Map;
  * Author: George Bakhtadze
  * Date: 27/05/2017
  */
-public class PosUtilTest extends LightPlatformCodeInsightFixtureTestCase {
+public class PosUtilTest extends PascalLightCodeInsightFixtureTestCase {
 
     private Map<String, PascalStructType> structs;
 
@@ -29,7 +29,7 @@ public class PosUtilTest extends LightPlatformCodeInsightFixtureTestCase {
         super.setUp();
         myFixture.configureByFiles("posUtilTest.pas");
         PascalModuleImpl mod = (PascalModuleImpl) PasReferenceUtil.findUnit(myFixture.getProject(),
-                PasReferenceUtil.findUnitFiles(myFixture.getProject(), myModule), "posUtilTest");
+                PasReferenceUtil.findUnitFiles(myFixture.getProject(), getModule()), "posUtilTest");
         Collection<PascalStructType> named = PsiTreeUtil.findChildrenOfType(mod, PascalStructType.class);
         structs = new HashMap<String, PascalStructType>();
         for (PascalStructType element : named) {

@@ -45,6 +45,6 @@ public class StrUtilTest {
         Assert.assertEquals(1, t.getVariableCount());
         Assert.assertEquals(1, t.getSegmentsCount());
         Assert.assertEquals("TYPE", t.getVariableNameAt(0));
-        Assert.assertEquals("T", t.getDefaultValueAt(0).calculateResult(null).toString());
+        Assert.assertEquals("T", t.getVariables().get(0).getDefaultValueExpression().calculateResult(null).toString());
     }
 }

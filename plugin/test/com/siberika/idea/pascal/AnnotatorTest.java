@@ -1,8 +1,6 @@
 package com.siberika.idea.pascal;
 
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
-
-public class AnnotatorTest extends LightPlatformCodeInsightFixtureTestCase {
+public class AnnotatorTest extends PascalLightCodeInsightFixtureTestCase {
     @Override
     protected String getTestDataPath() {
         return "testData/annotator";

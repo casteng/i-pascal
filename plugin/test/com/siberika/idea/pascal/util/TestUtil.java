@@ -6,7 +6,6 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiElementProcessor;
-import com.intellij.util.indexing.FileBasedIndex;
 import com.siberika.idea.pascal.PascalFileType;
 import com.siberika.idea.pascal.lang.parser.PascalFile;
 import com.siberika.idea.pascal.lang.psi.PasConstDeclaration;
@@ -76,8 +75,7 @@ public class TestUtil {
      * Handle all elements of the specified classes in project source (not in PPU) with the given processor
      */
     public static <T extends PascalPsiElement> void processProjectElements(Project project, PsiElementProcessor<T> processor, Class<? extends T>... clazz) {
-        Collection<VirtualFile> virtualFiles = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PascalFileType.INSTANCE,
-                GlobalSearchScope.allScope(project));
+        Collection<VirtualFile> virtualFiles = FileTypeIndex.getFiles(PascalFileType.INSTANCE, GlobalSearchScope.allScope(project));
         for (VirtualFile virtualFile : virtualFiles) {
             PascalFile pascalFile = (PascalFile) PsiManager.getInstance(project).findFile(virtualFile);
             if (pascalFile != null) {
