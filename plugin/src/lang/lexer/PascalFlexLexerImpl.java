@@ -384,17 +384,21 @@ public class PascalFlexLexerImpl extends _PascalLexer {
         Project project = getProject();
         VirtualFile virtualFile = getVirtualFile();
         if ((!StringUtils.isEmpty(name)) && (project != null)) {
-            VirtualFile file = com.siberika.idea.pascal.util.ModuleUtil.getIncludedFile(project, virtualFile, name);
-            PascalFlexLexerImpl lexer = !ObjectUtils.equals(virtualFile, file) ? processFile(project, file) : null;
-            if (lexer != null) {
-                getActualDefines().addAll(lexer.getActualDefines());
-                allDefines.putAll(lexer.getAllDefines());
-                for (Pair<Integer, String> define : lexer.defines) {
-                    defines.add(Pair.create(define.first > 0 ? pos : -pos, define.second));
+            try {
+                VirtualFile file = com.siberika.idea.pascal.util.ModuleUtil.getIncludedFile(project, virtualFile, name);
+                PascalFlexLexerImpl lexer = !ObjectUtils.equals(virtualFile, file) ? processFile(project, file) : null;
+                if (lexer != null) {
+                    getActualDefines().addAll(lexer.getActualDefines());
+                    allDefines.putAll(lexer.getAllDefines());
+                    for (Pair<Integer, String> define : lexer.defines) {
+                        defines.add(Pair.create(define.first > 0 ? pos : -pos, define.second));
+                    }
+                    //TODO: put in levels
+                } else {
+                    LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
                 }
-                //TODO: put in levels
-            } else {
-                LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
+            } catch (AssertionError e) {
+                LOG.info(String.format("Error handling include file: %s", name), e);
             }
         }
         return INCLUDE;

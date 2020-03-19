@@ -6,6 +6,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
 import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -88,7 +89,7 @@ public class ModuleService implements ModuleComponent {
 
     private boolean ensureCacheFresh() {
         long currentTime = System.nanoTime();
-        if (currentTime - lastClearTime > CACHE_TTL_MS * 1000000) {
+        if (currentTime - lastClearTime > CACHE_TTL_MS) {
             cache.clear();
             lastClearTime = currentTime;
             return false;
@@ -106,12 +107,15 @@ public class ModuleService implements ModuleComponent {
             return;
         }
         long currentTime = System.nanoTime();
-        if ((lastClearTimeNameFile == 0) || (checkTTL && ((currentTime - lastClearTimeNameFile) > (CACHE_TTL_MS * 1000000)))) {
+        if ((lastClearTimeNameFile == 0) || (checkTTL && ((currentTime - lastClearTimeNameFile) > CACHE_TTL_MS))) {
             fillCache(module);
         }
     }
 
     private void fillCache(@NotNull Module module) {
+        if (DumbService.isDumb(module.getProject())) {
+            return;
+        }
         SyncUtil.doWithLock(cacheNameFileLock, () -> {
             cacheNameFileMap.clear();
             lastClearTimeNameFile = System.nanoTime();;

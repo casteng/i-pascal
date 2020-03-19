@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,7 +43,7 @@ public class PPUDecompilerCache implements PascalCachingUnitDecompiler {
 
     private final Module module;
     private final Sdk sdk;
-    private final LoadingCache<String, PPUDumpParser.Section> cache;
+    private final LoadingCache<Key, PPUDumpParser.Section> cache;
 
     PPUDecompilerCache(@NotNull Module module, @Nullable Sdk sdk) {
         this.module = module;
@@ -63,12 +64,13 @@ public class PPUDecompilerCache implements PascalCachingUnitDecompiler {
         }
         if (file != null) {
             try {
-                String key = getKey(file.getName());
+                String name = getKey(file.getName());
+                final Key key = new Key(file);
                 PPUDumpParser.Section section = cache.getIfPresent(key);
                 boolean needReparsePsi = null == section;
                 section = cache.get(key);
                 if (section.isError()) {
-                    LOG.info("ERROR: Invalidating ppu cache for key: " + key);
+                    LOG.info("ERROR: Invalidating ppu cache for key: " + name);
                     cache.invalidate(key);
                 } else if (needReparsePsi) {
                     DocUtil.reparsePsi(module.getProject(), file);
@@ -86,14 +88,14 @@ public class PPUDecompilerCache implements PascalCachingUnitDecompiler {
         return new PPUDumpParser.Section(PascalBundle.message("decompile.unit.not.found", unitName));
     }
 
-    private class Loader extends CacheLoader<String, PPUDumpParser.Section> {
+    private class Loader extends CacheLoader<Key, PPUDumpParser.Section> {
         @Override
-        public PPUDumpParser.Section load(@NotNull String key) {
+        public PPUDumpParser.Section load(@NotNull Key key) {
             File ppuDump = null;
             String xml = "";
             try {
-                ppuDump = retrievePpuDump(key);
-                xml = retrieveXml(key, ppuDump);
+                ppuDump = retrievePpuDump(key.getKey());
+                xml = retrieveXml(key.getKey(), key.file, ppuDump);
                 if (xml != null) {
                     return PPUDumpParser.parse(xml, PPUDecompilerCache.this);
                 } else {
@@ -124,9 +126,8 @@ public class PPUDecompilerCache implements PascalCachingUnitDecompiler {
         }
     }
 
-    String retrieveXml(String key, File ppuDump) throws IOException, PascalException {
+    String retrieveXml(String key, VirtualFile file, File ppuDump) throws IOException, PascalException {
         ModuleService.getInstance(module).ensureCache(module, false);
-        VirtualFile file = module.getComponent(ModuleService.class).getFileByUnitName(key);
         if (file != null) {
             return SysUtils.runAndGetStdOut(sdk.getHomePath(), ppuDump.getCanonicalPath(), SysUtils.LONG_TIMEOUT, PPUDUMP_OPTIONS_COMMON, PPUDUMP_OPTIONS_FORMAT, file.getPath());
         } else {
@@ -172,4 +173,28 @@ public class PPUDecompilerCache implements PascalCachingUnitDecompiler {
         return FileUtil.getNameWithoutExtension(unitName);
     }
 
+    private static class Key {
+        private final VirtualFile file;
+
+        private Key(VirtualFile file) {
+            this.file = file;
+        }
+
+        public String getKey() {
+            return file.getName();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Key key1 = (Key) o;
+            return getKey().equals(key1.getKey());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getKey());
+        }
+    }
 }

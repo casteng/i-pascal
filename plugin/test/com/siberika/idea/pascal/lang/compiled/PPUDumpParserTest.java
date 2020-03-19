@@ -51,7 +51,7 @@ public class PPUDumpParserTest {
         }
 
         @Override
-        String retrieveXml(String key, File ppuDump) throws IOException {
+        String retrieveXml(String key, VirtualFile file, File ppuDump) throws IOException {
             return IOUtils.toString(new FileInputStream(files.get(key)), "UTF-8");
         }
 
