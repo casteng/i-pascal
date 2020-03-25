@@ -29,6 +29,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -56,10 +57,12 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     private String programFileName;
     private boolean fixIOBuffering = true;
     private boolean debugMode = false;
+    private final Project project;
 
     public PascalRunConfiguration(String name, RunConfigurationModule configurationModule, ConfigurationFactory factory) {
         super(name, configurationModule, factory);
-        workingDirectory = getProject().getBasePath();
+        project = configurationModule.getProject();
+        workingDirectory = project.getBasePath();
     }
 
     @Override
@@ -69,7 +72,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
 
     @Override
     protected ModuleBasedConfiguration createInstance() {
-        workingDirectory = getProject().getBasePath();
+        workingDirectory = project.getBasePath();
         return new PascalRunConfiguration(getName(),  getConfigurationModule(),  getFactory());
     }
 
@@ -162,7 +165,7 @@ public class PascalRunConfiguration extends ModuleBasedConfiguration<RunConfigur
     public Sdk getSdk() {
         return getConfigurationModule().getModule() != null ?
                 ModuleRootManager.getInstance(getConfigurationModule().getModule()).getSdk() :
-                ProjectRootManager.getInstance(getProject()).getProjectSdk();
+                ProjectRootManager.getInstance(project).getProjectSdk();
     }
 
     public void readExternal(@NotNull Element element) throws InvalidDataException {

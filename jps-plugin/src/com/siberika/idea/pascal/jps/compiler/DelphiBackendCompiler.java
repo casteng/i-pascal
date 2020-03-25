@@ -129,8 +129,8 @@ public class DelphiBackendCompiler extends PascalBackendCompiler {
             }
         }
 
-        commandLine.add(modulePath);
-
+        commandLine.add(FileUtil.getFilename(modulePath));
+        LOG.info("Final compiler command: " + commandLine.toString());
         return true;
     }
 

@@ -107,6 +107,7 @@ public abstract class PascalBackendCompiler {
         if (commandLine.size() == 0) {
             throw new IllegalArgumentException(getMessage(null, "compile.errorCall"));
         }
+        LOG.info("Final compiler command: " + commandLine.toString());
         return commandLine.toArray(new String[0]);
     }
 

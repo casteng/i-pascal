@@ -35,7 +35,7 @@ public abstract class BasePascalSdkType extends SdkType {
 
     private static final Logger LOG = Logger.getInstance(BasePascalSdkType.class.getName());
     private static final String[] EMPTY_ARGS = new String[0];
-    private final String compilerFamily;
+    final String compilerFamily;
 
     public static final String DEFINE_IDE_PARSER = "_IDE_PARSER_";
     public static final String DEFINE_IDE_DISABLE_CONDITIONALS_ = "_IDE_DISABLE_CONDITIONALS_";
@@ -183,6 +183,7 @@ public abstract class BasePascalSdkType extends SdkType {
     }
 
     protected void configureOptions(@NotNull Sdk sdk, PascalSdkData data, String target) {
+        data.setValue(PascalSdkData.Keys.COMPILER_FAMILY.getKey(), compilerFamily);
     }
 
     @Override

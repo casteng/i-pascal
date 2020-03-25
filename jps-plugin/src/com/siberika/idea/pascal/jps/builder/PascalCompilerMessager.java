@@ -1,12 +1,13 @@
 package com.siberika.idea.pascal.jps.builder;
 
-import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.util.io.URLUtil;
+import com.intellij.openapi.diagnostic.Logger;
 import com.siberika.idea.pascal.jps.compiler.CompilerMessager;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 
 /**
@@ -14,6 +15,10 @@ import java.util.regex.Matcher;
  * Date: 20/05/2015
  */
 class PascalCompilerMessager implements CompilerMessager {
+    private static final Logger LOG = Logger.getInstance(PascalCompilerMessager.class);
+
+    private static final List<String> SUPPRESSED_MSG_ID = Arrays.asList("1018", "10026", "F2063");
+
     private final CompileContext context;
     private final String name;
 
@@ -32,9 +37,6 @@ class PascalCompilerMessager implements CompilerMessager {
             int groupCount = matcher.groupCount();
             if (groupCount >= 5) {
                 url = matcher.group(2);
-                if (url != null) {
-                    url = VirtualFileManager.extractPath(VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, url));
-                }
                 try {
                     lineNum = Integer.parseInt(matcher.group(3));
                     colNum = Integer.parseInt(matcher.group(5));
@@ -43,8 +45,8 @@ class PascalCompilerMessager implements CompilerMessager {
             msgId = matcher.group(groupCount - 1);
             message = matcher.group(groupCount);
         }
-        if (null == message) message = line;
-        if ("1018".equals(msgId) || "10026".equals(msgId) || message.endsWith("returned an error exitcode")) {
+        message = message != null ? message : line;
+        if (isErrorSuppressNeeded(msgId, message)) {
             category = CompilerMessageCategory.WARNING;
         }
 
@@ -57,6 +59,10 @@ class PascalCompilerMessager implements CompilerMessager {
         } else {
             messager.info(msgId, message, url, lineNum, colNum);
         }
+    }
+
+    private static boolean isErrorSuppressNeeded(String msgId, String message) {
+        return SUPPRESSED_MSG_ID.contains(msgId) || message.endsWith("returned an error exitcode");
     }
 
     @Override
