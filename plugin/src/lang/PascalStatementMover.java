@@ -104,9 +104,11 @@ public class PascalStatementMover extends LineMover {
         int endLine = startLine + 1;
         if (isMovable(el)) {
             TextRange range = el.getTextRange();
-            TextRange commentRange = PascalDocumentationProvider.findElementCommentRange(file, el);
-            if (commentRange != TextRange.EMPTY_RANGE) {
-                range = commentRange.union(range);
+            if (!(el instanceof PasStatement)) {
+                TextRange commentRange = PascalDocumentationProvider.findElementCommentRange(file, el);
+                if (commentRange != TextRange.EMPTY_RANGE) {
+                    range = commentRange.union(range);
+                }
             }
             Document d = editor.getDocument();
             if (!DocUtil.isSingleLine(d, range)) {
@@ -124,6 +126,7 @@ public class PascalStatementMover extends LineMover {
             el = PsiTreeUtil.skipSiblingsForward(el, PsiUtil.ELEMENT_WS_COMMENTS);
         }
         el = el != null ? findTopmostStartingHere(el) : null;
+        el = ((el != null) && (DocUtil.getElementLine(el) == line)) ? el : null;
         return el;
     }
 
@@ -135,6 +138,7 @@ public class PascalStatementMover extends LineMover {
             el = PsiTreeUtil.skipSiblingsBackward(el, PsiUtil.ELEMENT_WS_COMMENTS);
         }
         el = el != null ? findTopmostEndingHere(el) : null;
+        el = ((el != null) && (DocUtil.getElementLine(el) == line)) ? el : null;
         return el;
     }
 
