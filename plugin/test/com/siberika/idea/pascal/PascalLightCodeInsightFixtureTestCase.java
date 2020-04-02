@@ -4,7 +4,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
-public class PascalLightCodeInsightFixtureTestCase
+public abstract class PascalLightCodeInsightFixtureTestCase
         extends LightPlatformCodeInsightFixtureTestCase {
     @NotNull
     public Module getModule() {

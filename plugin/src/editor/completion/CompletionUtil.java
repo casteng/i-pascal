@@ -81,6 +81,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Author: George Bakhtadze
@@ -89,6 +90,7 @@ import java.util.Set;
 class CompletionUtil {
     private static final Map<String, String> INSERT_MAP = getInsertMap();
     private static final String PLACEHOLDER_FILENAME = "__FILENAME__";
+    private static final String PLACEHOLDER_GUID = "__GUID__";
     private static final Collection<String> CLOSING_STATEMENTS = Arrays.asList(PasTypes.END.toString(), PasTypes.EXCEPT.toString(), PasTypes.UNTIL.toString());
 
     private static final InsertHandler<LookupElement> INSERT_HANDLER = new InsertHandler<LookupElement>() {
@@ -96,6 +98,9 @@ class CompletionUtil {
         public void handleInsert(final InsertionContext context, LookupElement item) {
             String content = INSERT_MAP.get(item.getLookupString());
             if (null != content) {
+                if (content.contains(PLACEHOLDER_GUID)) {
+                    content = content.replaceAll(PLACEHOLDER_GUID, UUID.randomUUID().toString());
+                }
                 content = content.replaceAll(PLACEHOLDER_FILENAME, FileUtilRt.getNameWithoutExtension(context.getFile().getName()));
                 int caretPos = context.getEditor().getCaretModel().getOffset();
                 DocUtil.adjustDocument(context.getEditor(), caretPos, content);
@@ -243,7 +248,7 @@ class CompletionUtil {
         res.put(PasTypes.OBJECT.toString(), String.format("  %s\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.CLASS.toString(), String.format("(TObject)\nprivate\n%s\npublic\nend;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.OBJC_CLASS.toString(), String.format("(NSObject)\n%s\npublic\nend;", DocUtil.PLACEHOLDER_CARET));
-        res.put(PasTypes.INTERFACE.toString() + " ", String.format("(IUnknown)\n%s\nend;", DocUtil.PLACEHOLDER_CARET));
+        res.put(PasTypes.INTERFACE.toString() + " ", String.format("\n['{%s}']\n%s\nend;", PLACEHOLDER_GUID, DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.ARRAY.toString(), String.format(" of %s;", DocUtil.PLACEHOLDER_CARET));
         res.put(PasTypes.ARRAY.toString() + "[", String.format("0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
         res.put("packed array[", String.format("0..%s] of ;", DocUtil.PLACEHOLDER_CARET));
