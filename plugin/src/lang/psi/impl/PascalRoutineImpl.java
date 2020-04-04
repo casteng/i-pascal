@@ -129,6 +129,11 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     @Override
+    public String getCanonicalTypeName() {
+        return null;
+    }
+
+    @Override
     public String getReducedName() {
         return getHelper().getReducedName();
     }

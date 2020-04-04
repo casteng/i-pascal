@@ -145,6 +145,16 @@ public abstract class PasStubStructTypeImpl<T extends PascalStructType, B extend
         return parentNames;
     }
 
+    @NotNull
+    @Override
+    public String getCanonicalTypeName() {
+        String name = getName();
+        if (name.indexOf('<') >= 0) {
+            name = name.substring(0, name.indexOf('<')) + '<' + String.join(", ", getTypeParameters()) + '>';
+        }
+        return name;
+    }
+
     // Returns structured type owning the field
     @Nullable
     @SuppressWarnings("unchecked")

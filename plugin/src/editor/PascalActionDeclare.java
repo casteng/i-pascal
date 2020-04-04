@@ -13,7 +13,6 @@ import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.codeInspection.SmartHashMap;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
@@ -77,6 +76,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -146,15 +146,11 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
     public void invoke(@NotNull final Project project, final Editor editor, final PsiFile file) throws IncorrectOperationException {
         onInvoke();
         final Document document = editor.getDocument();
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                final List<FixActionData> sorted = new SmartList<FixActionData>(fixActionDataArray);
-                Collections.sort(sorted);
-                final RangeMarker marker = document.createRangeMarker(editor.getCaretModel().getOffset(), editor.getCaretModel().getOffset());
-                new WriteCommandAction(project, actionName) {
-                    @Override
-                    protected void run(@NotNull Result result) throws Throwable {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            final List<FixActionData> sorted = new SmartList<>(fixActionDataArray);
+            Collections.sort(sorted);
+            final RangeMarker marker = document.createRangeMarker(editor.getCaretModel().getOffset(), editor.getCaretModel().getOffset());
+            WriteCommandAction.runWriteCommandAction(project, () -> {
                         Editor globalTemplateEditor = null;
                         boolean templated = false;
                         for (final FixActionData actionData : sorted) {
@@ -196,8 +192,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                             afterExecution(editor, file, null);
                         }
                     }
-                }.execute();
-            }
+            );
         });
     }
 
@@ -598,19 +593,13 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
         }
 
         private void addToImplementation(FixActionData data, String returnType) {
-            PsiElement block;
-            if (scope instanceof PasRoutineImplDecl) {
-                block = scope;
-            } else {
-                block = (callScope instanceof PascalRoutine) ? callScope : PsiTreeUtil.getParentOfType(data.element, PasBlockBody.class);
-            }
-            block = block != null ? block : PsiTreeUtil.getParentOfType(data.element, PasCompoundStatement.class);
+            PsiElement block = getBlock(data);
             if (block != null) {
                 data.offset = block.getTextRange().getStartOffset();
                 data.parent = block.getParent();
                 Pair<String, Map<String, String>> arguments = calcArguments(data);
                 String params = (arguments.second != null) && (arguments.second.size() > 0) ? arguments.first : "";
-                String prefix = scope instanceof PascalStructType ? ((PascalStructType) scope).getName() + "." : "";
+                String prefix = scope instanceof PascalStructType ? ((PascalStructType) scope).getCanonicalTypeName() + "." : "";
                 if (returnType != null) {
                     arguments.getSecond().put(TPL_VAR_RETURN_TYPE, returnType);
                     data.createTemplate(String.format("\n\nfunction %s%s(%s): $%s$;\nbegin\n$%s$\nend;",
@@ -620,6 +609,22 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                             prefix, data.name, params, TPL_VAR_CODE), arguments.getSecond());
                 }
             }
+        }
+
+        private PsiElement getBlock(FixActionData data) {
+            PsiElement block;
+            if (scope instanceof PasRoutineImplDecl) {
+                block = scope;
+            } else {
+                block = (callScope instanceof PascalRoutine) ? callScope : PsiTreeUtil.getParentOfType(data.element, PasBlockBody.class);
+            }
+            if (block instanceof PascalRoutine) {
+                Iterator<PsiElement> commentElements = PascalDocumentationProvider.findElementCommentElements(block.getContainingFile(), block).iterator();
+                if (commentElements.hasNext()) {
+                    block = commentElements.next();
+                }
+            }
+            return block != null ? block : PsiTreeUtil.getParentOfType(data.element, PasCompoundStatement.class);
         }
 
         private void addToInterface(FixActionData data, String returnType) {
@@ -667,7 +672,7 @@ public abstract class PascalActionDeclare extends BaseIntentionAction {
                         if (type.startsWith("T")) {
                             defaults.put(TPL_VAR_ARGS + count, type.substring(1));
                         } else {
-                            defaults.put(TPL_VAR_ARGS + count, type.substring(0, 1).toLowerCase() + (count+1));
+                            defaults.put(TPL_VAR_ARGS + count, type.substring(0, 1).toLowerCase() + (count + 1));
                         }
                     }
                     count++;

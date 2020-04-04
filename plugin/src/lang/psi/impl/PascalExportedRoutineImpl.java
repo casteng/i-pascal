@@ -7,9 +7,12 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
+import com.siberika.idea.pascal.lang.psi.PasConstrainedTypeParam;
 import com.siberika.idea.pascal.lang.psi.PasDeclSection;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasExportedRoutine;
+import com.siberika.idea.pascal.lang.psi.PasNamedIdent;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasUnitInterface;
@@ -93,7 +96,12 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     @Nullable
     @Override
     public PasField getField(String name) {
-        return null;                               // No fields within exported routine
+        for (PasField field : getAllFields()) {
+            if (field.name.equalsIgnoreCase(name)) {
+                return field;
+            }
+        }
+        return null;                               // No fields but type parameters within exported routine
     }
 
     @Nullable
@@ -104,8 +112,8 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
 
     @NotNull
     @Override
-    public Collection<PasField> getAllFields() {
-        return Collections.emptyList();            // No fields within exported routine
+    public Collection<PasField> getAllFields() {   // TODO: check stub
+        return collectTypeParameters();            // No fields but type parameters within exported routine
     }
 
     @Override
@@ -303,4 +311,15 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     public Collection<PasWithStatement> getWithStatements() {
         return Collections.emptyList();
     }
+
+    private List<PasField> collectTypeParameters() {
+        List<PasField> res = new SmartList<>();
+        for (PasConstrainedTypeParam typeParam : getConstrainedTypeParamList()) {
+            for (PasNamedIdent typeParamIdent : typeParam.getNamedIdentList()) {
+                res.add(new PasField(this, typeParamIdent, typeParamIdent.getName(), PasField.FieldType.TYPE, PasField.Visibility.STRICT_PRIVATE));
+            }
+        }
+        return res.isEmpty() ? Collections.emptyList() : res;
+    }
+
 }

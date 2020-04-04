@@ -22,6 +22,7 @@ import com.siberika.idea.pascal.lang.psi.PasClassPropertySpecifier;
 import com.siberika.idea.pascal.lang.psi.PasConstExpression;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasEnumType;
+import com.siberika.idea.pascal.lang.psi.PasFullyQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasLibraryModuleHead;
 import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamespaceIdent;
@@ -44,6 +45,7 @@ import com.siberika.idea.pascal.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -74,7 +76,8 @@ public class PascalAnnotator implements Annotator {
             List<PsiElement> scopes = new SmartList<>();
             ResolveContext resolveContext = new ResolveContext(null, PasField.TYPES_ALL, true, scopes, null);
 
-            boolean noTargets = Resolve.resolveExpr(NamespaceRec.fromElement(element), resolveContext, (originalScope, scope, field, type) -> false);
+            final NamespaceRec fqn = NamespaceRec.fromElement(element);
+            boolean noTargets = Resolve.resolveExpr(fqn, resolveContext, (originalScope, scope, field, type) -> false);
 
             if (noTargets && !isVariantField(scopes)) {
                 Annotation ann = holder.createErrorAnnotation(element, message("ann.error.undeclared.identifier"));
@@ -85,7 +88,23 @@ public class PascalAnnotator implements Annotator {
                         fixes.add(AddFixType.UNIT);
                     }
                 }
-                PsiElement scope = scopes.isEmpty() ? null : scopes.get(0);
+                Iterator<PsiElement> scopesIterators = scopes.iterator();
+                PsiElement scope = scopesIterators.hasNext() ? scopesIterators.next() : null;
+                // Skip WITH scopes
+                boolean firstPart = true;
+                if (fqn.getParentIdent() instanceof PasFullyQualifiedIdent) {
+                    firstPart = (PsiContext.FQN_FIRST == context) || (PsiContext.FQN_SINGLE == context)
+                            || (((PasFullyQualifiedIdent) fqn.getParentIdent()).getSubIdentList().size() == 1);
+                }
+                if (firstPart && (scope instanceof PascalStructType) && (scopesIterators.hasNext())) {
+                    PasEntityScope nearest = PsiUtil.getNearestAffectingScope(element);
+                    if (!(nearest instanceof PascalStructType)) {
+                        while (scopesIterators.hasNext() && (scope instanceof PascalStructType)) {
+                            scope = scopesIterators.next();
+                        }
+                    }
+                }
+
                 if (scope instanceof PasEnumType) {                                                          // TEnum.* => -* +enum
                     fixes = EnumSet.of(AddFixType.ENUM);
                     fixes.remove(AddFixType.UNIT_FIND);

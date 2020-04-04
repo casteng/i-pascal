@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.lang.psi.impl;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.SmartPsiElementPointer;
 import com.siberika.idea.pascal.lang.psi.PasClassQualifiedIdent;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PasGenericTypeIdent;
@@ -29,7 +28,7 @@ class PascalHelperScope extends PascalHelperNamed {
     static final String KEY_EMPTY_MARKER = "#";
     static final Members EMPTY_MEMBERS = new Members();
 
-    volatile private SmartPsiElementPointer<PasEntityScope> containingScope;
+    volatile private PasEntityScope containingScope;
 
     PascalHelperScope(PasEntityScope self) {
         super(self);
@@ -44,7 +43,7 @@ class PascalHelperScope extends PascalHelperNamed {
     @NotNull
     PasEntityScope calcContainingScope() {
         ensureCacheActual();
-        if (!PsiUtil.isSmartPointerValid(containingScope)) {
+        if (!PsiUtil.isElementUsable(containingScope)) {
             PasEntityScope scope = PsiUtil.getNearestAffectingScope(self);  // 2, 3, 4, 5, 1 for method declarations
             if ((scope instanceof PascalModuleImpl) && (self instanceof PasRoutineImplDecl)) {            // 1 for method implementations
                 String[] names = PsiUtil.getQualifiedMethodName(self).split("\\.");
@@ -57,9 +56,9 @@ class PascalHelperScope extends PascalHelperNamed {
                     scope = updateContainingScope(scope, scope.getField(PsiUtil.cleanGenericDef(names[i])));
                 }
             }
-            containingScope = scope != null ? PsiUtil.createSmartPointer(scope) : null;
+            containingScope = scope;
         }
-        return containingScope != null ? containingScope.getElement() : null;
+        return containingScope;
     }
 
     private PasEntityScope updateContainingScope(PasEntityScope scope, PasField field) {
