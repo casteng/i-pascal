@@ -551,14 +551,13 @@ private genericConstraintsRest ::= "," GenericConstraint
 GenericConstraint              ::= TypeID | RECORD | CLASS | CONSTRUCTOR | INTERFACE | OBJECT //{recoverWhile=rec_test}
 private rec_test ::= !(";" | "=" | ">" | ",") & rec_section
 
-//GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"             // TODO use TypeId + procedure types instead?
-GenericPostfix      ::=	"<" TypeID ("," TypeID)* ">"
+GenericPostfix      ::=	"<" TypeDecl typeDeclsRest* ">"             // TODO use TypeId + procedure types instead?
 private typeDeclsRest       ::= "," TypeDecl {pin=1}
 TypeID                      ::=	SPECIALIZE? FullyQualifiedIdent [GenericPostfix]
 
 TypeDecl	                ::=	complexType | PointerType | ProcedureType | [TYPE] StringType | simpleType | [TYPE] TypeID
 
-private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS | OBJC_PROTOCOL) //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
+private classForwardDecl    ::= (CLASS | INTERFACE | OBJC_CLASS | OBJC_PROTOCOL) [EXTERNAL [externalSpecifier]] //{name="forward class declaration" pin=1 recoverWhile=rec_semi_section}
 
 ClassField                  ::= field
 private classFieldSemi      ::= ClassField ";" {pin=1 recoverWhile=rec_struct_field}

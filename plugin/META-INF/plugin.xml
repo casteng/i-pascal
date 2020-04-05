@@ -5,10 +5,15 @@
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
-      Object Pascal support for IDEA.<br>
+      Object Pascal language support for IDEA.<br>
       ]]></description>
 
     <change-notes><![CDATA[
+        <p>2.70</p>
+        <ul>
+            <li>Improved generics support</li>
+            <li>Fixed parsing of external class declarations</li>
+        </ul>
         <p>2.60</p>
         <ul>
             <li>Errors, warning and hints highlighting using compiler syntax check</li>
