@@ -84,6 +84,9 @@ public class PasField {
     public static final ValueType BOOLEAN = new ValueType(null, Kind.BOOLEAN, null, null);
     public static final ValueType POINTER = new ValueType(null, Kind.POINTER, null, null);
     public static final ValueType VARIANT = new ValueType(null, Kind.VARIANT, null, null);
+    public static final ValueType ARRAY = new PasField.ValueType(null, Kind.ARRAY, null, null);
+    public static final ValueType TYPEREF = new PasField.ValueType(null, PasField.Kind.TYPEREF, null, null);
+    public static final ValueType TYPEALIAS = new PasField.ValueType(null, Kind.TYPEALIAS, null, null);
 
     private static final ValueType NOT_INITIALIZED = new ValueType(null, null, null, null);
     private static final ValueType CONSTRUCTOR = new ValueType(null, null, null, null);
@@ -232,11 +235,12 @@ public class PasField {
         if (SyncUtil.tryLockQuiet(typeLock, SyncUtil.LOCK_TIMEOUT_MS)) {
             try {
                 if (isValueTypeCacheDirty(timestamp)) {
+                    valueType = null;
                     if (ResolveUtil.isStubPowered(el)) {
                         ResolveContext context = new ResolveContext(owner, PasField.TYPES_TYPE, true, null, ModuleUtil.retrieveUnitNamespaces(el));
                         valueType = ResolveUtil.resolveTypeWithStub((PascalStubElement) el, context, recursionCount);
                     } else {
-                        valueType = PasReferenceUtil.resolveFieldType(this, true, recursionCount);
+                        valueType = PasReferenceUtil.resolveFieldType(owner, el, true, recursionCount);
                     }
                     if (valueType != null) {
                         if (el != null) {

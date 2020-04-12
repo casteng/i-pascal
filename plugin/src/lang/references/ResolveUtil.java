@@ -262,11 +262,14 @@ public class ResolveUtil {
         String type = element.getTypeString();
         if ((type != null) && KINDS_FOLLOW_TYPE.contains(element.getTypeKind())) {
             if (type.equalsIgnoreCase(element.getName())) {                                               // Pointing to self
-                return new PasField.ValueType(null, PasField.Kind.TYPEALIAS, null, element);
+                final PasField.ValueType valueType = PasField.getValueType(element.getName());
+                return valueType != null ? valueType : PasField.TYPEALIAS;
             }
             return resolveTypeForStub(type, element, typeResolveContext, recursionCount);
         } else if (element.getTypeKind() == PasField.Kind.STRUCT) {
             return retrieveStruct(element.getName(), element, typeResolveContext, ++recursionCount);
+        } else if (element.getTypeKind() == PasField.Kind.VARIANT) {
+            return PasField.VARIANT;
         } else {
             return new PasField.ValueType(null, element.getTypeKind(), null, element);
         }

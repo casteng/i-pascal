@@ -86,7 +86,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
             }
         } else if (expr instanceof PasDereferenceExpr) {
             res = getChildType(getFirstChild(expr));
-            res.add(new PasField.ValueType(null, PasField.Kind.POINTER, null, null));
+            res.add(PasField.POINTER);
         } else if (expr instanceof PasIndexExpr) {
             res = getChildType(getFirstChild(expr));
             if (!res.isEmpty()) {                                           // Replace scope if indexing default array property
@@ -98,12 +98,12 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                         PasField field = Types.resolveType(scope, typeId.getFullyQualifiedIdent());
                         PasField.ValueType fieldType = field != null ? field.getValueType(0) : null;
                         if (fieldType != null) {
-                            res = new SmartList<PasField.ValueType>(fieldType);
+                            res = new SmartList<>(fieldType);
                         }
                     }
                 }
             }
-            res.add(new PasField.ValueType(null, PasField.Kind.ARRAY, null, null));
+            res.add(PasField.ARRAY);
         } else if (expr instanceof PasProductExpr) {                                      // AS operator case
             res = getChildType(getLastChild(expr));
         } else {
@@ -117,7 +117,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
         if (child instanceof PascalExpression) {
             return PascalExpression.getTypes((PascalExpression) child);
         }
-        return new SmartList<PasField.ValueType>();
+        return new SmartList<>();
     }
 
     private static PsiElement getFirstChild(PascalExpression expr) {
@@ -280,7 +280,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
 
     private static boolean isLEThan(String text, long l) {
         try {
-            return Long.valueOf(text) <= l;
+            return Long.parseLong(text) <= l;
         } catch (NumberFormatException e) {
             return false;
         }
@@ -432,7 +432,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
     }
 
     @Nullable
-    public static String getTypeIdentifier(PasField.ValueType type) {
+    private static String getTypeIdentifier(PasField.ValueType type) {
         if (type.field != null) {
             PascalNamedElement el = type.field.getElement();
             if ((type.field.fieldType == PasField.FieldType.PSEUDO_VARIABLE) && PasEntityScope.BUILTIN_SELF_UPPER.equals(type.field.name.toUpperCase())) {
@@ -452,7 +452,7 @@ public class PascalExpression extends ASTWrapperPsiElement implements PascalPsiE
                     final PascalNamedElement fieldElement = type.field.getElement();
                     final PsiElement parent = fieldElement != null ? fieldElement.getParent() : null;
                     if (parent instanceof PasClassProperty) {
-                        PasTypeID typeId = PasReferenceUtil.resolvePropertyType(type.field, (PasClassProperty) parent);
+                        PasTypeID typeId = PasReferenceUtil.resolvePropertyType(type.field.owner, type.field.name, (PasClassProperty) parent, 0);
                         return typeId != null ? typeId.getText() : null;
                     }
                 }

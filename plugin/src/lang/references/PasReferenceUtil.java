@@ -34,7 +34,6 @@ import com.siberika.idea.pascal.lang.psi.PasModule;
 import com.siberika.idea.pascal.lang.psi.PasNamedIdentDecl;
 import com.siberika.idea.pascal.lang.psi.PasProcedureType;
 import com.siberika.idea.pascal.lang.psi.PasTypeDecl;
-import com.siberika.idea.pascal.lang.psi.PasTypeDeclaration;
 import com.siberika.idea.pascal.lang.psi.PasTypeID;
 import com.siberika.idea.pascal.lang.psi.PasWithStatement;
 import com.siberika.idea.pascal.lang.psi.PascalClassDecl;
@@ -181,20 +180,19 @@ public class PasReferenceUtil {
 
 //-------------------------------------------------------------------
 
-    public static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
-        final PascalNamedElement element = field.getElement();
+    public static PasField.ValueType resolveFieldType(PasEntityScope owner, PascalNamedElement element, boolean includeLibrary, int recursionCount) {
         if (recursionCount > PascalParserUtil.MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
             throw new PascalRTException("Too much recursion during resolving type for: " + element);
         }
         PasTypeID typeId = null;
         PasField.ValueType res = null;
         if (element instanceof PasNamedIdentDecl && element.getType() == PasField.FieldType.PROPERTY) {
-            typeId = resolvePropertyType(field, (PasClassProperty) element.getParent());
+            typeId = resolvePropertyType(owner, element.getName(), (PasClassProperty) element.getParent(), recursionCount);
         } else if (element instanceof PascalRoutine) {                                          // routine declaration case
             final PascalRoutine routine = (PascalRoutine) element;
             typeId = routine.getFunctionTypeIdent();
             if ((null == typeId) && "string".equalsIgnoreCase(routine.getFunctionTypeStr())) {
-                res = new PasField.ValueType(null, PasField.Kind.STRING, null, null);
+                res = PasField.STRING;
             }
         } else if ((element != null) && (element.getParent() instanceof PasHandler)) {          // exception handler case
             typeId = ((PasHandler) element.getParent()).getTypeID();
@@ -202,15 +200,15 @@ public class PasReferenceUtil {
             PasConstrainedTypeParam typeParam = (PasConstrainedTypeParam) element.getParent();
             if (!typeParam.getGenericConstraintList().isEmpty()) {
                 final PasTypeID typeID = typeParam.getGenericConstraintList().get(0).getTypeID();
-                res = typeID != null ? resolveTypeId(typeID, includeLibrary, recursionCount) : new PasField.ValueType(null, PasField.Kind.TYPEREF, null, null);
+                res = typeID != null ? resolveTypeId(typeID, includeLibrary, recursionCount) : PasField.TYPEREF;
             } else {
-                res = new PasField.ValueType(null, PasField.Kind.TYPEREF, null, null);
+                res = PasField.TYPEREF;
             }
         } else {
             if ((element != null) && PsiUtil.isTypeDeclPointingToSelf(element)) {
                 res = PasField.getValueType(element.getName());
                 if (null == res) {
-                    res = new PasField.ValueType(null, PasField.Kind.VARIANT, null, ((PasTypeDeclaration) element.getParent()).getTypeDecl());
+                    res = PasField.TYPEALIAS;
                 }
             } else {
                 res = retrieveAnonymousType(PsiUtil.getTypeDeclaration(element), includeLibrary, recursionCount);
@@ -219,23 +217,31 @@ public class PasReferenceUtil {
         if (typeId != null) {
             res = resolveTypeId(typeId, includeLibrary, recursionCount);
         }
+        return res;
+    }
+
+    private static PasField.ValueType resolveFieldType(PasField field, boolean includeLibrary, int recursionCount) {
+        PasField.ValueType res = resolveFieldType(field.owner, field.getElement(), includeLibrary, recursionCount);
         if (res != null) {
             res.field = field;
         }
         return res;
     }
 
-    public static PasTypeID resolvePropertyType(PasField field, PasClassProperty element) {
+    public static PasTypeID resolvePropertyType(PasEntityScope owner, String name, PasClassProperty element, int recursionCount) {
+        if (recursionCount > MAX_RECURSION_COUNT) {
+            throw new PascalRTException(String.format("Too much recursion during resolving type of property '%s' of '%s'", name, owner.getName()));
+        }
         PasTypeID typeId = element.getTypeID();
-        if ((null == typeId) && (field.owner instanceof PascalStructType)) {
-            for (SmartPsiElementPointer<PasEntityScope> parentPtr : field.owner.getParentScope()) {
+        if ((null == typeId) && (owner instanceof PascalStructType)) {
+            for (SmartPsiElementPointer<PasEntityScope> parentPtr : owner.getParentScope()) {
                 PasEntityScope parent = parentPtr.getElement();
-                PasField propField = parent != null ? parent.getField(field.name) : null;
+                PasField propField = parent != null ? parent.getField(name) : null;
                 if (propField != null && propField.fieldType == PasField.FieldType.PROPERTY) {
                     PascalNamedElement propEl = propField.getElement();
                     final PsiElement propDecl = propEl != null ? propEl.getParent() : null;
                     if (propDecl instanceof PasClassProperty) {
-                        typeId = resolvePropertyType(propField, (PasClassProperty) propDecl);
+                        typeId = resolvePropertyType(propField.owner, name, (PasClassProperty) propDecl, ++recursionCount);
                         if (typeId != null) {
                             break;
                         }
