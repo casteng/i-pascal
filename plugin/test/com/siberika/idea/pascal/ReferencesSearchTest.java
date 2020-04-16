@@ -28,7 +28,6 @@ public class ReferencesSearchTest extends PascalLightCodeInsightFixtureTestCase 
     public void testFromOtherUnit() {
         myFixture.configureByFiles("unit1.pas", "unit2.pas");
         List<PasEntityScope> decls = getDeclarations("unit1");
-        System.out.println("===*** decls: " + decls.size());
         SearchScope scope = GlobalSearchScope.allScope(getProject());
         for (PasEntityScope decl : decls) {
             Document doc = myFixture.getDocument(decl.getContainingFile());
