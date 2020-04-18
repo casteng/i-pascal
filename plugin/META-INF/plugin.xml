@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.62</version>
+    <version>2.69</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -419,6 +419,9 @@
     <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
          on how to target different products -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends optional="true" config-file="plugin-java.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="plugin-debug.xml">com.intellij.modules.xdebugger</depends>
 
     <application-components>
         <component>
@@ -445,7 +448,7 @@
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
         </action>
         <action id="Pascal.ToggleSection" class="com.siberika.idea.pascal.ide.actions.IntfImplNavAction"
-                text="Toggle section" description="Navigate to routine or method interface/implementation">
+                text="Toggle Section" description="Navigate to routine or method interface/implementation">
             <keyboard-shortcut first-keystroke="shift control KP_DOWN" keymap="$default"/>
             <keyboard-shortcut first-keystroke="shift control KP_UP" keymap="$default"/>
             <keyboard-shortcut first-keystroke="shift control DOWN" keymap="$default"/>
@@ -462,28 +465,29 @@
         </action>
     </actions>
 
-
-
     <extensions defaultExtensionNs="com.intellij">
-        <codeInsight.overrideMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalOverrideMethodsHandler"/>
-        <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
-
-        <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.lang.search.GotoSuper"/>
-        <!--<superMethodsSearch implementation="com.siberika.idea.pascal.lang.search.PascalSuperMethodSearch"/>-->
-        <definitionsScopedSearch implementation="com.siberika.idea.pascal.lang.search.PascalDefinitionsSearch"/>
-        <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
-
-        <lang.documentationProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalDocumentationProvider"/>
-
         <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
-        <moduleType id="PASCAL_MODULE" implementationClass="com.siberika.idea.pascal.module.PascalModuleType"/>
-        <moduleConfigurationEditorProvider implementation="com.siberika.idea.pascal.module.PascalModuleConfigEditorProvider" />
         <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.PascalParserDefinition"/>
         <lang.syntaxHighlighterFactory key="Pascal" language="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
         <syntaxHighlighter key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <syntaxHighlighter key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
         <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
+
         <highlightUsagesHandlerFactory implementation="com.siberika.idea.pascal.editor.highlighter.PascalHighlightHandlerFactory" />
+
+        <codeInsight.overrideMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalOverrideMethodsHandler"/>
+        <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
+        <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.lang.search.GotoSuper"/>
+        <!--<superMethodsSearch implementation="com.siberika.idea.pascal.lang.search.PascalSuperMethodSearch"/>-->
+
+        <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
+
+        <definitionsScopedSearch implementation="com.siberika.idea.pascal.lang.search.PascalDefinitionsSearch"/>
+
+        <lang.documentationProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalDocumentationProvider"/>
+
+        <moduleType id="PASCAL_MODULE" implementationClass="com.siberika.idea.pascal.module.PascalModuleType"/>
+
         <lang.quoteHandler language="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalQuoteHandler" />
         <fileIconProvider implementation="com.siberika.idea.pascal.PascalFileIconProvider" />
 
@@ -512,21 +516,13 @@
                          implementationClass="com.siberika.idea.pascal.lang.inspection.ResultAssignmentInspection"/>
         <lang.inspectionSuppressor language="Pascal" implementationClass="com.siberika.idea.pascal.lang.inspection.PascalInspectionSuppressor"/>
 
-        <editorNotificationProvider implementation="com.siberika.idea.pascal.sdk.SDKNotificationProvider"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
         <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
+
         <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.PascalConfigurationType"/>
         <runConfigurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.PascalRunContextConfigurationProducer" />
         <consoleFilterProvider implementation="com.siberika.idea.pascal.run.HeaptrcConsoleFilterProvider" />
         <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
-        <programRunner implementation="com.siberika.idea.pascal.debugger.PascalDebugRunner"/>
-        <xdebugger.breakpointType implementation="com.siberika.idea.pascal.debugger.PascalLineBreakpointType"/>
-
-        <xdebugger.settings implementation="com.siberika.idea.pascal.debugger.settings.PascalDebuggerSettings"/>
-
-        <applicationService serviceImplementation="com.siberika.idea.pascal.debugger.settings.PascalDebuggerViewSettings"/>
-        <applicationService serviceImplementation="com.siberika.idea.pascal.debugger.settings.PascalTypeRenderers"/>
-
         <stepsBeforeRunProvider implementation="com.siberika.idea.pascal.run.PascalBeforeRunProvider" order="first"/>
 
         <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
@@ -571,10 +567,6 @@
         <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
         <fileType.fileViewProviderFactory filetype="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
 
-        <filetype.stubBuilder filetype="FPC_PPU" implementationClass="com.intellij.psi.impl.compiled.ClassFileStubBuilder"/>
-        <filetype.stubBuilder filetype="DELPHI_DCU" implementationClass="com.intellij.psi.impl.compiled.ClassFileStubBuilder"/>
-
-        <psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PascalClassFileDecompiler"/>
 
         <lang.importOptimizer language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalImportOptimizer"/>
 
@@ -632,6 +624,11 @@
         </intentionAction>
         <intentionAction>
             <className>com.siberika.idea.pascal.ide.intention.CreatePropertyForParamAction</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.SynchronizeSignature</className>
             <category>Pascal</category>
         </intentionAction>
 
