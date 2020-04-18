@@ -2,7 +2,6 @@ package com.siberika.idea.pascal.sdk;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
@@ -34,7 +33,6 @@ import com.siberika.idea.pascal.DCUFileType;
 import com.siberika.idea.pascal.PPUFileType;
 import com.siberika.idea.pascal.PascalBundle;
 import com.siberika.idea.pascal.jps.sdk.PascalSdkData;
-import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -227,7 +225,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         if ((decompilerCommandEdit != null) &&
                 !getValue(keyComponentMap.get(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey())).equals(
                         BasePascalSdkType.getAdditionalData(sdk).getValue(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey()))
-                ) {
+        ) {
             BasePascalSdkType.getAdditionalData(sdk).setValue(PascalSdkData.Keys.DECOMPILER_CACHE.getKey(), null);
             invalidateCompiledCache();
         }
@@ -259,19 +257,19 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
                 final FileDocumentManager documentManager = FileDocumentManager.getInstance();
                 for (final Project project : projects) {
                     final Module[] modules = ModuleManager.getInstance(project).getModules();
-                    new WriteCommandAction(project) {
+                    WriteCommandAction.runWriteCommandAction(project, new Runnable() {
                         @Override
-                        protected void run(@NotNull Result result) throws Throwable {
+                        public void run() {
                             for (Module module : modules) {
                                 Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, PPUFileType.INSTANCE, GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module));
                                 files.addAll(FileBasedIndex.getInstance().getContainingFiles(FileTypeIndex.NAME, DCUFileType.INSTANCE, GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module)));
                                 for (VirtualFile virtualFile : files) {
-                                    ((VirtualFileListener) documentManager).contentsChanged(new VirtualFileEvent(null, virtualFile, virtualFile.getName(), virtualFile.getParent()));
+                                    ((VirtualFileListener) documentManager).contentsChanged(new VirtualFileEvent(null, virtualFile, virtualFile.getParent(), 0, 0));
                                 }
-                                FileContentUtil.reparseFiles(files);
+                                FileContentUtil.reparseFiles(project, files, true);
                             }
                         }
-                    }.execute();
+                    });
                 }
             }
         });

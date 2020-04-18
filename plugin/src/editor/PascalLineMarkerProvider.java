@@ -74,7 +74,7 @@ public class PascalLineMarkerProvider implements LineMarkerProvider {
             }
             if (element instanceof PasUnitModuleHead) {
                 if (UsedBy.hasDependentModules((PasUnitModuleHead) element)) {
-                    result.add(createLineMarkerInfo(element, AllIcons.Hierarchy.Caller, PascalMarker.USED_BY_UNIT));
+                    result.add(createLineMarkerInfo(element, PascalIcons.Idea.USED_BY, PascalMarker.USED_BY_UNIT));
                 }
             }
         }

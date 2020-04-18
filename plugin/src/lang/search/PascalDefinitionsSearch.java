@@ -12,7 +12,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.SmartHashSet;
-import com.siberika.idea.pascal.ide.actions.IntfImplNavAction;
 import com.siberika.idea.pascal.ide.actions.SectionToggle;
 import com.siberika.idea.pascal.lang.parser.NamespaceRec;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
@@ -47,7 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class PascalDefinitionsSearch extends QueryExecutorBase<PasEntityScope, DefinitionsScopedSearch.SearchParameters> {
 
-    private static final Logger LOG = Logger.getInstance(IntfImplNavAction.class.getName());
+    private static final Logger LOG = Logger.getInstance(PascalDefinitionsSearch.class.getName());
 
     private static final int MAX_RECURSION = 10;
 

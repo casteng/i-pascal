@@ -2,12 +2,11 @@ package com.siberika.idea.pascal.run;
 
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
+import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunConfigurationModule;
-import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
-import com.intellij.util.containers.ContainerUtil;
 import com.siberika.idea.pascal.PascalIcons;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,12 +24,20 @@ public class PascalConfigurationType implements ConfigurationType, DumbAware {
             @NotNull
             @Override
             public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-                return new PascalRunConfiguration("", new RunConfigurationModule(project), this);
+                return new PascalRunConfiguration(getDisplayName(), new RunConfigurationModule(project), this);
+            }
+
+            @NotNull
+            @Override
+            public String getId() {
+                return getDisplayName();
             }
         };
     }
+
+    @NotNull
     public String getDisplayName() {
-        return "Pascal executable";
+        return "Pascal Executable";
     }
 
     public String getConfigurationTypeDescription() {
@@ -47,7 +54,7 @@ public class PascalConfigurationType implements ConfigurationType, DumbAware {
     }
 
     public static PascalConfigurationType getInstance() {
-        return ContainerUtil.findInstance(Extensions.getExtensions(CONFIGURATION_TYPE_EP), PascalConfigurationType.class);
+        return ConfigurationTypeUtil.findConfigurationType(PascalConfigurationType.class);
     }
 
     public ConfigurationFactory[] getConfigurationFactories() {

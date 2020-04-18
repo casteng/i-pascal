@@ -1,6 +1,7 @@
 package com.siberika.idea.pascal.util;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -9,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkAdditionalData;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.io.FileUtilRt;
@@ -40,6 +42,7 @@ import java.util.Set;
  * Date: 26/11/2013
  */
 public class ModuleUtil {
+    private static final Logger LOG = Logger.getInstance(ModuleUtil.class);
     private static final List<String> INCLUDE_EXTENSIONS = Arrays.asList(null, "pas", "pp", "Pas", "Pp", "PAS", "PP");
 
     public static Collection<VirtualFile> getAllModuleFilesByExt(@Nullable Module module, @NotNull String extension) {
@@ -165,19 +168,34 @@ public class ModuleUtil {
 
     private static VirtualFile trySearchPath(Project project, String name, GlobalSearchScope scope) {
         name = FileUtil.getFilename(name);
-        Collection<VirtualFile> files = FilenameIndex.getVirtualFilesByName(project, name, scope);
+        Collection<VirtualFile> files = searchInPathByName(project, name, scope);
         if (!files.isEmpty()) {
             return files.iterator().next();
         } else {
             String nameWoExt = FileUtilRt.getNameWithoutExtension(name);
             for (String ext : INCLUDE_EXTENSIONS) {
-                files = FilenameIndex.getVirtualFilesByName(project, nameWoExt + "." + ext, scope);
+                files = searchInPathByName(project, nameWoExt + "." + ext, scope);
                 if (!files.isEmpty()) {
                     return files.iterator().next();
                 }
             }
         }
         return null;
+    }
+
+    private static Collection<VirtualFile> searchInPathByName(Project project, String name, GlobalSearchScope scope) {
+        try {
+            return FilenameIndex.getVirtualFilesByName(project, name, scope);
+        } catch (AssertionError e) {
+            LOG.info("Error using filename index. Falling back to ProjectFileIndex.");
+            List<VirtualFile> result = new SmartList<>();
+            ProjectFileIndex.getInstance(project).iterateContent(
+                    fileOrDir -> {
+                        result.add(fileOrDir);
+                        return false;
+                    }, file -> !file.isDirectory() && name.equalsIgnoreCase(file.getName()));
+            return result;
+        }
     }
 
     private static VirtualFile tryExtensions(File file) {

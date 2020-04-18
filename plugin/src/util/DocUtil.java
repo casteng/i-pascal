@@ -26,6 +26,7 @@ import com.siberika.idea.pascal.lang.psi.PasModule;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -202,7 +203,7 @@ public class DocUtil {
                     public void run() {
                         //final FileDocumentManager documentManager = FileDocumentManager.getInstance();
                         //((VirtualFileListener) documentManager).contentsChanged(new VirtualFileEvent(null, file, file.getName(), file.getParent()));
-                        FileContentUtil.reparseFiles(file);
+                        FileContentUtil.reparseFiles(project, Collections.singleton(file), true);
                     }
                 }
         );

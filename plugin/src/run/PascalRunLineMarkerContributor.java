@@ -2,9 +2,9 @@ package com.siberika.idea.pascal.run;
 
 import com.intellij.execution.lineMarker.ExecutorAction;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
-import com.intellij.icons.AllIcons;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.Function;
+import com.siberika.idea.pascal.PascalIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,7 +24,7 @@ public class PascalRunLineMarkerContributor extends RunLineMarkerContributor {
     @Override
     public Info getInfo(@NotNull PsiElement element) {
         if (PascalRunContextConfigurationProducer.isProgramLeafElement(element)) {
-            return new Info(AllIcons.General.Run, TOOLTIP_PROVIDER, ExecutorAction.getActions(0));
+            return new Info(PascalIcons.Idea.RUN, TOOLTIP_PROVIDER, ExecutorAction.getActions(0));
         }
         return null;
     }

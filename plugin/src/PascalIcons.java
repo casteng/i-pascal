@@ -44,4 +44,24 @@ public interface PascalIcons {
     Icon OBJECT = IconLoader.findIcon(PATH + "nobject.png");
     Icon RECORD = IconLoader.findIcon(PATH + "nrecord.png");
     Icon HELPER = IconLoader.findIcon(PATH + "nhelper.png");
+
+    final class Idea {
+        public static final Icon RUN = loadIcon("/general/run.png", "/actions/runAll.svg");
+        public static final Icon USED_BY = loadIcon("/general/inheritedMethod.svg", "/general/inheritedMethod.png");
+
+        private static Icon loadIcon(String...paths) {
+            for (String path : paths) {
+                try {
+                    Icon icon = IconLoader.getIcon(path);
+                    if (icon.getIconWidth() > 1) {
+                        return icon;
+                    }
+                } catch (Throwable t) {
+//                    System.out.println(String.format("Error for icon %s: %s", path, t.getMessage()));
+                }
+            }
+            return null;
+        }
+
+    }
 }

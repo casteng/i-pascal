@@ -398,7 +398,7 @@ public class PascalFlexLexerImpl extends _PascalLexer {
                     LOG.info(String.format("WARNING: Include %s referenced from %s not found", name, getVFName(virtualFile)));
                 }
             } catch (AssertionError e) {
-                LOG.info(String.format("Error handling include file: %s", name), e);
+                LOG.info(String.format("Error handling include file '%s': " + e.getMessage(), name), e);
             }
         }
         return INCLUDE;
