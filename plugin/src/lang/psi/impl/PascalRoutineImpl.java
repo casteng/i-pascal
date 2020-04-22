@@ -252,6 +252,11 @@ public abstract class PascalRoutineImpl extends PasScopeImpl implements PascalRo
     }
 
     @Override
+    public boolean isProcedure() {
+        return !isFunction() && !isConstructor();
+    }
+
+    @Override
     public boolean isOverloaded() {
         return RoutineUtil.isOverloaded(this);
     }

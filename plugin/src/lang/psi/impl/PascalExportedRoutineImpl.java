@@ -160,6 +160,11 @@ public abstract class PascalExportedRoutineImpl extends PasStubScopeImpl<PasExpo
     }
 
     @Override
+    public boolean isProcedure() {
+        return !isFunction() && !isConstructor();
+    }
+
+    @Override
     public boolean isOverloaded() {
         PasExportedRoutineStub stub = retrieveStub();
         if (stub != null) {

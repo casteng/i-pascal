@@ -14,6 +14,8 @@ public interface PascalRoutineEntity extends PascalPsiElement {
 
     boolean isFunction();
 
+    boolean isProcedure();
+
     boolean hasParameters();
 
     @NotNull

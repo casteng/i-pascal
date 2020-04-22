@@ -47,6 +47,11 @@ public abstract class PascalProcedureTypeImpl extends PascalPsiElementImpl imple
     }
 
     @Override
+    public boolean isProcedure() {
+        return !isFunction() && !isConstructor();
+    }
+
+    @Override
     public boolean hasParameters() {
         return !getFormalParameterNames().isEmpty();
     }

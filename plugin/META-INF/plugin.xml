@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.siberika.idea.pascal</id>
     <name>I-Pascal</name>
-    <version>2.69</version>
+    <version>2.70</version>
     <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
 
     <description><![CDATA[
@@ -11,6 +11,11 @@
     <change-notes><![CDATA[
         <p>2.70</p>
         <ul>
+            <li>Turn to procedure or function intention actions</li>
+            <li>Synchronize signature intention action</li>
+            <li>GUID generation for interfaces</li>
+            <li>2020.x compatibility</li>
+            <li>Fix Delphi external annotator</li>
             <li>Improved generics support</li>
             <li>Fixed parsing of external class declarations</li>
         </ul>
@@ -629,6 +634,16 @@
 
         <intentionAction>
             <className>com.siberika.idea.pascal.ide.intention.SynchronizeSignature</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.TurnToProcedure</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.TurnToFunction</className>
             <category>Pascal</category>
         </intentionAction>
 

@@ -1,0 +1,7 @@
+TTest = class
+  <spot>function </spot>Test(Arg1: Integer): ;
+end;
+
+<spot>function </spot>TTest.Test(Arg1: Integer);
+begin
+end;
