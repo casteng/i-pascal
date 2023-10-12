@@ -1,7 +1,0 @@
-TTest = class
-  function Test(Arg1: Integer);
-end;
-
-function TTest.Test(Arg1: Integer);
-begin
-end;

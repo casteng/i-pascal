@@ -1,8 +1,0 @@
-(*
- * Project: ${PROJECT_NAME}
- * User: ${USER}
- * Date: ${DATE}
- *)
-program ${NAME};
-begin
-end.

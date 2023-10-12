@@ -1,5 +1,0 @@
-begin
-  <spot>if</spot> true <spot>then</spot>
-  <spot>begin
-  end;</spot>
-end.

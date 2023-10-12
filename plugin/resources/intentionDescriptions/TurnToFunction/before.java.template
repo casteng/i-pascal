@@ -1,7 +1,0 @@
-TTest = class
-  procedure Test(Arg1: Integer);
-end;
-
-procedure TTest.Test(Arg1: Integer);
-begin
-end;
