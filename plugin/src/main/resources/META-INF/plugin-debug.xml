@@ -1,0 +1,10 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <programRunner implementation="com.siberika.idea.pascal.debugger.PascalDebugRunner"/>
+        <xdebugger.breakpointType implementation="com.siberika.idea.pascal.debugger.PascalLineBreakpointType"/>
+        <xdebugger.settings implementation="com.siberika.idea.pascal.debugger.settings.PascalDebuggerSettings"/>
+
+        <applicationService serviceImplementation="com.siberika.idea.pascal.debugger.settings.PascalDebuggerViewSettings"/>
+        <applicationService serviceImplementation="com.siberika.idea.pascal.debugger.settings.PascalTypeRenderers"/>
+    </extensions>
+</idea-plugin>

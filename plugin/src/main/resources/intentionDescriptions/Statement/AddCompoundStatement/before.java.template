@@ -1,0 +1,3 @@
+begin
+  <spot>if</spot> true <spot>then</spot>
+end.

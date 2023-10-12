@@ -1,0 +1,13 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <moduleConfigurationEditorProvider implementation="com.siberika.idea.pascal.module.PascalModuleConfigEditorProvider" />
+
+        <psi.classFileDecompiler implementation="com.siberika.idea.pascal.lang.compiled.PascalClassFileDecompiler"/>
+
+        <filetype.stubBuilder filetype="FPC_PPU" implementationClass="com.intellij.psi.impl.compiled.ClassFileStubBuilder"/>
+        <filetype.stubBuilder filetype="DELPHI_DCU" implementationClass="com.intellij.psi.impl.compiled.ClassFileStubBuilder"/>
+
+        <projectSdkSetupValidator implementation="com.siberika.idea.pascal.sdk.PascalProjectSdkValidator"/>
+    </extensions>
+
+</idea-plugin>

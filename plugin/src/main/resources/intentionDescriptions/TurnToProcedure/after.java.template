@@ -1,0 +1,7 @@
+TTest = class
+  <spot>procedure </spot>Test(Arg1: Integer);
+end;
+
+<spot>procedure </spot>TTest.Test(Arg1: Integer);
+begin
+end;

@@ -1,0 +1,651 @@
+<idea-plugin>
+    <id>com.siberika.idea.pascal</id>
+    <name>I-Pascal</name>
+    <version>2.70</version>
+    <vendor email="argb32@gmail.com" url="http://www.siberika.com/ipascal.htm">siberika.com</vendor>
+
+    <description><![CDATA[
+      Object Pascal language support for IDEA.<br>
+      ]]></description>
+
+    <change-notes><![CDATA[
+        <p>2.70</p>
+        <ul>
+            <li>Turn to procedure or function intention actions</li>
+            <li>Synchronize signature intention action</li>
+            <li>GUID generation for interfaces</li>
+            <li>2020.x compatibility</li>
+            <li>Fix Delphi external annotator</li>
+            <li>Improved generics support</li>
+            <li>Fixed parsing of external class declarations</li>
+        </ul>
+        <p>2.60</p>
+        <ul>
+            <li>Errors, warning and hints highlighting using compiler syntax check</li>
+            <li>Breakpoint ignore count</li>
+            <li>Fix type parameters scope</li>
+            <li>Compiler error reporting improvement</li>
+            <li>DCU handling improvement</li>
+        </ul>
+        <p>2.50</p>
+        <ul>
+            <li>Pascal to C watches expression converter based on AST</li>
+            <li>Array values formatting in watches</li>
+            <li>Threads support in debugger</li>
+            <li>Correctly display strings in any codepage while debugging</li>
+            <li>Fix reentrant indexing error (GitHub #44, BitBucket #97)</li>
+            <li>Fix invalid class cast error (GitHub #46, BitBucket #96)</li>
+            <li>Fix unit namespaces (GitHub #45)</li>
+        </ul>
+        <p>2.40</p>
+        <ul>
+            <li>Debugger improvement (arrays, strings, sets)</li>
+            <li>Intention actions for create field/property from parameter, goto super/descending, add/remove compound statement</li>
+            <li>Do not pass to Delphi compiler RTL path (Issues #43, 91)</li>
+            <li>Allow running of nameless programs (Issue #38, 95)</li>
+            <li>Disable full paths in breakpoints for LLDB (Issue #40)</li>
+        </ul>
+        <p>2.31</p>
+        <ul>
+            <li>Added "Introduce variable" refactoring</li>
+            <li>Create field/property for parameter quickfix</li>
+            <li>Default formal parameters support in resolving</li>
+            <li>Add/remove compound statement quickfix for structured operators</li>
+        </ul>
+        <p>2.20</p>
+        <ul>
+            <li>Filter by usage type in find usages</li>
+            <li>Not assigned function result inspection</li>
+            <li>Inherited keyword resolves to inherited method</li>
+            <li>Overloaded methods support in resolve (partial)</li>
+            <li>Removed file size limit for compiled files while indexing (Issue #88 on BitBucket)</li>
+            <li>Multiline injected strings support</li>
+        </ul>
+        <p>2.10</p>
+        <ul>
+            <li>Class/record helpers support and line markers</li>
+            <li>Not implemented interface inspection</li>
+            <li>Reference resolution fixes</li>
+            <li>Actual parameters type inference</li>
+            <li>More correct and fast indenting of new lines</li>
+            <li>Code completion improvement</li>
+            <li>Statement completion improvement</li>
+            <li>Changed file icons</li>
+        </ul>
+        <p>2.0</p>
+        <ul>
+            <li>Completion suggestions from not used units (double ctrl+space)</li>
+            <li>Context-aware code completion intellectual selection and prioritization</li>
+            <li>Delphi 10.3 inline declarations syntax support</li>
+            <li>Inherited destructor call inspection</li>
+            <li>Parameter info for variables of procedural types</li>
+            <li>"No SDK" warning</li>
+        </ul>
+        <p>1.980</p>
+        <ul>
+            <li>Exit points highlighting for routine and loops</li>
+            <li>Import from Delphi and Lazarus project files</li>
+            <li>Compilation in debug mode when debug runner is executed</li>
+            <li>Highlighting of identifiers declared in selected unit</li>
+            <li>Quick project SDK switch action</li>
+            <li>WITH scope identifiers highlighting</li>
+            <li>Left/right mover (Alt + Shift + Left/Right)</li>
+            <li>Fixed incorrect highlighting of string literals with incremental lexer (Issue #43)</li>
+            <li>Fixed breakpoints in files which path contains spaces</li>
+            <li>Fixed NoClassDefFoundError (Issue #82)</li>
+        </ul>
+        <p>1.95</p>
+        <ul>
+            <li>Errors annotation is now really fast (~100 times faster)</li>
+            <li>Delphi Community Edition RTL sources compatibility. Use sources by default.</li>
+            <li>Show fully qualified identifiers in WITH blocks</li>
+            <li>Show identifier's one-line documentation on mouse hover</li>
+            <li>Retrieve documentation for named elements from comments (HTML allowed)</li>
+            <li>Respect var and out parameters when calculating read/write access to identifier under cursor</li>
+            <li>Unused local identifier inspection now checks for unused local routines</li>
+            <li>Respect code folding settings</li>
+        </ul>
+        <p>1.90</p>
+        <ul>
+            <li>Unused local identifier inspection</li>
+            <li>Add containing unit quick fix for "unknown identifier" error</li>
+            <li>Unit used by which units info on gutter</li>
+            <li>File and unit name mismatch error annotation</li>
+            <li>Name suggestions for variables, types, constants, property accessors</li>
+            <li>Record constant completion</li>
+            <li>Type inference in constructor call (Issue #28)</li>
+            <li>Fix rename of a method to different case (Issue #29)</li>
+            <li>Correct completion after inherited keyword</li>
+        </ul>
+        <p>1.80</p>
+        <ul>
+            <li>Optimization for large projects (stub indices)</li>
+            <li>Find class by name</li>
+            <li>Find symbol by name</li>
+        </ul>
+        <p>1.52</p>
+        <ul>
+          <li>Inplace local identifiers rename with smart suggestions</li>
+          <li>Highlight read and write access to an identifier at cursor with different color</li>
+          <li>Add source path of dependent modules to search path</li>
+          <li>Fix run configurations duplication on run from gutter icon</li>
+          <li>Parameter name hint setting to show hints for all parameters</li>
+        </ul>
+        <p>1.50</p>
+        <ul>
+          <li>Move statements or declarations up/down as a whole</li>
+          <li>Run configuration option to workaround Write() buffering issue on Linux and Mac (Issue #18)</li>
+          <li>Format ">=" correctly (Issue #12)</li>
+          <li>FPC generics syntax (Issue #13)</li>
+          <li>Improve .ppu decompilation</li>
+          <li>No undeclared identifier errors for members of a variant (Issue #19)</li>
+          <li>Compatibility with latest IDEA version</li>
+        </ul>
+        <p>1.40</p>
+        <ul>
+          <li>LLDB debug backend</li>
+          <li>Objective Pascal syntax support</li>
+          <li>Optimization of find usages and rename for local identifiers</li>
+          <li>Improve positioning of created identifiers in create actions</li>
+          <li>Improve generics support in declare/implement actions</li>
+        </ul>
+        <p>1.30</p>
+        <ul>
+          <li>code style settings (Issue #51)</li>
+          <li>default indent set to 2 (Issue #19)</li>
+          <li>FPC SDK defaults to Delphi mode (Issue #68)</li>
+        </ul>
+        <p>1.26</p>
+        <ul>
+          <li>parameter hints</li>
+          <li>routine/method separators</li>
+          <li>rename parameters both in declaration and implementation (Issue #50)</li>
+          <li>make all routine definitions resolve to same element (Issue #48)</li>
+          <li>fix nested forward routines (Issue #56)</li>
+          <li>clickable file hyperlinks in Heaptrc output (Issue #62)</li>
+          <li>exclude some units from unused unit check (Issue 59#)</li>
+        </ul>
+        <p>1.24</p>
+        <ul>
+          <li>completion in watches</li>
+          <li>take in account if a unit is used in implementation section (Issue #44)</li>
+          <li>fixed support of escaped keywords in identifiers (Issue #5)</li>
+          <li>forward declaration of interfaces support (Issue #30)</li>
+        </ul>
+        <p>1.22</p>
+        <ul>
+          <li>watches in debugger</li>
+          <li>inspection of complex types in watches and local variables while debugging</li>
+          <li>correct identifier names in debugger</li>
+          <li>compiler executable setting in FPC/Delphi SDK (Issue #8)</li>
+          <li>Delphi Starter Edition support (Issue #53)</li>
+          <li>Delphi compiler output parsing fix (Issue #60)</li>
+        </ul>
+        <p>1.2</p>
+        <ul>
+          <li>experimental debugging support</li>
+        </ul>
+        <p>1.16</p>
+        <ul>
+          <li>complete statement feature improvement</li>
+          <li>new module type: Test (Issue #54)</li>
+          <li>fixed new Pascal module creation in a test directory (Issue #47)</li>
+          <li>fixed parent scopes resolving in WITH operator (Issue #41)</li>
+          <li>fixed incorrect resolving for Result pseudo variable in nested functions (Issue #42)</li>
+        </ul>
+        <p>1.14</p>
+        <ul>
+          <li>suggest parameter type in add parameter quickfix</li>
+          <li>suggest return/parameter type in create getter/setter quickfix</li>
+          <li>fixed scope resolving for inherited properties (Issue #32)</li>
+          <li>fixed nested generic definitions parsing (Issue #4)</li>
+          <li>fixed variant record tag identifier resolving (Issue #38)</li>
+          <li>fixed unknown units removal during optimize imports (Issue #40)</li>
+          <li>fixed quick definition (Issue #45)</li>
+        </ul>
+        <p>1.12</p>
+        <ul>
+          <li>suggest argument types in create routine/method quickfix</li>
+          <li>type inference for complex expressions</li>
+          <li>fixed result scope resolving in routines with omitted parameters (Issue #29)</li>
+          <li>fixed formatting bug (Issue #2)</li>
+        </ul>
+        <p>1.10</p>
+        <ul>
+          <li>simple type inference in create variable/field quick fixes</li>
+          <li>formal parameters type completion</li>
+          <li>fixed template system regression</li>
+          <li>fixed hang in CLion (issue #1@GitHub)</li>
+        </ul>
+        <p>1.09</p>
+        <ul>
+          <li>fixed section toggle when parameters omitted (Issue #29)</li>
+          <li>omitted parameters in code completion (Issue #29)</li>
+          <li>source code released</li>
+        </ul>
+        <p>1.08</p>
+        <ul>
+          <li>fixed bitwise operators parsing (Issue #25)</li>
+          <li>fixed WebStorm 2016.3 issues (Issue #26)</li>
+          <li>fixed members visibility in .ppu parsing (Issue #28)</li>
+          <li>FPC global directives suggestions</li>
+        </ul>
+        <p>1.07</p>
+        <ul>
+          <li>fixed IDEA 2016.3 issues (Issue #20, Issue #24)</li>
+          <li>Fixed file reindexing on edit</li>
+          <li>repeat-until brace matcher</li>
+          <li>fixed constrained generic method section search (Issue #14)<li>
+        </ul>
+        <p>1.06</p>
+        <ul>
+          <li>find declaration and find usages for include files</li>
+          <li>find declaration and find usages for conditional defines</li>
+          <li>compiler directives completion</li>
+          <li>conditional defines completion</li>
+          <li>fix spurious incorrect "undeclared identifier" errors</li>
+          <li>improved classes and methods completion</li>
+          <li>fixed parsing of generic classes</li>
+        </ul>
+        <p>1.05</p>
+        <ul>
+          <li>run programs with button at left gutter</li>
+          <li>EXCEPT and UNTIL completion with formatting</li>
+          <li>fixed compiler error reporting</li>
+          <li>complete variable declaration</li>
+        </ul>
+        <p>1.02</p>
+        <ul>
+          <li>fixed parsing routines with constrained generics</li>
+          <li>complete if statement</li>
+          <li>complete for statement</li>
+          <li>complete while statement</li>
+          <li>complete repeat statement</li>
+          <li>complete ")" in expressions</li>
+          <li>fix brace matcher (try/case/structured type)</li>
+        </ul>
+        <p>1.01</p>
+        <ul>
+          <li>ability to inject other languages in Pascal string literals</li>
+          <li>fixed spurious undeclared identifiers highlight bug</li>
+          <li>relative unit path support</li>
+          <li>fixed .dcu decompilation regression in newer IDEA versions</li>
+          <li>improved completion</li>
+          <li>improved folding</li>
+        </ul>
+        <p>1.0</p>
+        <ul>
+          <li>stable release</li>
+          <li>quick fixes are now context-aware and use template engine</li>
+          <li>create property/field quick fixes</li>
+          <li>create routine/method quick fix</li>
+          <li>create formal parameter quick fix</li>
+          <li>add unit to uses clause quick fix</li>
+          <li>add enumeration constant quick fix</li>
+          <li>fixed bug with "undeclared identifier" on .ppu units</li>
+          <li>improved IFDEFs handling</li>
+          <li>performance improve</li>
+        </ul>
+        <p>0.993</p>
+        <ul>
+          <li>used units usage check and quick fix</li>
+          <li>resolving enumeration constants qualified with type name</li>
+          <li>completion improvement</li>
+          <li>many minor fixes</li>
+        </ul>
+        <p>0.99</p>
+        <ul>
+          <li>identifiers cache rewrite</li>
+          <li>inherited classes/methods search optimization</li>
+          <li>setting for executable path</li>
+        </ul>
+        <p>0.98</p>
+        <ul>
+          <li>missing method declaration/implementation highlight and quick fixes</li>
+          <li>missing routine implementation highlight and quick fixes</li>
+          <li>super method search</li>
+          <li>implementations/descendants search</li>
+          <li>fixed predefined conditionals for Delphi compilers</li>
+          <li>fixed custom attributes support</li>
+          <li>added support of allowed keywords as identifiers</li>
+          <li>added support of forward interface declarations</li>
+        </ul>
+        <p>0.97</p>
+        <ul>
+          <li>resolving within compiled file regression fix</li>
+          <li>.dcu decompiler fix</li>
+          <li>compiler family regression fix</li>
+        </ul>
+        <p>0.96</p>
+        <ul>
+          <li>Navigation between interface and implementation action</li>
+        </ul>
+        <p>0.95</p>
+        <ul>
+          <li>Delphi support</li>
+          <li>.dcu file decompilation support</li>
+        </ul>
+        <p>0.92</p>
+        <ul>
+          <li>file structure view</li>
+          <li>syntax highlighting in decompiled files</li>
+          <li>completion improve</li>
+          <li>new icons</li>
+        </ul>
+        <p>0.91</p>
+        <ul>
+          <li>statements completion</li>
+          <li>support of nested type, variable and constant declarations</li>
+          <li>exception variables in except clause resolving</li>
+          <li>binary and octal numbers support (OBJFPC)</li>
+        </ul>
+        <p>0.9</p>
+        <ul>
+          <li>initial Delphi RTL support</li>
+          <li>scoped unit names support</li>
+          <li>basic generics support</li>
+          <li>moved built-in identifiers source file</li>
+        </ul>
+        <p>0.87</p>
+        <ul>
+          <li>major completion improvement</li>
+          <li>fixed variant record handling</li>
+          <li>added support of some keywords</li>
+          <li>support .pp extension for unit files</li>
+        </ul>
+        <p>0.86</p>
+        <ul>
+          <li>WITH statement support while resolving</li>
+          <li>multiple parents support while resolving</li>
+        </ul>
+        <p>0.85</p>
+        <ul>
+          <li>resolving of identifiers within complex expressions</li>
+          <li>routine parameters info display</li>
+          <li>fixed ppu decompilation issues under Windows</li>
+        </ul>
+        <p>0.83</p>
+        <ul>
+          <li>expressions parser</li>
+          <li>formatting and indentation improve</li>
+        </ul>
+        <p>0.82</p>
+        <ul>
+          <li>large files parsing performance improve</li>
+          <li>bug fixes</li>
+        </ul>
+        <p>0.81</p>
+        <ul>
+          <li>unit name completion</li>
+          <li>module rename refactoring</li>
+          <li>module file templates</li>
+        </ul>
+        <p>0.8</p>
+        <ul>
+          <li>full references/find usages</li>
+          <li>completion improvement</li>
+        </ul>
+        <p>0.7.5</p>
+        <ul>
+          <li>code formatter</li>
+        </ul>
+        <p>0.7.1</p>
+        <ul>
+          <li>regression fixes</li>
+        </ul>
+        <p>0.7</p>
+        <ul>
+          <li>IDEA 14 support</li>
+          <li>improved completion</li>
+          <li>stable parser</li>
+          <li>standard FPC installation layouts support (including OSX)</li>
+        </ul>
+        <p>0.6</p>
+        <ul>
+          <li>PPU viewer</li>
+        </ul>
+        <p>0.5</p>
+        <ul>
+          <li>context-aware code completion</li>
+          <li>undeclared identifiers highlighting and quick fix</li>
+          <li>rename refactoring</li>
+          <li>find usages</li>
+          <li>navigation: class method definition <=> implementation</li>
+          <li>navigation: unit routine interface definition <=> implementation</li>
+          <li>Pascal syntax highlighting</li>
+          <li>program compilation with FPC and running</li>
+          <li>first public version</li>
+        </ul>
+    ]]></change-notes>
+
+    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+    <idea-version since-build="211.6693.111"/>
+
+    <!-- please see http://confluence.jetbrains.net/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+<!--    <depends optional="true" config-file="plugin-java.xml">com.intellij.modules.java</depends>-->
+    <depends optional="true" config-file="plugin-debug.xml">com.intellij.modules.xdebugger</depends>
+
+    <application-components>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.PascalAppService</implementation-class>
+        </component>
+    </application-components>
+    <module-components>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.module.ModuleService</implementation-class>
+        </component>
+    </module-components>
+    <project-components>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.module.PascalProjectService</implementation-class>
+        </component>
+        <component>
+            <implementation-class>com.siberika.idea.pascal.ide.intention.GotoSuperAction</implementation-class>
+        </component>
+    </project-components>
+
+    <actions>
+        <action id="Pascal.NewHPascalModule" class="com.siberika.idea.pascal.ide.actions.CreateModuleAction"
+                text="Pascal Module" description="Create new Pascal program/unit/library/package">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+        </action>
+        <action id="Pascal.ToggleSection" class="com.siberika.idea.pascal.ide.actions.IntfImplNavAction"
+                text="Toggle Section" description="Navigate to routine or method interface/implementation">
+            <keyboard-shortcut first-keystroke="shift control KP_DOWN" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="shift control KP_UP" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="shift control DOWN" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="shift control UP" keymap="$default"/>
+            <add-to-group group-id="GoToMenu" relative-to-action="GotoRelated" anchor="after" />
+        </action>
+        <action id="Pascal.OverrideMethod" class="com.siberika.idea.pascal.ide.actions.ActionImplement"
+                text="Override Pascal Methods" description="Override methods from a superclass/interface">
+        </action>
+
+        <action id="Pascal.SDKSwitch" class="com.siberika.idea.pascal.ui.SdkSwitchAction"
+                text="Switch SDK" description="Allows to switch project SDK" icon="AllIcons.General.AddJdk">
+            <add-to-group group-id="ToolbarRunGroup" anchor="first" />
+        </action>
+    </actions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileTypeFactory implementation="com.siberika.idea.pascal.PascalFileTypeFactory"/>
+        <lang.parserDefinition language="Pascal" implementationClass="com.siberika.idea.pascal.PascalParserDefinition"/>
+        <lang.syntaxHighlighterFactory key="Pascal" language="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterFactory" />
+        <syntaxHighlighter key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
+        <syntaxHighlighter key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalSyntaxHighlighterBase"/>
+        <colorSettingsPage implementation="com.siberika.idea.pascal.editor.highlighter.PascalColorsPage" />
+
+        <highlightUsagesHandlerFactory implementation="com.siberika.idea.pascal.editor.highlighter.PascalHighlightHandlerFactory" />
+
+        <codeInsight.overrideMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalOverrideMethodsHandler"/>
+        <codeInsight.implementMethod language="Pascal" implementationClass="com.siberika.idea.pascal.ide.extensions.PascalImplementMethodsHandler"/>
+        <codeInsight.gotoSuper language="Pascal" implementationClass="com.siberika.idea.pascal.lang.search.GotoSuper"/>
+        <!--<superMethodsSearch implementation="com.siberika.idea.pascal.lang.search.PascalSuperMethodSearch"/>-->
+
+        <lang.implementationTextSelectioner language="Pascal" implementationClass="com.siberika.idea.pascal.ide.actions.PascalImplementationTextSelectioner"/>
+
+        <definitionsScopedSearch implementation="com.siberika.idea.pascal.lang.search.PascalDefinitionsSearch"/>
+
+        <lang.documentationProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalDocumentationProvider"/>
+
+        <moduleType id="PASCAL_MODULE" implementationClass="com.siberika.idea.pascal.module.PascalModuleType"/>
+
+        <lang.quoteHandler language="Pascal" implementationClass="com.siberika.idea.pascal.editor.highlighter.PascalQuoteHandler" />
+        <fileIconProvider implementation="com.siberika.idea.pascal.PascalFileIconProvider" />
+
+        <projectStructureDetector implementation="com.siberika.idea.pascal.module.PascalProjectStructureDetector" />
+
+        <readWriteAccessDetector implementation="com.siberika.idea.pascal.editor.highlighter.PascalReadWriteAccessDetector"/>
+
+        <!--<problemFileHighlightFilter implementation="com.siberika.idea.pascal.editor.highlighter.PascalProblemFileHighlightFilter"/>-->
+
+        <lang.foldingBuilder language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalFoldingBuilder"/>
+        <codeFoldingOptionsProvider instance="com.siberika.idea.pascal.lang.folding.PascalFoldingOptionsProvider"/>
+        <applicationService serviceInterface="com.siberika.idea.pascal.lang.folding.PascalCodeFoldingSettings"
+                            serviceImplementation="com.siberika.idea.pascal.lang.folding.PascalCodeFoldingSettingsImpl"/>
+
+        <annotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalAnnotator"/>
+        <externalAnnotator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalExternalAnnotator"/>
+        <localInspection language="Pascal" displayName="Unused units detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedUnitsInspection"/>
+        <localInspection language="Pascal" displayName="Unused local identifiers detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.UnusedIdentsInspection"/>
+        <localInspection language="Pascal" displayName="Not implemented methods detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.NotImplementedInspection"/>
+        <localInspection language="Pascal" displayName="No inherited destructor call detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.DestructorInheritedInspection"/>
+        <localInspection language="Pascal" displayName="No result assignment detection" enabledByDefault="true" groupName="Pascal"
+                         implementationClass="com.siberika.idea.pascal.lang.inspection.ResultAssignmentInspection"/>
+        <lang.inspectionSuppressor language="Pascal" implementationClass="com.siberika.idea.pascal.lang.inspection.PascalInspectionSuppressor"/>
+
+        <sdkType implementation="com.siberika.idea.pascal.sdk.FPCSdkType"/>
+        <sdkType implementation="com.siberika.idea.pascal.sdk.DelphiSdkType"/>
+
+        <configurationType id="FPC" implementation="com.siberika.idea.pascal.run.PascalConfigurationType"/>
+        <runConfigurationProducer id="FPC" implementation="com.siberika.idea.pascal.run.PascalRunContextConfigurationProducer" />
+        <consoleFilterProvider implementation="com.siberika.idea.pascal.run.HeaptrcConsoleFilterProvider" />
+        <programRunner implementation="com.siberika.idea.pascal.run.PascalRunner"/>
+        <stepsBeforeRunProvider implementation="com.siberika.idea.pascal.run.PascalBeforeRunProvider" order="first"/>
+
+        <psi.referenceContributor language="Pascal" implementation="com.siberika.idea.pascal.lang.references.PascalReferenceContributor"/>
+        <lang.findUsagesProvider language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalFindUsagesProvider"/>
+        <usageTypeProvider implementation="com.siberika.idea.pascal.lang.references.PascalUsageTypeProvider"/>
+        <referencesSearch implementation="com.siberika.idea.pascal.lang.references.PascalReferencesSearcher"/>
+        <targetElementEvaluator language="Pascal" implementationClass="com.siberika.idea.pascal.lang.references.PascalTargetElementEvaluator"/>
+
+        <gotoSymbolContributor implementation="com.siberika.idea.pascal.lang.references.PascalChooseByNameContributor"/>
+        <gotoClassContributor implementation="com.siberika.idea.pascal.lang.references.PascalClassByNameContributor"/>
+
+        <lang.refactoringSupport language="Pascal" implementationClass="com.siberika.idea.pascal.editor.refactoring.PascalRefactoringSupport"/>
+        <renamePsiElementProcessor implementation="com.siberika.idea.pascal.lang.references.impl.PascalRenameProcessor"/>
+        <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PascalNamedElement"
+                                 implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalNamedManipulator"/>
+        <lang.elementManipulator forClass="com.siberika.idea.pascal.lang.psi.PasStringFactor"
+                                 implementationClass="com.siberika.idea.pascal.lang.references.impl.manipulators.PascalStringManipulator"/>
+        <nameSuggestionProvider implementation="com.siberika.idea.pascal.editor.refactoring.PascalNameSuggestionProvider"/>
+        <refactoring.moveHandler implementation="com.siberika.idea.pascal.editor.refactoring.PascalMoveHandler"/>
+
+        <editorHighlighterProvider filetype="Pascal" implementationClass="com.siberika.idea.pascal.lang.lexer.PascalEditorHighlighterProvider"/>
+        <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalHeavyLineMarkerProvider"/>
+        <codeInsight.parameterInfo language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterInfoHandler"/>
+
+        <completion.contributor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCtxCompletionContributor"/>
+        <completion.confidence language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCompletionConfidence"/>
+
+        <braceMatcher filetype="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalBraceMatcher"/>
+        <lang.commenter language="Pascal" implementationClass="com.siberika.idea.pascal.editor.completion.PascalCommenter"/>
+
+        <lang.formatter language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalFormatter"/>
+        <lang.smartEnterProcessor language="Pascal" implementationClass="com.siberika.idea.pascal.editor.formatter.PascalSmartEnterProcessor"/>
+        <lineIndentProvider implementation="com.siberika.idea.pascal.editor.formatter.PascalLineIndentProvider"/>
+
+        <lang.psiStructureViewFactory language="Pascal" implementationClass="com.siberika.idea.pascal.editor.structure.PasStructureViewFactory"/>
+        <structureViewBuilder key="FPC_PPU" implementationClass="com.siberika.idea.pascal.editor.structure.PascalStructureViewBuilder" />
+        <structureViewBuilder key="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.editor.structure.PascalStructureViewBuilder" />
+
+        <filetype.decompiler filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUFileDecompiler"/>
+        <filetype.decompiler filetype="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.lang.compiled.DCUFileDecompiler"/>
+        <fileType.fileViewProviderFactory filetype="FPC_PPU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
+        <fileType.fileViewProviderFactory filetype="DELPHI_DCU" implementationClass="com.siberika.idea.pascal.lang.compiled.PPUViewProviderFactory"/>
+
+
+        <lang.importOptimizer language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalImportOptimizer"/>
+
+        <compiler.task implementation="com.siberika.idea.pascal.compiler.Task"/>
+
+        <runLineMarkerContributor language="Pascal" implementationClass="com.siberika.idea.pascal.run.PascalRunLineMarkerContributor"/>
+
+        <statementUpDownMover implementation="com.siberika.idea.pascal.lang.PascalStatementMover"/>
+        <moveLeftRightHandler language="Pascal" implementationClass="com.siberika.idea.pascal.lang.PascalLeftRightMover" />
+
+        <codeInsight.parameterNameHints language="Pascal" implementationClass="com.siberika.idea.pascal.editor.PascalParameterNameHints"/>
+
+        <internalFileTemplate name="PascalUnit"/>
+        <internalFileTemplate name="PascalProgram"/>
+        <internalFileTemplate name="PascalLibrary"/>
+        <internalFileTemplate name="PascalPackage"/>
+        <internalFileTemplate name="PascalTest"/>
+
+        <codeStyleSettingsProvider implementation="com.siberika.idea.pascal.editor.settings.PascalCodeStyleSettingsProvider"/>
+        <langCodeStyleSettingsProvider implementation="com.siberika.idea.pascal.editor.settings.PascalLanguageCodeStyleSettingsProvider"/>
+
+        <compileServer.plugin classpath="jps-plugin.jar"/>
+        <postStartupActivity implementation="com.siberika.idea.pascal.PostStartupActivity"/>
+
+        <stubElementTypeHolder class="com.siberika.idea.pascal.lang.psi.PasTypes"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalModuleIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalStructIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalSymbolIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalUnitSymbolIndex"/>
+        <stubIndex implementation="com.siberika.idea.pascal.lang.stub.PascalHelperIndex"/>
+
+        <fileBasedIndex implementation="com.siberika.idea.pascal.lang.compiled.PascalFakeCompiledIndex" />
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.GotoSuperAction</className>
+            <category>Pascal</category>
+        </intentionAction>
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.GotoImplementationAction</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.AddCompoundStatement</className>
+            <category>Pascal</category>
+        </intentionAction>
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.RemoveCompoundStatement</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.CreateFieldForParamAction</className>
+            <category>Pascal</category>
+        </intentionAction>
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.CreatePropertyForParamAction</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.SynchronizeSignature</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.TurnToProcedure</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+        <intentionAction>
+            <className>com.siberika.idea.pascal.ide.intention.TurnToFunction</className>
+            <category>Pascal</category>
+        </intentionAction>
+
+    </extensions>
+</idea-plugin>
